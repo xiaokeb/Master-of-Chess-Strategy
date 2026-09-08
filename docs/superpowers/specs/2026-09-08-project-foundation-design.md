@@ -135,7 +135,7 @@ Compose UI
 
 ## 9. 构建环境调整
 
-- Gradle Wrapper 保持项目锁定的 9.6.0，但将当前 10 秒下载超时提高到适合首次拉取发行包的值。
+- Gradle Wrapper 保持项目锁定的 9.6.0，并将当前 10 秒下载超时提高到 120 秒，以覆盖首次拉取发行包的场景。
 - Android Gradle Plugin 保持当前 9.4.0，除非实际同步证明与已安装工具链不兼容。
 - Gradle daemon 与源码编译目标统一使用 JDK 17，避免当前配置请求未安装的 JDK 25。
 - `compileSdk`/`targetSdk` 37、`minSdk` 24 暂时保留，以真实 Gradle 同步和 Debug 构建结果决定是否调整。
