@@ -7,7 +7,6 @@
 - 增加悔棋、合法走法生成、基础困毙胜负和 MOCX 版本 1 局面往返。
 - NDK Clang 21 在 -Wall、-Wextra、-Wpedantic 下编译并链接 ARM64 原生测试目标，无警告。
 - Gradle 已完成 arm64-v8a、armeabi-v7a、x86 和 x86_64 构建；测试目标因无设备或 AVD 尚未运行。
-- 当前 JVM 单元测试累计 23 个，全部通过。
 - engine-api 新增中国象棋阵营、棋子、棋盘边界和 ChineseChessRuleEngine。
 - engine-native 新增 NativeChineseChessEngine、可替换 bridge 与受互斥锁保护的原生句柄表。
 - JNI 已覆盖创建、释放、当前方、重置、走子、悔棋、合法着、胜负、棋盘查询和序列化往返。
@@ -17,6 +16,11 @@
 - 本地双人对局已贯通选子、走子、悔棋和重开；AI、提示、计时和历史判定明确保持未接入。
 - 新增 6 个 ViewModel 测试、3 个棋盘坐标测试和 1 个已编译的 Compose 仪器测试。
 - App Lint 为 0 error、1 个锁定版本提示；Debug APK 与测试 APK 构建通过，权限仍不含 INTERNET。
+- 新增正式 Compose Navigation 返回栈：首页 → 中国象棋模式 → 本地对局，以及普通人机 → 难度条件。
+- 首页按 40/60 分栏展示本地初始档案和五张棋种入口卡，尚未实现的棋种保持不可进入。
+- 模式页明确区分当前可用、本节点仅可查看条件和后续切片三类状态；四档 AI 难度按 PRD 条件锁定。
+- Navigation 2.10.1 与 Lifecycle 2.11.0 已锁定并通过兼容性构建。
+- 当前 JVM 单元测试累计 27 个，全部通过。
 
 ## 0.1.0 Foundation（2026-09-12）
 

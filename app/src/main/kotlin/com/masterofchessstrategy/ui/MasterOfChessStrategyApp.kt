@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +28,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.masterofchessstrategy.R
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessPiece
@@ -36,22 +40,58 @@ import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.game.ChineseChessFeedback
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 import com.masterofchessstrategy.game.ChineseChessGameViewModel
+import com.masterofchessstrategy.navigation.AppDestination
+import com.masterofchessstrategy.navigation.HomeGameEntry
 import com.masterofchessstrategy.ui.theme.MocsTheme
 
 internal const val UNDO_BUTTON_TAG = "undo_button"
 internal const val RESTART_BUTTON_TAG = "restart_button"
 internal const val AI_BUTTON_TAG = "ai_button"
+internal const val GAME_BACK_BUTTON_TAG = "game_back_button"
 
 @Composable
-fun MasterOfChessStrategyApp(
-    gameViewModel: ChineseChessGameViewModel = viewModel(),
-) {
-    ChineseChessGameScreen(
-        state = gameViewModel.uiState,
-        onSquareTap = gameViewModel::onSquareTap,
-        onUndo = gameViewModel::undo,
-        onRestart = gameViewModel::restart,
-    )
+fun MasterOfChessStrategyApp() {
+    MocsTheme {
+        val navController = rememberNavController()
+        NavHost(
+            navController = navController,
+            startDestination = AppDestination.HOME,
+        ) {
+            composable(AppDestination.HOME) {
+                HomeScreen(
+                    onGameSelected = { entry ->
+                        if (entry == HomeGameEntry.CHINESE_CHESS) {
+                            navController.navigate(AppDestination.CHINESE_CHESS_MODES)
+                        }
+                    },
+                )
+            }
+            composable(AppDestination.CHINESE_CHESS_MODES) {
+                ChineseChessModeScreen(
+                    onBack = navController::popBackStack,
+                    onLocalGame = {
+                        navController.navigate(AppDestination.CHINESE_CHESS_GAME)
+                    },
+                    onAiDifficulty = {
+                        navController.navigate(AppDestination.CHINESE_CHESS_DIFFICULTY)
+                    },
+                )
+            }
+            composable(AppDestination.CHINESE_CHESS_DIFFICULTY) {
+                ChineseChessDifficultyScreen(onBack = navController::popBackStack)
+            }
+            composable(AppDestination.CHINESE_CHESS_GAME) {
+                val gameViewModel: ChineseChessGameViewModel = viewModel()
+                ChineseChessGameScreen(
+                    state = gameViewModel.uiState,
+                    onSquareTap = gameViewModel::onSquareTap,
+                    onUndo = gameViewModel::undo,
+                    onRestart = gameViewModel::restart,
+                    onBack = navController::popBackStack,
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -60,6 +100,7 @@ internal fun ChineseChessGameScreen(
     onSquareTap: (BoardPosition) -> Unit,
     onUndo: () -> Unit,
     onRestart: () -> Unit,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     MocsTheme {
@@ -70,7 +111,7 @@ internal fun ChineseChessGameScreen(
                     .padding(horizontal = 20.dp, vertical = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                GameHeader(state)
+                GameHeader(state, onBack)
                 HorizontalDivider()
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                     if (maxWidth >= 720.dp) {
@@ -121,22 +162,33 @@ internal fun ChineseChessGameScreen(
 }
 
 @Composable
-private fun GameHeader(state: ChineseChessGameUiState) {
+private fun GameHeader(
+    state: ChineseChessGameUiState,
+    onBack: () -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column {
-            Text(
-                text = stringResource(R.string.chinese_chess_title),
-                style = MaterialTheme.typography.headlineMedium,
-            )
-            Text(
-                text = stringResource(R.string.local_two_player),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextButton(
+                onClick = onBack,
+                modifier = Modifier.testTag(GAME_BACK_BUTTON_TAG),
+            ) {
+                Text(stringResource(R.string.back))
+            }
+            Column {
+                Text(
+                    text = stringResource(R.string.chinese_chess_title),
+                    style = MaterialTheme.typography.headlineMedium,
+                )
+                Text(
+                    text = stringResource(R.string.local_two_player),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
         Text(
             text = gameStatusText(state),
@@ -306,6 +358,7 @@ private fun ChineseChessGameScreenPreview() {
         onSquareTap = {},
         onUndo = {},
         onRestart = {},
+        onBack = {},
     )
 }
 

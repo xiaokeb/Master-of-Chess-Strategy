@@ -20,6 +20,7 @@ class ChineseChessGameScreenTest {
                 onSquareTap = {},
                 onUndo = {},
                 onRestart = {},
+                onBack = {},
             )
         }
 

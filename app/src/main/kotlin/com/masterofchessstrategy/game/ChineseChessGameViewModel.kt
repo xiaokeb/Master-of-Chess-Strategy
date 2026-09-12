@@ -97,7 +97,6 @@ class ChineseChessGameViewModel internal constructor(
 
     override fun onCleared() {
         closeEngine()
-        super.onCleared()
     }
 
     private fun selectPiece(

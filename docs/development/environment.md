@@ -13,6 +13,8 @@
 | CMake | 4.1.2 |
 | Gradle Wrapper | 9.6.0 |
 | Android Gradle Plugin | 9.4.0 |
+| Compose Navigation | 2.10.1 |
+| AndroidX Lifecycle | 2.11.0 |
 
 本机尚未发现 Android 设备或 AVD。设备集成测试先保证可编译，获得设备后再执行，不得将未执行的测试标记为通过。
 
