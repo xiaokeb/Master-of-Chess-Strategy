@@ -1,17 +1,22 @@
 # 变更记录
 
-## 未发布：中国象棋规则核心
+## 未发布：中国象棋可操作纵切
 
 - 增加中国象棋 9×10 初始局面、七类棋子基础走法、路径阻挡和轮次管理。
 - 拒绝越界、己方占位、蹩马腿、塞象眼、错误炮架、未过河横兵、自陷将和将帅照面。
 - 增加悔棋、合法走法生成、基础困毙胜负和 MOCX 版本 1 局面往返。
 - NDK Clang 21 在 -Wall、-Wextra、-Wpedantic 下编译并链接 ARM64 原生测试目标，无警告。
 - Gradle 已完成 arm64-v8a、armeabi-v7a、x86 和 x86_64 构建；测试目标因无设备或 AVD 尚未运行。
-- 当前 JVM 单元测试累计 14 个，全部通过。
+- 当前 JVM 单元测试累计 23 个，全部通过。
 - engine-api 新增中国象棋阵营、棋子、棋盘边界和 ChineseChessRuleEngine。
 - engine-native 新增 NativeChineseChessEngine、可替换 bridge 与受互斥锁保护的原生句柄表。
 - JNI 已覆盖创建、释放、当前方、重置、走子、悔棋、合法着、胜负、棋盘查询和序列化往返。
 - Kotlin JVM 测试覆盖稳定编码、错误映射、句柄传递、幂等释放、关闭后拒绝调用及畸形数组。
+- App 新增不可变 90 点棋盘状态与 ChineseChessGameViewModel，由 ViewModel 独占并释放原生会话。
+- Compose 对局页新增横屏自适应棋盘、楚河汉界、棋子、选中态、合法落点、行棋方与终局反馈。
+- 本地双人对局已贯通选子、走子、悔棋和重开；AI、提示、计时和历史判定明确保持未接入。
+- 新增 6 个 ViewModel 测试、3 个棋盘坐标测试和 1 个已编译的 Compose 仪器测试。
+- App Lint 为 0 error、1 个锁定版本提示；Debug APK 与测试 APK 构建通过，权限仍不含 INTERNET。
 
 ## 0.1.0 Foundation（2026-09-12）
 

@@ -1,5 +1,28 @@
 <resources>
     <string name="app_name">棋术大师</string>
-    <string name="offline_tagline">纯单机离线</string>
-    <string name="foundation_title">工程底座</string>
+    <string name="chinese_chess_title">中国象棋</string>
+    <string name="local_two_player">本地双人 · 基础规则</string>
+    <string name="game_controls">对局操作</string>
+    <string name="red_to_move">红方行棋</string>
+    <string name="black_to_move">黑方行棋</string>
+    <string name="red_wins">红方胜</string>
+    <string name="black_wins">黑方胜</string>
+    <string name="draw">和棋</string>
+    <string name="engine_unavailable">规则引擎不可用，请重启应用</string>
+    <string name="select_piece_instruction">请选择当前行棋方的棋子</string>
+    <string name="selected_position">已选 (%1$d, %2$d)，合法落点 %3$d 个</string>
+    <string name="undo">悔棋</string>
+    <string name="restart">重开</string>
+    <string name="later_features">后续能力</string>
+    <string name="ai_not_available">人机对局 · 待接入</string>
+    <string name="hint_not_available">提示 · 待接入</string>
+    <string name="rules_scope_note">当前按行棋规则不含长将、长捉、自然限着与计时判定。</string>
+    <string name="feedback_select_own">请先选择己方棋子。</string>
+    <string name="feedback_wrong_side">当前不能操作对方棋子。</string>
+    <string name="feedback_illegal_move">该棋子不能走到此处。</string>
+    <string name="feedback_move_rejected">当前局面无法执行该操作。</string>
+    <string name="feedback_nothing_to_undo">当前没有可撤销的走子。</string>
+    <string name="feedback_move_undone">已撤销上一步。</string>
+    <string name="feedback_game_restarted">棋局已重开，红方先行。</string>
+    <string name="feedback_game_finished">棋局已经结束，请重开。</string>
 </resources>

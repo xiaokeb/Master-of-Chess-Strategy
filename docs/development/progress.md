@@ -13,13 +13,15 @@
 | JNI 安全门面 | 完成 | 健康检查、固定错误映射、3 个 JVM 测试和测试 APK 已落地 |
 | Compose 工程壳 | 完成 | 固定横屏、40/60 分栏、国风简约主题及 2 个状态测试 |
 | 文档与构建门禁 | 完成 | Lint、Debug APK、权限与测试结果已记录 |
+| 中国象棋规则纵切 | 完成 | 基础规则、句柄表、12 个 JNI 接口与 Kotlin 安全门面已贯通 |
+| 中国象棋对局 UI | 完成 | 不可变棋盘状态、ViewModel、选子、合法落点、走子、悔棋与重开已接入 |
 
 ## 已验证
 
-- JVM 单元测试：14 个通过。
+- JVM 单元测试：23 个通过，0 失败、0 跳过。
 - NDK：Clang 21，C++17，Android ARM64 测试目标编译和链接通过。
 - Gradle NDK：arm64-v8a、armeabi-v7a、x86、x86_64 构建通过。
-- Android：Lint 0 error，Debug APK 与 engine-native 测试 APK 构建通过。
+- Android：App Lint 0 error、1 个锁定版本更新提示；Debug APK、App 测试 APK 与 engine-native 测试 APK 构建通过。
 - 离线边界：Debug APK 不包含 android.permission.INTERNET。
 - JNI：ARM64 动态库已导出并核对 12 个 NativeBindings 符号。
 
@@ -31,7 +33,7 @@
 
 ## 下一节点
 
-1. 建立中国象棋不可变棋盘 UI 状态和对局 ViewModel，接入 NativeChineseChessEngine。
-2. 实现可操作的横屏棋盘与合法落点反馈，不提前加入 AI。
-3. 在设备或 AVD 可用后运行中国象棋与 NativeBridge 集成测试。
+1. 建立正式首页与模式入口导航，从中国象棋入口创建和释放对局会话。
+2. 设计本地对局自动保存与异常恢复，沿用 MOCX 版本边界并明确恢复失败路径。
+3. 在设备或 AVD 可用后运行 Compose、中国象棋与 NativeBridge 集成测试。
 4. 单独设计长将、长捉、长拦和自然限着历史判定，不与基础走法混写。
