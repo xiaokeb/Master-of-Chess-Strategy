@@ -126,7 +126,7 @@ internal fun ChineseChessDifficultyScreen(
 }
 
 @Composable
-private fun PageHeader(
+internal fun PageHeader(
     title: String,
     subtitle: String,
     onBack: () -> Unit,

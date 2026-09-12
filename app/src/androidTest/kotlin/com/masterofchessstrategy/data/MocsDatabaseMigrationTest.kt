@@ -49,6 +49,34 @@ class MocsDatabaseMigrationTest {
         migrated.close()
     }
 
+    @Test
+    fun migrateTwoToThreePreservesExistingTablesAndAddsSettings() {
+        helper.createDatabase(SETTINGS_DATABASE_NAME, 2).apply {
+            execSQL(
+                """
+                INSERT INTO last_game_selections (
+                    gameTypeCode,
+                    modeCode,
+                    difficultyCode,
+                    updatedAtEpochMillis
+                ) VALUES (0, 0, NULL, 100)
+                """.trimIndent(),
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            SETTINGS_DATABASE_NAME,
+            3,
+            true,
+            MocsDatabase.MIGRATION_2_3,
+        )
+
+        assertEquals(1, migrated.singleInt("SELECT COUNT(*) FROM last_game_selections"))
+        assertEquals(0, migrated.singleInt("SELECT COUNT(*) FROM app_settings"))
+        migrated.close()
+    }
+
     private fun SupportSQLiteDatabase.singleInt(query: String): Int =
         this.query(query).use { cursor ->
             check(cursor.moveToFirst())
@@ -57,5 +85,6 @@ class MocsDatabaseMigrationTest {
 
     private companion object {
         const val DATABASE_NAME = "migration-1-2-test"
+        const val SETTINGS_DATABASE_NAME = "migration-2-3-test"
     }
 }

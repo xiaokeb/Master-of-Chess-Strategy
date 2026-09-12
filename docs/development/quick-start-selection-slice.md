@@ -27,6 +27,6 @@
 
 ## 版本
 
-- Room schema：2。
+- 当前 Room schema：3；上次选择表由 schema 2 引入，schema 3 仅新增设置表。
 - 迁移：1 → 2，显式无损迁移。
 - 上次选择表：last_game_selections。

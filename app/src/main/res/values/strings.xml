@@ -62,4 +62,23 @@
     <string name="feedback_game_restored">已恢复上次棋局，悔棋从本次新走子开始。</string>
     <string name="feedback_restore_rejected">旧棋局不兼容或已损坏，已从标准局面开始。</string>
     <string name="feedback_save_failed">棋局保存失败，本局仍可继续。</string>
+    <string name="settings_title">设置</string>
+    <string name="settings_offline_summary">本地设置 · 自动保存</string>
+    <string name="settings_loading">正在读取设置…</string>
+    <string name="settings_saving">正在保存设置…</string>
+    <string name="settings_saved">设置已保存</string>
+    <string name="settings_load_recovered">旧设置无效，已恢复安全默认值</string>
+    <string name="settings_save_failed">保存失败，已恢复上次设置</string>
+    <string name="default_difficulty_title">默认难度</string>
+    <string name="default_difficulty_summary">仅作为已解锁人机模式的默认选择，不改变解锁条件。</string>
+    <string name="auto_continue_title">自动续局</string>
+    <string name="auto_continue_summary">AI 自动演局结束后按此偏好开始下一局。</string>
+    <string name="sound_title">音效</string>
+    <string name="sound_summary">控制后续落子、操作与胜负音效。</string>
+    <string name="game_duration_title">对局时长</string>
+    <string name="unlimited_duration">不限时</string>
+    <string name="duration_minutes">%1$d 分钟</string>
+    <string name="duration_decrease">减少 5 分钟</string>
+    <string name="duration_increase">增加 5 分钟</string>
+    <string name="settings_scope_note">当前保存并展示全局偏好；AI 自动续局、正式音效和超时判负将在对应能力接入后消费这些设置。</string>
 </resources>

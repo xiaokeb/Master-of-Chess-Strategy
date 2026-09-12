@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +23,7 @@ import com.masterofchessstrategy.R
 import com.masterofchessstrategy.navigation.HomeGameEntry
 
 internal const val HOME_CHINESE_CHESS_TAG = "home_chinese_chess"
+internal const val HOME_SETTINGS_TAG = "home_settings"
 
 internal data class LocalPlayerSummary(
     val rank: String,
@@ -42,6 +44,7 @@ internal fun HomeScreen(
     onGameSelected: (HomeGameEntry) -> Unit,
     quickStartEntries: Set<HomeGameEntry>,
     onQuickStart: (HomeGameEntry) -> Unit,
+    onSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(modifier = modifier.fillMaxSize()) {
@@ -58,6 +61,7 @@ internal fun HomeScreen(
                 ) {
                     PlayerSummaryCard(
                         summary = InitialPlayerSummary,
+                        onSettings = onSettings,
                         modifier = Modifier.weight(0.4f),
                     )
                     GameCatalog(
@@ -74,6 +78,7 @@ internal fun HomeScreen(
                 ) {
                     PlayerSummaryCard(
                         summary = InitialPlayerSummary,
+                        onSettings = onSettings,
                         modifier = Modifier.fillMaxWidth(),
                     )
                     GameCatalog(
@@ -91,6 +96,7 @@ internal fun HomeScreen(
 @Composable
 private fun PlayerSummaryCard(
     summary: LocalPlayerSummary,
+    onSettings: () -> Unit,
     modifier: Modifier,
 ) {
     Card(modifier = modifier) {
@@ -111,6 +117,12 @@ private fun PlayerSummaryCard(
             Text(stringResource(R.string.profile_wins, summary.wins))
             Text(stringResource(R.string.profile_stars, summary.stars))
             Text(stringResource(R.string.profile_score, summary.score))
+            OutlinedButton(
+                onClick = onSettings,
+                modifier = Modifier.testTag(HOME_SETTINGS_TAG),
+            ) {
+                Text(stringResource(R.string.settings_title))
+            }
         }
     }
 }

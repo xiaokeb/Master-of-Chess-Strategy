@@ -7,9 +7,9 @@
 - engine-native：C++17 规则核心、受控 JNI 入口和 Kotlin 安全门面。
 - tools/python：残局解析、验证、分级和打包工具。
 
-当前运行时分为两条单向数据流：Compose → NavHost → ChineseChessGameViewModel → engine-api → engine-native → JNI → C++ 规则核心；以及 ViewModel → GameSessionRepository → Room。Python 不进入 APK，只生成经过版本化格式校验的离线资源。
+当前运行时分为规则与本地数据两类单向数据流：Compose → NavHost → ChineseChessGameViewModel → engine-api → engine-native → JNI → C++ 规则核心；以及 ViewModel → GameSessionRepository / LastSelectionRepository / AppSettingsRepository → Room。Python 不进入 APK，只生成经过版本化格式校验的离线资源。
 
-应用不声明联网权限。活动对局已经通过统一 Repository 和 Room 持久化；后续设置、成长和棋谱继续复用该边界，规则引擎不直接依赖数据库。
+应用不声明联网权限。活动对局、上次模式与全局设置已经通过独立 Repository 和 Room 表持久化；后续成长和棋谱继续复用该边界，规则引擎不直接依赖数据库。
 
 ## 依赖方向
 

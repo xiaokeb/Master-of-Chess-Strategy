@@ -36,6 +36,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.masterofchessstrategy.R
 import com.masterofchessstrategy.data.MocsDatabase
+import com.masterofchessstrategy.data.AppSettings
+import com.masterofchessstrategy.data.RoomAppSettingsRepository
 import com.masterofchessstrategy.data.RoomGameSessionRepository
 import com.masterofchessstrategy.data.RoomLastSelectionRepository
 import com.masterofchessstrategy.data.StoredGameMode
@@ -51,12 +53,14 @@ import com.masterofchessstrategy.navigation.AppDestination
 import com.masterofchessstrategy.navigation.AppNavigationViewModel
 import com.masterofchessstrategy.navigation.HomeGameEntry
 import com.masterofchessstrategy.navigation.QuickStartDestination
+import com.masterofchessstrategy.settings.AppSettingsViewModel
 import com.masterofchessstrategy.ui.theme.MocsTheme
 
 internal const val UNDO_BUTTON_TAG = "undo_button"
 internal const val RESTART_BUTTON_TAG = "restart_button"
 internal const val AI_BUTTON_TAG = "ai_button"
 internal const val GAME_BACK_BUTTON_TAG = "game_back_button"
+internal const val GAME_SETTINGS_BUTTON_TAG = "game_settings_button"
 
 @Composable
 fun MasterOfChessStrategyApp() {
@@ -70,12 +74,19 @@ fun MasterOfChessStrategyApp() {
         val selectionRepository = remember {
             RoomLastSelectionRepository(database.lastSelectionDao())
         }
+        val settingsRepository = remember {
+            RoomAppSettingsRepository(database.appSettingsDao())
+        }
         val navigationFactory = remember(selectionRepository) {
             AppNavigationViewModel.factory(selectionRepository)
         }
         val navigationViewModel: AppNavigationViewModel = viewModel(
             factory = navigationFactory,
         )
+        val settingsFactory = remember(settingsRepository) {
+            AppSettingsViewModel.factory(settingsRepository)
+        }
+        val settingsViewModel: AppSettingsViewModel = viewModel(factory = settingsFactory)
         val quickStartEntries = if (
             navigationViewModel.chineseChessQuickStartDestination() == null
         ) {
@@ -114,6 +125,11 @@ fun MasterOfChessStrategyApp() {
                             navController.navigate(destination)
                         }
                     },
+                    onSettings = {
+                        navController.navigate(AppDestination.SETTINGS) {
+                            launchSingleTop = true
+                        }
+                    },
                 )
             }
             composable(AppDestination.CHINESE_CHESS_MODES) {
@@ -147,6 +163,23 @@ fun MasterOfChessStrategyApp() {
                     onUndo = gameViewModel::undo,
                     onRestart = gameViewModel::restart,
                     onBack = navController::popBackStack,
+                    settings = settingsViewModel.uiState.settings,
+                    onSettings = {
+                        navController.navigate(AppDestination.SETTINGS) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
+            }
+            composable(AppDestination.SETTINGS) {
+                SettingsScreen(
+                    state = settingsViewModel.uiState,
+                    onBack = navController::popBackStack,
+                    onDefaultDifficulty = settingsViewModel::setDefaultDifficulty,
+                    onAutoContinue = settingsViewModel::setAutoContinue,
+                    onSoundEnabled = settingsViewModel::setSoundEnabled,
+                    onTimeLimitEnabled = settingsViewModel::setTimeLimitEnabled,
+                    onAdjustDuration = settingsViewModel::adjustDuration,
                 )
             }
         }
@@ -160,6 +193,8 @@ internal fun ChineseChessGameScreen(
     onUndo: () -> Unit,
     onRestart: () -> Unit,
     onBack: () -> Unit,
+    settings: AppSettings = AppSettings.DEFAULT,
+    onSettings: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     BackHandler(enabled = state.isRestoring || state.isPersisting) {
@@ -173,7 +208,7 @@ internal fun ChineseChessGameScreen(
                     .padding(horizontal = 20.dp, vertical = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                GameHeader(state, onBack)
+                GameHeader(state, settings, onBack, onSettings)
                 HorizontalDivider()
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                     if (maxWidth >= 720.dp) {
@@ -226,7 +261,9 @@ internal fun ChineseChessGameScreen(
 @Composable
 private fun GameHeader(
     state: ChineseChessGameUiState,
+    settings: AppSettings,
     onBack: () -> Unit,
+    onSettings: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -253,10 +290,27 @@ private fun GameHeader(
                 )
             }
         }
-        Text(
-            text = gameStatusText(state),
-            style = MaterialTheme.typography.titleLarge,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = gameStatusText(state),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                Text(
+                    text = settings.gameDurationMinutes?.let {
+                        stringResource(R.string.duration_minutes, it)
+                    } ?: stringResource(R.string.unlimited_duration),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            TextButton(
+                onClick = onSettings,
+                enabled = !state.isRestoring && !state.isPersisting,
+                modifier = Modifier.testTag(GAME_SETTINGS_BUTTON_TAG),
+            ) {
+                Text(stringResource(R.string.settings_title))
+            }
+        }
     }
 }
 

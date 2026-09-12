@@ -8,6 +8,7 @@ internal object AppDestination {
     const val CHINESE_CHESS_MODES = "chinese-chess/modes"
     const val CHINESE_CHESS_DIFFICULTY = "chinese-chess/difficulty"
     const val CHINESE_CHESS_GAME = "chinese-chess/game"
+    const val SETTINGS = "settings"
 }
 
 /** Five first-level cards required by the product layout. */

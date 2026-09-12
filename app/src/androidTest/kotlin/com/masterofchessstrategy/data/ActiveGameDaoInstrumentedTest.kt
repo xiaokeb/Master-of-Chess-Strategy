@@ -67,4 +67,22 @@ class ActiveGameDaoInstrumentedTest {
         )
         assertEquals(null, database.activeGameDao().find(GameType.CHINESE_CHESS.code))
     }
+
+    @Test
+    fun settingsAreIndependentFromGameAndSelection() = runBlocking {
+        val expected = AppSettingsEntity(
+            id = 0,
+            defaultDifficultyCode = 0,
+            autoContinueEnabled = false,
+            soundEnabled = true,
+            gameDurationMinutes = null,
+            updatedAtEpochMillis = 101L,
+        )
+
+        database.appSettingsDao().upsert(expected)
+
+        assertEquals(expected, database.appSettingsDao().find())
+        assertEquals(null, database.activeGameDao().find(GameType.CHINESE_CHESS.code))
+        assertEquals(null, database.lastSelectionDao().find(GameType.CHINESE_CHESS.code))
+    }
 }
