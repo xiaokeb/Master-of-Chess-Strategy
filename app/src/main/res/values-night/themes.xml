@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.MasterofChessStrategy" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:colorAccent">@color/teal_200</item>
+        <item name="android:statusBarColor">@color/purple_700</item>
+        <item name="android:navigationBarColor">@color/black</item>
+    </style>
+</resources>

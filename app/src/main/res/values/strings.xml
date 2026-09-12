@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">棋术大师</string>
+    <string name="offline_tagline">纯单机离线</string>
+    <string name="foundation_title">工程底座</string>
+</resources>
