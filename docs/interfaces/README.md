@@ -24,3 +24,11 @@ NativeEngineStatusProvider.check 是应用当前唯一直接使用的原生入�
 ## 当前边界
 
 健康检查只证明 Kotlin、JNI 与 C++ 链路可连接，不代表任一具体棋种规则已经实现。句柄管理、规则动作转换和正式序列化协议在对应棋种切片中补充。
+
+## 中国象棋核心
+
+首个 C++ 切片提供 ChineseChessEngine，并实现统一 RuleEngine。EngineAction kind=0 表示棋盘移动，四个参数依次为起点 x/y 和终点 x/y。坐标、棋子稳定编码和当前边界见 ../requirements/chinese-chess-rules.md。
+
+局面格式当前为 96 字节：MOCX 魔数 4 字节、版本 1 字节、当前方 1 字节、90 个棋盘点位。空位编码为 0；棋子低 3 位为 PieceType 1..7，最高位表示黑方。未知版本返回 unsupported，长度、魔数或编码损坏返回 corrupted_data，无将帅或重复将帅返回 invalid_state。
+
+此格式为内部版本 1，尚未承诺与第三方 FEN 互转。接入真实存档前必须增加往返、迁移和损坏输入回归样例。

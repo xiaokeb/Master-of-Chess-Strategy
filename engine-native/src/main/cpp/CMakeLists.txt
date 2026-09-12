@@ -13,12 +13,20 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_library(
     mocs_engine_core
     STATIC
+    src/chinese_chess.cpp
     src/health_check.cpp
 )
 target_include_directories(
     mocs_engine_core
     PUBLIC
     include
+)
+target_compile_options(
+    mocs_engine_core
+    PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
 )
 set_target_properties(
     mocs_engine_core
@@ -35,6 +43,13 @@ target_link_libraries(
     mocs_engine_native
     PRIVATE
     mocs_engine_core
+)
+target_compile_options(
+    mocs_engine_native
+    PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
 )
 
 option(MOCS_BUILD_TESTS "Build Android native test targets" OFF)
