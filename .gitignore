@@ -1,0 +1,39 @@
+# IDE and local machine state
+.idea/
+*.iml
+.DS_Store
+local.properties
+
+# Gradle and Android build output
+.gradle/
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+.build/
+
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Signing and private configuration
+*.jks
+*.keystore
+*.p12
+*.properties.local
+.env
+.env.*
+
+# Generated or locally sourced content
+content/raw/
+content/generated/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
