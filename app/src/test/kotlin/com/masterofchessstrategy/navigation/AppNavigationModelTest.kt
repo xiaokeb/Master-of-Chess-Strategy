@@ -1,5 +1,7 @@
 package com.masterofchessstrategy.navigation
 
+import com.masterofchessstrategy.data.LastGameSelection
+import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.engine.GameType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -48,5 +50,20 @@ class AppNavigationModelTest {
     fun allAiDifficultiesStayLockedBeforeTutorialExists() {
         assertEquals(4, ChineseChessDifficulties.size)
         assertTrue(ChineseChessDifficulties.none { it.isUnlocked })
+    }
+
+    @Test
+    fun lockedHistoricalModeReturnsToModeSelection() {
+        val selection = LastGameSelection(
+            gameType = GameType.CHINESE_CHESS,
+            mode = StoredGameMode.TUTORIAL,
+            difficulty = null,
+            updatedAtEpochMillis = 1L,
+        )
+
+        assertEquals(
+            QuickStartDestination.MODE_SELECTION,
+            selection.quickStartDestination(),
+        )
     }
 }

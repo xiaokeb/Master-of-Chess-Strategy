@@ -37,6 +37,7 @@
     <string name="lanzhou_mahjong_title">兰州麻将</string>
     <string name="lanzhou_traditional_title">兰州特色棋</string>
     <string name="enter_modes">进入模式选择</string>
+    <string name="enter_modes_or_quick_start">点击选择模式 · 长按快速进入上次模式</string>
     <string name="future_slice">后续切片开放</string>
     <string name="choose_mode">选择模式</string>
     <string name="human_vs_ai">普通人机</string>

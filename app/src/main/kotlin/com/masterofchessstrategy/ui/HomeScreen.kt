@@ -1,6 +1,6 @@
 package com.masterofchessstrategy.ui
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -40,6 +40,8 @@ private val InitialPlayerSummary = LocalPlayerSummary(
 @Composable
 internal fun HomeScreen(
     onGameSelected: (HomeGameEntry) -> Unit,
+    quickStartEntries: Set<HomeGameEntry>,
+    onQuickStart: (HomeGameEntry) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(modifier = modifier.fillMaxSize()) {
@@ -60,6 +62,8 @@ internal fun HomeScreen(
                     )
                     GameCatalog(
                         onGameSelected = onGameSelected,
+                        quickStartEntries = quickStartEntries,
+                        onQuickStart = onQuickStart,
                         modifier = Modifier.weight(0.6f),
                     )
                 }
@@ -74,6 +78,8 @@ internal fun HomeScreen(
                     )
                     GameCatalog(
                         onGameSelected = onGameSelected,
+                        quickStartEntries = quickStartEntries,
+                        onQuickStart = onQuickStart,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
@@ -112,6 +118,8 @@ private fun PlayerSummaryCard(
 @Composable
 private fun GameCatalog(
     onGameSelected: (HomeGameEntry) -> Unit,
+    quickStartEntries: Set<HomeGameEntry>,
+    onQuickStart: (HomeGameEntry) -> Unit,
     modifier: Modifier,
 ) {
     Column(
@@ -131,6 +139,11 @@ private fun GameCatalog(
                     GameEntryCard(
                         entry = entry,
                         onClick = { onGameSelected(entry) },
+                        onLongClick = if (entry in quickStartEntries) {
+                            { onQuickStart(entry) }
+                        } else {
+                            null
+                        },
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -146,6 +159,7 @@ private fun GameCatalog(
 private fun GameEntryCard(
     entry: HomeGameEntry,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)?,
     modifier: Modifier,
 ) {
     Card(
@@ -157,7 +171,11 @@ private fun GameEntryCard(
                     Modifier
                 },
             )
-            .clickable(enabled = entry.isAvailable, onClick = onClick),
+            .combinedClickable(
+                enabled = entry.isAvailable,
+                onClick = onClick,
+                onLongClick = onLongClick,
+            ),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -169,7 +187,11 @@ private fun GameEntryCard(
             )
             Text(
                 text = if (entry.isAvailable) {
-                    stringResource(R.string.enter_modes)
+                    if (onLongClick == null) {
+                        stringResource(R.string.enter_modes)
+                    } else {
+                        stringResource(R.string.enter_modes_or_quick_start)
+                    }
                 } else {
                     stringResource(R.string.future_slice)
                 },

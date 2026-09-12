@@ -23,7 +23,7 @@
 
 ## 版本
 
-- Room schema：1。
+- Room schema：2；活动对局表结构仍为 schema 1 定义，schema 2 仅新增上次选择表。
 - 活动会话信封：1。
 - 中国象棋引擎格式：MOCX 1。
 - Room：2.8.5。

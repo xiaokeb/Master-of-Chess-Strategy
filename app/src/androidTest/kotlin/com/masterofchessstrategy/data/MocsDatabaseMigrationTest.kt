@@ -1,0 +1,61 @@
+package com.masterofchessstrategy.data
+
+import androidx.room.testing.MigrationTestHelper
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.assertEquals
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class MocsDatabaseMigrationTest {
+    @get:Rule
+    val helper = MigrationTestHelper(
+        InstrumentationRegistry.getInstrumentation(),
+        MocsDatabase::class.java,
+    )
+
+    @Test
+    fun migrateOneToTwoPreservesSessionAndAddsSelectionTable() {
+        helper.createDatabase(DATABASE_NAME, 1).apply {
+            execSQL(
+                """
+                INSERT INTO active_games (
+                    gameTypeCode,
+                    modeCode,
+                    difficultyCode,
+                    envelopeVersion,
+                    engineFormatVersion,
+                    engineState,
+                    updatedAtEpochMillis
+                ) VALUES (?, ?, NULL, 1, 1, ?, 99)
+                """.trimIndent(),
+                arrayOf(0, 0, byteArrayOf(1, 2, 3)),
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            DATABASE_NAME,
+            2,
+            true,
+            MocsDatabase.MIGRATION_1_2,
+        )
+
+        assertEquals(1, migrated.singleInt("SELECT COUNT(*) FROM active_games"))
+        assertEquals(0, migrated.singleInt("SELECT COUNT(*) FROM last_game_selections"))
+        migrated.close()
+    }
+
+    private fun SupportSQLiteDatabase.singleInt(query: String): Int =
+        this.query(query).use { cursor ->
+            check(cursor.moveToFirst())
+            cursor.getInt(0)
+        }
+
+    private companion object {
+        const val DATABASE_NAME = "migration-1-2-test"
+    }
+}

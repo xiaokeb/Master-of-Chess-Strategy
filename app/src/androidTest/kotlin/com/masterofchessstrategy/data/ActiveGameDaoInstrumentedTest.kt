@@ -49,4 +49,22 @@ class ActiveGameDaoInstrumentedTest {
         assertEquals(expected.copy(engineState = byteArrayOf()), actual.copy(engineState = byteArrayOf()))
         assertArrayEquals(expected.engineState, actual.engineState)
     }
+
+    @Test
+    fun lastSelectionIsIndependentFromActiveGame() = runBlocking {
+        val expected = LastSelectionEntity(
+            gameTypeCode = GameType.CHINESE_CHESS.code,
+            modeCode = StoredGameMode.HUMAN_VS_AI.code,
+            difficultyCode = null,
+            updatedAtEpochMillis = 100L,
+        )
+
+        database.lastSelectionDao().upsert(expected)
+
+        assertEquals(
+            expected,
+            database.lastSelectionDao().find(GameType.CHINESE_CHESS.code),
+        )
+        assertEquals(null, database.activeGameDao().find(GameType.CHINESE_CHESS.code))
+    }
 }

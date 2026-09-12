@@ -37,6 +37,8 @@ import androidx.navigation.compose.rememberNavController
 import com.masterofchessstrategy.R
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.RoomGameSessionRepository
+import com.masterofchessstrategy.data.RoomLastSelectionRepository
+import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessPiece
 import com.masterofchessstrategy.engine.ChineseChessPieceType
@@ -46,7 +48,9 @@ import com.masterofchessstrategy.game.ChineseChessFeedback
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 import com.masterofchessstrategy.game.ChineseChessGameViewModel
 import com.masterofchessstrategy.navigation.AppDestination
+import com.masterofchessstrategy.navigation.AppNavigationViewModel
 import com.masterofchessstrategy.navigation.HomeGameEntry
+import com.masterofchessstrategy.navigation.QuickStartDestination
 import com.masterofchessstrategy.ui.theme.MocsTheme
 
 internal const val UNDO_BUTTON_TAG = "undo_button"
@@ -58,6 +62,27 @@ internal const val GAME_BACK_BUTTON_TAG = "game_back_button"
 fun MasterOfChessStrategyApp() {
     MocsTheme {
         val navController = rememberNavController()
+        val context = LocalContext.current
+        val database = remember { MocsDatabase.getInstance(context) }
+        val gameSessionRepository = remember {
+            RoomGameSessionRepository(database.activeGameDao())
+        }
+        val selectionRepository = remember {
+            RoomLastSelectionRepository(database.lastSelectionDao())
+        }
+        val navigationFactory = remember(selectionRepository) {
+            AppNavigationViewModel.factory(selectionRepository)
+        }
+        val navigationViewModel: AppNavigationViewModel = viewModel(
+            factory = navigationFactory,
+        )
+        val quickStartEntries = if (
+            navigationViewModel.chineseChessQuickStartDestination() == null
+        ) {
+            emptySet()
+        } else {
+            setOf(HomeGameEntry.CHINESE_CHESS)
+        }
         NavHost(
             navController = navController,
             startDestination = AppDestination.HOME,
@@ -69,15 +94,41 @@ fun MasterOfChessStrategyApp() {
                             navController.navigate(AppDestination.CHINESE_CHESS_MODES)
                         }
                     },
+                    quickStartEntries = quickStartEntries,
+                    onQuickStart = { entry ->
+                        if (entry == HomeGameEntry.CHINESE_CHESS) {
+                            val destination = when (
+                                navigationViewModel.chineseChessQuickStartDestination()
+                            ) {
+                                QuickStartDestination.GAME -> AppDestination.CHINESE_CHESS_GAME
+                                QuickStartDestination.DIFFICULTY -> {
+                                    AppDestination.CHINESE_CHESS_DIFFICULTY
+                                }
+
+                                QuickStartDestination.MODE_SELECTION -> {
+                                    AppDestination.CHINESE_CHESS_MODES
+                                }
+
+                                null -> return@HomeScreen
+                            }
+                            navController.navigate(destination)
+                        }
+                    },
                 )
             }
             composable(AppDestination.CHINESE_CHESS_MODES) {
                 ChineseChessModeScreen(
                     onBack = navController::popBackStack,
                     onLocalGame = {
+                        navigationViewModel.recordChineseChessSelection(
+                            StoredGameMode.LOCAL_TWO_PLAYER,
+                        )
                         navController.navigate(AppDestination.CHINESE_CHESS_GAME)
                     },
                     onAiDifficulty = {
+                        navigationViewModel.recordChineseChessSelection(
+                            StoredGameMode.HUMAN_VS_AI,
+                        )
                         navController.navigate(AppDestination.CHINESE_CHESS_DIFFICULTY)
                     },
                 )
@@ -86,14 +137,8 @@ fun MasterOfChessStrategyApp() {
                 ChineseChessDifficultyScreen(onBack = navController::popBackStack)
             }
             composable(AppDestination.CHINESE_CHESS_GAME) {
-                val context = LocalContext.current
-                val repository = remember {
-                    RoomGameSessionRepository(
-                        MocsDatabase.getInstance(context).activeGameDao(),
-                    )
-                }
-                val factory = remember(repository) {
-                    ChineseChessGameViewModel.factory(repository)
+                val factory = remember(gameSessionRepository) {
+                    ChineseChessGameViewModel.factory(gameSessionRepository)
                 }
                 val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
                 ChineseChessGameScreen(
