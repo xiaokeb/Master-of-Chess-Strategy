@@ -77,6 +77,12 @@ private:
 
     using Board = std::array<std::optional<Piece>, board_size>;
 
+    enum class MoveNature : std::uint8_t {
+        idle = 0,
+        check = 1,
+        chase = 2,
+    };
+
     struct MoveRecord {
         std::int32_t from_x;
         std::int32_t from_y;
@@ -85,6 +91,20 @@ private:
         Piece moved;
         std::optional<Piece> captured;
         Side previous_side;
+        std::uint16_t previous_no_capture_plies;
+        GameResult previous_adjudicated_result;
+        MoveNature nature;
+    };
+
+    struct PositionState {
+        Board board;
+        Side side;
+
+        [[nodiscard]] bool operator==(
+            const PositionState& other
+        ) const noexcept {
+            return side == other.side && board == other.board;
+        }
     };
 
     [[nodiscard]] static bool is_inside(
@@ -120,6 +140,23 @@ private:
         const Board& board,
         Side side
     ) noexcept;
+    [[nodiscard]] static bool is_legal_capture(
+        const Board& board,
+        Side side,
+        std::int32_t from_x,
+        std::int32_t from_y,
+        std::int32_t to_x,
+        std::int32_t to_y
+    ) noexcept;
+    [[nodiscard]] static std::array<bool, board_size> unrooted_targets(
+        const Board& board,
+        Side attacker
+    ) noexcept;
+    [[nodiscard]] static MoveNature classify_move(
+        const Board& before,
+        const Board& after,
+        Side mover
+    ) noexcept;
     [[nodiscard]] bool is_legal_move(
         std::int32_t from_x,
         std::int32_t from_y,
@@ -128,10 +165,14 @@ private:
     ) const noexcept;
     [[nodiscard]] bool has_general(Side side) const noexcept;
     [[nodiscard]] bool has_legal_action() const noexcept;
+    void adjudicate_history() noexcept;
 
     Board board_{};
     Side current_side_{Side::red};
     std::vector<MoveRecord> history_;
+    std::vector<PositionState> position_history_;
+    std::uint16_t no_capture_plies_{0};
+    GameResult adjudicated_result_{GameResult::ongoing};
 };
 
 }  // namespace mocs::engine

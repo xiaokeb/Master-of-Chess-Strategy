@@ -16,7 +16,7 @@
     <string name="later_features">后续能力</string>
     <string name="ai_not_available">人机对局 · 待接入</string>
     <string name="hint_not_available">提示 · 待接入</string>
-    <string name="rules_scope_note">当前按行棋规则不含长将、长捉、自然限着与计时判定。</string>
+    <string name="rules_scope_note">已包含三次循环长将、直接无根子长捉与 60 回合自然限着；复杂杀着和子力交换棋例继续扩充。</string>
     <string name="feedback_select_own">请先选择己方棋子。</string>
     <string name="feedback_wrong_side">当前不能操作对方棋子。</string>
     <string name="feedback_illegal_move">该棋子不能走到此处。</string>

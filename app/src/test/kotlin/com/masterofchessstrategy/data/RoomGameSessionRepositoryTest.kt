@@ -30,7 +30,7 @@ class RoomGameSessionRepositoryTest {
         assertEquals(GameType.CHINESE_CHESS.code, stored.gameTypeCode)
         assertEquals(StoredGameMode.LOCAL_TWO_PLAYER.code, stored.modeCode)
         assertEquals(1, stored.envelopeVersion)
-        assertEquals(1, stored.engineFormatVersion)
+        assertEquals(2, stored.engineFormatVersion)
         assertArrayEquals(byteArrayOf(1, 2, 3), stored.engineState)
     }
 
@@ -43,7 +43,7 @@ class RoomGameSessionRepositoryTest {
                 modeCode = StoredGameMode.LOCAL_TWO_PLAYER.code,
                 difficultyCode = null,
                 envelopeVersion = 1,
-                engineFormatVersion = 1,
+                engineFormatVersion = 2,
                 engineState = storedBytes,
                 updatedAtEpochMillis = 84L,
             ),

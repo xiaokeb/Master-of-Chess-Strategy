@@ -90,7 +90,7 @@ internal class RoomGameSessionRepository(
 
     private companion object {
         const val CURRENT_ENVELOPE_VERSION = 1
-        const val CHINESE_CHESS_ENGINE_FORMAT_VERSION = 1
+        const val CHINESE_CHESS_ENGINE_FORMAT_VERSION = 2
         const val MAX_ENGINE_STATE_BYTES = 64 * 1024
     }
 }

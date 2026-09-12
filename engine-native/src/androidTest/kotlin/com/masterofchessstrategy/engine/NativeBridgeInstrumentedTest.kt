@@ -32,6 +32,9 @@ class NativeBridgeInstrumentedTest {
             )
 
             val initial = engine.serialize()
+            assertEquals('M'.code.toByte(), initial[0])
+            assertEquals(2, initial[4].toInt())
+            assertEquals(GameType.CHINESE_CHESS.code, initial[5].toInt())
             assertEquals(
                 ActionResult.Accepted,
                 engine.apply(
@@ -44,6 +47,14 @@ class NativeBridgeInstrumentedTest {
             assertTrue(engine.undo())
             assertTrue(initial.contentEquals(engine.serialize()))
             assertEquals(RestoreResult.Restored, engine.restore(initial))
+
+            val corrupted = initial.copyOf()
+            corrupted[20] = (corrupted[20].toInt() xor 1).toByte()
+            assertEquals(
+                RestoreResult.Rejected(EngineError.CORRUPTED_DATA),
+                engine.restore(corrupted),
+            )
+            assertTrue(initial.contentEquals(engine.serialize()))
         }
     }
 }

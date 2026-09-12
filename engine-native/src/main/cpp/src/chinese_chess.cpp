@@ -14,8 +14,103 @@ constexpr std::array<std::uint8_t, 4> position_magic{
     'C',
     'X',
 };
-constexpr std::uint8_t position_version = 1;
-constexpr std::size_t position_header_size = 6;
+constexpr std::uint8_t position_version = 2;
+constexpr std::uint8_t position_game_type =
+    static_cast<std::uint8_t>(GameType::chinese_chess);
+constexpr std::size_t position_header_size = 12;
+constexpr std::size_t checksum_size = 4;
+constexpr std::size_t move_record_size = 11;
+constexpr std::size_t maximum_history_size = 4096;
+constexpr std::uint16_t natural_limit_plies = 120;
+
+void append_u16(
+    std::vector<std::uint8_t>& data,
+    const std::uint16_t value
+) {
+    data.push_back(static_cast<std::uint8_t>(value & 0xffU));
+    data.push_back(static_cast<std::uint8_t>((value >> 8U) & 0xffU));
+}
+
+void append_u32(
+    std::vector<std::uint8_t>& data,
+    const std::uint32_t value
+) {
+    for (std::uint32_t shift = 0; shift < 32U; shift += 8U) {
+        data.push_back(
+            static_cast<std::uint8_t>((value >> shift) & 0xffU)
+        );
+    }
+}
+
+[[nodiscard]] std::uint16_t read_u16(
+    const std::vector<std::uint8_t>& data,
+    const std::size_t offset
+) noexcept {
+    return static_cast<std::uint16_t>(
+        static_cast<std::uint16_t>(data[offset]) |
+        (static_cast<std::uint16_t>(data[offset + 1]) << 8U)
+    );
+}
+
+[[nodiscard]] std::uint32_t read_u32(
+    const std::vector<std::uint8_t>& data,
+    const std::size_t offset
+) noexcept {
+    std::uint32_t value = 0;
+    for (std::uint32_t byte = 0; byte < 4U; ++byte) {
+        value |= static_cast<std::uint32_t>(data[offset + byte])
+            << (byte * 8U);
+    }
+    return value;
+}
+
+[[nodiscard]] std::uint32_t crc32(
+    const std::vector<std::uint8_t>& data,
+    const std::size_t length
+) noexcept {
+    std::uint32_t crc = 0xffffffffU;
+    for (std::size_t index = 0; index < length; ++index) {
+        crc ^= data[index];
+        for (std::uint32_t bit = 0; bit < 8U; ++bit) {
+            const auto mask = static_cast<std::uint32_t>(
+                -static_cast<std::int32_t>(crc & 1U)
+            );
+            crc = (crc >> 1U) ^ (0xedb88320U & mask);
+        }
+    }
+    return ~crc;
+}
+
+[[nodiscard]] std::uint8_t encode_piece(
+    const std::optional<Piece>& piece
+) noexcept {
+    if (!piece) {
+        return 0;
+    }
+    const auto side_bit = piece->side == Side::black
+        ? static_cast<std::uint8_t>(0x80)
+        : static_cast<std::uint8_t>(0);
+    return side_bit | static_cast<std::uint8_t>(piece->type);
+}
+
+[[nodiscard]] std::optional<Piece> decode_piece(
+    const std::uint8_t encoded
+) noexcept {
+    if (encoded == 0 || (encoded & 0x78U) != 0) {
+        return std::nullopt;
+    }
+    const auto type_code = static_cast<std::uint8_t>(encoded & 0x07U);
+    if (type_code < static_cast<std::uint8_t>(PieceType::general) ||
+        type_code > static_cast<std::uint8_t>(PieceType::soldier)) {
+        return std::nullopt;
+    }
+    const auto side = (encoded & 0x80U) == 0 ? Side::red : Side::black;
+    return Piece{static_cast<PieceType>(type_code), side};
+}
+
+[[nodiscard]] bool is_valid_result_code(const std::uint8_t code) noexcept {
+    return code <= static_cast<std::uint8_t>(GameResult::draw);
+}
 
 }  // namespace
 
@@ -46,7 +141,10 @@ std::uint8_t ChineseChessEngine::current_player() const noexcept {
 void ChineseChessEngine::reset() {
     board_.fill(std::nullopt);
     history_.clear();
+    position_history_.clear();
     current_side_ = Side::red;
+    no_capture_plies_ = 0;
+    adjudicated_result_ = GameResult::ongoing;
 
     constexpr std::array<PieceType, board_width> back_rank{
         PieceType::chariot,
@@ -74,11 +172,15 @@ void ChineseChessEngine::reset() {
         board_[index(x, 3)] = Piece{PieceType::soldier, Side::black};
         board_[index(x, 6)] = Piece{PieceType::soldier, Side::red};
     }
+    position_history_.push_back(PositionState{board_, current_side_});
 }
 
 ActionResult ChineseChessEngine::apply(const EngineAction& action) {
     if (action.kind != board_move_action_kind) {
         return ActionResult{false, EngineError::unsupported};
+    }
+    if (game_result() != GameResult::ongoing) {
+        return ActionResult{false, EngineError::invalid_state};
     }
 
     const auto [from_x, from_y, to_x, to_y] = action.arguments;
@@ -89,6 +191,10 @@ ActionResult ChineseChessEngine::apply(const EngineAction& action) {
     const auto from = index(from_x, from_y);
     const auto to = index(to_x, to_y);
     const auto moving = *board_[from];
+    auto next = board_;
+    next[to] = moving;
+    next[from].reset();
+    const auto nature = classify_move(board_, next, current_side_);
     history_.push_back(MoveRecord{
         from_x,
         from_y,
@@ -97,11 +203,18 @@ ActionResult ChineseChessEngine::apply(const EngineAction& action) {
         moving,
         board_[to],
         current_side_,
+        no_capture_plies_,
+        adjudicated_result_,
+        nature,
     });
 
-    board_[to] = moving;
-    board_[from].reset();
+    no_capture_plies_ = board_[to]
+        ? static_cast<std::uint16_t>(0)
+        : static_cast<std::uint16_t>(no_capture_plies_ + 1U);
+    board_ = next;
     current_side_ = opposite(current_side_);
+    position_history_.push_back(PositionState{board_, current_side_});
+    adjudicate_history();
     return ActionResult{true, EngineError::none};
 }
 
@@ -115,6 +228,11 @@ bool ChineseChessEngine::undo() {
     board_[index(move.from_x, move.from_y)] = move.moved;
     board_[index(move.to_x, move.to_y)] = move.captured;
     current_side_ = move.previous_side;
+    no_capture_plies_ = move.previous_no_capture_plies;
+    adjudicated_result_ = move.previous_adjudicated_result;
+    if (position_history_.size() > 1) {
+        position_history_.pop_back();
+    }
     return true;
 }
 
@@ -147,6 +265,9 @@ GameResult ChineseChessEngine::game_result() const noexcept {
     if (!has_general(Side::black)) {
         return GameResult::first_player_win;
     }
+    if (adjudicated_result_ != GameResult::ongoing) {
+        return adjudicated_result_;
+    }
     if (has_legal_action()) {
         return GameResult::ongoing;
     }
@@ -157,30 +278,50 @@ GameResult ChineseChessEngine::game_result() const noexcept {
 
 std::vector<std::uint8_t> ChineseChessEngine::serialize() const {
     std::vector<std::uint8_t> data;
-    data.reserve(position_header_size + board_size);
+    if (history_.size() > maximum_history_size) {
+        return {};
+    }
+    data.reserve(
+        position_header_size + board_size +
+        history_.size() * move_record_size + checksum_size
+    );
     data.insert(data.end(), position_magic.begin(), position_magic.end());
     data.push_back(position_version);
+    data.push_back(position_game_type);
     data.push_back(static_cast<std::uint8_t>(current_side_));
+    append_u16(data, no_capture_plies_);
+    data.push_back(static_cast<std::uint8_t>(adjudicated_result_));
+    append_u16(data, static_cast<std::uint16_t>(history_.size()));
 
     for (const auto& piece : board_) {
-        if (!piece) {
-            data.push_back(0);
-            continue;
-        }
-        const auto side_bit = piece->side == Side::black
-            ? static_cast<std::uint8_t>(0x80)
-            : static_cast<std::uint8_t>(0);
-        data.push_back(
-            side_bit | static_cast<std::uint8_t>(piece->type)
-        );
+        data.push_back(encode_piece(piece));
     }
+    for (const auto& move : history_) {
+        data.push_back(static_cast<std::uint8_t>(move.from_x));
+        data.push_back(static_cast<std::uint8_t>(move.from_y));
+        data.push_back(static_cast<std::uint8_t>(move.to_x));
+        data.push_back(static_cast<std::uint8_t>(move.to_y));
+        data.push_back(encode_piece(move.moved));
+        data.push_back(encode_piece(move.captured));
+        data.push_back(static_cast<std::uint8_t>(move.previous_side));
+        append_u16(data, move.previous_no_capture_plies);
+        data.push_back(
+            static_cast<std::uint8_t>(move.previous_adjudicated_result)
+        );
+        data.push_back(static_cast<std::uint8_t>(move.nature));
+    }
+    append_u32(data, crc32(data, data.size()));
     return data;
 }
 
 RestoreResult ChineseChessEngine::restore(
     const std::vector<std::uint8_t>& data
 ) {
-    if (data.size() != position_header_size + board_size) {
+    if (data.size() < position_header_size + board_size + checksum_size) {
+        return RestoreResult{false, EngineError::corrupted_data};
+    }
+    const auto payload_size = data.size() - checksum_size;
+    if (read_u32(data, payload_size) != crc32(data, payload_size)) {
         return RestoreResult{false, EngineError::corrupted_data};
     }
     if (!std::equal(position_magic.begin(), position_magic.end(), data.begin())) {
@@ -189,7 +330,24 @@ RestoreResult ChineseChessEngine::restore(
     if (data[4] != position_version) {
         return RestoreResult{false, EngineError::unsupported};
     }
-    if (data[5] > static_cast<std::uint8_t>(Side::black)) {
+    if (data[5] != position_game_type) {
+        return RestoreResult{false, EngineError::unsupported};
+    }
+    if (data[6] > static_cast<std::uint8_t>(Side::black)) {
+        return RestoreResult{false, EngineError::corrupted_data};
+    }
+    const auto restored_no_capture_plies = read_u16(data, 7);
+    if (restored_no_capture_plies > natural_limit_plies) {
+        return RestoreResult{false, EngineError::corrupted_data};
+    }
+    if (!is_valid_result_code(data[9])) {
+        return RestoreResult{false, EngineError::corrupted_data};
+    }
+    const auto history_size = read_u16(data, 10);
+    if (history_size > maximum_history_size ||
+        data.size() != position_header_size + board_size +
+            static_cast<std::size_t>(history_size) * move_record_size +
+            checksum_size) {
         return RestoreResult{false, EngineError::corrupted_data};
     }
 
@@ -200,21 +358,13 @@ RestoreResult ChineseChessEngine::restore(
         if (encoded == 0) {
             continue;
         }
-        if ((encoded & 0x78U) != 0) {
+        const auto piece = decode_piece(encoded);
+        if (encoded != 0 && !piece) {
             return RestoreResult{false, EngineError::corrupted_data};
         }
-
-        const auto type_code = static_cast<std::uint8_t>(encoded & 0x07U);
-        if (type_code < static_cast<std::uint8_t>(PieceType::general) ||
-            type_code > static_cast<std::uint8_t>(PieceType::soldier)) {
-            return RestoreResult{false, EngineError::corrupted_data};
-        }
-
-        const auto side = (encoded & 0x80U) == 0 ? Side::red : Side::black;
-        const auto type = static_cast<PieceType>(type_code);
-        restored[square] = Piece{type, side};
-        if (type == PieceType::general) {
-            ++general_counts[static_cast<std::size_t>(side)];
+        restored[square] = piece;
+        if (piece && piece->type == PieceType::general) {
+            ++general_counts[static_cast<std::size_t>(piece->side)];
         }
     }
 
@@ -224,9 +374,82 @@ RestoreResult ChineseChessEngine::restore(
         return RestoreResult{false, EngineError::invalid_state};
     }
 
+    std::vector<MoveRecord> restored_history;
+    restored_history.reserve(history_size);
+    auto offset = position_header_size + board_size;
+    for (std::size_t move_index = 0; move_index < history_size; ++move_index) {
+        const auto from_x = static_cast<std::int32_t>(data[offset]);
+        const auto from_y = static_cast<std::int32_t>(data[offset + 1]);
+        const auto to_x = static_cast<std::int32_t>(data[offset + 2]);
+        const auto to_y = static_cast<std::int32_t>(data[offset + 3]);
+        const auto moved_code = data[offset + 4];
+        const auto captured_code = data[offset + 5];
+        const auto moved = decode_piece(moved_code);
+        const auto captured = decode_piece(captured_code);
+        const auto previous_side_code = data[offset + 6];
+        const auto previous_no_capture_plies = read_u16(data, offset + 7);
+        const auto previous_result_code = data[offset + 9];
+        const auto nature_code = data[offset + 10];
+        if (!is_inside(from_x, from_y) ||
+            !is_inside(to_x, to_y) ||
+            (from_x == to_x && from_y == to_y) ||
+            !moved ||
+            (captured_code != 0 && !captured) ||
+            previous_side_code > static_cast<std::uint8_t>(Side::black) ||
+            previous_no_capture_plies > natural_limit_plies ||
+            !is_valid_result_code(previous_result_code) ||
+            nature_code > static_cast<std::uint8_t>(MoveNature::chase)) {
+            return RestoreResult{false, EngineError::corrupted_data};
+        }
+        const auto previous_side = static_cast<Side>(previous_side_code);
+        if (moved->side != previous_side ||
+            (captured && captured->side == previous_side)) {
+            return RestoreResult{false, EngineError::corrupted_data};
+        }
+        restored_history.push_back(MoveRecord{
+            from_x,
+            from_y,
+            to_x,
+            to_y,
+            *moved,
+            captured,
+            previous_side,
+            previous_no_capture_plies,
+            static_cast<GameResult>(previous_result_code),
+            static_cast<MoveNature>(nature_code),
+        });
+        offset += move_record_size;
+    }
+
+    auto working_board = restored;
+    auto working_side = static_cast<Side>(data[6]);
+    std::vector<PositionState> restored_positions(
+        static_cast<std::size_t>(history_size) + 1U
+    );
+    restored_positions.back() = PositionState{working_board, working_side};
+    for (std::size_t reverse = history_size; reverse > 0; --reverse) {
+        const auto& move = restored_history[reverse - 1];
+        const auto moved_at_target =
+            working_board[index(move.to_x, move.to_y)];
+        if (working_side != opposite(move.previous_side) ||
+            !moved_at_target ||
+            !(*moved_at_target == move.moved) ||
+            working_board[index(move.from_x, move.from_y)]) {
+            return RestoreResult{false, EngineError::corrupted_data};
+        }
+        working_board[index(move.from_x, move.from_y)] = move.moved;
+        working_board[index(move.to_x, move.to_y)] = move.captured;
+        working_side = move.previous_side;
+        restored_positions[reverse - 1] =
+            PositionState{working_board, working_side};
+    }
+
     board_ = restored;
-    current_side_ = static_cast<Side>(data[5]);
-    history_.clear();
+    current_side_ = static_cast<Side>(data[6]);
+    history_ = std::move(restored_history);
+    position_history_ = std::move(restored_positions);
+    no_capture_plies_ = restored_no_capture_plies;
+    adjudicated_result_ = static_cast<GameResult>(data[9]);
     return RestoreResult{true, EngineError::none};
 }
 
@@ -419,6 +642,115 @@ bool ChineseChessEngine::is_in_check(
     return false;
 }
 
+bool ChineseChessEngine::is_legal_capture(
+    const Board& board,
+    const Side side,
+    const std::int32_t from_x,
+    const std::int32_t from_y,
+    const std::int32_t to_x,
+    const std::int32_t to_y
+) noexcept {
+    const auto moving = board[index(from_x, from_y)];
+    const auto target = board[index(to_x, to_y)];
+    if (!moving ||
+        moving->side != side ||
+        !target ||
+        target->side == side ||
+        !piece_attacks_square(
+            board,
+            *moving,
+            from_x,
+            from_y,
+            to_x,
+            to_y
+        )) {
+        return false;
+    }
+    auto next = board;
+    next[index(to_x, to_y)] = moving;
+    next[index(from_x, from_y)].reset();
+    return !is_in_check(next, side);
+}
+
+std::array<bool, ChineseChessEngine::board_size>
+ChineseChessEngine::unrooted_targets(
+    const Board& board,
+    const Side attacker
+) noexcept {
+    std::array<bool, board_size> targets{};
+    for (std::int32_t target_y = 0; target_y < board_height; ++target_y) {
+        for (std::int32_t target_x = 0; target_x < board_width; ++target_x) {
+            const auto target = board[index(target_x, target_y)];
+            if (!target ||
+                target->side == attacker ||
+                target->type == PieceType::general) {
+                continue;
+            }
+            for (std::int32_t from_y = 0; from_y < board_height; ++from_y) {
+                for (std::int32_t from_x = 0; from_x < board_width; ++from_x) {
+                    const auto attacking_piece = board[index(from_x, from_y)];
+                    if (!attacking_piece ||
+                        attacking_piece->side != attacker ||
+                        attacking_piece->type == PieceType::general ||
+                        attacking_piece->type == PieceType::soldier ||
+                        !is_legal_capture(
+                            board,
+                            attacker,
+                            from_x,
+                            from_y,
+                            target_x,
+                            target_y
+                        )) {
+                        continue;
+                    }
+
+                    auto captured = board;
+                    captured[index(target_x, target_y)] = attacking_piece;
+                    captured[index(from_x, from_y)].reset();
+                    bool can_recapture = false;
+                    for (std::int32_t y = 0; y < board_height && !can_recapture; ++y) {
+                        for (std::int32_t x = 0; x < board_width; ++x) {
+                            if (is_legal_capture(
+                                captured,
+                                opposite(attacker),
+                                x,
+                                y,
+                                target_x,
+                                target_y
+                            )) {
+                                can_recapture = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!can_recapture) {
+                        targets[index(target_x, target_y)] = true;
+                    }
+                }
+            }
+        }
+    }
+    return targets;
+}
+
+ChineseChessEngine::MoveNature ChineseChessEngine::classify_move(
+    const Board& before,
+    const Board& after,
+    const Side mover
+) noexcept {
+    if (is_in_check(after, opposite(mover))) {
+        return MoveNature::check;
+    }
+    const auto previous_targets = unrooted_targets(before, mover);
+    const auto next_targets = unrooted_targets(after, mover);
+    for (std::size_t square = 0; square < board_size; ++square) {
+        if (next_targets[square] && !previous_targets[square]) {
+            return MoveNature::chase;
+        }
+    }
+    return MoveNature::idle;
+}
+
 bool ChineseChessEngine::is_legal_move(
     const std::int32_t from_x,
     const std::int32_t from_y,
@@ -482,6 +814,75 @@ bool ChineseChessEngine::has_legal_action() const noexcept {
         }
     }
     return false;
+}
+
+void ChineseChessEngine::adjudicate_history() noexcept {
+    if (no_capture_plies_ >= natural_limit_plies) {
+        adjudicated_result_ = GameResult::draw;
+        return;
+    }
+    if (position_history_.size() < 3) {
+        return;
+    }
+
+    std::array<std::size_t, 3> occurrences{};
+    std::size_t occurrence_count = 0;
+    const auto& current = position_history_.back();
+    for (std::size_t cursor = position_history_.size(); cursor > 0; --cursor) {
+        if (position_history_[cursor - 1] == current) {
+            occurrences[occurrence_count++] = cursor - 1;
+            if (occurrence_count == occurrences.size()) {
+                break;
+            }
+        }
+    }
+    if (occurrence_count < occurrences.size()) {
+        return;
+    }
+
+    const auto cycle_start = occurrences.back();
+    const auto all_moves_match = [this, cycle_start](
+        const Side side,
+        const auto predicate
+    ) noexcept {
+        bool found = false;
+        for (std::size_t i = cycle_start; i < history_.size(); ++i) {
+            const auto& move = history_[i];
+            if (move.previous_side != side) {
+                continue;
+            }
+            found = true;
+            if (!predicate(move.nature)) {
+                return false;
+            }
+        }
+        return found;
+    };
+    const auto is_check = [](const MoveNature nature) noexcept {
+        return nature == MoveNature::check;
+    };
+    const auto is_attack = [](const MoveNature nature) noexcept {
+        return nature == MoveNature::check || nature == MoveNature::chase;
+    };
+
+    const auto red_long_check = all_moves_match(Side::red, is_check);
+    const auto black_long_check = all_moves_match(Side::black, is_check);
+    if (red_long_check != black_long_check) {
+        adjudicated_result_ = red_long_check
+            ? GameResult::second_player_win
+            : GameResult::first_player_win;
+        return;
+    }
+
+    const auto red_attacks = all_moves_match(Side::red, is_attack);
+    const auto black_attacks = all_moves_match(Side::black, is_attack);
+    if (red_attacks != black_attacks) {
+        adjudicated_result_ = red_attacks
+            ? GameResult::second_player_win
+            : GameResult::first_player_win;
+        return;
+    }
+    adjudicated_result_ = GameResult::draw;
 }
 
 }  // namespace mocs::engine
