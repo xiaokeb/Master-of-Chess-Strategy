@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
@@ -21,9 +22,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -32,6 +35,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.masterofchessstrategy.R
+import com.masterofchessstrategy.data.MocsDatabase
+import com.masterofchessstrategy.data.RoomGameSessionRepository
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessPiece
 import com.masterofchessstrategy.engine.ChineseChessPieceType
@@ -81,7 +86,16 @@ fun MasterOfChessStrategyApp() {
                 ChineseChessDifficultyScreen(onBack = navController::popBackStack)
             }
             composable(AppDestination.CHINESE_CHESS_GAME) {
-                val gameViewModel: ChineseChessGameViewModel = viewModel()
+                val context = LocalContext.current
+                val repository = remember {
+                    RoomGameSessionRepository(
+                        MocsDatabase.getInstance(context).activeGameDao(),
+                    )
+                }
+                val factory = remember(repository) {
+                    ChineseChessGameViewModel.factory(repository)
+                }
+                val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
                 ChineseChessGameScreen(
                     state = gameViewModel.uiState,
                     onSquareTap = gameViewModel::onSquareTap,
@@ -103,6 +117,9 @@ internal fun ChineseChessGameScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    BackHandler(enabled = state.isRestoring || state.isPersisting) {
+        // Keep the destination alive until the atomic Room operation finishes.
+    }
     MocsTheme {
         Surface(modifier = modifier.fillMaxSize()) {
             Column(
@@ -174,6 +191,7 @@ private fun GameHeader(
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextButton(
                 onClick = onBack,
+                enabled = !state.isRestoring && !state.isPersisting,
                 modifier = Modifier.testTag(GAME_BACK_BUTTON_TAG),
             ) {
                 Text(stringResource(R.string.back))
@@ -261,7 +279,7 @@ private fun GameControls(
             ) {
                 Button(
                     onClick = onUndo,
-                    enabled = state.isEngineAvailable && state.canUndo,
+                    enabled = state.isInteractionEnabled && state.canUndo,
                     modifier = Modifier
                         .weight(1f)
                         .testTag(UNDO_BUTTON_TAG),
@@ -270,7 +288,7 @@ private fun GameControls(
                 }
                 OutlinedButton(
                     onClick = onRestart,
-                    enabled = state.isEngineAvailable,
+                    enabled = state.isInteractionEnabled,
                     modifier = Modifier
                         .weight(1f)
                         .testTag(RESTART_BUTTON_TAG),
@@ -312,6 +330,8 @@ private fun GameControls(
 private fun gameStatusText(state: ChineseChessGameUiState): String =
     when {
         !state.isEngineAvailable -> stringResource(R.string.engine_unavailable)
+        state.isRestoring -> stringResource(R.string.restoring_game)
+        state.isPersisting -> stringResource(R.string.saving_game)
         state.result == GameResult.FIRST_PLAYER_WIN -> stringResource(R.string.red_wins)
         state.result == GameResult.SECOND_PLAYER_WIN -> stringResource(R.string.black_wins)
         state.result == GameResult.DRAW -> stringResource(R.string.draw)
@@ -343,6 +363,9 @@ private fun feedbackText(feedback: ChineseChessFeedback): String =
             ChineseChessFeedback.GAME_RESTARTED -> R.string.feedback_game_restarted
             ChineseChessFeedback.GAME_FINISHED -> R.string.feedback_game_finished
             ChineseChessFeedback.ENGINE_UNAVAILABLE -> R.string.engine_unavailable
+            ChineseChessFeedback.GAME_RESTORED -> R.string.feedback_game_restored
+            ChineseChessFeedback.RESTORE_REJECTED -> R.string.feedback_restore_rejected
+            ChineseChessFeedback.SAVE_FAILED -> R.string.feedback_save_failed
         },
     )
 

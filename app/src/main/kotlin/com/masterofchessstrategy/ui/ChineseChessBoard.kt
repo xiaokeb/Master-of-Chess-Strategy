@@ -98,8 +98,8 @@ internal fun ChineseChessBoard(
             .semantics {
                 contentDescription = "中国象棋棋盘，" + state.currentSide.displayName() + "方行棋"
             }
-            .pointerInput(state.isEngineAvailable, state.result) {
-                if (state.isEngineAvailable) {
+            .pointerInput(state.isInteractionEnabled, state.result) {
+                if (state.isInteractionEnabled) {
                     detectTapGestures { tap ->
                         boardPositionAt(tap, size.width.toFloat(), size.height.toFloat())
                             ?.let(onSquareTap)

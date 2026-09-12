@@ -17,6 +17,9 @@ enum class ChineseChessFeedback {
     GAME_RESTARTED,
     GAME_FINISHED,
     ENGINE_UNAVAILABLE,
+    GAME_RESTORED,
+    RESTORE_REJECTED,
+    SAVE_FAILED,
 }
 
 /**
@@ -35,8 +38,13 @@ data class ChineseChessGameUiState(
     val result: GameResult = GameResult.ONGOING,
     val canUndo: Boolean = false,
     val isEngineAvailable: Boolean = true,
+    val isRestoring: Boolean = false,
+    val isPersisting: Boolean = false,
     val feedback: ChineseChessFeedback? = null,
 ) {
+    val isInteractionEnabled: Boolean
+        get() = isEngineAvailable && !isRestoring && !isPersisting
+
     init {
         require(board.size == ChineseChessBoard.WIDTH * ChineseChessBoard.HEIGHT) {
             "Chinese chess board must contain exactly 90 intersections"

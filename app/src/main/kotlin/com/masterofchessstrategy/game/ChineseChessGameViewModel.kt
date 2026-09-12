@@ -4,6 +4,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.masterofchessstrategy.data.GameSessionRepository
+import com.masterofchessstrategy.data.GameSessionSnapshot
+import com.masterofchessstrategy.data.LoadGameSessionResult
+import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.BoardMove
 import com.masterofchessstrategy.engine.BoardPosition
@@ -12,15 +20,21 @@ import com.masterofchessstrategy.engine.ChineseChessRuleEngine
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.EngineError
 import com.masterofchessstrategy.engine.GameResult
+import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.NativeChineseChessEngine
+import com.masterofchessstrategy.engine.RestoreResult
+import kotlinx.coroutines.launch
 
 /**
  * Owns one local Chinese chess session and is the only UI-layer JNI consumer.
  *
- * Expected illegal moves remain normal state transitions. Runtime or linkage
- * failures close the session and leave the screen in a stable disabled state.
+ * Room access is asynchronous. While restoring or committing a snapshot, game
+ * interactions are disabled so a newer position cannot be overtaken by an
+ * older database write.
  */
 class ChineseChessGameViewModel internal constructor(
+    private val sessionRepository: GameSessionRepository? = null,
+    private val nowEpochMillis: () -> Long = { System.currentTimeMillis() },
     private val engineFactory: () -> ChineseChessRuleEngine,
 ) : ViewModel() {
     private var engine: ChineseChessRuleEngine? = null
@@ -35,6 +49,7 @@ class ChineseChessGameViewModel internal constructor(
         try {
             engine = engineFactory()
             refresh()
+            restoreSavedSession()
         } catch (_: RuntimeException) {
             disableEngine()
         } catch (_: LinkageError) {
@@ -45,6 +60,7 @@ class ChineseChessGameViewModel internal constructor(
     fun onSquareTap(position: BoardPosition) {
         ChineseChessBoard.requireInside(position)
         val activeEngine = engine ?: return
+        if (!uiState.isInteractionEnabled) return
         if (uiState.result != GameResult.ONGOING) {
             uiState = uiState.copy(feedback = ChineseChessFeedback.GAME_FINISHED)
             return
@@ -67,6 +83,7 @@ class ChineseChessGameViewModel internal constructor(
 
     fun undo() {
         val activeEngine = engine ?: return
+        if (!uiState.isInteractionEnabled) return
         if (!uiState.canUndo) {
             uiState = uiState.copy(feedback = ChineseChessFeedback.NOTHING_TO_UNDO)
             return
@@ -75,6 +92,7 @@ class ChineseChessGameViewModel internal constructor(
             if (activeEngine.undo()) {
                 acceptedMoveCount--
                 refresh(ChineseChessFeedback.MOVE_UNDONE)
+                persistCurrentSession()
             } else {
                 acceptedMoveCount = 0
                 refresh(ChineseChessFeedback.NOTHING_TO_UNDO)
@@ -84,10 +102,12 @@ class ChineseChessGameViewModel internal constructor(
 
     fun restart() {
         val activeEngine = engine ?: return
+        if (!uiState.isInteractionEnabled) return
         runEngineOperation {
             activeEngine.reset()
             acceptedMoveCount = 0
             refresh(ChineseChessFeedback.GAME_RESTARTED)
+            persistCurrentSession()
         }
     }
 
@@ -97,6 +117,105 @@ class ChineseChessGameViewModel internal constructor(
 
     override fun onCleared() {
         closeEngine()
+    }
+
+    private fun restoreSavedSession() {
+        val repository = sessionRepository ?: return
+        uiState = uiState.copy(isRestoring = true)
+        viewModelScope.launch {
+            val result = try {
+                repository.load(GameType.CHINESE_CHESS)
+            } catch (_: RuntimeException) {
+                uiState = uiState.copy(
+                    isRestoring = false,
+                    feedback = ChineseChessFeedback.RESTORE_REJECTED,
+                )
+                return@launch
+            }
+            when (result) {
+                LoadGameSessionResult.NotFound -> {
+                    uiState = uiState.copy(isRestoring = false)
+                }
+
+                LoadGameSessionResult.Incompatible -> rejectStoredSession(repository)
+
+                is LoadGameSessionResult.Loaded -> {
+                    if (result.snapshot.mode != StoredGameMode.LOCAL_TWO_PLAYER) {
+                        rejectStoredSession(repository)
+                    } else {
+                        restoreEngineState(repository, result.snapshot.engineState)
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun restoreEngineState(
+        repository: GameSessionRepository,
+        data: ByteArray,
+    ) {
+        val activeEngine = engine ?: return
+        try {
+            when (activeEngine.restore(data)) {
+                RestoreResult.Restored -> {
+                    acceptedMoveCount = 0
+                    refresh(ChineseChessFeedback.GAME_RESTORED)
+                }
+
+                is RestoreResult.Rejected -> rejectStoredSession(repository)
+            }
+        } catch (_: RuntimeException) {
+            disableEngine()
+        } catch (_: LinkageError) {
+            disableEngine()
+        }
+    }
+
+    private suspend fun rejectStoredSession(repository: GameSessionRepository) {
+        try {
+            repository.clear(GameType.CHINESE_CHESS)
+        } catch (_: RuntimeException) {
+            // A failed cleanup must not prevent a fresh in-memory game.
+        }
+        val activeEngine = engine ?: return
+        runEngineOperation {
+            activeEngine.reset()
+            acceptedMoveCount = 0
+            refresh(ChineseChessFeedback.RESTORE_REJECTED)
+        }
+    }
+
+    private fun persistCurrentSession() {
+        val repository = sessionRepository ?: return
+        val activeEngine = engine ?: return
+        val stateBytes = try {
+            activeEngine.serialize()
+        } catch (_: RuntimeException) {
+            disableEngine()
+            return
+        } catch (_: LinkageError) {
+            disableEngine()
+            return
+        }
+        uiState = uiState.copy(isPersisting = true)
+        val snapshot = GameSessionSnapshot(
+            gameType = GameType.CHINESE_CHESS,
+            mode = StoredGameMode.LOCAL_TWO_PLAYER,
+            difficulty = null,
+            engineState = stateBytes,
+            updatedAtEpochMillis = nowEpochMillis(),
+        )
+        viewModelScope.launch {
+            try {
+                repository.save(snapshot)
+                uiState = uiState.copy(isPersisting = false)
+            } catch (_: RuntimeException) {
+                uiState = uiState.copy(
+                    isPersisting = false,
+                    feedback = ChineseChessFeedback.SAVE_FAILED,
+                )
+            }
+        }
     }
 
     private fun selectPiece(
@@ -139,6 +258,7 @@ class ChineseChessGameViewModel internal constructor(
                 ActionResult.Accepted -> {
                     acceptedMoveCount++
                     refresh()
+                    persistCurrentSession()
                 }
 
                 is ActionResult.Rejected -> {
@@ -197,6 +317,8 @@ class ChineseChessGameViewModel internal constructor(
             legalDestinations = emptySet(),
             canUndo = false,
             isEngineAvailable = false,
+            isRestoring = false,
+            isPersisting = false,
             feedback = ChineseChessFeedback.ENGINE_UNAVAILABLE,
         )
     }
@@ -221,4 +343,16 @@ class ChineseChessGameViewModel internal constructor(
             EngineError.UNSUPPORTED,
             -> ChineseChessFeedback.MOVE_REJECTED
         }
+
+    companion object {
+        internal fun factory(repository: GameSessionRepository): ViewModelProvider.Factory =
+            viewModelFactory {
+                initializer {
+                    ChineseChessGameViewModel(
+                        sessionRepository = repository,
+                        engineFactory = { NativeChineseChessEngine() },
+                    )
+                }
+            }
+    }
 }
