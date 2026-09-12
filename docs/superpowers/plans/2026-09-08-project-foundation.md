@@ -1,12 +1,12 @@
 # Master of Chess Strategy 工程底座实施计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
+> **执行约束（2026-09-12）：** 按用户要求在 main 分支直接实施，不使用 worktree 或 Superpowers。步骤清单保留为验收依据，测试合并为受影响模块检查和里程碑门禁。
 
 **Goal:** 建立可构建、可测试、纯离线的 Kotlin/Compose + C++17/JNI + Python 工具工程底座。
 
 **Architecture:** 保留 Android Gradle 工程在仓库根目录，应用、Kotlin 引擎契约和原生引擎分别作为 app、engine-api、engine-native 模块。Python 只承担离线数据生产；界面通过类型化 Kotlin 接口和受控 JNI Facade 访问 C++。
 
-**Tech Stack:** AGP 9.4.0、Gradle 9.6.0、JDK 17、Kotlin 2.3.21、Compose BOM 2026.08.00、Material 3、C++17、NDK 30.0.16138531、CMake 4.1.2、JUnit 4、CTest、Python 3.13.15。
+**Tech Stack:** AGP 9.4.0、Gradle 9.6.0、JDK 17、Kotlin 2.3.21、Compose BOM 2026.08.00、Material 3、C++17、NDK 30.0.16138531 LLVM、CMake 4.1.2、JUnit 4、Python 3.13.15。
 
 **Spec:** docs/superpowers/specs/2026-09-08-project-foundation-design.md
 
@@ -52,7 +52,7 @@
 
 - [ ] **Step 2: 归档原始需求并创建目录说明**
 
-原始文档只移动不改写。各 README 明确“存放什么、不得存放什么、何时更新”。environment.md 记录 JDK 17、SDK 37、Build Tools 36.0.0、NDK 30.0.16138531、CMake 4.1.2、MinGW、Conda 环境，以及当前无 Android 设备/AVD。
+原始文档只移动不改写。各 README 明确“存放什么、不得存放什么、何时更新”。environment.md 记录 JDK 17、SDK 37、Build Tools 36.0.0、NDK 30.0.16138531 LLVM、CMake 4.1.2、Conda 环境，以及当前无 Android 设备/AVD；C++ 不调用 MinGW。
 
 - [ ] **Step 3: 建立提示词使用索引**
 
@@ -257,7 +257,7 @@ git add engine-api
 git commit -m "feat: define engine contracts"
 ~~~
 
-### Task 4: C++17 核心与宿主机测试
+### Task 4: C++17 核心与 NDK 目标测试
 
 **Files:**
 - Create: engine-native/src/main/cpp/include/mocs/engine/engine_types.hpp
@@ -284,13 +284,13 @@ int main() {
 }
 ~~~
 
-- [ ] **Step 2: 运行宿主机测试并确认 RED**
+- [ ] **Step 2: 使用 NDK 工具链构建并确认 RED**
 
 Run:
 
 ~~~powershell
-& "E:\Backend_Env\SDK\cmake\4.1.2\bin\cmake.exe" -S engine-native/src/main/cpp -B .build/native-host -G "MinGW Makefiles" -DMOCS_BUILD_TESTS=ON -DCMAKE_CXX_COMPILER=E:/Backend_Env/CPP/MinGW/bin/g++.exe
-& "E:\Backend_Env\SDK\cmake\4.1.2\bin\cmake.exe" --build .build/native-host
+& "E:\Backend_Env\SDK\cmake\4.1.2\bin\cmake.exe" -S engine-native/src/main/cpp -B .build/native-android -G Ninja -DCMAKE_TOOLCHAIN_FILE=E:/Backend_Env/SDK/ndk/30.0.16138531/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-24 -DMOCS_BUILD_TESTS=ON -DCMAKE_MAKE_PROGRAM=E:/Backend_Env/SDK/cmake/4.1.2/bin/ninja.exe
+& "E:\Backend_Env\SDK\cmake\4.1.2\bin\cmake.exe" --build .build/native-android
 ~~~
 
 Expected: FAIL，因为 health_check 尚未实现或链接。
@@ -338,20 +338,19 @@ public:
 };
 ~~~
 
-- [ ] **Step 4: 实现健康检查并启用 CTest**
+- [ ] **Step 4: 实现健康检查并启用 Android 测试目标**
 
 health_check.hpp 声明 std::string health_check()，实现返回固定协议字符串。顶层 CMake 创建 mocs_engine_core 静态库，并在 MOCS_BUILD_TESTS=ON 时 enable_testing/add_subdirectory(tests)。
 
-- [ ] **Step 5: 运行 CTest 并确认 GREEN**
+- [ ] **Step 5: 使用 NDK 工具链构建并确认 GREEN**
 
 Run:
 
 ~~~powershell
-& "E:\Backend_Env\SDK\cmake\4.1.2\bin\cmake.exe" --build .build/native-host
-& "E:\Backend_Env\SDK\cmake\4.1.2\bin\ctest.exe" --test-dir .build/native-host --output-on-failure
+& "E:\Backend_Env\SDK\cmake\4.1.2\bin\cmake.exe" --build .build/native-android
 ~~~
 
-Expected: 100% tests passed, 0 tests failed。
+Expected: 原生库和 Android 测试可执行目标均编译、链接成功。没有设备或 AVD 时不声明测试已运行。
 
 - [ ] **Step 6: Commit and milestone push**
 
@@ -587,13 +586,13 @@ git push
 Run:
 
 ~~~powershell
-& "E:\Backend_Env\SDK\cmake\4.1.2\bin\ctest.exe" --test-dir .build/native-host --output-on-failure
+& "E:\Backend_Env\SDK\cmake\4.1.2\bin\cmake.exe" --build .build/native-android
 .\gradlew.bat :engine-api:testDebugUnitTest :engine-native:testDebugUnitTest :app:testDebugUnitTest lintDebug assembleDebug
 git diff --check
 rg -n "<uses-permission[^>]*INTERNET" app/src/main/AndroidManifest.xml
 ~~~
 
-Expected: CTest 0 failures；Gradle BUILD SUCCESSFUL；git diff --check 无输出；最后一次 rg 无命中且退出码为 1。
+Expected: NDK 原生库和测试目标编译、链接成功；Gradle BUILD SUCCESSFUL；git diff --check 无输出；最后一次 rg 无命中且退出码为 1。没有设备或 AVD 时不声明原生测试已运行。
 
 - [ ] **Step 3: 检查 APK 权限**
 

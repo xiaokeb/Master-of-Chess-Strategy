@@ -8,4 +8,19 @@
 
 稳定枚举编码一经用于存档或 JNI 后不得重排。C++ 异常不得跨越 JNI；非法操作必须转换为明确的业务结果。
 
-当前接口仍处于工程底座阶段，实际签名将在对应源码落地后补充。
+## Kotlin 公共契约
+
+- GameType 和 Difficulty 的 code 是 JNI 与持久化协议的一部分，只能追加，不能重排。
+- PlayerId 与 BoardPosition 在构造时拒绝负数；具体棋盘边界由棋种实现验证。
+- RuleEngine 负责一个游戏会话，实现拥有原生资源，调用方在会话结束时调用 close。
+- apply 和 restore 使用类型化结果表达可预期失败，不以异常表达非法走法。
+
+## 原生健康检查
+
+NativeEngineStatusProvider.check 是应用当前唯一直接使用的原生入口。成功时返回 Available(protocol)，动态库加载失败时返回固定诊断“Native library could not be loaded”，运行错误返回“Native engine health check failed”。底层异常消息、堆栈和本机路径不得进入 UI。
+
+原生库名为 mocs_engine_native，当前协议字符串为 MasterofChessStrategy Engine/1。JNI 函数只调用平台无关的 mocs::engine::health_check，并在边界内捕获所有 C++ 异常。
+
+## 当前边界
+
+健康检查只证明 Kotlin、JNI 与 C++ 链路可连接，不代表任一具体棋种规则已经实现。句柄管理、规则动作转换和正式序列化协议在对应棋种切片中补充。
