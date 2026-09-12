@@ -27,3 +27,21 @@ add_test(
     NAME mocs_engine_chinese_chess
     COMMAND mocs_engine_chinese_chess_test
 )
+
+add_executable(
+    mocs_engine_registry_test
+    native_engine_registry_test.cpp
+)
+target_link_libraries(mocs_engine_registry_test PRIVATE mocs_engine_core)
+target_compile_options(
+    mocs_engine_registry_test
+    PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+)
+
+add_test(
+    NAME mocs_engine_registry
+    COMMAND mocs_engine_registry_test
+)

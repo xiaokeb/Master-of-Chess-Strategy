@@ -7,4 +7,32 @@ internal object NativeBindings {
     }
 
     external fun healthCheck(): String
+
+    external fun createChineseChessEngine(): Long
+
+    external fun releaseChineseChessEngine(handle: Long)
+
+    external fun chineseChessCurrentPlayer(handle: Long): Int
+
+    external fun resetChineseChess(handle: Long)
+
+    external fun applyChineseChessMove(
+        handle: Long,
+        fromX: Int,
+        fromY: Int,
+        toX: Int,
+        toY: Int,
+    ): Int
+
+    external fun undoChineseChess(handle: Long): Boolean
+
+    external fun chineseChessLegalMoves(handle: Long): IntArray
+
+    external fun chineseChessGameResult(handle: Long): Int
+
+    external fun serializeChineseChess(handle: Long): ByteArray
+
+    external fun restoreChineseChess(handle: Long, data: ByteArray): Int
+
+    external fun chineseChessPieceAt(handle: Long, x: Int, y: Int): Int
 }

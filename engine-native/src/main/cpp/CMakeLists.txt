@@ -15,6 +15,7 @@ add_library(
     STATIC
     src/chinese_chess.cpp
     src/health_check.cpp
+    src/native_engine_registry.cpp
 )
 target_include_directories(
     mocs_engine_core

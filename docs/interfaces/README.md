@@ -23,7 +23,7 @@ NativeEngineStatusProvider.check 是应用当前唯一直接使用的原生入�
 
 ## 当前边界
 
-健康检查只证明 Kotlin、JNI 与 C++ 链路可连接，不代表任一具体棋种规则已经实现。句柄管理、规则动作转换和正式序列化协议在对应棋种切片中补充。
+健康检查只证明 Kotlin、JNI 与 C++ 链路可连接，不代表任一具体棋种规则已经实现。新增棋种必须使用类型化 Kotlin 接口和受控句柄，不得从应用层直接调用 NativeBindings。
 
 ## 中国象棋核心
 
@@ -32,3 +32,14 @@ NativeEngineStatusProvider.check 是应用当前唯一直接使用的原生入�
 局面格式当前为 96 字节：MOCX 魔数 4 字节、版本 1 字节、当前方 1 字节、90 个棋盘点位。空位编码为 0；棋子低 3 位为 PieceType 1..7，最高位表示黑方。未知版本返回 unsupported，长度、魔数或编码损坏返回 corrupted_data，无将帅或重复将帅返回 invalid_state。
 
 此格式为内部版本 1，尚未承诺与第三方 FEN 互转。接入真实存档前必须增加往返、迁移和损坏输入回归样例。
+
+### Kotlin/JNI 实现
+
+- ChineseChessRuleEngine 位于 engine-api，提供统一规则方法和 pieceAt 棋盘查询。
+- NativeChineseChessEngine 位于 engine-native，是当前生产实现；构造时创建原生句柄，close 幂等释放。
+- 公开方法在同一实例内串行访问句柄，关闭后的调用固定抛出“Engine session is closed”。
+- NativeBindings 与 ChineseChessBridge 保持 internal，UI 和业务代码不得依赖它们。
+- C++ NativeEngineRegistry 使用递增整数句柄和互斥锁管理共享对象，不把地址转换为 long。
+- release 删除句柄映射；正在执行的调用持有临时共享所有权，因此并发释放不会造成悬空访问。
+
+JNI 只传递 Long、Int、IntArray 和 ByteArray。合法着数组每四个整数表示一个 BoardMove；Kotlin 验证数组长度、坐标和编码后才构造公共类型。未知协议编码视为原生协议错误，不静默降级为其他枚举值。

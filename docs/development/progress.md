@@ -16,20 +16,22 @@
 
 ## 已验证
 
-- JVM 单元测试：8 个通过。
+- JVM 单元测试：14 个通过。
 - NDK：Clang 21，C++17，Android ARM64 测试目标编译和链接通过。
 - Gradle NDK：arm64-v8a、armeabi-v7a、x86、x86_64 构建通过。
 - Android：Lint 0 error，Debug APK 与 engine-native 测试 APK 构建通过。
 - 离线边界：Debug APK 不包含 android.permission.INTERNET。
+- JNI：ARM64 动态库已导出并核对 12 个 NativeBindings 符号。
 
 ## 条件限制
 
 当前没有 Android 设备或 AVD。NativeBridgeInstrumentedTest 仅完成编译，尚未运行；该项不会标记为测试通过。C++ 构建由 CMake 强制要求 Android NDK 工具链，不接受 MinGW 或其他宿主机工具链。
 
-中国象棋基础规则测试目标已完成 NDK ARM64 编译和链接，但受相同设备条件限制尚未运行。当前不能据此宣称规则用例运行通过。
+中国象棋基础规则和句柄表测试目标已完成 NDK ARM64 编译和链接，但受相同设备条件限制尚未运行。当前不能据此宣称规则用例运行通过。真实 JNI 集成测试已编译进 Android 测试 APK。
 
 ## 下一节点
 
-1. 为 ChineseChessEngine 增加受控句柄和 Kotlin/JNI 业务接口。
-2. 在设备或 AVD 可用后运行中国象棋与 NativeBridge 集成测试。
-3. 单独设计长将、长捉、长拦和自然限着历史判定，不与基础走法混写。
+1. 建立中国象棋不可变棋盘 UI 状态和对局 ViewModel，接入 NativeChineseChessEngine。
+2. 实现可操作的横屏棋盘与合法落点反馈，不提前加入 AI。
+3. 在设备或 AVD 可用后运行中国象棋与 NativeBridge 集成测试。
+4. 单独设计长将、长捉、长拦和自然限着历史判定，不与基础走法混写。

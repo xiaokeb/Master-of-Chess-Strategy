@@ -18,4 +18,32 @@ class NativeBridgeInstrumentedTest {
             (status as NativeEngineStatus.Available).protocol,
         )
     }
+
+    @Test
+    fun nativeChineseChessSessionSupportsMoveUndoAndRestore() {
+        NativeChineseChessEngine().use { engine ->
+            assertEquals(PlayerId(0), engine.currentPlayer)
+            assertEquals(
+                ChineseChessPiece(
+                    ChineseChessPieceType.GENERAL,
+                    ChineseChessSide.RED,
+                ),
+                engine.pieceAt(BoardPosition(4, 9)),
+            )
+
+            val initial = engine.serialize()
+            assertEquals(
+                ActionResult.Accepted,
+                engine.apply(
+                    BoardMove(
+                        BoardPosition(0, 6),
+                        BoardPosition(0, 5),
+                    ),
+                ),
+            )
+            assertTrue(engine.undo())
+            assertTrue(initial.contentEquals(engine.serialize()))
+            assertEquals(RestoreResult.Restored, engine.restore(initial))
+        }
+    }
 }

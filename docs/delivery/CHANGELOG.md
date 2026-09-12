@@ -7,6 +7,11 @@
 - 增加悔棋、合法走法生成、基础困毙胜负和 MOCX 版本 1 局面往返。
 - NDK Clang 21 在 -Wall、-Wextra、-Wpedantic 下编译并链接 ARM64 原生测试目标，无警告。
 - Gradle 已完成 arm64-v8a、armeabi-v7a、x86 和 x86_64 构建；测试目标因无设备或 AVD 尚未运行。
+- 当前 JVM 单元测试累计 14 个，全部通过。
+- engine-api 新增中国象棋阵营、棋子、棋盘边界和 ChineseChessRuleEngine。
+- engine-native 新增 NativeChineseChessEngine、可替换 bridge 与受互斥锁保护的原生句柄表。
+- JNI 已覆盖创建、释放、当前方、重置、走子、悔棋、合法着、胜负、棋盘查询和序列化往返。
+- Kotlin JVM 测试覆盖稳定编码、错误映射、句柄传递、幂等释放、关闭后拒绝调用及畸形数组。
 
 ## 0.1.0 Foundation（2026-09-12）
 
