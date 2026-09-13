@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.activity.compose.BackHandler
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -22,7 +23,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -67,6 +71,8 @@ import com.masterofchessstrategy.ui.theme.MocsTheme
 
 internal const val UNDO_BUTTON_TAG = "undo_button"
 internal const val RESTART_BUTTON_TAG = "restart_button"
+internal const val HINT_BUTTON_TAG = "hint_button"
+internal const val RESIGN_BUTTON_TAG = "resign_button"
 internal const val AI_BUTTON_TAG = "ai_button"
 internal const val GAME_BACK_BUTTON_TAG = "game_back_button"
 internal const val GAME_SETTINGS_BUTTON_TAG = "game_settings_button"
@@ -258,6 +264,8 @@ fun MasterOfChessStrategyApp() {
                     state = gameViewModel.uiState,
                     onSquareTap = gameViewModel::onSquareTap,
                     onUndo = gameViewModel::undo,
+                    onHint = gameViewModel::requestHint,
+                    onResign = gameViewModel::resign,
                     onRestart = gameViewModel::restart,
                     onBack = navController::popBackStack,
                     settings = settingsViewModel.uiState.settings,
@@ -303,6 +311,8 @@ fun MasterOfChessStrategyApp() {
                     state = gameViewModel.uiState,
                     onSquareTap = gameViewModel::onSquareTap,
                     onUndo = gameViewModel::undo,
+                    onHint = gameViewModel::requestHint,
+                    onResign = gameViewModel::resign,
                     onRestart = gameViewModel::restart,
                     onBack = navController::popBackStack,
                     settings = settingsViewModel.uiState.settings,
@@ -333,13 +343,21 @@ internal fun ChineseChessGameScreen(
     state: ChineseChessGameUiState,
     onSquareTap: (BoardPosition) -> Unit,
     onUndo: () -> Unit,
+    onHint: () -> Unit,
+    onResign: () -> Unit,
     onRestart: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     settings: AppSettings = AppSettings.DEFAULT,
     onSettings: () -> Unit = {},
 ) {
-    BackHandler(enabled = state.isRestoring || state.isPersisting || state.isAiThinking) {
+    BackHandler(
+        enabled =
+            state.isRestoring ||
+                state.isPersisting ||
+                state.isAiThinking ||
+                state.isHintThinking,
+    ) {
         // Keep the destination alive until the atomic Room operation finishes.
     }
     MocsTheme {
@@ -368,6 +386,8 @@ internal fun ChineseChessGameScreen(
                             GameControls(
                                 state = state,
                                 onUndo = onUndo,
+                                onHint = onHint,
+                                onResign = onResign,
                                 onRestart = onRestart,
                                 modifier = Modifier
                                     .widthIn(min = 240.dp, max = 320.dp)
@@ -389,6 +409,8 @@ internal fun ChineseChessGameScreen(
                             GameControls(
                                 state = state,
                                 onUndo = onUndo,
+                                onHint = onHint,
+                                onResign = onResign,
                                 onRestart = onRestart,
                                 modifier = Modifier.fillMaxWidth(),
                             )
@@ -415,7 +437,11 @@ private fun GameHeader(
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextButton(
                 onClick = onBack,
-                enabled = !state.isRestoring && !state.isPersisting && !state.isAiThinking,
+                enabled =
+                    !state.isRestoring &&
+                        !state.isPersisting &&
+                        !state.isAiThinking &&
+                        !state.isHintThinking,
                 modifier = Modifier.testTag(GAME_BACK_BUTTON_TAG),
             ) {
                 Text(stringResource(R.string.back))
@@ -447,7 +473,11 @@ private fun GameHeader(
             }
             TextButton(
                 onClick = onSettings,
-                enabled = !state.isRestoring && !state.isPersisting && !state.isAiThinking,
+                enabled =
+                    !state.isRestoring &&
+                        !state.isPersisting &&
+                        !state.isAiThinking &&
+                        !state.isHintThinking,
                 modifier = Modifier.testTag(GAME_SETTINGS_BUTTON_TAG),
             ) {
                 Text(stringResource(R.string.settings_title))
@@ -481,9 +511,34 @@ private fun BoardPanel(
 private fun GameControls(
     state: ChineseChessGameUiState,
     onUndo: () -> Unit,
+    onHint: () -> Unit,
+    onResign: () -> Unit,
     onRestart: () -> Unit,
     modifier: Modifier,
 ) {
+    var showResignConfirmation by remember { mutableStateOf(false) }
+    if (showResignConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showResignConfirmation = false },
+            title = { Text(stringResource(R.string.resign_confirm_title)) },
+            text = { Text(stringResource(R.string.resign_confirm_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showResignConfirmation = false
+                        onResign()
+                    },
+                ) {
+                    Text(stringResource(R.string.resign_confirm_action))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResignConfirmation = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
     Card(modifier = modifier) {
         Column(
             modifier = Modifier
@@ -525,7 +580,7 @@ private fun GameControls(
                         .weight(1f)
                         .testTag(UNDO_BUTTON_TAG),
                 ) {
-                    Text(stringResource(R.string.undo))
+                    Text(undoButtonText(state))
                 }
                 OutlinedButton(
                     onClick = onRestart,
@@ -535,6 +590,35 @@ private fun GameControls(
                         .testTag(RESTART_BUTTON_TAG),
                 ) {
                     Text(stringResource(R.string.restart))
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                OutlinedButton(
+                    onClick = onHint,
+                    enabled =
+                        state.isInteractionEnabled &&
+                            state.result == GameResult.ONGOING &&
+                            state.canRequestHint,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag(HINT_BUTTON_TAG),
+                ) {
+                    Text(hintButtonText(state))
+                }
+                OutlinedButton(
+                    onClick = { showResignConfirmation = true },
+                    enabled =
+                        state.isInteractionEnabled &&
+                            state.result == GameResult.ONGOING,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag(RESIGN_BUTTON_TAG),
+                ) {
+                    Text(stringResource(R.string.resign))
                 }
             }
 
@@ -556,13 +640,6 @@ private fun GameControls(
                     ),
                 )
             }
-            OutlinedButton(
-                onClick = {},
-                enabled = false,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.hint_not_available))
-            }
             Text(
                 text = stringResource(R.string.rules_scope_note),
                 style = MaterialTheme.typography.bodySmall,
@@ -577,6 +654,7 @@ private fun gameStatusText(state: ChineseChessGameUiState): String =
         !state.isEngineAvailable -> stringResource(R.string.engine_unavailable)
         state.isRestoring -> stringResource(R.string.restoring_game)
         state.isAiThinking -> stringResource(R.string.ai_thinking)
+        state.isHintThinking -> stringResource(R.string.calculating_hint)
         state.isPersisting -> stringResource(R.string.saving_game)
         state.result == GameResult.FIRST_PLAYER_WIN -> stringResource(R.string.red_wins)
         state.result == GameResult.SECOND_PLAYER_WIN -> stringResource(R.string.black_wins)
@@ -604,7 +682,9 @@ private fun aiCapabilityText(state: ChineseChessGameUiState): Int =
 
 @Composable
 private fun selectionText(state: ChineseChessGameUiState): String =
-    if (state.isAiThinking) {
+    if (state.isHintThinking) {
+        stringResource(R.string.calculating_hint)
+    } else if (state.isAiThinking) {
         stringResource(R.string.wait_for_ai)
     } else {
         state.selectedPosition?.let {
@@ -635,8 +715,30 @@ private fun feedbackText(feedback: ChineseChessFeedback): String =
             ChineseChessFeedback.SAVE_FAILED -> R.string.feedback_save_failed
             ChineseChessFeedback.AI_MOVED -> R.string.feedback_ai_moved
             ChineseChessFeedback.AI_MOVE_FAILED -> R.string.feedback_ai_move_failed
+            ChineseChessFeedback.UNDO_LIMIT_REACHED -> R.string.feedback_undo_limit
+            ChineseChessFeedback.HINT_READY -> R.string.feedback_hint_ready
+            ChineseChessFeedback.HINT_LIMIT_REACHED -> R.string.feedback_hint_limit
+            ChineseChessFeedback.HINT_UNAVAILABLE -> R.string.feedback_hint_unavailable
+            ChineseChessFeedback.PLAYER_RESIGNED -> R.string.feedback_player_resigned
         },
     )
+
+@Composable
+private fun undoButtonText(state: ChineseChessGameUiState): String =
+    state.undoRemaining?.let {
+        stringResource(R.string.undo_remaining, it)
+    } ?: stringResource(R.string.undo_unlimited)
+
+@Composable
+private fun hintButtonText(state: ChineseChessGameUiState): String =
+    when {
+        state.isHintThinking -> stringResource(R.string.calculating_hint)
+        !state.canRequestHint && state.hintRemaining == 0 -> {
+            stringResource(R.string.hint_not_available)
+        }
+        state.hintRemaining == null -> stringResource(R.string.hint_unlimited)
+        else -> stringResource(R.string.hint_remaining, requireNotNull(state.hintRemaining))
+    }
 
 @Preview(
     widthDp = 960,
@@ -649,6 +751,8 @@ private fun ChineseChessGameScreenPreview() {
         state = previewGameState(),
         onSquareTap = {},
         onUndo = {},
+        onHint = {},
+        onResign = {},
         onRestart = {},
         onBack = {},
     )

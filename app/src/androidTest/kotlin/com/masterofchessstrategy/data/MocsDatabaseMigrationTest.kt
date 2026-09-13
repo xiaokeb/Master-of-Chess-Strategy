@@ -151,6 +151,49 @@ class MocsDatabaseMigrationTest {
         migrated.close()
     }
 
+    @Test
+    fun migrateFiveToSixPreservesSessionAndAddsControlState() {
+        helper.createDatabase(CONTROL_STATE_DATABASE_NAME, 5).apply {
+            execSQL(
+                """
+                INSERT INTO active_games (
+                    gameTypeCode,
+                    modeCode,
+                    difficultyCode,
+                    envelopeVersion,
+                    engineFormatVersion,
+                    engineState,
+                    updatedAtEpochMillis,
+                    sessionId
+                ) VALUES (?, ?, 1, 1, 2, ?, 104, 'match-control')
+                """.trimIndent(),
+                arrayOf(0, 1, byteArrayOf(4, 5, 6)),
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            CONTROL_STATE_DATABASE_NAME,
+            6,
+            true,
+            MocsDatabase.MIGRATION_5_6,
+        )
+
+        assertEquals(2, migrated.singleInt("SELECT envelopeVersion FROM active_games"))
+        assertEquals(0, migrated.singleInt("SELECT acceptedMoveCount FROM active_games"))
+        assertEquals(0, migrated.singleInt("SELECT undoUseCount FROM active_games"))
+        assertEquals(0, migrated.singleInt("SELECT hintUseCount FROM active_games"))
+        assertEquals(
+            null,
+            migrated.singleNullableInt("SELECT resultOverrideCode FROM active_games"),
+        )
+        assertEquals(
+            "match-control",
+            migrated.singleString("SELECT sessionId FROM active_games"),
+        )
+        migrated.close()
+    }
+
     private fun SupportSQLiteDatabase.singleInt(query: String): Int =
         this.query(query).use { cursor ->
             check(cursor.moveToFirst())
@@ -163,10 +206,17 @@ class MocsDatabaseMigrationTest {
             cursor.getString(0)
         }
 
+    private fun SupportSQLiteDatabase.singleNullableInt(query: String): Int? =
+        this.query(query).use { cursor ->
+            check(cursor.moveToFirst())
+            if (cursor.isNull(0)) null else cursor.getInt(0)
+        }
+
     private companion object {
         const val DATABASE_NAME = "migration-1-2-test"
         const val SETTINGS_DATABASE_NAME = "migration-2-3-test"
         const val TUTORIAL_DATABASE_NAME = "migration-3-4-test"
         const val STATISTICS_DATABASE_NAME = "migration-4-5-test"
+        const val CONTROL_STATE_DATABASE_NAME = "migration-5-6-test"
     }
 }

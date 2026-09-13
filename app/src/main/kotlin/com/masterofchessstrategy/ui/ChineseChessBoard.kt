@@ -90,6 +90,7 @@ internal fun ChineseChessBoard(
     val pieceColor = Color(0xFFF4DFB0)
     val legalColor = Color(0xFF2D7A55)
     val selectedColor = Color(0xFFFFC857)
+    val hintColor = Color(0xFF3567B7)
 
     Canvas(
         modifier = modifier
@@ -186,6 +187,24 @@ internal fun ChineseChessBoard(
                 color = legalColor,
                 radius = cell * 0.11f,
                 center = geometry.center(destination),
+            )
+        }
+
+        state.hintedDestinations.forEach { destination ->
+            drawCircle(
+                color = hintColor,
+                radius = cell * 0.15f,
+                center = geometry.center(destination),
+                style = Stroke(width = cell * 0.07f),
+            )
+        }
+
+        state.hintedOrigins.forEach { originPosition ->
+            drawCircle(
+                color = hintColor,
+                radius = cell * 0.47f,
+                center = geometry.center(originPosition),
+                style = Stroke(width = cell * 0.08f),
             )
         }
 

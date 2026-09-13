@@ -23,6 +23,11 @@ enum class ChineseChessFeedback {
     SAVE_FAILED,
     AI_MOVED,
     AI_MOVE_FAILED,
+    UNDO_LIMIT_REACHED,
+    HINT_READY,
+    HINT_LIMIT_REACHED,
+    HINT_UNAVAILABLE,
+    PLAYER_RESIGNED,
 }
 
 /**
@@ -38,14 +43,20 @@ data class ChineseChessGameUiState(
     val currentSide: ChineseChessSide = ChineseChessSide.RED,
     val selectedPosition: BoardPosition? = null,
     val legalDestinations: Set<BoardPosition> = emptySet(),
+    val hintedOrigins: Set<BoardPosition> = emptySet(),
+    val hintedDestinations: Set<BoardPosition> = emptySet(),
     val result: GameResult = GameResult.ONGOING,
     val canUndo: Boolean = false,
+    val undoRemaining: Int? = null,
+    val canRequestHint: Boolean = false,
+    val hintRemaining: Int? = 0,
     val isEngineAvailable: Boolean = true,
     val isRestoring: Boolean = false,
     val isPersisting: Boolean = false,
     val isAiGame: Boolean = false,
     val difficulty: Difficulty? = null,
     val isAiThinking: Boolean = false,
+    val isHintThinking: Boolean = false,
     val feedback: ChineseChessFeedback? = null,
 ) {
     val isInteractionEnabled: Boolean
@@ -54,6 +65,7 @@ data class ChineseChessGameUiState(
                 !isRestoring &&
                 !isPersisting &&
                 !isAiThinking &&
+                !isHintThinking &&
                 (!isAiGame || currentSide == ChineseChessSide.RED)
 
     init {

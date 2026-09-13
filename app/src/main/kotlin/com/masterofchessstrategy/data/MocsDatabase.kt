@@ -15,7 +15,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TutorialProgressEntity::class,
         MatchOutcomeEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -104,6 +104,30 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE active_games " +
+                        "ADD COLUMN acceptedMoveCount INTEGER NOT NULL DEFAULT 0",
+                )
+                db.execSQL(
+                    "ALTER TABLE active_games " +
+                        "ADD COLUMN undoUseCount INTEGER NOT NULL DEFAULT 0",
+                )
+                db.execSQL(
+                    "ALTER TABLE active_games " +
+                        "ADD COLUMN hintUseCount INTEGER NOT NULL DEFAULT 0",
+                )
+                db.execSQL(
+                    "ALTER TABLE active_games ADD COLUMN resultOverrideCode INTEGER",
+                )
+                db.execSQL(
+                    "UPDATE active_games SET envelopeVersion = 2 " +
+                        "WHERE envelopeVersion = 1",
+                )
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -119,6 +143,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_2_3,
                         MIGRATION_3_4,
                         MIGRATION_4_5,
+                        MIGRATION_5_6,
                     )
                     .build()
                     .also { instance = it }

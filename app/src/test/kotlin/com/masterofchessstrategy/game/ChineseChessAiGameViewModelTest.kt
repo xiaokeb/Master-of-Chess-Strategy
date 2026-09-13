@@ -80,11 +80,14 @@ class ChineseChessAiGameViewModelTest {
         assertEquals(2, repository.saved.last().engineState.single().toInt())
 
         viewModel.undo()
+        advanceUntilIdle()
 
         assertEquals(2, engine.undoCalls)
         assertEquals(ChineseChessSide.RED, viewModel.uiState.currentSide)
         assertEquals(ChineseChessSide.RED, viewModel.uiState.pieceAt(engine.redFrom)?.side)
         assertEquals(ChineseChessSide.BLACK, viewModel.uiState.pieceAt(engine.blackFrom)?.side)
+        assertEquals(1, repository.saved.last().undoUseCount)
+        assertEquals(0, repository.saved.last().acceptedMoveCount)
     }
 
     @Test
@@ -134,11 +137,127 @@ class ChineseChessAiGameViewModelTest {
         }
     }
 
-    private class RecordingSessionRepository : GameSessionRepository {
+    @Test
+    fun easyHintShowsEveryLegalOriginAndDestinationWithoutSearching() =
+        runTest(dispatcher) {
+            val engine = FakeAiEngine()
+            val viewModel = ChineseChessGameViewModel(
+                mode = StoredGameMode.HUMAN_VS_AI,
+                difficulty = Difficulty.EASY,
+                aiDispatcher = dispatcher,
+                engineFactory = { engine },
+            )
+
+            viewModel.requestHint()
+
+            assertEquals(setOf(engine.redFrom), viewModel.uiState.hintedOrigins)
+            assertEquals(setOf(engine.redTo), viewModel.uiState.hintedDestinations)
+            assertEquals(0, engine.chooseCalls)
+            assertNull(viewModel.uiState.hintRemaining)
+            assertTrue(viewModel.uiState.canRequestHint)
+        }
+
+    @Test
+    fun mediumBestMoveHintConsumesThreePersistedUses() = runTest(dispatcher) {
+        val engine = FakeAiEngine()
+        val repository = RecordingSessionRepository()
+        val viewModel = ChineseChessGameViewModel(
+            sessionRepository = repository,
+            mode = StoredGameMode.HUMAN_VS_AI,
+            difficulty = Difficulty.MEDIUM,
+            aiDispatcher = dispatcher,
+            engineFactory = { engine },
+        )
+        advanceUntilIdle()
+
+        repeat(3) {
+            viewModel.requestHint()
+            assertTrue(viewModel.uiState.isHintThinking)
+            advanceUntilIdle()
+        }
+
+        assertEquals(3, engine.chooseCalls)
+        assertEquals(setOf(engine.redFrom), viewModel.uiState.hintedOrigins)
+        assertEquals(setOf(engine.redTo), viewModel.uiState.hintedDestinations)
+        assertFalse(viewModel.uiState.canRequestHint)
+        assertEquals(0, viewModel.uiState.hintRemaining)
+        assertEquals(3, repository.saved.last().hintUseCount)
+
+        viewModel.requestHint()
+        assertEquals(3, engine.chooseCalls)
+        assertEquals(ChineseChessFeedback.HINT_LIMIT_REACHED, viewModel.uiState.feedback)
+    }
+
+    @Test
+    fun resignSettlesOnceAndPersistsTerminalOverride() = runTest(dispatcher) {
+        val engine = FakeAiEngine()
+        val repository = RecordingSessionRepository()
+        val outcomes = mutableListOf<com.masterofchessstrategy.data.MatchOutcome>()
+        val viewModel = ChineseChessGameViewModel(
+            sessionRepository = repository,
+            mode = StoredGameMode.HUMAN_VS_AI,
+            difficulty = Difficulty.HARD,
+            aiDispatcher = dispatcher,
+            matchIdFactory = { "match-resign" },
+            onMatchFinished = outcomes::add,
+            engineFactory = { engine },
+        )
+        advanceUntilIdle()
+
+        viewModel.resign()
+        advanceUntilIdle()
+        viewModel.resign()
+
+        assertEquals(GameResult.SECOND_PLAYER_WIN, viewModel.uiState.result)
+        assertFalse(viewModel.uiState.canUndo)
+        assertEquals(1, outcomes.size)
+        assertEquals(GameResult.SECOND_PLAYER_WIN, outcomes.single().result)
+        assertEquals(
+            GameResult.SECOND_PLAYER_WIN,
+            repository.saved.last().resultOverride,
+        )
+    }
+
+    @Test
+    fun restoreKeepsMoveAndAssistanceCounters() = runTest(dispatcher) {
+        val snapshot = GameSessionSnapshot(
+            gameType = GameType.CHINESE_CHESS,
+            mode = StoredGameMode.HUMAN_VS_AI,
+            difficulty = Difficulty.MEDIUM,
+            engineState = byteArrayOf(2),
+            updatedAtEpochMillis = 9L,
+            sessionId = "match-restored-controls",
+            acceptedMoveCount = 2,
+            undoUseCount = 1,
+            hintUseCount = 2,
+        )
+        val repository = RecordingSessionRepository(
+            LoadGameSessionResult.Loaded(snapshot),
+        )
+        val viewModel = ChineseChessGameViewModel(
+            sessionRepository = repository,
+            mode = StoredGameMode.HUMAN_VS_AI,
+            difficulty = Difficulty.MEDIUM,
+            aiDispatcher = dispatcher,
+            engineFactory = { FakeAiEngine() },
+        )
+
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.canUndo)
+        assertEquals(2, viewModel.uiState.undoRemaining)
+        assertTrue(viewModel.uiState.canRequestHint)
+        assertEquals(1, viewModel.uiState.hintRemaining)
+        assertEquals(ChineseChessFeedback.GAME_RESTORED, viewModel.uiState.feedback)
+    }
+
+    private class RecordingSessionRepository(
+        private val loadResult: LoadGameSessionResult = LoadGameSessionResult.NotFound,
+    ) : GameSessionRepository {
         val saved = mutableListOf<GameSessionSnapshot>()
 
         override suspend fun load(gameType: GameType): LoadGameSessionResult =
-            LoadGameSessionResult.NotFound
+            loadResult
 
         override suspend fun save(snapshot: GameSessionSnapshot) {
             saved += snapshot.defensiveCopy()

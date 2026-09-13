@@ -17,6 +17,13 @@ internal data class ActiveGameEntity(
     val updatedAtEpochMillis: Long,
     @ColumnInfo(defaultValue = "''")
     val sessionId: String = "",
+    @ColumnInfo(defaultValue = "0")
+    val acceptedMoveCount: Int = 0,
+    @ColumnInfo(defaultValue = "0")
+    val undoUseCount: Int = 0,
+    @ColumnInfo(defaultValue = "0")
+    val hintUseCount: Int = 0,
+    val resultOverrideCode: Int? = null,
 ) {
     override fun equals(other: Any?): Boolean =
         this === other ||
@@ -28,8 +35,12 @@ internal data class ActiveGameEntity(
                     envelopeVersion == other.envelopeVersion &&
                     engineFormatVersion == other.engineFormatVersion &&
                     engineState.contentEquals(other.engineState) &&
-                    updatedAtEpochMillis == other.updatedAtEpochMillis
-                    && sessionId == other.sessionId
+                    updatedAtEpochMillis == other.updatedAtEpochMillis &&
+                    sessionId == other.sessionId &&
+                    acceptedMoveCount == other.acceptedMoveCount &&
+                    undoUseCount == other.undoUseCount &&
+                    hintUseCount == other.hintUseCount &&
+                    resultOverrideCode == other.resultOverrideCode
                 )
 
     override fun hashCode(): Int {
@@ -41,6 +52,10 @@ internal data class ActiveGameEntity(
         result = 31 * result + engineState.contentHashCode()
         result = 31 * result + updatedAtEpochMillis.hashCode()
         result = 31 * result + sessionId.hashCode()
+        result = 31 * result + acceptedMoveCount
+        result = 31 * result + undoUseCount
+        result = 31 * result + hintUseCount
+        result = 31 * result + (resultOverrideCode ?: 0)
         return result
     }
 }

@@ -51,10 +51,14 @@ class ChineseChessGameViewModel internal constructor(
 ) : ViewModel() {
     private var engine: ChineseChessRuleEngine? = null
     private var acceptedMoveCount = 0
+    private var undoUseCount = 0
+    private var hintUseCount = 0
+    private var resultOverride: GameResult? = null
     private var matchId = createMatchId()
     private var settlementRequested = false
 
     private val isAiGame = mode == StoredGameMode.HUMAN_VS_AI
+    private val assistancePolicy = ChineseChessAssistancePolicy.resolve(mode, difficulty)
 
     var uiState by mutableStateOf(
         ChineseChessGameUiState(
@@ -98,6 +102,12 @@ class ChineseChessGameViewModel internal constructor(
             uiState = uiState.copy(feedback = ChineseChessFeedback.GAME_FINISHED)
             return
         }
+        if (uiState.hintedOrigins.isNotEmpty() || uiState.hintedDestinations.isNotEmpty()) {
+            uiState = uiState.copy(
+                hintedOrigins = emptySet(),
+                hintedDestinations = emptySet(),
+            )
+        }
 
         val piece = uiState.pieceAt(position)
         val selected = uiState.selectedPosition
@@ -118,11 +128,18 @@ class ChineseChessGameViewModel internal constructor(
         val activeEngine = engine ?: return
         if (!uiState.isInteractionEnabled) return
         if (!uiState.canUndo) {
-            uiState = uiState.copy(feedback = ChineseChessFeedback.NOTHING_TO_UNDO)
+            uiState = uiState.copy(
+                feedback = if (uiState.undoRemaining == 0) {
+                    ChineseChessFeedback.UNDO_LIMIT_REACHED
+                } else {
+                    ChineseChessFeedback.NOTHING_TO_UNDO
+                },
+            )
             return
         }
         runEngineOperation {
             if (undoTurn(activeEngine)) {
+                undoUseCount++
                 refresh(ChineseChessFeedback.MOVE_UNDONE)
                 persistCurrentSession()
             } else {
@@ -140,9 +157,48 @@ class ChineseChessGameViewModel internal constructor(
             settlementRequested = false
             activeEngine.reset()
             acceptedMoveCount = 0
+            undoUseCount = 0
+            hintUseCount = 0
+            resultOverride = null
             refresh(ChineseChessFeedback.GAME_RESTARTED)
             persistCurrentSession()
         }
+    }
+
+    fun requestHint() {
+        val activeEngine = engine ?: return
+        if (!uiState.isInteractionEnabled || uiState.result != GameResult.ONGOING) return
+        if (!uiState.canRequestHint) {
+            uiState = uiState.copy(
+                feedback = if (
+                    assistancePolicy.hintMode != ChineseChessHintMode.NONE &&
+                    uiState.hintRemaining == 0
+                ) {
+                    ChineseChessFeedback.HINT_LIMIT_REACHED
+                } else {
+                    ChineseChessFeedback.HINT_UNAVAILABLE
+                },
+            )
+            return
+        }
+        when (assistancePolicy.hintMode) {
+            ChineseChessHintMode.ALL_LEGAL_MOVES -> revealAllLegalMoves(activeEngine)
+            ChineseChessHintMode.BEST_MOVE -> calculateBestMoveHint(activeEngine)
+            ChineseChessHintMode.NONE -> {
+                uiState = uiState.copy(feedback = ChineseChessFeedback.HINT_UNAVAILABLE)
+            }
+        }
+    }
+
+    fun resign() {
+        if (!uiState.isInteractionEnabled || uiState.result != GameResult.ONGOING) return
+        resultOverride = if (uiState.currentSide == ChineseChessSide.RED) {
+            GameResult.SECOND_PLAYER_WIN
+        } else {
+            GameResult.FIRST_PLAYER_WIN
+        }
+        refresh(ChineseChessFeedback.PLAYER_RESIGNED)
+        persistCurrentSession()
     }
 
     fun dismissFeedback() {
@@ -199,10 +255,14 @@ class ChineseChessGameViewModel internal constructor(
                         .takeIf(::isValidMatchId)
                         ?: createMatchId()
                     settlementRequested = false
-                    acceptedMoveCount = 0
+                    acceptedMoveCount = snapshot.acceptedMoveCount
+                    undoUseCount = snapshot.undoUseCount
+                    hintUseCount = snapshot.hintUseCount
+                    resultOverride = snapshot.resultOverride
                     refresh(ChineseChessFeedback.GAME_RESTORED)
                     if (
                         isAiGame &&
+                        resultOverride == null &&
                         activeEngine.currentPlayer.value == ChineseChessSide.BLACK.code &&
                         activeEngine.gameResult() == GameResult.ONGOING
                     ) {
@@ -231,6 +291,9 @@ class ChineseChessGameViewModel internal constructor(
             settlementRequested = false
             activeEngine.reset()
             acceptedMoveCount = 0
+            undoUseCount = 0
+            hintUseCount = 0
+            resultOverride = null
             refresh(ChineseChessFeedback.RESTORE_REJECTED)
         }
     }
@@ -330,7 +393,9 @@ class ChineseChessGameViewModel internal constructor(
                     }
                 }
             }
-            val result = activeEngine.gameResult()
+            val result = resultOverride ?: activeEngine.gameResult()
+            val undoRemaining = assistancePolicy.undoRemaining(undoUseCount)
+            val hintRemaining = assistancePolicy.hintRemaining(hintUseCount)
             uiState = ChineseChessGameUiState(
                 board = board,
                 currentSide = when (activeEngine.currentPlayer.value) {
@@ -341,7 +406,14 @@ class ChineseChessGameViewModel internal constructor(
                 result = result,
                 canUndo =
                     acceptedMoveCount > 0 &&
-                        (!isAiGame || result == GameResult.ONGOING),
+                        result == GameResult.ONGOING &&
+                        (undoRemaining == null || undoRemaining > 0),
+                undoRemaining = undoRemaining,
+                canRequestHint =
+                    result == GameResult.ONGOING &&
+                        assistancePolicy.hintMode != ChineseChessHintMode.NONE &&
+                        (hintRemaining == null || hintRemaining > 0),
+                hintRemaining = hintRemaining,
                 isAiGame = isAiGame,
                 difficulty = difficulty,
                 feedback = feedback,
@@ -354,8 +426,88 @@ class ChineseChessGameViewModel internal constructor(
         uiState = uiState.copy(
             selectedPosition = null,
             legalDestinations = emptySet(),
+            hintedOrigins = emptySet(),
+            hintedDestinations = emptySet(),
             feedback = null,
         )
+    }
+
+    private fun revealAllLegalMoves(activeEngine: ChineseChessRuleEngine) {
+        runEngineOperation {
+            val moves = activeEngine.legalActions()
+            if (moves.isEmpty()) {
+                uiState = uiState.copy(feedback = ChineseChessFeedback.HINT_UNAVAILABLE)
+                return@runEngineOperation
+            }
+            uiState = uiState.copy(
+                selectedPosition = null,
+                legalDestinations = emptySet(),
+                hintedOrigins = moves.mapTo(mutableSetOf(), BoardMove::from),
+                hintedDestinations = moves.mapTo(mutableSetOf(), BoardMove::to),
+                feedback = ChineseChessFeedback.HINT_READY,
+            )
+            persistCurrentSession()
+        }
+    }
+
+    private fun calculateBestMoveHint(activeEngine: ChineseChessRuleEngine) {
+        val aiEngine = activeEngine as? ChineseChessAiEngine
+        val selectedDifficulty = difficulty
+        if (aiEngine == null || selectedDifficulty == null) {
+            uiState = uiState.copy(
+                feedback = ChineseChessFeedback.HINT_UNAVAILABLE,
+            )
+            return
+        }
+        uiState = uiState.copy(
+            selectedPosition = null,
+            legalDestinations = emptySet(),
+            hintedOrigins = emptySet(),
+            hintedDestinations = emptySet(),
+            isHintThinking = true,
+            feedback = null,
+        )
+        viewModelScope.launch {
+            val move = try {
+                withContext(aiDispatcher) {
+                    aiEngine.chooseMove(selectedDifficulty)
+                }
+            } catch (_: RuntimeException) {
+                disableEngine()
+                return@launch
+            } catch (_: LinkageError) {
+                disableEngine()
+                return@launch
+            }
+            if (engine !== activeEngine) return@launch
+            val hintedMove = try {
+                move?.takeIf { it in activeEngine.legalActions() }
+            } catch (_: RuntimeException) {
+                disableEngine()
+                return@launch
+            } catch (_: LinkageError) {
+                disableEngine()
+                return@launch
+            }
+            if (hintedMove == null) {
+                uiState = uiState.copy(
+                    isHintThinking = false,
+                    feedback = ChineseChessFeedback.HINT_UNAVAILABLE,
+                )
+                return@launch
+            }
+            hintUseCount++
+            uiState = uiState.copy(
+                hintedOrigins = setOf(hintedMove.from),
+                hintedDestinations = setOf(hintedMove.to),
+                isHintThinking = false,
+                canRequestHint =
+                    assistancePolicy.hintRemaining(hintUseCount)?.let { it > 0 } ?: true,
+                hintRemaining = assistancePolicy.hintRemaining(hintUseCount),
+                feedback = ChineseChessFeedback.HINT_READY,
+            )
+            persistCurrentSession()
+        }
     }
 
     private fun undoTurn(activeEngine: ChineseChessRuleEngine): Boolean {
@@ -392,6 +544,8 @@ class ChineseChessGameViewModel internal constructor(
         uiState = uiState.copy(
             selectedPosition = null,
             legalDestinations = emptySet(),
+            hintedOrigins = emptySet(),
+            hintedDestinations = emptySet(),
             isAiThinking = true,
             isPersisting = humanSnapshot != null && sessionRepository != null,
         )
@@ -455,6 +609,10 @@ class ChineseChessGameViewModel internal constructor(
             engineState = engineState,
             updatedAtEpochMillis = nowEpochMillis(),
             sessionId = matchId,
+            acceptedMoveCount = acceptedMoveCount,
+            undoUseCount = undoUseCount,
+            hintUseCount = hintUseCount,
+            resultOverride = resultOverride,
         )
 
     private fun requestSettlement(result: GameResult) {
@@ -505,10 +663,15 @@ class ChineseChessGameViewModel internal constructor(
         uiState = uiState.copy(
             selectedPosition = null,
             legalDestinations = emptySet(),
+            hintedOrigins = emptySet(),
+            hintedDestinations = emptySet(),
             canUndo = false,
+            canRequestHint = false,
             isEngineAvailable = false,
             isRestoring = false,
             isPersisting = false,
+            isAiThinking = false,
+            isHintThinking = false,
             feedback = ChineseChessFeedback.ENGINE_UNAVAILABLE,
         )
     }
