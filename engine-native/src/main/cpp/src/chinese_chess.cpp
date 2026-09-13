@@ -29,6 +29,10 @@ constexpr std::int32_t easy_score_window = 80;
 constexpr std::size_t easy_candidate_limit = 3;
 constexpr std::int32_t medium_score_window = 30;
 constexpr std::size_t medium_candidate_limit = 2;
+constexpr std::size_t hard_candidate_limit = 1;
+constexpr std::size_t easy_node_limit = 10'000;
+constexpr std::size_t medium_node_limit = 50'000;
+constexpr std::size_t hard_node_limit = 150'000;
 
 void append_u16(
     std::vector<std::uint8_t>& data,
@@ -270,7 +274,8 @@ std::optional<EngineAction> ChineseChessEngine::best_move(
 ) const {
     if (
         (difficulty != Difficulty::easy &&
-         difficulty != Difficulty::medium) ||
+         difficulty != Difficulty::medium &&
+         difficulty != Difficulty::hard) ||
         game_result() != GameResult::ongoing
     ) {
         return std::nullopt;
@@ -282,22 +287,37 @@ std::optional<EngineAction> ChineseChessEngine::best_move(
     };
 
     const auto perspective = current_side_;
-    const auto search_depth =
-        difficulty == Difficulty::easy ? 1 : 2;
+    const auto search_depth = difficulty == Difficulty::easy
+        ? 1
+        : (difficulty == Difficulty::medium ? 2 : 3);
+    SearchContext search_context{
+        0,
+        difficulty == Difficulty::easy
+            ? easy_node_limit
+            : (
+                difficulty == Difficulty::medium
+                    ? medium_node_limit
+                    : hard_node_limit
+            ),
+    };
     std::vector<ScoredAction> scored;
     for (const auto& action : legal_actions()) {
         auto next = *this;
         if (!next.apply(action).accepted) {
             continue;
         }
-        auto score = next.search_score(
-            search_depth - 1,
-            perspective,
-            std::numeric_limits<std::int32_t>::min(),
-            std::numeric_limits<std::int32_t>::max()
-        );
+        const auto next_result = next.game_result();
+        auto score = next_result == GameResult::ongoing
+            ? next.search_score(
+                search_depth - 1,
+                perspective,
+                std::numeric_limits<std::int32_t>::min(),
+                std::numeric_limits<std::int32_t>::max(),
+                search_context
+            )
+            : next.evaluate_for(perspective);
         if (
-            next.game_result() == GameResult::ongoing &&
+            next_result == GameResult::ongoing &&
             next.is_in_check(next.current_side_)
         ) {
             score += check_bonus;
@@ -318,10 +338,14 @@ std::optional<EngineAction> ChineseChessEngine::best_move(
     const auto best_score = scored.front().score;
     const auto candidate_limit = difficulty == Difficulty::easy
         ? easy_candidate_limit
-        : medium_candidate_limit;
+        : (
+            difficulty == Difficulty::medium
+                ? medium_candidate_limit
+                : hard_candidate_limit
+        );
     const auto score_window = difficulty == Difficulty::easy
         ? easy_score_window
-        : medium_score_window;
+        : (difficulty == Difficulty::medium ? medium_score_window : 0);
     std::size_t candidate_count = 0;
     while (
         candidate_count < scored.size() &&
@@ -930,12 +954,30 @@ std::int32_t ChineseChessEngine::evaluate_for(
         return perspective_wins ? winning_score : -winning_score;
     }
 
+    return material_score(perspective);
+}
+
+std::int32_t ChineseChessEngine::material_score(
+    const Side perspective
+) const noexcept {
     std::int32_t score = 0;
-    for (const auto& piece : board_) {
+    for (std::size_t square = 0; square < board_.size(); ++square) {
+        const auto& piece = board_[square];
         if (!piece) {
             continue;
         }
-        const auto value = piece_value(piece->type);
+        auto value = piece_value(piece->type);
+        if (piece->type == PieceType::soldier) {
+            const auto y = static_cast<std::int32_t>(
+                square / static_cast<std::size_t>(board_width)
+            );
+            const auto crossed_river =
+                (piece->side == Side::red && y <= 4) ||
+                (piece->side == Side::black && y >= 5);
+            if (crossed_river) {
+                value += 30;
+            }
+        }
         score += piece->side == perspective ? value : -value;
     }
     return score;
@@ -958,15 +1000,54 @@ std::int32_t ChineseChessEngine::search_score(
     const std::int32_t depth,
     const Side perspective,
     std::int32_t alpha,
-    std::int32_t beta
+    std::int32_t beta,
+    SearchContext& context
 ) const {
-    if (depth <= 0 || game_result() != GameResult::ongoing) {
+    if (context.visited_nodes >= context.node_limit) {
+        return material_score(perspective);
+    }
+    ++context.visited_nodes;
+    if (
+        !has_general(Side::red) ||
+        !has_general(Side::black) ||
+        adjudicated_result_ != GameResult::ongoing
+    ) {
         return evaluate_for(perspective);
     }
-    const auto actions = legal_actions();
+    if (depth <= 0) {
+        // Mate at the search horizon must outrank any material gain. Restrict
+        // the extra legal-move scan to checked positions to keep the hard
+        // difficulty within its deterministic node budget.
+        if (is_in_check(current_side_) && !has_legal_action()) {
+            return evaluate_for(perspective);
+        }
+        return material_score(perspective);
+    }
+    auto actions = legal_actions();
     if (actions.empty()) {
         return evaluate_for(perspective);
     }
+    std::stable_sort(
+        actions.begin(),
+        actions.end(),
+        [this](const EngineAction& left, const EngineAction& right) {
+            const auto left_target = index(
+                left.arguments[2],
+                left.arguments[3]
+            );
+            const auto right_target = index(
+                right.arguments[2],
+                right.arguments[3]
+            );
+            const auto left_value = board_[left_target]
+                ? piece_value(board_[left_target]->type)
+                : 0;
+            const auto right_value = board_[right_target]
+                ? piece_value(board_[right_target]->type)
+                : 0;
+            return left_value > right_value;
+        }
+    );
 
     const auto maximize = current_side_ == perspective;
     auto best = maximize
@@ -981,7 +1062,8 @@ std::int32_t ChineseChessEngine::search_score(
             depth - 1,
             perspective,
             alpha,
-            beta
+            beta,
+            context
         );
         if (maximize) {
             best = std::max(best, score);

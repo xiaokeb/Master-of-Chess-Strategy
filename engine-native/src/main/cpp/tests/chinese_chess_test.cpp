@@ -353,7 +353,20 @@ void easy_ai_returns_legal_move_without_mutating_position() {
         )
     );
     assert(engine.serialize() == before);
-    assert(!engine.best_move(Difficulty::hard));
+    const auto hard = engine.best_move(Difficulty::hard);
+    assert(hard);
+    assert(
+        std::any_of(
+            legal.begin(),
+            legal.end(),
+            [&hard](const auto& action) {
+                return action.kind == hard->kind &&
+                    action.arguments == hard->arguments;
+            }
+        )
+    );
+    assert(engine.serialize() == before);
+    assert(!engine.best_move(Difficulty::master));
 }
 
 }  // namespace

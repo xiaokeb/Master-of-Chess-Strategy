@@ -114,22 +114,24 @@ class ChineseChessAiGameViewModelTest {
     }
 
     @Test
-    fun mediumMatchPassesMediumDifficultyToSearch() = runTest(dispatcher) {
-        val engine = FakeAiEngine()
-        val viewModel = ChineseChessGameViewModel(
-            mode = StoredGameMode.HUMAN_VS_AI,
-            difficulty = Difficulty.MEDIUM,
-            aiDispatcher = dispatcher,
-            engineFactory = { engine },
-        )
+    fun implementedHigherDifficultiesReachSearchUnchanged() = runTest(dispatcher) {
+        listOf(Difficulty.MEDIUM, Difficulty.HARD).forEach { difficulty ->
+            val engine = FakeAiEngine()
+            val viewModel = ChineseChessGameViewModel(
+                mode = StoredGameMode.HUMAN_VS_AI,
+                difficulty = difficulty,
+                aiDispatcher = dispatcher,
+                engineFactory = { engine },
+            )
 
-        viewModel.onSquareTap(engine.redFrom)
-        viewModel.onSquareTap(engine.redTo)
-        advanceUntilIdle()
+            viewModel.onSquareTap(engine.redFrom)
+            viewModel.onSquareTap(engine.redTo)
+            advanceUntilIdle()
 
-        assertEquals(Difficulty.MEDIUM, engine.lastDifficulty)
-        assertEquals(Difficulty.MEDIUM, viewModel.uiState.difficulty)
-        assertEquals(ChineseChessSide.RED, viewModel.uiState.currentSide)
+            assertEquals(difficulty, engine.lastDifficulty)
+            assertEquals(difficulty, viewModel.uiState.difficulty)
+            assertEquals(ChineseChessSide.RED, viewModel.uiState.currentSide)
+        }
     }
 
     private class RecordingSessionRepository : GameSessionRepository {

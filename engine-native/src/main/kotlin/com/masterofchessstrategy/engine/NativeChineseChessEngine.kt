@@ -65,8 +65,8 @@ class NativeChineseChessEngine internal constructor(
     }
 
     override fun chooseMove(difficulty: Difficulty): BoardMove? {
-        require(difficulty == Difficulty.EASY || difficulty == Difficulty.MEDIUM) {
-            "Only easy and medium Chinese chess AI are currently available"
+        require(difficulty != Difficulty.MASTER) {
+            "Master Chinese chess AI is not currently available"
         }
         val encoded = withHandle {
             bridge.bestMove(it, difficulty.code)

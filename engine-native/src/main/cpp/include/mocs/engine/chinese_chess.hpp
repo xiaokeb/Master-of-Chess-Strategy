@@ -110,6 +110,11 @@ private:
         }
     };
 
+    struct SearchContext {
+        std::size_t visited_nodes;
+        std::size_t node_limit;
+    };
+
     [[nodiscard]] static bool is_inside(
         std::int32_t x,
         std::int32_t y
@@ -174,12 +179,16 @@ private:
     [[nodiscard]] std::int32_t evaluate_for(
         Side perspective
     ) const noexcept;
+    [[nodiscard]] std::int32_t material_score(
+        Side perspective
+    ) const noexcept;
     [[nodiscard]] std::uint64_t position_seed() const noexcept;
     [[nodiscard]] std::int32_t search_score(
         std::int32_t depth,
         Side perspective,
         std::int32_t alpha,
-        std::int32_t beta
+        std::int32_t beta,
+        SearchContext& context
     ) const;
     void adjudicate_history() noexcept;
 

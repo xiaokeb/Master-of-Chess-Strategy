@@ -71,6 +71,18 @@ class AppNavigationModelTest {
     }
 
     @Test
+    fun fifteenMediumWinsUnlockImplementedHardDifficulty() {
+        val entries = chineseChessDifficulties(
+            tutorialCompleted = true,
+            winsByDifficulty = mapOf(Difficulty.MEDIUM to 15),
+        )
+        val hard = entries.single { it.difficulty == Difficulty.HARD }
+
+        assertTrue(hard.isUnlocked)
+        assertTrue(hard.isPlayable)
+    }
+
+    @Test
     fun tutorialHistoryReturnsDirectlyToTutorial() {
         val selection = LastGameSelection(
             gameType = GameType.CHINESE_CHESS,

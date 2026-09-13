@@ -73,6 +73,6 @@ internal fun chineseChessDifficulties(
             isUnlocked = isUnlocked,
             isPlayable =
                 isUnlocked &&
-                    difficulty in setOf(Difficulty.EASY, Difficulty.MEDIUM),
+                    difficulty != Difficulty.MASTER,
         )
     }

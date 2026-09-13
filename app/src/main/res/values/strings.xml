@@ -20,6 +20,7 @@
     <string name="medium_ai_game">普通人机 · 中等</string>
     <string name="medium_ai_enabled">中等 AI 已启用 · 执黑</string>
     <string name="hard_ai_game">普通人机 · 困难</string>
+    <string name="hard_ai_enabled">困难 AI 已启用 · 执黑</string>
     <string name="master_ai_game">普通人机 · 大师</string>
     <string name="ai_thinking">简单 AI 思考中…</string>
     <string name="wait_for_ai">请等待黑方 AI 完成走子</string>

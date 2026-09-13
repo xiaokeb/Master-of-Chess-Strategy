@@ -48,6 +48,8 @@ class NativeBridgeInstrumentedTest {
             assertTrue(aiMove in engine.legalActions())
             val mediumMove = requireNotNull(engine.chooseMove(Difficulty.MEDIUM))
             assertTrue(mediumMove in engine.legalActions())
+            val hardMove = requireNotNull(engine.chooseMove(Difficulty.HARD))
+            assertTrue(hardMove in engine.legalActions())
             assertTrue(engine.undo())
             assertTrue(initial.contentEquals(engine.serialize()))
             assertEquals(RestoreResult.Restored, engine.restore(initial))

@@ -45,8 +45,8 @@ internal fun HomeScreen(
     quickStartEntries: Set<HomeGameEntry>,
     onQuickStart: (HomeGameEntry) -> Unit,
     onSettings: () -> Unit,
-    playerSummary: LocalPlayerSummary = InitialPlayerSummary,
     modifier: Modifier = Modifier,
+    playerSummary: LocalPlayerSummary = InitialPlayerSummary,
 ) {
     Surface(modifier = modifier.fillMaxSize()) {
         BoxWithConstraints(

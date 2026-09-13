@@ -80,9 +80,9 @@ internal fun ChineseChessModeScreen(
 internal fun ChineseChessDifficultyScreen(
     onBack: () -> Unit,
     tutorialCompleted: Boolean,
-    winsByDifficulty: Map<Difficulty, Int> = emptyMap(),
     onDifficultySelected: (Difficulty) -> Unit,
     modifier: Modifier = Modifier,
+    winsByDifficulty: Map<Difficulty, Int> = emptyMap(),
 ) {
     Surface(
         modifier = modifier

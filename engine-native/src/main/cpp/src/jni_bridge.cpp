@@ -220,7 +220,7 @@ Java_com_masterofchessstrategy_engine_internal_NativeBindings_chineseChessBestMo
     return guard_jni<jintArray>(env, nullptr, [env, handle, difficulty_code] {
         if (
             difficulty_code < static_cast<jint>(mocs::engine::Difficulty::easy) ||
-            difficulty_code > static_cast<jint>(mocs::engine::Difficulty::medium)
+            difficulty_code > static_cast<jint>(mocs::engine::Difficulty::hard)
         ) {
             throw std::invalid_argument("Unsupported AI difficulty");
         }

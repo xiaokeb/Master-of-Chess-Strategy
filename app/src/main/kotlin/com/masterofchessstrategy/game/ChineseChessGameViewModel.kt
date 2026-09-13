@@ -71,9 +71,10 @@ class ChineseChessGameViewModel internal constructor(
             require(
                 !isAiGame ||
                     difficulty == Difficulty.EASY ||
-                    difficulty == Difficulty.MEDIUM
+                    difficulty == Difficulty.MEDIUM ||
+                    difficulty == Difficulty.HARD
             ) {
-                "Human versus AI currently requires easy or medium difficulty"
+                "Human versus AI currently requires easy, medium, or hard difficulty"
             }
             engine = engineFactory().also { created ->
                 require(!isAiGame || created is ChineseChessAiEngine) {
@@ -377,7 +378,7 @@ class ChineseChessGameViewModel internal constructor(
     ) {
         val aiEngine = activeEngine as? ChineseChessAiEngine
         val selectedDifficulty = difficulty?.takeIf {
-            it == Difficulty.EASY || it == Difficulty.MEDIUM
+            it != Difficulty.MASTER
         }
         if (aiEngine == null || selectedDifficulty == null) {
             disableEngine()

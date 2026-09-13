@@ -281,7 +281,7 @@ fun MasterOfChessStrategyApp() {
                 val difficulty = checkNotNull(
                     Difficulty.entries.firstOrNull {
                         it.code == difficultyCode &&
-                            it in setOf(Difficulty.EASY, Difficulty.MEDIUM)
+                            it != Difficulty.MASTER
                     },
                 ) {
                     "Unsupported Chinese chess AI route"
@@ -335,9 +335,9 @@ internal fun ChineseChessGameScreen(
     onUndo: () -> Unit,
     onRestart: () -> Unit,
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     settings: AppSettings = AppSettings.DEFAULT,
     onSettings: () -> Unit = {},
-    modifier: Modifier = Modifier,
 ) {
     BackHandler(enabled = state.isRestoring || state.isPersisting || state.isAiThinking) {
         // Keep the destination alive until the atomic Room operation finishes.
@@ -598,6 +598,7 @@ private fun aiCapabilityText(state: ChineseChessGameUiState): Int =
     when (state.difficulty) {
         Difficulty.EASY -> R.string.easy_ai_enabled
         Difficulty.MEDIUM -> R.string.medium_ai_enabled
+        Difficulty.HARD -> R.string.hard_ai_enabled
         else -> R.string.ai_not_available
     }
 
