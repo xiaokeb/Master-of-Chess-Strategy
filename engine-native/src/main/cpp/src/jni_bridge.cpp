@@ -219,13 +219,13 @@ Java_com_masterofchessstrategy_engine_internal_NativeBindings_chineseChessBestMo
 ) noexcept {
     return guard_jni<jintArray>(env, nullptr, [env, handle, difficulty_code] {
         if (
-            difficulty_code !=
-            static_cast<jint>(mocs::engine::Difficulty::easy)
+            difficulty_code < static_cast<jint>(mocs::engine::Difficulty::easy) ||
+            difficulty_code > static_cast<jint>(mocs::engine::Difficulty::medium)
         ) {
             throw std::invalid_argument("Unsupported AI difficulty");
         }
         const auto action = require_chinese_chess_engine(handle)->best_move(
-            mocs::engine::Difficulty::easy
+            static_cast<mocs::engine::Difficulty>(difficulty_code)
         );
         const auto result = env->NewIntArray(action ? 4 : 0);
         if (result != nullptr && action) {

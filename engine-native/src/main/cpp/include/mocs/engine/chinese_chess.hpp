@@ -175,6 +175,12 @@ private:
         Side perspective
     ) const noexcept;
     [[nodiscard]] std::uint64_t position_seed() const noexcept;
+    [[nodiscard]] std::int32_t search_score(
+        std::int32_t depth,
+        Side perspective,
+        std::int32_t alpha,
+        std::int32_t beta
+    ) const;
     void adjudicate_history() noexcept;
 
     Board board_{};

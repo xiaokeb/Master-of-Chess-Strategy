@@ -9,8 +9,13 @@ internal object AppDestination {
     const val CHINESE_CHESS_DIFFICULTY = "chinese-chess/difficulty"
     const val CHINESE_CHESS_TUTORIAL = "chinese-chess/tutorial"
     const val CHINESE_CHESS_GAME = "chinese-chess/game"
-    const val CHINESE_CHESS_AI_GAME = "chinese-chess/ai-game"
+    const val AI_DIFFICULTY_ARGUMENT = "difficultyCode"
+    const val CHINESE_CHESS_AI_GAME =
+        "chinese-chess/ai-game/{$AI_DIFFICULTY_ARGUMENT}"
     const val SETTINGS = "settings"
+
+    fun chineseChessAiGame(difficulty: Difficulty): String =
+        "chinese-chess/ai-game/" + difficulty.code
 }
 
 /** Five first-level cards required by the product layout. */
@@ -66,6 +71,8 @@ internal fun chineseChessDifficulties(
         DifficultyEntry(
             difficulty = difficulty,
             isUnlocked = isUnlocked,
-            isPlayable = isUnlocked && difficulty == Difficulty.EASY,
+            isPlayable =
+                isUnlocked &&
+                    difficulty in setOf(Difficulty.EASY, Difficulty.MEDIUM),
         )
     }

@@ -5,6 +5,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import com.masterofchessstrategy.data.AppSettings
@@ -128,6 +129,25 @@ class AppNavigationScreenTest {
 
         composeRule.runOnIdle {
             assertEquals(Difficulty.EASY, selected)
+        }
+    }
+
+    @Test
+    fun tenEasyWinsMakeMediumDifficultySelectable() {
+        var selected: Difficulty? = null
+        composeRule.setContent {
+            ChineseChessDifficultyScreen(
+                onBack = {},
+                tutorialCompleted = true,
+                winsByDifficulty = mapOf(Difficulty.EASY to 10),
+                onDifficultySelected = { selected = it },
+            )
+        }
+
+        composeRule.onNodeWithText("中等").performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(Difficulty.MEDIUM, selected)
         }
     }
 }

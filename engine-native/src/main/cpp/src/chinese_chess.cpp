@@ -27,6 +27,8 @@ constexpr std::int32_t winning_score = 1'000'000;
 constexpr std::int32_t check_bonus = 30;
 constexpr std::int32_t easy_score_window = 80;
 constexpr std::size_t easy_candidate_limit = 3;
+constexpr std::int32_t medium_score_window = 30;
+constexpr std::size_t medium_candidate_limit = 2;
 
 void append_u16(
     std::vector<std::uint8_t>& data,
@@ -267,7 +269,8 @@ std::optional<EngineAction> ChineseChessEngine::best_move(
     const Difficulty difficulty
 ) const {
     if (
-        difficulty != Difficulty::easy ||
+        (difficulty != Difficulty::easy &&
+         difficulty != Difficulty::medium) ||
         game_result() != GameResult::ongoing
     ) {
         return std::nullopt;
@@ -279,13 +282,20 @@ std::optional<EngineAction> ChineseChessEngine::best_move(
     };
 
     const auto perspective = current_side_;
+    const auto search_depth =
+        difficulty == Difficulty::easy ? 1 : 2;
     std::vector<ScoredAction> scored;
     for (const auto& action : legal_actions()) {
         auto next = *this;
         if (!next.apply(action).accepted) {
             continue;
         }
-        auto score = next.evaluate_for(perspective);
+        auto score = next.search_score(
+            search_depth - 1,
+            perspective,
+            std::numeric_limits<std::int32_t>::min(),
+            std::numeric_limits<std::int32_t>::max()
+        );
         if (
             next.game_result() == GameResult::ongoing &&
             next.is_in_check(next.current_side_)
@@ -306,11 +316,17 @@ std::optional<EngineAction> ChineseChessEngine::best_move(
         }
     );
     const auto best_score = scored.front().score;
+    const auto candidate_limit = difficulty == Difficulty::easy
+        ? easy_candidate_limit
+        : medium_candidate_limit;
+    const auto score_window = difficulty == Difficulty::easy
+        ? easy_score_window
+        : medium_score_window;
     std::size_t candidate_count = 0;
     while (
         candidate_count < scored.size() &&
-        candidate_count < easy_candidate_limit &&
-        scored[candidate_count].score >= best_score - easy_score_window
+        candidate_count < candidate_limit &&
+        scored[candidate_count].score >= best_score - score_window
     ) {
         ++candidate_count;
     }
@@ -936,6 +952,49 @@ std::uint64_t ChineseChessEngine::position_seed() const noexcept {
     seed ^= static_cast<std::uint8_t>(current_side_);
     seed *= prime;
     return seed;
+}
+
+std::int32_t ChineseChessEngine::search_score(
+    const std::int32_t depth,
+    const Side perspective,
+    std::int32_t alpha,
+    std::int32_t beta
+) const {
+    if (depth <= 0 || game_result() != GameResult::ongoing) {
+        return evaluate_for(perspective);
+    }
+    const auto actions = legal_actions();
+    if (actions.empty()) {
+        return evaluate_for(perspective);
+    }
+
+    const auto maximize = current_side_ == perspective;
+    auto best = maximize
+        ? std::numeric_limits<std::int32_t>::min()
+        : std::numeric_limits<std::int32_t>::max();
+    for (const auto& action : actions) {
+        auto next = *this;
+        if (!next.apply(action).accepted) {
+            continue;
+        }
+        const auto score = next.search_score(
+            depth - 1,
+            perspective,
+            alpha,
+            beta
+        );
+        if (maximize) {
+            best = std::max(best, score);
+            alpha = std::max(alpha, best);
+        } else {
+            best = std::min(best, score);
+            beta = std::min(beta, best);
+        }
+        if (beta <= alpha) {
+            break;
+        }
+    }
+    return best;
 }
 
 void ChineseChessEngine::adjudicate_history() noexcept {

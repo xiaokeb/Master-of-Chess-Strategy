@@ -59,7 +59,7 @@ class AppNavigationModelTest {
     }
 
     @Test
-    fun verifiedWinsUnlockPrerequisiteWithoutPretendingEngineExists() {
+    fun verifiedWinsUnlockMediumDifficultyAndItsImplementedEngine() {
         val entries = chineseChessDifficulties(
             tutorialCompleted = true,
             winsByDifficulty = mapOf(Difficulty.EASY to 10),
@@ -67,7 +67,7 @@ class AppNavigationModelTest {
         val medium = entries.single { it.difficulty == Difficulty.MEDIUM }
 
         assertTrue(medium.isUnlocked)
-        assertFalse(medium.isPlayable)
+        assertTrue(medium.isPlayable)
     }
 
     @Test
@@ -97,6 +97,14 @@ class AppNavigationModelTest {
         assertEquals(
             QuickStartDestination.AI_GAME,
             selection.quickStartDestination(),
+        )
+    }
+
+    @Test
+    fun aiRouteCarriesStableMediumDifficultyCode() {
+        assertEquals(
+            "chinese-chess/ai-game/1",
+            AppDestination.chineseChessAiGame(Difficulty.MEDIUM),
         )
     }
 }

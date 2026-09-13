@@ -32,8 +32,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.masterofchessstrategy.R
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.AppSettings
@@ -57,6 +59,7 @@ import com.masterofchessstrategy.navigation.AppDestination
 import com.masterofchessstrategy.navigation.AppNavigationViewModel
 import com.masterofchessstrategy.navigation.HomeGameEntry
 import com.masterofchessstrategy.navigation.QuickStartDestination
+import com.masterofchessstrategy.navigation.chineseChessDifficulties
 import com.masterofchessstrategy.progress.PlayerStatisticsViewModel
 import com.masterofchessstrategy.settings.AppSettingsViewModel
 import com.masterofchessstrategy.tutorial.ChineseChessTutorialViewModel
@@ -118,6 +121,13 @@ fun MasterOfChessStrategyApp() {
         } else {
             setOf(HomeGameEntry.CHINESE_CHESS)
         }
+        val chineseChessWins = statisticsViewModel.uiState.statistics
+            .winsByGameAndDifficulty[GameType.CHINESE_CHESS]
+            .orEmpty()
+        val difficultyEntries = chineseChessDifficulties(
+            tutorialCompleted = tutorialViewModel.uiState.progress.isCompleted,
+            winsByDifficulty = chineseChessWins,
+        )
         NavHost(
             navController = navController,
             startDestination = AppDestination.HOME,
@@ -145,8 +155,16 @@ fun MasterOfChessStrategyApp() {
                                 }
 
                                 QuickStartDestination.AI_GAME -> {
-                                    if (tutorialViewModel.uiState.progress.isCompleted) {
-                                        AppDestination.CHINESE_CHESS_AI_GAME
+                                    val difficulty = navigationViewModel.uiState
+                                        .lastChineseChessSelection
+                                        ?.difficulty
+                                    if (
+                                        difficulty != null &&
+                                        difficultyEntries.any {
+                                            it.difficulty == difficulty && it.isPlayable
+                                        }
+                                    ) {
+                                        AppDestination.chineseChessAiGame(difficulty)
                                     } else {
                                         AppDestination.CHINESE_CHESS_DIFFICULTY
                                     }
@@ -202,19 +220,20 @@ fun MasterOfChessStrategyApp() {
                     onBack = navController::popBackStack,
                     tutorialCompleted = tutorialViewModel.uiState.progress.isCompleted,
                     winsByDifficulty =
-                        statisticsViewModel.uiState.statistics
-                            .winsByGameAndDifficulty[GameType.CHINESE_CHESS]
-                            .orEmpty(),
+                        chineseChessWins,
                     onDifficultySelected = { difficulty ->
                         if (
-                            difficulty == Difficulty.EASY &&
-                            tutorialViewModel.uiState.progress.isCompleted
+                            difficultyEntries.any {
+                                it.difficulty == difficulty && it.isPlayable
+                            }
                         ) {
                             navigationViewModel.recordChineseChessSelection(
                                 StoredGameMode.HUMAN_VS_AI,
                                 difficulty,
                             )
-                            navController.navigate(AppDestination.CHINESE_CHESS_AI_GAME)
+                            navController.navigate(
+                                AppDestination.chineseChessAiGame(difficulty),
+                            )
                         }
                     },
                 )
@@ -249,12 +268,33 @@ fun MasterOfChessStrategyApp() {
                     },
                 )
             }
-            composable(AppDestination.CHINESE_CHESS_AI_GAME) {
-                val factory = remember(gameSessionRepository, statisticsViewModel) {
+            composable(
+                route = AppDestination.CHINESE_CHESS_AI_GAME,
+                arguments = listOf(
+                    navArgument(AppDestination.AI_DIFFICULTY_ARGUMENT) {
+                        type = NavType.IntType
+                    },
+                ),
+            ) { backStackEntry ->
+                val difficultyCode = backStackEntry.arguments
+                    ?.getInt(AppDestination.AI_DIFFICULTY_ARGUMENT)
+                val difficulty = checkNotNull(
+                    Difficulty.entries.firstOrNull {
+                        it.code == difficultyCode &&
+                            it in setOf(Difficulty.EASY, Difficulty.MEDIUM)
+                    },
+                ) {
+                    "Unsupported Chinese chess AI route"
+                }
+                val factory = remember(
+                    gameSessionRepository,
+                    statisticsViewModel,
+                    difficulty,
+                ) {
                     ChineseChessGameViewModel.factory(
                         repository = gameSessionRepository,
                         mode = StoredGameMode.HUMAN_VS_AI,
-                        difficulty = Difficulty.EASY,
+                        difficulty = difficulty,
                         onMatchFinished = statisticsViewModel::record,
                     )
                 }
@@ -386,13 +426,7 @@ private fun GameHeader(
                     style = MaterialTheme.typography.headlineMedium,
                 )
                 Text(
-                    text = stringResource(
-                        if (state.isAiGame) {
-                            R.string.easy_ai_game
-                        } else {
-                            R.string.local_two_player
-                        },
-                    ),
+                    text = stringResource(gameModeTitle(state)),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -518,11 +552,7 @@ private fun GameControls(
             ) {
                 Text(
                     stringResource(
-                        if (state.isAiGame) {
-                            R.string.easy_ai_enabled
-                        } else {
-                            R.string.ai_not_available
-                        },
+                        aiCapabilityText(state),
                     ),
                 )
             }
@@ -553,6 +583,22 @@ private fun gameStatusText(state: ChineseChessGameUiState): String =
         state.result == GameResult.DRAW -> stringResource(R.string.draw)
         state.currentSide == ChineseChessSide.RED -> stringResource(R.string.red_to_move)
         else -> stringResource(R.string.black_to_move)
+    }
+
+private fun gameModeTitle(state: ChineseChessGameUiState): Int =
+    when (state.difficulty) {
+        Difficulty.EASY -> R.string.easy_ai_game
+        Difficulty.MEDIUM -> R.string.medium_ai_game
+        Difficulty.HARD -> R.string.hard_ai_game
+        Difficulty.MASTER -> R.string.master_ai_game
+        null -> R.string.local_two_player
+    }
+
+private fun aiCapabilityText(state: ChineseChessGameUiState): Int =
+    when (state.difficulty) {
+        Difficulty.EASY -> R.string.easy_ai_enabled
+        Difficulty.MEDIUM -> R.string.medium_ai_enabled
+        else -> R.string.ai_not_available
     }
 
 @Composable

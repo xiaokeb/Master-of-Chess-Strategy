@@ -113,6 +113,25 @@ class ChineseChessAiGameViewModelTest {
         assertTrue(outcomes.single().isWin)
     }
 
+    @Test
+    fun mediumMatchPassesMediumDifficultyToSearch() = runTest(dispatcher) {
+        val engine = FakeAiEngine()
+        val viewModel = ChineseChessGameViewModel(
+            mode = StoredGameMode.HUMAN_VS_AI,
+            difficulty = Difficulty.MEDIUM,
+            aiDispatcher = dispatcher,
+            engineFactory = { engine },
+        )
+
+        viewModel.onSquareTap(engine.redFrom)
+        viewModel.onSquareTap(engine.redTo)
+        advanceUntilIdle()
+
+        assertEquals(Difficulty.MEDIUM, engine.lastDifficulty)
+        assertEquals(Difficulty.MEDIUM, viewModel.uiState.difficulty)
+        assertEquals(ChineseChessSide.RED, viewModel.uiState.currentSide)
+    }
+
     private class RecordingSessionRepository : GameSessionRepository {
         val saved = mutableListOf<GameSessionSnapshot>()
 
@@ -156,6 +175,8 @@ class ChineseChessAiGameViewModelTest {
             private set
         var undoCalls = 0
             private set
+        var lastDifficulty: Difficulty? = null
+            private set
 
         override val currentPlayer: PlayerId
             get() = player
@@ -195,7 +216,7 @@ class ChineseChessAiGameViewModelTest {
             }
 
         override fun chooseMove(difficulty: Difficulty): BoardMove? {
-            assertEquals(Difficulty.EASY, difficulty)
+            lastDifficulty = difficulty
             chooseCalls++
             return legalActions().single()
         }

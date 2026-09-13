@@ -101,7 +101,7 @@ class NativeChineseChessEngineTest {
                 engine.chooseMove(Difficulty.EASY)
             }
             assertThrows(IllegalArgumentException::class.java) {
-                engine.chooseMove(Difficulty.MEDIUM)
+                engine.chooseMove(Difficulty.HARD)
             }
         }
     }

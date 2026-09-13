@@ -17,6 +17,10 @@
     <string name="ai_not_available">人机对局 · 待接入</string>
     <string name="easy_ai_game">普通人机 · 简单</string>
     <string name="easy_ai_enabled">简单 AI 已启用 · 执黑</string>
+    <string name="medium_ai_game">普通人机 · 中等</string>
+    <string name="medium_ai_enabled">中等 AI 已启用 · 执黑</string>
+    <string name="hard_ai_game">普通人机 · 困难</string>
+    <string name="master_ai_game">普通人机 · 大师</string>
     <string name="ai_thinking">简单 AI 思考中…</string>
     <string name="wait_for_ai">请等待黑方 AI 完成走子</string>
     <string name="feedback_ai_moved">黑方 AI 已完成走子。</string>
@@ -54,7 +58,7 @@
     <string name="view_unlock_rules">查看难度解锁条件</string>
     <string name="choose_difficulty">选择难度</string>
     <string name="difficulty_locked_summary">教程与胜场数据尚未建立，暂不解锁</string>
-    <string name="difficulty_easy_unlocked_summary">简单难度已解锁；人机对局能力将在下一节点接入</string>
+    <string name="difficulty_easy_unlocked_summary">已按教程进度与各难度真实胜场更新解锁状态</string>
     <string name="difficulty_easy">简单</string>
     <string name="difficulty_medium">中等</string>
     <string name="difficulty_hard">困难</string>
