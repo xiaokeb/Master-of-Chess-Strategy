@@ -37,6 +37,7 @@ internal fun SettingsScreen(
     onBack: () -> Unit,
     onDefaultDifficulty: (Difficulty) -> Unit,
     onAutoContinue: (Boolean) -> Unit,
+    onAdjustAutoContinueLimit: (Int) -> Unit,
     onSoundEnabled: (Boolean) -> Unit,
     onTimeLimitEnabled: (Boolean) -> Unit,
     onAdjustDuration: (Int) -> Unit,
@@ -67,6 +68,9 @@ internal fun SettingsScreen(
                 enabled = state.isInteractionEnabled,
                 onCheckedChange = onAutoContinue,
             )
+            if (state.settings.autoContinueEnabled) {
+                AutoContinueLimitSetting(state, onAdjustAutoContinueLimit)
+            }
             BooleanSettingCard(
                 title = stringResource(R.string.sound_title),
                 summary = stringResource(R.string.sound_summary),
@@ -80,6 +84,47 @@ internal fun SettingsScreen(
                 text = stringResource(R.string.settings_scope_note),
                 style = MaterialTheme.typography.bodySmall,
             )
+        }
+    }
+}
+
+@Composable
+private fun AutoContinueLimitSetting(
+    state: AppSettingsUiState,
+    onAdjust: (Int) -> Unit,
+) {
+    val limit = state.settings.autoContinueGameLimit
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.auto_continue_limit, limit),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(
+                    onClick = {
+                        onAdjust(-AppSettingsViewModel.AUTO_CONTINUE_LIMIT_STEP)
+                    },
+                    enabled =
+                        state.isInteractionEnabled &&
+                            limit > AppSettings.AUTO_CONTINUE_LIMIT_RANGE.first,
+                ) {
+                    Text(stringResource(R.string.auto_continue_limit_decrease))
+                }
+                OutlinedButton(
+                    onClick = {
+                        onAdjust(AppSettingsViewModel.AUTO_CONTINUE_LIMIT_STEP)
+                    },
+                    enabled =
+                        state.isInteractionEnabled &&
+                            limit < AppSettings.AUTO_CONTINUE_LIMIT_RANGE.last,
+                ) {
+                    Text(stringResource(R.string.auto_continue_limit_increase))
+                }
+            }
         }
     }
 }

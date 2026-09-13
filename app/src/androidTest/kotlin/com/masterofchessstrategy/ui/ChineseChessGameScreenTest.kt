@@ -31,7 +31,7 @@ class ChineseChessGameScreenTest {
         composeRule.onNodeWithTag(HINT_BUTTON_TAG).assertIsNotEnabled()
         composeRule.onNodeWithTag(RESIGN_BUTTON_TAG).assertIsEnabled()
         composeRule.onNodeWithTag(RESTART_BUTTON_TAG).assertIsEnabled()
-        composeRule.onNodeWithTag(AI_BUTTON_TAG).assertIsNotEnabled()
+        composeRule.onNodeWithTag(DRAW_BUTTON_TAG).assertIsNotEnabled()
     }
 
     @Test
@@ -57,5 +57,28 @@ class ChineseChessGameScreenTest {
         composeRule.onNodeWithTag(UNDO_BUTTON_TAG).assertIsEnabled()
         composeRule.onNodeWithTag(HINT_BUTTON_TAG).assertIsEnabled()
         composeRule.onNodeWithTag(RESIGN_BUTTON_TAG).assertIsEnabled()
+    }
+
+    @Test
+    fun autoPlayShowsPauseAndSpeedInsteadOfHumanActions() {
+        composeRule.setContent {
+            ChineseChessGameScreen(
+                state = ChineseChessGameUiState(
+                    isAiGame = true,
+                    isAutoPlay = true,
+                    isAiThinking = true,
+                ),
+                onSquareTap = {},
+                onUndo = {},
+                onHint = {},
+                onResign = {},
+                onRestart = {},
+                onBack = {},
+            )
+        }
+
+        composeRule.onNodeWithTag(AUTO_PLAY_TOGGLE_TAG).assertIsEnabled()
+        composeRule.onNodeWithTag(AUTO_PLAY_SPEED_TAG).assertIsEnabled()
+        composeRule.onNodeWithTag(RESIGN_BUTTON_TAG).assertDoesNotExist()
     }
 }

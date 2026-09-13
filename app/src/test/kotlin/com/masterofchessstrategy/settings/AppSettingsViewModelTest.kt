@@ -44,6 +44,7 @@ class AppSettingsViewModelTest {
         assertFalse(viewModel.uiState.isLoading)
         assertEquals(Difficulty.EASY, viewModel.uiState.settings.defaultDifficulty)
         assertFalse(viewModel.uiState.settings.autoContinueEnabled)
+        assertEquals(10, viewModel.uiState.settings.autoContinueGameLimit)
         assertTrue(viewModel.uiState.settings.soundEnabled)
         assertNull(viewModel.uiState.settings.gameDurationMinutes)
     }
@@ -78,6 +79,21 @@ class AppSettingsViewModelTest {
             advanceUntilIdle()
         }
         assertEquals(180, viewModel.uiState.settings.gameDurationMinutes)
+    }
+
+    @Test
+    fun autoContinueLimitIsClampedAndSaved() = runTest(dispatcher) {
+        val repository = FakeSettingsRepository(LoadAppSettingsResult.NotFound)
+        val viewModel = AppSettingsViewModel(repository)
+        advanceUntilIdle()
+
+        repeat(120) {
+            viewModel.adjustAutoContinueLimit(1)
+            advanceUntilIdle()
+        }
+
+        assertEquals(100, viewModel.uiState.settings.autoContinueGameLimit)
+        assertEquals(100, repository.saved?.autoContinueGameLimit)
     }
 
     @Test

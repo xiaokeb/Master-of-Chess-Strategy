@@ -27,13 +27,14 @@
 | 中国象棋困难 AI | 完成 | 三层 alpha-beta、确定性节点预算、15 个中等胜场解锁及困难协议已接入 |
 | 中国象棋对局控制 | 完成 | Room schema 6、分级悔棋/提示、认输确认及幂等结算已接入 |
 | 中国象棋大师 AI | 完成 | Pikafish 2026-09-06、官方 NNUE、20 个困难胜场解锁及合法着复核已接入 |
+| 中国象棋计时、提和与自动演局 | 完成 | Room schema 7、双方独立棋钟、互相同意和棋、AI 双边托管、无级调速及限次续局已接入 |
 
 ## 已验证
 
-- JVM 单元测试：77 个通过，0 失败、0 错误、0 跳过。
+- JVM 单元测试：86 个通过，0 失败、0 错误、0 跳过。
 - NDK：Clang 21，C++17，Android ARM64 测试目标及 Pikafish 静态库编译和链接通过。
 - Gradle NDK：arm64-v8a、x86_64 两个正式 64 位 ABI 构建通过。
-- Android：App Lint 0 issue；Debug APK、App 测试 APK 与 engine-native 测试 APK 构建通过。
+- Android：App Lint 0 错误，仅有锁定 Kotlin 版本的升级提醒；Debug APK、App 测试 APK 与 engine-native 测试 APK 构建通过。
 - 离线边界：Debug APK 不包含 android.permission.INTERNET。
 - 大师资产：NNUE 大小和 SHA-256 构建校验通过，APK 同时包含权重、许可文本和两套完整原生引擎库。
 
@@ -48,6 +49,6 @@ MinGW 或其他宿主机工具链。
 
 ## 下一节点
 
-1. 实现正式计时、超时判负、提和、自动演局和调速。
-2. 按官方棋例继续扩充杀着、联合捉、暗根、假根、少根、价值交换及追捉集合连续性判定。
+1. 按官方棋例继续扩充杀着、联合捉、暗根、假根、少根、价值交换及追捉集合连续性判定。
+2. 接入正式对局音效资源及音效偏好消费。
 3. 在设备或 AVD 可用后运行 Room、Compose、中国象棋与 NativeBridge 集成测试及 AI 性能基准。

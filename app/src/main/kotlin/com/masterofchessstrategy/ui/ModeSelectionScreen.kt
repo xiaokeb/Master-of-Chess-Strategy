@@ -26,6 +26,7 @@ import com.masterofchessstrategy.navigation.chineseChessDifficulties
 
 internal const val MODE_LOCAL_GAME_TAG = "mode_local_game"
 internal const val MODE_AI_GAME_TAG = "mode_ai_game"
+internal const val MODE_AUTO_PLAY_TAG = "mode_auto_play"
 internal const val MODE_TUTORIAL_TAG = "mode_tutorial"
 internal const val DIFFICULTY_SCREEN_TAG = "difficulty_screen"
 internal const val DIFFICULTY_EASY_TAG = "difficulty_easy"
@@ -35,6 +36,7 @@ internal fun ChineseChessModeScreen(
     onBack: () -> Unit,
     onLocalGame: () -> Unit,
     onAiDifficulty: () -> Unit,
+    onAutoPlayDifficulty: () -> Unit,
     onTutorial: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -61,6 +63,9 @@ internal fun ChineseChessModeScreen(
                             onClick = when (mode.destination) {
                                 ModeDestination.GAME -> onLocalGame
                                 ModeDestination.DIFFICULTY -> onAiDifficulty
+                                ModeDestination.AUTO_PLAY_DIFFICULTY -> {
+                                    onAutoPlayDifficulty
+                                }
                                 ModeDestination.TUTORIAL -> onTutorial
                                 ModeDestination.LOCKED -> ({})
                             },
@@ -203,6 +208,7 @@ private fun ModeCard(
                 when (mode) {
                     ChineseChessMode.LOCAL_TWO_PLAYER -> Modifier.testTag(MODE_LOCAL_GAME_TAG)
                     ChineseChessMode.HUMAN_VS_AI -> Modifier.testTag(MODE_AI_GAME_TAG)
+                    ChineseChessMode.AI_AUTO_PLAY -> Modifier.testTag(MODE_AUTO_PLAY_TAG)
                     ChineseChessMode.TUTORIAL -> Modifier.testTag(MODE_TUTORIAL_TAG)
                     else -> Modifier
                 },
@@ -221,6 +227,9 @@ private fun ModeCard(
                 text = when (mode.destination) {
                     ModeDestination.GAME -> stringResource(R.string.available_now)
                     ModeDestination.DIFFICULTY -> stringResource(R.string.view_unlock_rules)
+                    ModeDestination.AUTO_PLAY_DIFFICULTY -> {
+                        stringResource(R.string.view_unlock_rules)
+                    }
                     ModeDestination.TUTORIAL -> stringResource(R.string.available_now)
                     ModeDestination.LOCKED -> stringResource(R.string.future_slice)
                 },

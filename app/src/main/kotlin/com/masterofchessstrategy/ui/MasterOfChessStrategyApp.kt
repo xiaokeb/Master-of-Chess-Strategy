@@ -20,6 +20,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,7 +43,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.masterofchessstrategy.R
 import com.masterofchessstrategy.data.MocsDatabase
-import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.data.RoomAppSettingsRepository
 import com.masterofchessstrategy.data.RoomGameSessionRepository
 import com.masterofchessstrategy.data.RoomLastSelectionRepository
@@ -75,7 +75,9 @@ internal const val UNDO_BUTTON_TAG = "undo_button"
 internal const val RESTART_BUTTON_TAG = "restart_button"
 internal const val HINT_BUTTON_TAG = "hint_button"
 internal const val RESIGN_BUTTON_TAG = "resign_button"
-internal const val AI_BUTTON_TAG = "ai_button"
+internal const val DRAW_BUTTON_TAG = "draw_button"
+internal const val AUTO_PLAY_TOGGLE_TAG = "auto_play_toggle"
+internal const val AUTO_PLAY_SPEED_TAG = "auto_play_speed"
 internal const val GAME_BACK_BUTTON_TAG = "game_back_button"
 internal const val GAME_SETTINGS_BUTTON_TAG = "game_settings_button"
 
@@ -181,6 +183,22 @@ fun MasterOfChessStrategyApp() {
                                     }
                                 }
 
+                                QuickStartDestination.AUTO_PLAY_GAME -> {
+                                    val difficulty = navigationViewModel.uiState
+                                        .lastChineseChessSelection
+                                        ?.difficulty
+                                    if (
+                                        difficulty != null &&
+                                        difficultyEntries.any {
+                                            it.difficulty == difficulty && it.isPlayable
+                                        }
+                                    ) {
+                                        AppDestination.chineseChessAutoPlayGame(difficulty)
+                                    } else {
+                                        AppDestination.CHINESE_CHESS_AUTO_PLAY_DIFFICULTY
+                                    }
+                                }
+
                                 QuickStartDestination.MODE_SELECTION -> {
                                     AppDestination.CHINESE_CHESS_MODES
                                 }
@@ -218,6 +236,14 @@ fun MasterOfChessStrategyApp() {
                         )
                         navController.navigate(AppDestination.CHINESE_CHESS_DIFFICULTY)
                     },
+                    onAutoPlayDifficulty = {
+                        navigationViewModel.recordChineseChessSelection(
+                            StoredGameMode.AI_AUTO_PLAY,
+                        )
+                        navController.navigate(
+                            AppDestination.CHINESE_CHESS_AUTO_PLAY_DIFFICULTY,
+                        )
+                    },
                     onTutorial = {
                         navigationViewModel.recordChineseChessSelection(
                             StoredGameMode.TUTORIAL,
@@ -249,6 +275,28 @@ fun MasterOfChessStrategyApp() {
                     },
                 )
             }
+            composable(AppDestination.CHINESE_CHESS_AUTO_PLAY_DIFFICULTY) {
+                ChineseChessDifficultyScreen(
+                    onBack = navController::popBackStack,
+                    tutorialCompleted = tutorialViewModel.uiState.progress.isCompleted,
+                    winsByDifficulty = chineseChessWins,
+                    onDifficultySelected = { difficulty ->
+                        if (
+                            difficultyEntries.any {
+                                it.difficulty == difficulty && it.isPlayable
+                            }
+                        ) {
+                            navigationViewModel.recordChineseChessSelection(
+                                StoredGameMode.AI_AUTO_PLAY,
+                                difficulty,
+                            )
+                            navController.navigate(
+                                AppDestination.chineseChessAutoPlayGame(difficulty),
+                            )
+                        }
+                    },
+                )
+            }
             composable(AppDestination.CHINESE_CHESS_TUTORIAL) {
                 ChineseChessTutorialScreen(
                     state = tutorialViewModel.uiState,
@@ -261,8 +309,13 @@ fun MasterOfChessStrategyApp() {
                 )
             }
             composable(AppDestination.CHINESE_CHESS_GAME) {
-                val factory = remember(gameSessionRepository) {
-                    ChineseChessGameViewModel.factory(gameSessionRepository)
+                val timeControlMinutes =
+                    settingsViewModel.uiState.settings.gameDurationMinutes
+                val factory = remember(gameSessionRepository, timeControlMinutes) {
+                    ChineseChessGameViewModel.factory(
+                        repository = gameSessionRepository,
+                        timeControlMinutes = timeControlMinutes,
+                    )
                 }
                 val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
                 ChineseChessGameScreen(
@@ -271,9 +324,9 @@ fun MasterOfChessStrategyApp() {
                     onUndo = gameViewModel::undo,
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
+                    onDraw = gameViewModel::offerOrAcceptDraw,
                     onRestart = gameViewModel::restart,
                     onBack = navController::popBackStack,
-                    settings = settingsViewModel.uiState.settings,
                     onSettings = {
                         navController.navigate(AppDestination.SETTINGS) {
                             launchSingleTop = true
@@ -302,6 +355,7 @@ fun MasterOfChessStrategyApp() {
                     gameSessionRepository,
                     statisticsViewModel,
                     difficulty,
+                    settingsViewModel.uiState.settings.gameDurationMinutes,
                     pikafishNetworkProvider,
                 ) {
                     ChineseChessGameViewModel.factory(
@@ -309,6 +363,8 @@ fun MasterOfChessStrategyApp() {
                         mode = StoredGameMode.HUMAN_VS_AI,
                         difficulty = difficulty,
                         onMatchFinished = statisticsViewModel::record,
+                        timeControlMinutes =
+                            settingsViewModel.uiState.settings.gameDurationMinutes,
                         engineFactory = {
                             NativeChineseChessEngine(
                                 pikafishNetworkProvider::requireNetworkPath,
@@ -323,9 +379,68 @@ fun MasterOfChessStrategyApp() {
                     onUndo = gameViewModel::undo,
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
+                    onDraw = gameViewModel::offerOrAcceptDraw,
                     onRestart = gameViewModel::restart,
                     onBack = navController::popBackStack,
-                    settings = settingsViewModel.uiState.settings,
+                    onSettings = {
+                        navController.navigate(AppDestination.SETTINGS) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
+            }
+            composable(
+                route = AppDestination.CHINESE_CHESS_AUTO_PLAY_GAME,
+                arguments = listOf(
+                    navArgument(AppDestination.AI_DIFFICULTY_ARGUMENT) {
+                        type = NavType.IntType
+                    },
+                ),
+            ) { backStackEntry ->
+                val difficultyCode = backStackEntry.arguments
+                    ?.getInt(AppDestination.AI_DIFFICULTY_ARGUMENT)
+                val difficulty = checkNotNull(
+                    Difficulty.entries.firstOrNull { it.code == difficultyCode },
+                ) {
+                    "Unsupported Chinese chess auto-play route"
+                }
+                val settings = settingsViewModel.uiState.settings
+                val factory = remember(
+                    gameSessionRepository,
+                    difficulty,
+                    settings.gameDurationMinutes,
+                    settings.autoContinueEnabled,
+                    settings.autoContinueGameLimit,
+                    pikafishNetworkProvider,
+                ) {
+                    ChineseChessGameViewModel.factory(
+                        repository = gameSessionRepository,
+                        mode = StoredGameMode.AI_AUTO_PLAY,
+                        difficulty = difficulty,
+                        timeControlMinutes = settings.gameDurationMinutes,
+                        autoContinueEnabled = settings.autoContinueEnabled,
+                        autoContinueGameLimit = settings.autoContinueGameLimit,
+                        engineFactory = {
+                            NativeChineseChessEngine(
+                                pikafishNetworkProvider::requireNetworkPath,
+                            )
+                        },
+                    )
+                }
+                val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
+                ChineseChessGameScreen(
+                    state = gameViewModel.uiState,
+                    onSquareTap = gameViewModel::onSquareTap,
+                    onUndo = gameViewModel::undo,
+                    onHint = gameViewModel::requestHint,
+                    onResign = gameViewModel::resign,
+                    onDraw = gameViewModel::offerOrAcceptDraw,
+                    onToggleAutoPlay = gameViewModel::toggleAutoPlayPaused,
+                    onAutoPlaySpeedChange = gameViewModel::setAutoPlaySpeed,
+                    onAutoPlaySpeedChangeFinished =
+                        gameViewModel::persistAutoPlaySpeed,
+                    onRestart = gameViewModel::restart,
+                    onBack = navController::popBackStack,
                     onSettings = {
                         navController.navigate(AppDestination.SETTINGS) {
                             launchSingleTop = true
@@ -339,6 +454,8 @@ fun MasterOfChessStrategyApp() {
                     onBack = navController::popBackStack,
                     onDefaultDifficulty = settingsViewModel::setDefaultDifficulty,
                     onAutoContinue = settingsViewModel::setAutoContinue,
+                    onAdjustAutoContinueLimit =
+                        settingsViewModel::adjustAutoContinueLimit,
                     onSoundEnabled = settingsViewModel::setSoundEnabled,
                     onTimeLimitEnabled = settingsViewModel::setTimeLimitEnabled,
                     onAdjustDuration = settingsViewModel::adjustDuration,
@@ -358,7 +475,10 @@ internal fun ChineseChessGameScreen(
     onRestart: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    settings: AppSettings = AppSettings.DEFAULT,
+    onDraw: () -> Unit = {},
+    onToggleAutoPlay: () -> Unit = {},
+    onAutoPlaySpeedChange: (Float) -> Unit = {},
+    onAutoPlaySpeedChangeFinished: () -> Unit = {},
     onSettings: () -> Unit = {},
 ) {
     BackHandler(
@@ -368,7 +488,7 @@ internal fun ChineseChessGameScreen(
                 state.isAiThinking ||
                 state.isHintThinking,
     ) {
-        // Keep the destination alive until the atomic Room operation finishes.
+        // Leave only after engine and persistence work reaches a safe checkpoint.
     }
     MocsTheme {
         Surface(modifier = modifier.fillMaxSize()) {
@@ -378,7 +498,7 @@ internal fun ChineseChessGameScreen(
                     .padding(horizontal = 20.dp, vertical = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                GameHeader(state, settings, onBack, onSettings)
+                GameHeader(state, onBack, onSettings)
                 HorizontalDivider()
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                     if (maxWidth >= 720.dp) {
@@ -398,6 +518,11 @@ internal fun ChineseChessGameScreen(
                                 onUndo = onUndo,
                                 onHint = onHint,
                                 onResign = onResign,
+                                onDraw = onDraw,
+                                onToggleAutoPlay = onToggleAutoPlay,
+                                onAutoPlaySpeedChange = onAutoPlaySpeedChange,
+                                onAutoPlaySpeedChangeFinished =
+                                    onAutoPlaySpeedChangeFinished,
                                 onRestart = onRestart,
                                 modifier = Modifier
                                     .widthIn(min = 240.dp, max = 320.dp)
@@ -421,6 +546,11 @@ internal fun ChineseChessGameScreen(
                                 onUndo = onUndo,
                                 onHint = onHint,
                                 onResign = onResign,
+                                onDraw = onDraw,
+                                onToggleAutoPlay = onToggleAutoPlay,
+                                onAutoPlaySpeedChange = onAutoPlaySpeedChange,
+                                onAutoPlaySpeedChangeFinished =
+                                    onAutoPlaySpeedChangeFinished,
                                 onRestart = onRestart,
                                 modifier = Modifier.fillMaxWidth(),
                             )
@@ -435,7 +565,6 @@ internal fun ChineseChessGameScreen(
 @Composable
 private fun GameHeader(
     state: ChineseChessGameUiState,
-    settings: AppSettings,
     onBack: () -> Unit,
     onSettings: () -> Unit,
 ) {
@@ -462,7 +591,7 @@ private fun GameHeader(
                     style = MaterialTheme.typography.headlineMedium,
                 )
                 Text(
-                    text = stringResource(gameModeTitle(state)),
+                    text = gameModeTitle(state),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -475,9 +604,19 @@ private fun GameHeader(
                     style = MaterialTheme.typography.titleLarge,
                 )
                 Text(
-                    text = settings.gameDurationMinutes?.let {
-                        stringResource(R.string.duration_minutes, it)
-                    } ?: stringResource(R.string.unlimited_duration),
+                    text = if (state.timeControlMinutes == null) {
+                        stringResource(R.string.unlimited_duration)
+                    } else {
+                        val red = stringResource(
+                            R.string.red_clock,
+                            formatClock(state.redRemainingMillis),
+                        )
+                        val black = stringResource(
+                            R.string.black_clock,
+                            formatClock(state.blackRemainingMillis),
+                        )
+                        "$red · $black"
+                    },
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -523,9 +662,19 @@ private fun GameControls(
     onUndo: () -> Unit,
     onHint: () -> Unit,
     onResign: () -> Unit,
+    onDraw: () -> Unit,
+    onToggleAutoPlay: () -> Unit,
+    onAutoPlaySpeedChange: (Float) -> Unit,
+    onAutoPlaySpeedChangeFinished: () -> Unit,
     onRestart: () -> Unit,
     modifier: Modifier,
 ) {
+    val controlAvailable =
+        state.isEngineAvailable &&
+            !state.isRestoring &&
+            !state.isPersisting &&
+            !state.isAiThinking &&
+            !state.isHintThinking
     var showResignConfirmation by remember { mutableStateOf(false) }
     if (showResignConfirmation) {
         AlertDialog(
@@ -594,7 +743,7 @@ private fun GameControls(
                 }
                 OutlinedButton(
                     onClick = onRestart,
-                    enabled = state.isInteractionEnabled,
+                    enabled = controlAvailable,
                     modifier = Modifier
                         .weight(1f)
                         .testTag(RESTART_BUTTON_TAG),
@@ -603,21 +752,91 @@ private fun GameControls(
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                OutlinedButton(
-                    onClick = onHint,
-                    enabled =
-                        state.isInteractionEnabled &&
-                            state.result == GameResult.ONGOING &&
-                            state.canRequestHint,
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag(HINT_BUTTON_TAG),
+            if (state.isAutoPlay) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Text(hintButtonText(state))
+                    Button(
+                        onClick = onToggleAutoPlay,
+                        enabled =
+                            state.isEngineAvailable &&
+                                !state.isRestoring &&
+                                !state.isPersisting,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(AUTO_PLAY_TOGGLE_TAG),
+                    ) {
+                        Text(
+                            stringResource(
+                                if (state.isAutoPlayPaused) {
+                                    R.string.resume_auto_play
+                                } else {
+                                    R.string.pause_auto_play
+                                },
+                            ),
+                        )
+                    }
+                }
+                Text(stringResource(R.string.auto_play_speed, state.autoPlaySpeed))
+                Slider(
+                    value = state.autoPlaySpeed,
+                    onValueChange = onAutoPlaySpeedChange,
+                    onValueChangeFinished = onAutoPlaySpeedChangeFinished,
+                    valueRange = 0.5f..4f,
+                    enabled =
+                        state.isEngineAvailable &&
+                            !state.isRestoring &&
+                            !state.isPersisting,
+                    modifier = Modifier.testTag(AUTO_PLAY_SPEED_TAG),
+                )
+                Text(
+                    text = stringResource(
+                        R.string.auto_play_progress,
+                        state.completedAutoGames,
+                        state.autoContinueGameLimit,
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    OutlinedButton(
+                        onClick = onHint,
+                        enabled =
+                            state.isInteractionEnabled &&
+                                state.result == GameResult.ONGOING &&
+                                state.canRequestHint,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(HINT_BUTTON_TAG),
+                    ) {
+                        Text(hintButtonText(state))
+                    }
+                    OutlinedButton(
+                        onClick = onDraw,
+                        enabled =
+                            state.isInteractionEnabled &&
+                                state.canOfferOrAcceptDraw,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(DRAW_BUTTON_TAG),
+                    ) {
+                        Text(
+                            stringResource(
+                                if (
+                                    state.pendingDrawOfferSide != null &&
+                                    state.pendingDrawOfferSide != state.currentSide
+                                ) {
+                                    R.string.accept_draw
+                                } else {
+                                    R.string.offer_draw
+                                },
+                            ),
+                        )
+                    }
                 }
                 OutlinedButton(
                     onClick = { showResignConfirmation = true },
@@ -625,7 +844,7 @@ private fun GameControls(
                         state.isInteractionEnabled &&
                             state.result == GameResult.ONGOING,
                     modifier = Modifier
-                        .weight(1f)
+                        .fillMaxWidth()
                         .testTag(RESIGN_BUTTON_TAG),
                 ) {
                     Text(stringResource(R.string.resign))
@@ -633,23 +852,6 @@ private fun GameControls(
             }
 
             HorizontalDivider()
-            Text(
-                text = stringResource(R.string.later_features),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Button(
-                onClick = {},
-                enabled = false,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag(AI_BUTTON_TAG),
-            ) {
-                Text(
-                    stringResource(
-                        aiCapabilityText(state),
-                    ),
-                )
-            }
             Text(
                 text = stringResource(R.string.rules_scope_note),
                 style = MaterialTheme.typography.bodySmall,
@@ -673,27 +875,42 @@ private fun gameStatusText(state: ChineseChessGameUiState): String =
         else -> stringResource(R.string.black_to_move)
     }
 
-private fun gameModeTitle(state: ChineseChessGameUiState): Int =
-    when (state.difficulty) {
-        Difficulty.EASY -> R.string.easy_ai_game
-        Difficulty.MEDIUM -> R.string.medium_ai_game
-        Difficulty.HARD -> R.string.hard_ai_game
-        Difficulty.MASTER -> R.string.master_ai_game
-        null -> R.string.local_two_player
+@Composable
+private fun gameModeTitle(state: ChineseChessGameUiState): String {
+    val title = when (state.difficulty) {
+        Difficulty.EASY -> R.string.difficulty_easy
+        Difficulty.MEDIUM -> R.string.difficulty_medium
+        Difficulty.HARD -> R.string.difficulty_hard
+        Difficulty.MASTER -> R.string.difficulty_master
+        null -> return stringResource(R.string.local_two_player)
     }
+    return if (state.isAutoPlay) {
+        stringResource(R.string.auto_play_game, stringResource(title))
+    } else {
+        stringResource(
+            when (requireNotNull(state.difficulty)) {
+                Difficulty.EASY -> R.string.easy_ai_game
+                Difficulty.MEDIUM -> R.string.medium_ai_game
+                Difficulty.HARD -> R.string.hard_ai_game
+                Difficulty.MASTER -> R.string.master_ai_game
+            },
+        )
+    }
+}
 
-private fun aiCapabilityText(state: ChineseChessGameUiState): Int =
-    when (state.difficulty) {
-        Difficulty.EASY -> R.string.easy_ai_enabled
-        Difficulty.MEDIUM -> R.string.medium_ai_enabled
-        Difficulty.HARD -> R.string.hard_ai_enabled
-        Difficulty.MASTER -> R.string.master_ai_enabled
-        else -> R.string.ai_not_available
-    }
+private fun formatClock(millis: Long?): String {
+    if (millis == null) return "--:--"
+    val seconds = (millis.coerceAtLeast(0L) + 999L) / 1_000L
+    return "%02d:%02d".format(seconds / 60L, seconds % 60L)
+}
 
 @Composable
 private fun selectionText(state: ChineseChessGameUiState): String =
-    if (state.isHintThinking) {
+    if (state.isAutoPlayPaused) {
+        stringResource(R.string.auto_play_paused_status)
+    } else if (state.isAutoPlay) {
+        stringResource(R.string.auto_play_watching)
+    } else if (state.isHintThinking) {
         stringResource(R.string.calculating_hint)
     } else if (state.isAiThinking) {
         stringResource(R.string.wait_for_ai)
@@ -731,6 +948,13 @@ private fun feedbackText(feedback: ChineseChessFeedback): String =
             ChineseChessFeedback.HINT_LIMIT_REACHED -> R.string.feedback_hint_limit
             ChineseChessFeedback.HINT_UNAVAILABLE -> R.string.feedback_hint_unavailable
             ChineseChessFeedback.PLAYER_RESIGNED -> R.string.feedback_player_resigned
+            ChineseChessFeedback.DRAW_OFFERED -> R.string.feedback_draw_offered
+            ChineseChessFeedback.DRAW_WAITING -> R.string.feedback_draw_waiting
+            ChineseChessFeedback.DRAW_ACCEPTED -> R.string.feedback_draw_accepted
+            ChineseChessFeedback.DRAW_DECLINED -> R.string.feedback_draw_declined
+            ChineseChessFeedback.TIME_EXPIRED -> R.string.feedback_time_expired
+            ChineseChessFeedback.AUTO_PLAY_PAUSED -> R.string.feedback_auto_play_paused
+            ChineseChessFeedback.AUTO_PLAY_RESUMED -> R.string.feedback_auto_play_resumed
         },
     )
 

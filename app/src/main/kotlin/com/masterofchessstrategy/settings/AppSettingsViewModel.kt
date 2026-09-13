@@ -52,6 +52,16 @@ internal class AppSettingsViewModel(
         update { copy(autoContinueEnabled = enabled) }
     }
 
+    fun adjustAutoContinueLimit(deltaGames: Int) {
+        if (deltaGames == 0) return
+        update {
+            copy(
+                autoContinueGameLimit = (autoContinueGameLimit + deltaGames)
+                    .coerceIn(AppSettings.AUTO_CONTINUE_LIMIT_RANGE),
+            )
+        }
+    }
+
     fun setSoundEnabled(enabled: Boolean) {
         update { copy(soundEnabled = enabled) }
     }
@@ -148,6 +158,7 @@ internal class AppSettingsViewModel(
     companion object {
         const val DEFAULT_DURATION_MINUTES = 30
         const val DURATION_STEP_MINUTES = 5
+        const val AUTO_CONTINUE_LIMIT_STEP = 1
 
         fun factory(repository: AppSettingsRepository): ViewModelProvider.Factory =
             viewModelFactory {

@@ -5,6 +5,7 @@ import com.masterofchessstrategy.engine.Difficulty
 internal data class AppSettings(
     val defaultDifficulty: Difficulty,
     val autoContinueEnabled: Boolean,
+    val autoContinueGameLimit: Int = 10,
     val soundEnabled: Boolean,
     val gameDurationMinutes: Int?,
     val updatedAtEpochMillis: Long,
@@ -13,14 +14,19 @@ internal data class AppSettings(
         require(gameDurationMinutes == null || gameDurationMinutes in DURATION_RANGE) {
             "Game duration must be unlimited or between 5 and 180 minutes"
         }
+        require(autoContinueGameLimit in AUTO_CONTINUE_LIMIT_RANGE) {
+            "Auto-continue limit must be between 1 and 100 games"
+        }
     }
 
     companion object {
         val DURATION_RANGE = 5..180
+        val AUTO_CONTINUE_LIMIT_RANGE = 1..100
 
         val DEFAULT = AppSettings(
             defaultDifficulty = Difficulty.EASY,
             autoContinueEnabled = false,
+            autoContinueGameLimit = 10,
             soundEnabled = true,
             gameDurationMinutes = null,
             updatedAtEpochMillis = 0L,
@@ -57,10 +63,14 @@ internal class RoomAppSettingsRepository(
         if (duration != null && duration !in AppSettings.DURATION_RANGE) {
             return LoadAppSettingsResult.Incompatible
         }
+        if (entity.autoContinueGameLimit !in AppSettings.AUTO_CONTINUE_LIMIT_RANGE) {
+            return LoadAppSettingsResult.Incompatible
+        }
         return LoadAppSettingsResult.Loaded(
             AppSettings(
                 defaultDifficulty = difficulty,
                 autoContinueEnabled = entity.autoContinueEnabled,
+                autoContinueGameLimit = entity.autoContinueGameLimit,
                 soundEnabled = entity.soundEnabled,
                 gameDurationMinutes = duration,
                 updatedAtEpochMillis = entity.updatedAtEpochMillis,
@@ -74,6 +84,7 @@ internal class RoomAppSettingsRepository(
                 id = SINGLETON_ID,
                 defaultDifficultyCode = settings.defaultDifficulty.code,
                 autoContinueEnabled = settings.autoContinueEnabled,
+                autoContinueGameLimit = settings.autoContinueGameLimit,
                 soundEnabled = settings.soundEnabled,
                 gameDurationMinutes = settings.gameDurationMinutes,
                 updatedAtEpochMillis = settings.updatedAtEpochMillis,

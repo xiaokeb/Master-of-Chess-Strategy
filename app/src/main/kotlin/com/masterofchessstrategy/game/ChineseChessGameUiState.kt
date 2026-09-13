@@ -28,6 +28,13 @@ enum class ChineseChessFeedback {
     HINT_LIMIT_REACHED,
     HINT_UNAVAILABLE,
     PLAYER_RESIGNED,
+    DRAW_OFFERED,
+    DRAW_WAITING,
+    DRAW_ACCEPTED,
+    DRAW_DECLINED,
+    TIME_EXPIRED,
+    AUTO_PLAY_PAUSED,
+    AUTO_PLAY_RESUMED,
 }
 
 /**
@@ -54,7 +61,17 @@ data class ChineseChessGameUiState(
     val isRestoring: Boolean = false,
     val isPersisting: Boolean = false,
     val isAiGame: Boolean = false,
+    val isAutoPlay: Boolean = false,
+    val isAutoPlayPaused: Boolean = false,
+    val autoPlaySpeed: Float = 1f,
+    val completedAutoGames: Int = 0,
+    val autoContinueGameLimit: Int = 0,
     val difficulty: Difficulty? = null,
+    val timeControlMinutes: Int? = null,
+    val redRemainingMillis: Long? = null,
+    val blackRemainingMillis: Long? = null,
+    val pendingDrawOfferSide: ChineseChessSide? = null,
+    val canOfferOrAcceptDraw: Boolean = false,
     val isAiThinking: Boolean = false,
     val isHintThinking: Boolean = false,
     val feedback: ChineseChessFeedback? = null,
@@ -66,6 +83,7 @@ data class ChineseChessGameUiState(
                 !isPersisting &&
                 !isAiThinking &&
                 !isHintThinking &&
+                !isAutoPlay &&
                 (!isAiGame || currentSide == ChineseChessSide.RED)
 
     init {

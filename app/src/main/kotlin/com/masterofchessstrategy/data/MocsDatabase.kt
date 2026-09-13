@@ -15,7 +15,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TutorialProgressEntity::class,
         MatchOutcomeEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -128,6 +128,46 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE active_games ADD COLUMN timeControlMinutes INTEGER",
+                )
+                db.execSQL(
+                    "ALTER TABLE active_games ADD COLUMN redRemainingMillis INTEGER",
+                )
+                db.execSQL(
+                    "ALTER TABLE active_games ADD COLUMN blackRemainingMillis INTEGER",
+                )
+                db.execSQL(
+                    "ALTER TABLE active_games ADD COLUMN turnStartedAtEpochMillis INTEGER",
+                )
+                db.execSQL(
+                    "ALTER TABLE active_games ADD COLUMN pendingDrawOfferSideCode INTEGER",
+                )
+                db.execSQL(
+                    "ALTER TABLE active_games " +
+                        "ADD COLUMN autoPlayPaused INTEGER NOT NULL DEFAULT 0",
+                )
+                db.execSQL(
+                    "ALTER TABLE active_games " +
+                        "ADD COLUMN autoPlaySpeedPermille INTEGER NOT NULL DEFAULT 1000",
+                )
+                db.execSQL(
+                    "ALTER TABLE active_games " +
+                        "ADD COLUMN completedAutoGames INTEGER NOT NULL DEFAULT 0",
+                )
+                db.execSQL(
+                    "ALTER TABLE app_settings " +
+                        "ADD COLUMN autoContinueGameLimit INTEGER NOT NULL DEFAULT 10",
+                )
+                db.execSQL(
+                    "UPDATE active_games SET envelopeVersion = 3 " +
+                        "WHERE envelopeVersion = 2",
+                )
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -144,6 +184,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_3_4,
                         MIGRATION_4_5,
                         MIGRATION_5_6,
+                        MIGRATION_6_7,
                     )
                     .build()
                     .also { instance = it }

@@ -101,6 +101,7 @@ class AppNavigationScreenTest {
                 onBack = {},
                 onDefaultDifficulty = {},
                 onAutoContinue = {},
+                onAdjustAutoContinueLimit = {},
                 onSoundEnabled = { requestedSound = it },
                 onTimeLimitEnabled = {},
                 onAdjustDuration = {},

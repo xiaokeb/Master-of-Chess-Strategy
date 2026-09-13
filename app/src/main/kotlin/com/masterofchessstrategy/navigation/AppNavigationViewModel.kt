@@ -26,6 +26,7 @@ internal enum class QuickStartDestination {
     DIFFICULTY,
     TUTORIAL,
     AI_GAME,
+    AUTO_PLAY_GAME,
     GAME,
 }
 
@@ -38,7 +39,12 @@ internal fun LastGameSelection.quickStartDestination(): QuickStartDestination =
             QuickStartDestination.AI_GAME
         }
         StoredGameMode.TUTORIAL -> QuickStartDestination.TUTORIAL
-        StoredGameMode.AI_AUTO_PLAY,
+        StoredGameMode.AI_AUTO_PLAY -> if (difficulty == null) {
+            QuickStartDestination.MODE_SELECTION
+        } else {
+            QuickStartDestination.AUTO_PLAY_GAME
+        }
+
         StoredGameMode.ENDGAME,
         -> QuickStartDestination.MODE_SELECTION
     }

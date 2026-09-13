@@ -7,15 +7,22 @@ internal object AppDestination {
     const val HOME = "home"
     const val CHINESE_CHESS_MODES = "chinese-chess/modes"
     const val CHINESE_CHESS_DIFFICULTY = "chinese-chess/difficulty"
+    const val CHINESE_CHESS_AUTO_PLAY_DIFFICULTY =
+        "chinese-chess/auto-play/difficulty"
     const val CHINESE_CHESS_TUTORIAL = "chinese-chess/tutorial"
     const val CHINESE_CHESS_GAME = "chinese-chess/game"
     const val AI_DIFFICULTY_ARGUMENT = "difficultyCode"
     const val CHINESE_CHESS_AI_GAME =
         "chinese-chess/ai-game/{$AI_DIFFICULTY_ARGUMENT}"
+    const val CHINESE_CHESS_AUTO_PLAY_GAME =
+        "chinese-chess/auto-play/{$AI_DIFFICULTY_ARGUMENT}"
     const val SETTINGS = "settings"
 
     fun chineseChessAiGame(difficulty: Difficulty): String =
         "chinese-chess/ai-game/" + difficulty.code
+
+    fun chineseChessAutoPlayGame(difficulty: Difficulty): String =
+        "chinese-chess/auto-play/" + difficulty.code
 }
 
 /** Five first-level cards required by the product layout. */
@@ -38,7 +45,7 @@ internal enum class ChineseChessMode(
 ) {
     LOCAL_TWO_PLAYER(ModeDestination.GAME),
     HUMAN_VS_AI(ModeDestination.DIFFICULTY),
-    AI_AUTO_PLAY(ModeDestination.LOCKED),
+    AI_AUTO_PLAY(ModeDestination.AUTO_PLAY_DIFFICULTY),
     ENDGAME(ModeDestination.LOCKED),
     TUTORIAL(ModeDestination.TUTORIAL),
 }
@@ -46,6 +53,7 @@ internal enum class ChineseChessMode(
 internal enum class ModeDestination {
     GAME,
     DIFFICULTY,
+    AUTO_PLAY_DIFFICULTY,
     TUTORIAL,
     LOCKED,
 }

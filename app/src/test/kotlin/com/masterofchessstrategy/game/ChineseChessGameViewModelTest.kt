@@ -11,6 +11,7 @@ import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.PlayerId
 import com.masterofchessstrategy.engine.RestoreResult
+import com.masterofchessstrategy.data.StoredGameMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -95,6 +96,49 @@ class ChineseChessGameViewModelTest {
         assertFalse(viewModel.uiState.isEngineAvailable)
         assertFalse(viewModel.uiState.canUndo)
         assertEquals(ChineseChessFeedback.ENGINE_UNAVAILABLE, viewModel.uiState.feedback)
+    }
+
+    @Test
+    fun timedGameChargesOnlyActiveSideAndTimeoutLoses() {
+        var now = 1_000L
+        val viewModel = ChineseChessGameViewModel(
+            nowEpochMillis = { now },
+            mode = StoredGameMode.LOCAL_TWO_PLAYER,
+            initialTimeControlMinutes = 5,
+            clockTickIntervalMillis = null,
+            engineFactory = { FakeChineseChessEngine() },
+        )
+
+        now += 2_000L
+        viewModel.onSquareTap(redRook)
+        viewModel.onSquareTap(redRookDestination)
+
+        assertEquals(298_000L, viewModel.uiState.redRemainingMillis)
+        assertEquals(300_000L, viewModel.uiState.blackRemainingMillis)
+
+        now += 300_001L
+        viewModel.synchronizeClock()
+
+        assertEquals(0L, viewModel.uiState.blackRemainingMillis)
+        assertEquals(GameResult.FIRST_PLAYER_WIN, viewModel.uiState.result)
+        assertEquals(ChineseChessFeedback.TIME_EXPIRED, viewModel.uiState.feedback)
+    }
+
+    @Test
+    fun drawRequiresTheOtherSideToAccept() {
+        val viewModel = ChineseChessGameViewModel { FakeChineseChessEngine() }
+
+        viewModel.offerOrAcceptDraw()
+        assertEquals(ChineseChessSide.RED, viewModel.uiState.pendingDrawOfferSide)
+        assertEquals(GameResult.ONGOING, viewModel.uiState.result)
+
+        viewModel.onSquareTap(redRook)
+        viewModel.onSquareTap(redRookDestination)
+        viewModel.offerOrAcceptDraw()
+
+        assertEquals(GameResult.DRAW, viewModel.uiState.result)
+        assertNull(viewModel.uiState.pendingDrawOfferSide)
+        assertEquals(ChineseChessFeedback.DRAW_ACCEPTED, viewModel.uiState.feedback)
     }
 
     private inner class FakeChineseChessEngine : ChineseChessRuleEngine {

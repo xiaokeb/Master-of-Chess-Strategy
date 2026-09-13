@@ -74,7 +74,7 @@ class ChineseChessAiGameViewModelTest {
             viewModel.uiState.pieceAt(engine.blackTo)?.side,
         )
         assertEquals(ChineseChessFeedback.AI_MOVED, viewModel.uiState.feedback)
-        assertEquals(2, repository.saved.size)
+        assertEquals(3, repository.saved.size)
         assertEquals(StoredGameMode.HUMAN_VS_AI, repository.saved.last().mode)
         assertEquals(Difficulty.EASY, repository.saved.last().difficulty)
         assertEquals(2, repository.saved.last().engineState.single().toInt())
@@ -223,6 +223,26 @@ class ChineseChessAiGameViewModelTest {
     }
 
     @Test
+    fun aiDrawOfferCannotForceAResultAndIsExplicitlyDeclined() = runTest(dispatcher) {
+        val engine = FakeAiEngine()
+        val viewModel = ChineseChessGameViewModel(
+            mode = StoredGameMode.HUMAN_VS_AI,
+            difficulty = Difficulty.EASY,
+            aiDispatcher = dispatcher,
+            engineFactory = { engine },
+        )
+
+        viewModel.offerOrAcceptDraw()
+        viewModel.onSquareTap(engine.redFrom)
+        viewModel.onSquareTap(engine.redTo)
+        advanceUntilIdle()
+
+        assertEquals(GameResult.ONGOING, viewModel.uiState.result)
+        assertNull(viewModel.uiState.pendingDrawOfferSide)
+        assertEquals(ChineseChessFeedback.DRAW_DECLINED, viewModel.uiState.feedback)
+    }
+
+    @Test
     fun restoreKeepsMoveAndAssistanceCounters() = runTest(dispatcher) {
         val snapshot = GameSessionSnapshot(
             gameType = GameType.CHINESE_CHESS,
@@ -253,6 +273,138 @@ class ChineseChessAiGameViewModelTest {
         assertTrue(viewModel.uiState.canRequestHint)
         assertEquals(1, viewModel.uiState.hintRemaining)
         assertEquals(ChineseChessFeedback.GAME_RESTORED, viewModel.uiState.feedback)
+    }
+
+    @Test
+    fun restoreChargesElapsedBackgroundTimeAndPersistsTimeout() = runTest(dispatcher) {
+        var now = 121_000L
+        val snapshot = GameSessionSnapshot(
+            gameType = GameType.CHINESE_CHESS,
+            mode = StoredGameMode.HUMAN_VS_AI,
+            difficulty = Difficulty.EASY,
+            engineState = byteArrayOf(0),
+            updatedAtEpochMillis = 1_000L,
+            sessionId = "match-restored-clock",
+            timeControlMinutes = 5,
+            redRemainingMillis = 300_000L,
+            blackRemainingMillis = 300_000L,
+            turnStartedAtEpochMillis = 1_000L,
+        )
+        val repository = RecordingSessionRepository(
+            LoadGameSessionResult.Loaded(snapshot),
+        )
+        val outcomes = mutableListOf<com.masterofchessstrategy.data.MatchOutcome>()
+        val viewModel = ChineseChessGameViewModel(
+            sessionRepository = repository,
+            nowEpochMillis = { now },
+            mode = StoredGameMode.HUMAN_VS_AI,
+            difficulty = Difficulty.EASY,
+            aiDispatcher = dispatcher,
+            clockTickIntervalMillis = null,
+            onMatchFinished = outcomes::add,
+            engineFactory = { FakeAiEngine() },
+        )
+
+        advanceUntilIdle()
+        assertEquals(180_000L, viewModel.uiState.redRemainingMillis)
+
+        now = 301_001L
+        viewModel.synchronizeClock()
+        viewModel.synchronizeClock()
+        advanceUntilIdle()
+
+        assertEquals(GameResult.SECOND_PLAYER_WIN, viewModel.uiState.result)
+        assertEquals(0L, viewModel.uiState.redRemainingMillis)
+        assertEquals(
+            GameResult.SECOND_PLAYER_WIN,
+            repository.saved.last().resultOverride,
+        )
+        assertEquals(1, outcomes.size)
+        assertFalse(outcomes.single().isWin)
+    }
+
+    @Test
+    fun autoPlayRunsBothSidesAndStopsAtConfiguredGameLimit() = runTest(dispatcher) {
+        val engine = FakeAiEngine(
+            humanMoveResult = GameResult.FIRST_PLAYER_WIN,
+        )
+        val outcomes = mutableListOf<com.masterofchessstrategy.data.MatchOutcome>()
+        val viewModel = ChineseChessGameViewModel(
+            mode = StoredGameMode.AI_AUTO_PLAY,
+            difficulty = Difficulty.EASY,
+            aiDispatcher = dispatcher,
+            autoContinueEnabled = true,
+            autoContinueGameLimit = 2,
+            clockTickIntervalMillis = null,
+            onMatchFinished = outcomes::add,
+            engineFactory = { engine },
+        )
+
+        advanceUntilIdle()
+
+        assertEquals(2, engine.chooseCalls)
+        assertEquals(1, engine.resetCalls)
+        assertEquals(2, viewModel.uiState.completedAutoGames)
+        assertTrue(viewModel.uiState.isAutoPlayPaused)
+        assertFalse(viewModel.uiState.isInteractionEnabled)
+        assertTrue(outcomes.isEmpty())
+
+        viewModel.restart()
+
+        assertEquals(0, viewModel.uiState.completedAutoGames)
+        assertFalse(viewModel.uiState.isAutoPlayPaused)
+    }
+
+    @Test
+    fun restoredAutoPlayTerminalDoesNotIncrementCompletedGamesTwice() =
+        runTest(dispatcher) {
+            val snapshot = GameSessionSnapshot(
+                gameType = GameType.CHINESE_CHESS,
+                mode = StoredGameMode.AI_AUTO_PLAY,
+                difficulty = Difficulty.EASY,
+                engineState = byteArrayOf(1),
+                updatedAtEpochMillis = 1L,
+                sessionId = "match-restored-auto-terminal",
+                resultOverride = GameResult.DRAW,
+                autoPlayPaused = true,
+                completedAutoGames = 3,
+            )
+            val viewModel = ChineseChessGameViewModel(
+                sessionRepository = RecordingSessionRepository(
+                    LoadGameSessionResult.Loaded(snapshot),
+                ),
+                mode = StoredGameMode.AI_AUTO_PLAY,
+                difficulty = Difficulty.EASY,
+                aiDispatcher = dispatcher,
+                clockTickIntervalMillis = null,
+                engineFactory = { FakeAiEngine() },
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(GameResult.DRAW, viewModel.uiState.result)
+            assertEquals(3, viewModel.uiState.completedAutoGames)
+            assertTrue(viewModel.uiState.isAutoPlayPaused)
+        }
+
+    @Test
+    fun pausedAutoPlayFreezesBeforeSearchAndAcceptsContinuousSpeed() = runTest(dispatcher) {
+        val engine = FakeAiEngine()
+        val viewModel = ChineseChessGameViewModel(
+            mode = StoredGameMode.AI_AUTO_PLAY,
+            difficulty = Difficulty.EASY,
+            aiDispatcher = dispatcher,
+            clockTickIntervalMillis = null,
+            engineFactory = { engine },
+        )
+
+        viewModel.toggleAutoPlayPaused()
+        viewModel.setAutoPlaySpeed(1.75f)
+        advanceUntilIdle()
+
+        assertEquals(0, engine.chooseCalls)
+        assertTrue(viewModel.uiState.isAutoPlayPaused)
+        assertEquals(1.75f, viewModel.uiState.autoPlaySpeed)
     }
 
     private class RecordingSessionRepository(
@@ -302,11 +454,26 @@ class ChineseChessAiGameViewModelTest {
             private set
         var lastDifficulty: Difficulty? = null
             private set
+        var resetCalls = 0
+            private set
 
         override val currentPlayer: PlayerId
             get() = player
 
-        override fun reset() = Unit
+        override fun reset() {
+            resetCalls++
+            history.clear()
+            pieces.clear()
+            pieces[redFrom] = ChineseChessPiece(
+                ChineseChessPieceType.CHARIOT,
+                ChineseChessSide.RED,
+            )
+            pieces[blackFrom] = ChineseChessPiece(
+                ChineseChessPieceType.CHARIOT,
+                ChineseChessSide.BLACK,
+            )
+            player = PlayerId(ChineseChessSide.RED.code)
+        }
 
         override fun apply(action: BoardMove): ActionResult {
             if (action !in legalActions()) {

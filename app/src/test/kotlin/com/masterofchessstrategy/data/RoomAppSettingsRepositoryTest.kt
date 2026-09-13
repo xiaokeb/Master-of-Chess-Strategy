@@ -21,6 +21,7 @@ class RoomAppSettingsRepositoryTest {
         val expected = AppSettings(
             defaultDifficulty = Difficulty.HARD,
             autoContinueEnabled = true,
+            autoContinueGameLimit = 25,
             soundEnabled = false,
             gameDurationMinutes = 45,
             updatedAtEpochMillis = 99L,
@@ -32,14 +33,15 @@ class RoomAppSettingsRepositoryTest {
     }
 
     @Test
-    fun invalidDifficultyOrDurationIsIncompatible() = runBlocking {
+    fun invalidSettingsRowIsIncompatible() = runBlocking {
         val dao = FakeAppSettingsDao(
             AppSettingsEntity(
                 id = 0,
-                defaultDifficultyCode = 99,
+                defaultDifficultyCode = Difficulty.EASY.code,
                 autoContinueEnabled = false,
+                autoContinueGameLimit = 101,
                 soundEnabled = true,
-                gameDurationMinutes = 181,
+                gameDurationMinutes = 30,
                 updatedAtEpochMillis = 0L,
             ),
         )

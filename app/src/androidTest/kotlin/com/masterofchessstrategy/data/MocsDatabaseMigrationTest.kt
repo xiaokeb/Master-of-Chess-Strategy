@@ -194,6 +194,48 @@ class MocsDatabaseMigrationTest {
         migrated.close()
     }
 
+    @Test
+    fun migrateSixToSevenAddsClockDrawAndAutoPlayState() {
+        helper.createDatabase(AUTOMATION_DATABASE_NAME, 6).apply {
+            execSQL(
+                """
+                INSERT INTO active_games (
+                    gameTypeCode,
+                    modeCode,
+                    difficultyCode,
+                    envelopeVersion,
+                    engineFormatVersion,
+                    engineState,
+                    updatedAtEpochMillis,
+                    sessionId,
+                    acceptedMoveCount,
+                    undoUseCount,
+                    hintUseCount,
+                    resultOverrideCode
+                ) VALUES (?, ?, 0, 2, 2, ?, 105, 'match-auto', 3, 0, 0, NULL)
+                """.trimIndent(),
+                arrayOf(0, 1, byteArrayOf(7, 8, 9)),
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            AUTOMATION_DATABASE_NAME,
+            7,
+            true,
+            MocsDatabase.MIGRATION_6_7,
+        )
+
+        assertEquals(3, migrated.singleInt("SELECT envelopeVersion FROM active_games"))
+        assertEquals(1_000, migrated.singleInt("SELECT autoPlaySpeedPermille FROM active_games"))
+        assertEquals(0, migrated.singleInt("SELECT completedAutoGames FROM active_games"))
+        assertEquals(
+            null,
+            migrated.singleNullableInt("SELECT timeControlMinutes FROM active_games"),
+        )
+        migrated.close()
+    }
+
     private fun SupportSQLiteDatabase.singleInt(query: String): Int =
         this.query(query).use { cursor ->
             check(cursor.moveToFirst())
@@ -218,5 +260,6 @@ class MocsDatabaseMigrationTest {
         const val TUTORIAL_DATABASE_NAME = "migration-3-4-test"
         const val STATISTICS_DATABASE_NAME = "migration-4-5-test"
         const val CONTROL_STATE_DATABASE_NAME = "migration-5-6-test"
+        const val AUTOMATION_DATABASE_NAME = "migration-6-7-test"
     }
 }

@@ -10,6 +10,8 @@ internal data class AppSettingsEntity(
     val id: Int,
     val defaultDifficultyCode: Int,
     val autoContinueEnabled: Boolean,
+    @androidx.room.ColumnInfo(defaultValue = "10")
+    val autoContinueGameLimit: Int = 10,
     val soundEnabled: Boolean,
     val gameDurationMinutes: Int?,
     val updatedAtEpochMillis: Long,

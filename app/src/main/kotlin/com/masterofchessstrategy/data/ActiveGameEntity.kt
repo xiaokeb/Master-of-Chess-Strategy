@@ -24,6 +24,17 @@ internal data class ActiveGameEntity(
     @ColumnInfo(defaultValue = "0")
     val hintUseCount: Int = 0,
     val resultOverrideCode: Int? = null,
+    val timeControlMinutes: Int? = null,
+    val redRemainingMillis: Long? = null,
+    val blackRemainingMillis: Long? = null,
+    val turnStartedAtEpochMillis: Long? = null,
+    val pendingDrawOfferSideCode: Int? = null,
+    @ColumnInfo(defaultValue = "0")
+    val autoPlayPaused: Boolean = false,
+    @ColumnInfo(defaultValue = "1000")
+    val autoPlaySpeedPermille: Int = 1_000,
+    @ColumnInfo(defaultValue = "0")
+    val completedAutoGames: Int = 0,
 ) {
     override fun equals(other: Any?): Boolean =
         this === other ||
@@ -40,7 +51,15 @@ internal data class ActiveGameEntity(
                     acceptedMoveCount == other.acceptedMoveCount &&
                     undoUseCount == other.undoUseCount &&
                     hintUseCount == other.hintUseCount &&
-                    resultOverrideCode == other.resultOverrideCode
+                    resultOverrideCode == other.resultOverrideCode &&
+                    timeControlMinutes == other.timeControlMinutes &&
+                    redRemainingMillis == other.redRemainingMillis &&
+                    blackRemainingMillis == other.blackRemainingMillis &&
+                    turnStartedAtEpochMillis == other.turnStartedAtEpochMillis &&
+                    pendingDrawOfferSideCode == other.pendingDrawOfferSideCode &&
+                    autoPlayPaused == other.autoPlayPaused &&
+                    autoPlaySpeedPermille == other.autoPlaySpeedPermille &&
+                    completedAutoGames == other.completedAutoGames
                 )
 
     override fun hashCode(): Int {
@@ -56,6 +75,14 @@ internal data class ActiveGameEntity(
         result = 31 * result + undoUseCount
         result = 31 * result + hintUseCount
         result = 31 * result + (resultOverrideCode ?: 0)
+        result = 31 * result + (timeControlMinutes ?: 0)
+        result = 31 * result + (redRemainingMillis?.hashCode() ?: 0)
+        result = 31 * result + (blackRemainingMillis?.hashCode() ?: 0)
+        result = 31 * result + (turnStartedAtEpochMillis?.hashCode() ?: 0)
+        result = 31 * result + (pendingDrawOfferSideCode ?: 0)
+        result = 31 * result + autoPlayPaused.hashCode()
+        result = 31 * result + autoPlaySpeedPermille
+        result = 31 * result + completedAutoGames
         return result
     }
 }

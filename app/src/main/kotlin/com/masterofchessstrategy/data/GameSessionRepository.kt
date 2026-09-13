@@ -3,6 +3,7 @@ package com.masterofchessstrategy.data
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.engine.ChineseChessSide
 
 internal enum class StoredGameMode(val code: Int) {
     LOCAL_TWO_PLAYER(0),
@@ -23,6 +24,14 @@ internal data class GameSessionSnapshot(
     val undoUseCount: Int = 0,
     val hintUseCount: Int = 0,
     val resultOverride: GameResult? = null,
+    val timeControlMinutes: Int? = null,
+    val redRemainingMillis: Long? = null,
+    val blackRemainingMillis: Long? = null,
+    val turnStartedAtEpochMillis: Long? = null,
+    val pendingDrawOfferSide: ChineseChessSide? = null,
+    val autoPlayPaused: Boolean = false,
+    val autoPlaySpeedPermille: Int = 1_000,
+    val completedAutoGames: Int = 0,
 ) {
     fun defensiveCopy(): GameSessionSnapshot = copy(engineState = engineState.copyOf())
 }
@@ -55,7 +64,15 @@ internal class RoomGameSessionRepository(
             entity.engineState.size !in 1..MAX_ENGINE_STATE_BYTES ||
             entity.acceptedMoveCount !in 0..MAX_TRACKED_ACTIONS ||
             entity.undoUseCount !in 0..MAX_TRACKED_ACTIONS ||
-            entity.hintUseCount !in 0..MAX_TRACKED_ACTIONS
+            entity.hintUseCount !in 0..MAX_TRACKED_ACTIONS ||
+            entity.autoPlaySpeedPermille !in AUTO_PLAY_SPEED_RANGE ||
+            entity.completedAutoGames !in 0..MAX_TRACKED_ACTIONS ||
+            !isValidClock(
+                entity.timeControlMinutes,
+                entity.redRemainingMillis,
+                entity.blackRemainingMillis,
+                entity.turnStartedAtEpochMillis,
+            )
         ) {
             return LoadGameSessionResult.Incompatible
         }
@@ -67,6 +84,10 @@ internal class RoomGameSessionRepository(
         }
         val resultOverride = entity.resultOverrideCode?.let { code ->
             decodeTerminalResult(code) ?: return LoadGameSessionResult.Incompatible
+        }
+        val pendingDrawOfferSide = entity.pendingDrawOfferSideCode?.let { code ->
+            ChineseChessSide.entries.firstOrNull { it.code == code }
+                ?: return LoadGameSessionResult.Incompatible
         }
         return LoadGameSessionResult.Loaded(
             GameSessionSnapshot(
@@ -80,6 +101,14 @@ internal class RoomGameSessionRepository(
                 undoUseCount = entity.undoUseCount,
                 hintUseCount = entity.hintUseCount,
                 resultOverride = resultOverride,
+                timeControlMinutes = entity.timeControlMinutes,
+                redRemainingMillis = entity.redRemainingMillis,
+                blackRemainingMillis = entity.blackRemainingMillis,
+                turnStartedAtEpochMillis = entity.turnStartedAtEpochMillis,
+                pendingDrawOfferSide = pendingDrawOfferSide,
+                autoPlayPaused = entity.autoPlayPaused,
+                autoPlaySpeedPermille = entity.autoPlaySpeedPermille,
+                completedAutoGames = entity.completedAutoGames,
             ),
         )
     }
@@ -104,6 +133,22 @@ internal class RoomGameSessionRepository(
         require(snapshot.resultOverride != GameResult.ONGOING) {
             "Only a terminal result may override the engine result"
         }
+        require(
+            snapshot.autoPlaySpeedPermille in AUTO_PLAY_SPEED_RANGE &&
+                snapshot.completedAutoGames in 0..MAX_TRACKED_ACTIONS
+        ) {
+            "Auto-play state is outside the persistence boundary"
+        }
+        require(
+            isValidClock(
+                snapshot.timeControlMinutes,
+                snapshot.redRemainingMillis,
+                snapshot.blackRemainingMillis,
+                snapshot.turnStartedAtEpochMillis,
+            )
+        ) {
+            "Game clock is outside the persistence boundary"
+        }
         dao.upsert(
             ActiveGameEntity(
                 gameTypeCode = snapshot.gameType.code,
@@ -118,6 +163,14 @@ internal class RoomGameSessionRepository(
                 undoUseCount = snapshot.undoUseCount,
                 hintUseCount = snapshot.hintUseCount,
                 resultOverrideCode = snapshot.resultOverride?.let(::encodeTerminalResult),
+                timeControlMinutes = snapshot.timeControlMinutes,
+                redRemainingMillis = snapshot.redRemainingMillis,
+                blackRemainingMillis = snapshot.blackRemainingMillis,
+                turnStartedAtEpochMillis = snapshot.turnStartedAtEpochMillis,
+                pendingDrawOfferSideCode = snapshot.pendingDrawOfferSide?.code,
+                autoPlayPaused = snapshot.autoPlayPaused,
+                autoPlaySpeedPermille = snapshot.autoPlaySpeedPermille,
+                completedAutoGames = snapshot.completedAutoGames,
             ),
         )
     }
@@ -127,10 +180,11 @@ internal class RoomGameSessionRepository(
     }
 
     private companion object {
-        const val CURRENT_ENVELOPE_VERSION = 2
+        const val CURRENT_ENVELOPE_VERSION = 3
         const val CHINESE_CHESS_ENGINE_FORMAT_VERSION = 2
         const val MAX_ENGINE_STATE_BYTES = 64 * 1024
         const val MAX_TRACKED_ACTIONS = 10_000
+        val AUTO_PLAY_SPEED_RANGE = 500..4_000
 
         const val RESULT_FIRST_PLAYER_WIN = 1
         const val RESULT_SECOND_PLAYER_WIN = 2
@@ -151,5 +205,25 @@ internal class RoomGameSessionRepository(
                 RESULT_DRAW -> GameResult.DRAW
                 else -> null
             }
+
+        fun isValidClock(
+            timeControlMinutes: Int?,
+            redRemainingMillis: Long?,
+            blackRemainingMillis: Long?,
+            turnStartedAtEpochMillis: Long?,
+        ): Boolean {
+            if (timeControlMinutes == null) {
+                return redRemainingMillis == null &&
+                    blackRemainingMillis == null &&
+                    turnStartedAtEpochMillis == null
+            }
+            if (timeControlMinutes !in AppSettings.DURATION_RANGE) return false
+            val maximum = timeControlMinutes * 60_000L
+            return redRemainingMillis != null &&
+                blackRemainingMillis != null &&
+                redRemainingMillis in 0L..maximum &&
+                blackRemainingMillis in 0L..maximum &&
+                (turnStartedAtEpochMillis == null || turnStartedAtEpochMillis >= 0L)
+        }
     }
 }

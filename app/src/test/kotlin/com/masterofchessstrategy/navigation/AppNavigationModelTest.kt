@@ -41,10 +41,11 @@ class AppNavigationModelTest {
             ModeDestination.TUTORIAL,
             ChineseChessMode.TUTORIAL.destination,
         )
-        assertTrue(
-            listOf(ChineseChessMode.AI_AUTO_PLAY, ChineseChessMode.ENDGAME)
-                .all { it.destination == ModeDestination.LOCKED },
+        assertEquals(
+            ModeDestination.AUTO_PLAY_DIFFICULTY,
+            ChineseChessMode.AI_AUTO_PLAY.destination,
         )
+        assertEquals(ModeDestination.LOCKED, ChineseChessMode.ENDGAME.destination)
     }
 
     @Test
@@ -117,6 +118,25 @@ class AppNavigationModelTest {
         assertEquals(
             "chinese-chess/ai-game/1",
             AppDestination.chineseChessAiGame(Difficulty.MEDIUM),
+        )
+    }
+
+    @Test
+    fun configuredAutoPlayHistoryQuickStartsItsOwnStableRoute() {
+        val selection = LastGameSelection(
+            gameType = GameType.CHINESE_CHESS,
+            mode = StoredGameMode.AI_AUTO_PLAY,
+            difficulty = Difficulty.HARD,
+            updatedAtEpochMillis = 1L,
+        )
+
+        assertEquals(
+            QuickStartDestination.AUTO_PLAY_GAME,
+            selection.quickStartDestination(),
+        )
+        assertEquals(
+            "chinese-chess/auto-play/2",
+            AppDestination.chineseChessAutoPlayGame(Difficulty.HARD),
         )
     }
 
