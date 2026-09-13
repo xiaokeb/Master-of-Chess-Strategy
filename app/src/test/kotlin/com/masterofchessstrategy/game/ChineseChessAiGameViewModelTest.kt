@@ -118,7 +118,11 @@ class ChineseChessAiGameViewModelTest {
 
     @Test
     fun implementedHigherDifficultiesReachSearchUnchanged() = runTest(dispatcher) {
-        listOf(Difficulty.MEDIUM, Difficulty.HARD).forEach { difficulty ->
+        listOf(
+            Difficulty.MEDIUM,
+            Difficulty.HARD,
+            Difficulty.MASTER,
+        ).forEach { difficulty ->
             val engine = FakeAiEngine()
             val viewModel = ChineseChessGameViewModel(
                 mode = StoredGameMode.HUMAN_VS_AI,

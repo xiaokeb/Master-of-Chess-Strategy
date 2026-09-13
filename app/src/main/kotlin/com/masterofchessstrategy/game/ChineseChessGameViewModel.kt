@@ -530,9 +530,7 @@ class ChineseChessGameViewModel internal constructor(
         saveHumanPosition: Boolean = true,
     ) {
         val aiEngine = activeEngine as? ChineseChessAiEngine
-        val selectedDifficulty = difficulty?.takeIf {
-            it != Difficulty.MASTER
-        }
+        val selectedDifficulty = difficulty
         if (aiEngine == null || selectedDifficulty == null) {
             disableEngine()
             return
