@@ -32,6 +32,10 @@ class NativeChineseChessEngineTest {
                 engine.legalActions(),
             )
             assertEquals(GameResult.ONGOING, engine.gameResult())
+            assertEquals(
+                BoardMove(BoardPosition(0, 3), BoardPosition(0, 4)),
+                engine.chooseMove(Difficulty.EASY),
+            )
         }
     }
 
@@ -88,6 +92,21 @@ class NativeChineseChessEngineTest {
     }
 
     @Test
+    fun malformedAiMoveAndUnsupportedDifficultyAreRejected() {
+        val bridge = FakeChineseChessBridge().apply {
+            aiMove = intArrayOf(0, 3, 0)
+        }
+        NativeChineseChessEngine(bridge).use { engine ->
+            assertThrows(IllegalStateException::class.java) {
+                engine.chooseMove(Difficulty.EASY)
+            }
+            assertThrows(IllegalArgumentException::class.java) {
+                engine.chooseMove(Difficulty.MEDIUM)
+            }
+        }
+    }
+
+    @Test
     fun malformedNativeScalarCodesAreRejected() {
         val bridge = FakeChineseChessBridge()
         bridge.currentPlayerCode = 2
@@ -133,6 +152,7 @@ private class FakeChineseChessBridge : ChineseChessBridge {
     var restoreResult = 0
     var lastRestore = byteArrayOf()
     var moves = intArrayOf(0, 6, 0, 5)
+    var aiMove = intArrayOf(0, 3, 0, 4)
     var currentPlayerCode = 0
     var pieceCode = 0x80 or ChineseChessPieceType.CHARIOT.code
 
@@ -159,6 +179,9 @@ private class FakeChineseChessBridge : ChineseChessBridge {
 
     override fun legalMoves(handle: Long): IntArray =
         observe(handle) { moves.copyOf() }
+
+    override fun bestMove(handle: Long, difficultyCode: Int): IntArray =
+        observe(handle) { aiMove.copyOf() }
 
     override fun gameResult(handle: Long): Int = observe(handle) { 0 }
 

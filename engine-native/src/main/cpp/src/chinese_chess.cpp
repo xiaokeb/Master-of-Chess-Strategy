@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <limits>
 #include <utility>
 
 namespace mocs::engine {
@@ -22,6 +23,10 @@ constexpr std::size_t checksum_size = 4;
 constexpr std::size_t move_record_size = 11;
 constexpr std::size_t maximum_history_size = 4096;
 constexpr std::uint16_t natural_limit_plies = 120;
+constexpr std::int32_t winning_score = 1'000'000;
+constexpr std::int32_t check_bonus = 30;
+constexpr std::int32_t easy_score_window = 80;
+constexpr std::size_t easy_candidate_limit = 3;
 
 void append_u16(
     std::vector<std::uint8_t>& data,
@@ -256,6 +261,63 @@ std::vector<EngineAction> ChineseChessEngine::legal_actions() const {
         }
     }
     return actions;
+}
+
+std::optional<EngineAction> ChineseChessEngine::best_move(
+    const Difficulty difficulty
+) const {
+    if (
+        difficulty != Difficulty::easy ||
+        game_result() != GameResult::ongoing
+    ) {
+        return std::nullopt;
+    }
+
+    struct ScoredAction {
+        EngineAction action;
+        std::int32_t score;
+    };
+
+    const auto perspective = current_side_;
+    std::vector<ScoredAction> scored;
+    for (const auto& action : legal_actions()) {
+        auto next = *this;
+        if (!next.apply(action).accepted) {
+            continue;
+        }
+        auto score = next.evaluate_for(perspective);
+        if (
+            next.game_result() == GameResult::ongoing &&
+            next.is_in_check(next.current_side_)
+        ) {
+            score += check_bonus;
+        }
+        scored.push_back(ScoredAction{action, score});
+    }
+    if (scored.empty()) {
+        return std::nullopt;
+    }
+
+    std::stable_sort(
+        scored.begin(),
+        scored.end(),
+        [](const ScoredAction& left, const ScoredAction& right) {
+            return left.score > right.score;
+        }
+    );
+    const auto best_score = scored.front().score;
+    std::size_t candidate_count = 0;
+    while (
+        candidate_count < scored.size() &&
+        candidate_count < easy_candidate_limit &&
+        scored[candidate_count].score >= best_score - easy_score_window
+    ) {
+        ++candidate_count;
+    }
+    const auto selected = static_cast<std::size_t>(
+        position_seed() % candidate_count
+    );
+    return scored[selected].action;
 }
 
 GameResult ChineseChessEngine::game_result() const noexcept {
@@ -814,6 +876,66 @@ bool ChineseChessEngine::has_legal_action() const noexcept {
         }
     }
     return false;
+}
+
+std::int32_t ChineseChessEngine::piece_value(
+    const PieceType type
+) noexcept {
+    switch (type) {
+        case PieceType::general:
+            return 100'000;
+        case PieceType::chariot:
+            return 900;
+        case PieceType::horse:
+        case PieceType::cannon:
+            return 450;
+        case PieceType::advisor:
+        case PieceType::elephant:
+            return 200;
+        case PieceType::soldier:
+            return 100;
+    }
+    return 0;
+}
+
+std::int32_t ChineseChessEngine::evaluate_for(
+    const Side perspective
+) const noexcept {
+    const auto result = game_result();
+    if (result != GameResult::ongoing) {
+        if (result == GameResult::draw) {
+            return 0;
+        }
+        const auto perspective_wins =
+            (perspective == Side::red &&
+             result == GameResult::first_player_win) ||
+            (perspective == Side::black &&
+             result == GameResult::second_player_win);
+        return perspective_wins ? winning_score : -winning_score;
+    }
+
+    std::int32_t score = 0;
+    for (const auto& piece : board_) {
+        if (!piece) {
+            continue;
+        }
+        const auto value = piece_value(piece->type);
+        score += piece->side == perspective ? value : -value;
+    }
+    return score;
+}
+
+std::uint64_t ChineseChessEngine::position_seed() const noexcept {
+    constexpr std::uint64_t offset_basis = 1469598103934665603ULL;
+    constexpr std::uint64_t prime = 1099511628211ULL;
+    auto seed = offset_basis;
+    for (const auto& piece : board_) {
+        seed ^= encode_piece(piece);
+        seed *= prime;
+    }
+    seed ^= static_cast<std::uint8_t>(current_side_);
+    seed *= prime;
+    return seed;
 }
 
 void ChineseChessEngine::adjudicate_history() noexcept {

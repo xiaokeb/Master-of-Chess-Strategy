@@ -38,3 +38,12 @@ object ChineseChessBoard {
 interface ChineseChessRuleEngine : RuleEngine<BoardMove> {
     fun pieceAt(position: BoardPosition): ChineseChessPiece?
 }
+
+/**
+ * Optional computer-player capability implemented by engines with search.
+ *
+ * A null move is valid only when the current position has no legal action.
+ */
+interface ChineseChessAiEngine : ChineseChessRuleEngine {
+    fun chooseMove(difficulty: Difficulty): BoardMove?
+}

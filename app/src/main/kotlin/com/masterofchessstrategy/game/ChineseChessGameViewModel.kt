@@ -16,17 +16,22 @@ import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.BoardMove
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessBoard
+import com.masterofchessstrategy.engine.ChineseChessAiEngine
 import com.masterofchessstrategy.engine.ChineseChessRuleEngine
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.EngineError
+import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.NativeChineseChessEngine
 import com.masterofchessstrategy.engine.RestoreResult
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
- * Owns one local Chinese chess session and is the only UI-layer JNI consumer.
+ * Owns one local or human-versus-AI Chinese chess session.
  *
  * Room access is asynchronous. While restoring or committing a snapshot, game
  * interactions are disabled so a newer position cannot be overtaken by an
@@ -35,19 +40,39 @@ import kotlinx.coroutines.launch
 class ChineseChessGameViewModel internal constructor(
     private val sessionRepository: GameSessionRepository? = null,
     private val nowEpochMillis: () -> Long = { System.currentTimeMillis() },
+    private val mode: StoredGameMode = StoredGameMode.LOCAL_TWO_PLAYER,
+    private val difficulty: Difficulty? = null,
+    private val aiDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val engineFactory: () -> ChineseChessRuleEngine,
 ) : ViewModel() {
     private var engine: ChineseChessRuleEngine? = null
     private var acceptedMoveCount = 0
 
-    var uiState by mutableStateOf(ChineseChessGameUiState())
+    private val isAiGame = mode == StoredGameMode.HUMAN_VS_AI
+
+    var uiState by mutableStateOf(
+        ChineseChessGameUiState(
+            isAiGame = isAiGame,
+            difficulty = difficulty,
+        ),
+    )
         private set
 
     constructor() : this(engineFactory = { NativeChineseChessEngine() })
 
     init {
         try {
-            engine = engineFactory()
+            require(
+                !isAiGame ||
+                    difficulty == Difficulty.EASY
+            ) {
+                "Human versus AI currently requires easy difficulty"
+            }
+            engine = engineFactory().also { created ->
+                require(!isAiGame || created is ChineseChessAiEngine) {
+                    "Human versus AI requires an AI-capable engine"
+                }
+            }
             refresh()
             restoreSavedSession()
         } catch (_: RuntimeException) {
@@ -89,8 +114,7 @@ class ChineseChessGameViewModel internal constructor(
             return
         }
         runEngineOperation {
-            if (activeEngine.undo()) {
-                acceptedMoveCount--
+            if (undoTurn(activeEngine)) {
                 refresh(ChineseChessFeedback.MOVE_UNDONE)
                 persistCurrentSession()
             } else {
@@ -140,7 +164,10 @@ class ChineseChessGameViewModel internal constructor(
                 LoadGameSessionResult.Incompatible -> rejectStoredSession(repository)
 
                 is LoadGameSessionResult.Loaded -> {
-                    if (result.snapshot.mode != StoredGameMode.LOCAL_TWO_PLAYER) {
+                    if (
+                        result.snapshot.mode != mode ||
+                        result.snapshot.difficulty != difficulty
+                    ) {
                         rejectStoredSession(repository)
                     } else {
                         restoreEngineState(repository, result.snapshot.engineState)
@@ -160,6 +187,13 @@ class ChineseChessGameViewModel internal constructor(
                 RestoreResult.Restored -> {
                     acceptedMoveCount = 0
                     refresh(ChineseChessFeedback.GAME_RESTORED)
+                    if (
+                        isAiGame &&
+                        activeEngine.currentPlayer.value == ChineseChessSide.BLACK.code &&
+                        activeEngine.gameResult() == GameResult.ONGOING
+                    ) {
+                        startAiTurn(activeEngine, saveHumanPosition = false)
+                    }
                 }
 
                 is RestoreResult.Rejected -> rejectStoredSession(repository)
@@ -200,8 +234,8 @@ class ChineseChessGameViewModel internal constructor(
         uiState = uiState.copy(isPersisting = true)
         val snapshot = GameSessionSnapshot(
             gameType = GameType.CHINESE_CHESS,
-            mode = StoredGameMode.LOCAL_TWO_PLAYER,
-            difficulty = null,
+            mode = mode,
+            difficulty = difficulty,
             engineState = stateBytes,
             updatedAtEpochMillis = nowEpochMillis(),
         )
@@ -258,7 +292,15 @@ class ChineseChessGameViewModel internal constructor(
                 ActionResult.Accepted -> {
                     acceptedMoveCount++
                     refresh()
-                    persistCurrentSession()
+                    if (
+                        isAiGame &&
+                        activeEngine.currentPlayer.value == ChineseChessSide.BLACK.code &&
+                        activeEngine.gameResult() == GameResult.ONGOING
+                    ) {
+                        startAiTurn(activeEngine)
+                    } else {
+                        persistCurrentSession()
+                    }
                 }
 
                 is ActionResult.Rejected -> {
@@ -287,6 +329,8 @@ class ChineseChessGameViewModel internal constructor(
                 },
                 result = activeEngine.gameResult(),
                 canUndo = acceptedMoveCount > 0,
+                isAiGame = isAiGame,
+                difficulty = difficulty,
                 feedback = feedback,
             )
         }
@@ -299,6 +343,97 @@ class ChineseChessGameViewModel internal constructor(
             feedback = null,
         )
     }
+
+    private fun undoTurn(activeEngine: ChineseChessRuleEngine): Boolean {
+        if (!activeEngine.undo()) return false
+        acceptedMoveCount = (acceptedMoveCount - 1).coerceAtLeast(0)
+        if (
+            isAiGame &&
+            activeEngine.currentPlayer.value == ChineseChessSide.BLACK.code &&
+            acceptedMoveCount > 0
+        ) {
+            if (!activeEngine.undo()) return false
+            acceptedMoveCount--
+        }
+        return true
+    }
+
+    private fun startAiTurn(
+        activeEngine: ChineseChessRuleEngine,
+        saveHumanPosition: Boolean = true,
+    ) {
+        val aiEngine = activeEngine as? ChineseChessAiEngine
+        val selectedDifficulty = difficulty
+        if (aiEngine == null || selectedDifficulty != Difficulty.EASY) {
+            disableEngine()
+            return
+        }
+        val humanSnapshot = if (saveHumanPosition) {
+            createSnapshot(activeEngine)
+        } else {
+            null
+        }
+        uiState = uiState.copy(
+            selectedPosition = null,
+            legalDestinations = emptySet(),
+            isAiThinking = true,
+            isPersisting = humanSnapshot != null && sessionRepository != null,
+        )
+        viewModelScope.launch {
+            humanSnapshot?.let { snapshot ->
+                try {
+                    sessionRepository?.save(snapshot)
+                } catch (_: RuntimeException) {
+                    // The post-AI snapshot retries persistence for the full turn.
+                }
+            }
+            if (engine !== activeEngine) return@launch
+            uiState = uiState.copy(isPersisting = false)
+            val move = try {
+                withContext(aiDispatcher) {
+                    aiEngine.chooseMove(selectedDifficulty)
+                }
+            } catch (_: RuntimeException) {
+                disableEngine()
+                return@launch
+            } catch (_: LinkageError) {
+                disableEngine()
+                return@launch
+            }
+            if (engine !== activeEngine) return@launch
+            if (move == null) {
+                val feedback = if (activeEngine.gameResult() == GameResult.ONGOING) {
+                    ChineseChessFeedback.AI_MOVE_FAILED
+                } else {
+                    null
+                }
+                refresh(feedback)
+                return@launch
+            }
+            when (activeEngine.apply(move)) {
+                ActionResult.Accepted -> {
+                    acceptedMoveCount++
+                    refresh(ChineseChessFeedback.AI_MOVED)
+                    persistCurrentSession()
+                }
+
+                is ActionResult.Rejected -> {
+                    refresh(ChineseChessFeedback.AI_MOVE_FAILED)
+                }
+            }
+        }
+    }
+
+    private fun createSnapshot(
+        activeEngine: ChineseChessRuleEngine,
+    ): GameSessionSnapshot =
+        GameSessionSnapshot(
+            gameType = GameType.CHINESE_CHESS,
+            mode = mode,
+            difficulty = difficulty,
+            engineState = activeEngine.serialize(),
+            updatedAtEpochMillis = nowEpochMillis(),
+        )
 
     private inline fun runEngineOperation(operation: () -> Unit) {
         try {
@@ -345,11 +480,17 @@ class ChineseChessGameViewModel internal constructor(
         }
 
     companion object {
-        internal fun factory(repository: GameSessionRepository): ViewModelProvider.Factory =
+        internal fun factory(
+            repository: GameSessionRepository,
+            mode: StoredGameMode = StoredGameMode.LOCAL_TWO_PLAYER,
+            difficulty: Difficulty? = null,
+        ): ViewModelProvider.Factory =
             viewModelFactory {
                 initializer {
                     ChineseChessGameViewModel(
                         sessionRepository = repository,
+                        mode = mode,
+                        difficulty = difficulty,
                         engineFactory = { NativeChineseChessEngine() },
                     )
                 }

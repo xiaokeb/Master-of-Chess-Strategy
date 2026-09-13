@@ -3,6 +3,8 @@
 
 #include <jni.h>
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
@@ -203,6 +205,37 @@ Java_com_masterofchessstrategy_engine_internal_NativeBindings_chineseChessLegalM
                 static_cast<jsize>(flattened.size()),
                 flattened.data()
             );
+        }
+        return result;
+    });
+}
+
+extern "C" JNIEXPORT jintArray JNICALL
+Java_com_masterofchessstrategy_engine_internal_NativeBindings_chineseChessBestMove(
+    JNIEnv* env,
+    jobject,
+    const jlong handle,
+    const jint difficulty_code
+) noexcept {
+    return guard_jni<jintArray>(env, nullptr, [env, handle, difficulty_code] {
+        if (
+            difficulty_code !=
+            static_cast<jint>(mocs::engine::Difficulty::easy)
+        ) {
+            throw std::invalid_argument("Unsupported AI difficulty");
+        }
+        const auto action = require_chinese_chess_engine(handle)->best_move(
+            mocs::engine::Difficulty::easy
+        );
+        const auto result = env->NewIntArray(action ? 4 : 0);
+        if (result != nullptr && action) {
+            std::array<jint, 4> flattened{};
+            std::copy(
+                action->arguments.begin(),
+                action->arguments.end(),
+                flattened.begin()
+            );
+            env->SetIntArrayRegion(result, 0, 4, flattened.data());
         }
         return result;
     });

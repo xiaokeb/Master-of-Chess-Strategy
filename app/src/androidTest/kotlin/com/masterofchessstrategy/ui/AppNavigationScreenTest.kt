@@ -9,6 +9,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.navigation.HomeGameEntry
+import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.settings.AppSettingsUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -109,6 +110,24 @@ class AppNavigationScreenTest {
 
         composeRule.runOnIdle {
             assertFalse(requestedSound)
+        }
+    }
+
+    @Test
+    fun completedTutorialMakesEasyDifficultySelectable() {
+        var selected: Difficulty? = null
+        composeRule.setContent {
+            ChineseChessDifficultyScreen(
+                onBack = {},
+                tutorialCompleted = true,
+                onDifficultySelected = { selected = it },
+            )
+        }
+
+        composeRule.onNodeWithTag(DIFFICULTY_EASY_TAG).performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(Difficulty.EASY, selected)
         }
     }
 }

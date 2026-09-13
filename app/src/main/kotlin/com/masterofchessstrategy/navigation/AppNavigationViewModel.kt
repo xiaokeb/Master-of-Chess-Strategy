@@ -25,13 +25,18 @@ internal enum class QuickStartDestination {
     MODE_SELECTION,
     DIFFICULTY,
     TUTORIAL,
+    AI_GAME,
     GAME,
 }
 
 internal fun LastGameSelection.quickStartDestination(): QuickStartDestination =
     when (mode) {
         StoredGameMode.LOCAL_TWO_PLAYER -> QuickStartDestination.GAME
-        StoredGameMode.HUMAN_VS_AI -> QuickStartDestination.DIFFICULTY
+        StoredGameMode.HUMAN_VS_AI -> if (difficulty == null) {
+            QuickStartDestination.DIFFICULTY
+        } else {
+            QuickStartDestination.AI_GAME
+        }
         StoredGameMode.TUTORIAL -> QuickStartDestination.TUTORIAL
         StoredGameMode.AI_AUTO_PLAY,
         StoredGameMode.ENDGAME,

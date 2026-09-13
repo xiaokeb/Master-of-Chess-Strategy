@@ -28,6 +28,7 @@ internal const val MODE_LOCAL_GAME_TAG = "mode_local_game"
 internal const val MODE_AI_GAME_TAG = "mode_ai_game"
 internal const val MODE_TUTORIAL_TAG = "mode_tutorial"
 internal const val DIFFICULTY_SCREEN_TAG = "difficulty_screen"
+internal const val DIFFICULTY_EASY_TAG = "difficulty_easy"
 
 @Composable
 internal fun ChineseChessModeScreen(
@@ -79,6 +80,7 @@ internal fun ChineseChessModeScreen(
 internal fun ChineseChessDifficultyScreen(
     onBack: () -> Unit,
     tutorialCompleted: Boolean,
+    onDifficultySelected: (Difficulty) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -109,7 +111,23 @@ internal fun ChineseChessDifficultyScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     rowDifficulties.forEach { entry ->
-                        Card(modifier = Modifier.weight(1f)) {
+                        Card(
+                            modifier = Modifier
+                                .weight(1f)
+                                .then(
+                                    if (entry.difficulty == Difficulty.EASY) {
+                                        Modifier.testTag(DIFFICULTY_EASY_TAG)
+                                    } else {
+                                        Modifier
+                                    },
+                                )
+                                .clickable(
+                                    enabled = entry.isUnlocked,
+                                    onClick = {
+                                        onDifficultySelected(entry.difficulty)
+                                    },
+                                ),
+                        ) {
                             Column(
                                 modifier = Modifier.padding(18.dp),
                                 verticalArrangement = Arrangement.spacedBy(6.dp),

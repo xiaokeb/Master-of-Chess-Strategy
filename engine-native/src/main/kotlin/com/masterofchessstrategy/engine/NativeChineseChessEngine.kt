@@ -6,7 +6,7 @@ import com.masterofchessstrategy.engine.internal.JniChineseChessBridge
 /** Thread-safe Kotlin owner for one native Chinese chess session. */
 class NativeChineseChessEngine internal constructor(
     private val bridge: ChineseChessBridge,
-) : ChineseChessRuleEngine {
+) : ChineseChessAiEngine {
     private val lock = Any()
     private var handle = bridge.create().also {
         check(it > 0) { "Native engine could not be created" }
@@ -62,6 +62,26 @@ class NativeChineseChessEngine internal constructor(
                 add(BoardMove(from, to))
             }
         }
+    }
+
+    override fun chooseMove(difficulty: Difficulty): BoardMove? {
+        require(difficulty == Difficulty.EASY) {
+            "Only easy Chinese chess AI is currently available"
+        }
+        val encoded = withHandle {
+            bridge.bestMove(it, difficulty.code)
+        }
+        check(encoded.size == 0 || encoded.size == MOVE_FIELD_COUNT) {
+            "Native engine returned malformed AI move"
+        }
+        if (encoded.isEmpty()) {
+            return null
+        }
+        val from = BoardPosition(encoded[0], encoded[1])
+        val to = BoardPosition(encoded[2], encoded[3])
+        ChineseChessBoard.requireInside(from)
+        ChineseChessBoard.requireInside(to)
+        return BoardMove(from, to)
     }
 
     override fun gameResult(): GameResult =

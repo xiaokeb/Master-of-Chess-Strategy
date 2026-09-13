@@ -9,6 +9,7 @@ internal object AppDestination {
     const val CHINESE_CHESS_DIFFICULTY = "chinese-chess/difficulty"
     const val CHINESE_CHESS_TUTORIAL = "chinese-chess/tutorial"
     const val CHINESE_CHESS_GAME = "chinese-chess/game"
+    const val CHINESE_CHESS_AI_GAME = "chinese-chess/ai-game"
     const val SETTINGS = "settings"
 }
 

@@ -71,4 +71,19 @@ class AppNavigationModelTest {
             selection.quickStartDestination(),
         )
     }
+
+    @Test
+    fun configuredAiHistoryQuickStartsAiGame() {
+        val selection = LastGameSelection(
+            gameType = GameType.CHINESE_CHESS,
+            mode = StoredGameMode.HUMAN_VS_AI,
+            difficulty = Difficulty.EASY,
+            updatedAtEpochMillis = 1L,
+        )
+
+        assertEquals(
+            QuickStartDestination.AI_GAME,
+            selection.quickStartDestination(),
+        )
+    }
 }

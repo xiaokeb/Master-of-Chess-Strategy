@@ -46,6 +46,7 @@ import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessPiece
 import com.masterofchessstrategy.engine.ChineseChessPieceType
 import com.masterofchessstrategy.engine.ChineseChessSide
+import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.game.ChineseChessFeedback
 import com.masterofchessstrategy.game.ChineseChessGameUiState
@@ -131,6 +132,14 @@ fun MasterOfChessStrategyApp() {
                                     AppDestination.CHINESE_CHESS_TUTORIAL
                                 }
 
+                                QuickStartDestination.AI_GAME -> {
+                                    if (tutorialViewModel.uiState.progress.isCompleted) {
+                                        AppDestination.CHINESE_CHESS_AI_GAME
+                                    } else {
+                                        AppDestination.CHINESE_CHESS_DIFFICULTY
+                                    }
+                                }
+
                                 QuickStartDestination.MODE_SELECTION -> {
                                     AppDestination.CHINESE_CHESS_MODES
                                 }
@@ -174,6 +183,18 @@ fun MasterOfChessStrategyApp() {
                 ChineseChessDifficultyScreen(
                     onBack = navController::popBackStack,
                     tutorialCompleted = tutorialViewModel.uiState.progress.isCompleted,
+                    onDifficultySelected = { difficulty ->
+                        if (
+                            difficulty == Difficulty.EASY &&
+                            tutorialViewModel.uiState.progress.isCompleted
+                        ) {
+                            navigationViewModel.recordChineseChessSelection(
+                                StoredGameMode.HUMAN_VS_AI,
+                                difficulty,
+                            )
+                            navController.navigate(AppDestination.CHINESE_CHESS_AI_GAME)
+                        }
+                    },
                 )
             }
             composable(AppDestination.CHINESE_CHESS_TUTORIAL) {
@@ -190,6 +211,29 @@ fun MasterOfChessStrategyApp() {
             composable(AppDestination.CHINESE_CHESS_GAME) {
                 val factory = remember(gameSessionRepository) {
                     ChineseChessGameViewModel.factory(gameSessionRepository)
+                }
+                val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
+                ChineseChessGameScreen(
+                    state = gameViewModel.uiState,
+                    onSquareTap = gameViewModel::onSquareTap,
+                    onUndo = gameViewModel::undo,
+                    onRestart = gameViewModel::restart,
+                    onBack = navController::popBackStack,
+                    settings = settingsViewModel.uiState.settings,
+                    onSettings = {
+                        navController.navigate(AppDestination.SETTINGS) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
+            }
+            composable(AppDestination.CHINESE_CHESS_AI_GAME) {
+                val factory = remember(gameSessionRepository) {
+                    ChineseChessGameViewModel.factory(
+                        repository = gameSessionRepository,
+                        mode = StoredGameMode.HUMAN_VS_AI,
+                        difficulty = Difficulty.EASY,
+                    )
                 }
                 val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
                 ChineseChessGameScreen(
@@ -232,7 +276,7 @@ internal fun ChineseChessGameScreen(
     onSettings: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    BackHandler(enabled = state.isRestoring || state.isPersisting) {
+    BackHandler(enabled = state.isRestoring || state.isPersisting || state.isAiThinking) {
         // Keep the destination alive until the atomic Room operation finishes.
     }
     MocsTheme {
@@ -308,7 +352,7 @@ private fun GameHeader(
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextButton(
                 onClick = onBack,
-                enabled = !state.isRestoring && !state.isPersisting,
+                enabled = !state.isRestoring && !state.isPersisting && !state.isAiThinking,
                 modifier = Modifier.testTag(GAME_BACK_BUTTON_TAG),
             ) {
                 Text(stringResource(R.string.back))
@@ -319,7 +363,13 @@ private fun GameHeader(
                     style = MaterialTheme.typography.headlineMedium,
                 )
                 Text(
-                    text = stringResource(R.string.local_two_player),
+                    text = stringResource(
+                        if (state.isAiGame) {
+                            R.string.easy_ai_game
+                        } else {
+                            R.string.local_two_player
+                        },
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -340,7 +390,7 @@ private fun GameHeader(
             }
             TextButton(
                 onClick = onSettings,
-                enabled = !state.isRestoring && !state.isPersisting,
+                enabled = !state.isRestoring && !state.isPersisting && !state.isAiThinking,
                 modifier = Modifier.testTag(GAME_SETTINGS_BUTTON_TAG),
             ) {
                 Text(stringResource(R.string.settings_title))
@@ -443,7 +493,15 @@ private fun GameControls(
                     .fillMaxWidth()
                     .testTag(AI_BUTTON_TAG),
             ) {
-                Text(stringResource(R.string.ai_not_available))
+                Text(
+                    stringResource(
+                        if (state.isAiGame) {
+                            R.string.easy_ai_enabled
+                        } else {
+                            R.string.ai_not_available
+                        },
+                    ),
+                )
             }
             OutlinedButton(
                 onClick = {},
@@ -465,6 +523,7 @@ private fun gameStatusText(state: ChineseChessGameUiState): String =
     when {
         !state.isEngineAvailable -> stringResource(R.string.engine_unavailable)
         state.isRestoring -> stringResource(R.string.restoring_game)
+        state.isAiThinking -> stringResource(R.string.ai_thinking)
         state.isPersisting -> stringResource(R.string.saving_game)
         state.result == GameResult.FIRST_PLAYER_WIN -> stringResource(R.string.red_wins)
         state.result == GameResult.SECOND_PLAYER_WIN -> stringResource(R.string.black_wins)
@@ -475,14 +534,18 @@ private fun gameStatusText(state: ChineseChessGameUiState): String =
 
 @Composable
 private fun selectionText(state: ChineseChessGameUiState): String =
-    state.selectedPosition?.let {
+    if (state.isAiThinking) {
+        stringResource(R.string.wait_for_ai)
+    } else {
+        state.selectedPosition?.let {
         stringResource(
             R.string.selected_position,
             it.x,
             it.y,
             state.legalDestinations.size,
         )
-    } ?: stringResource(R.string.select_piece_instruction)
+        } ?: stringResource(R.string.select_piece_instruction)
+    }
 
 @Composable
 private fun feedbackText(feedback: ChineseChessFeedback): String =
@@ -500,6 +563,8 @@ private fun feedbackText(feedback: ChineseChessFeedback): String =
             ChineseChessFeedback.GAME_RESTORED -> R.string.feedback_game_restored
             ChineseChessFeedback.RESTORE_REJECTED -> R.string.feedback_restore_rejected
             ChineseChessFeedback.SAVE_FAILED -> R.string.feedback_save_failed
+            ChineseChessFeedback.AI_MOVED -> R.string.feedback_ai_moved
+            ChineseChessFeedback.AI_MOVE_FAILED -> R.string.feedback_ai_move_failed
         },
     )
 

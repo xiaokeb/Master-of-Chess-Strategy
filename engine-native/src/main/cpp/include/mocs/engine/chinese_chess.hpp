@@ -68,6 +68,9 @@ public:
         std::int32_t y
     ) const noexcept;
     [[nodiscard]] bool is_in_check(Side side) const noexcept;
+    [[nodiscard]] std::optional<EngineAction> best_move(
+        Difficulty difficulty
+    ) const;
 
 private:
     static constexpr std::int32_t board_width = 9;
@@ -165,6 +168,13 @@ private:
     ) const noexcept;
     [[nodiscard]] bool has_general(Side side) const noexcept;
     [[nodiscard]] bool has_legal_action() const noexcept;
+    [[nodiscard]] static std::int32_t piece_value(
+        PieceType type
+    ) noexcept;
+    [[nodiscard]] std::int32_t evaluate_for(
+        Side perspective
+    ) const noexcept;
+    [[nodiscard]] std::uint64_t position_seed() const noexcept;
     void adjudicate_history() noexcept;
 
     Board board_{};

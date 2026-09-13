@@ -4,6 +4,7 @@ import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessBoard
 import com.masterofchessstrategy.engine.ChineseChessPiece
 import com.masterofchessstrategy.engine.ChineseChessSide
+import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 
 /** User-facing outcomes. Text is resolved by Compose so this state stays resource-free. */
@@ -20,6 +21,8 @@ enum class ChineseChessFeedback {
     GAME_RESTORED,
     RESTORE_REJECTED,
     SAVE_FAILED,
+    AI_MOVED,
+    AI_MOVE_FAILED,
 }
 
 /**
@@ -40,10 +43,18 @@ data class ChineseChessGameUiState(
     val isEngineAvailable: Boolean = true,
     val isRestoring: Boolean = false,
     val isPersisting: Boolean = false,
+    val isAiGame: Boolean = false,
+    val difficulty: Difficulty? = null,
+    val isAiThinking: Boolean = false,
     val feedback: ChineseChessFeedback? = null,
 ) {
     val isInteractionEnabled: Boolean
-        get() = isEngineAvailable && !isRestoring && !isPersisting
+        get() =
+            isEngineAvailable &&
+                !isRestoring &&
+                !isPersisting &&
+                !isAiThinking &&
+                (!isAiGame || currentSide == ChineseChessSide.RED)
 
     init {
         require(board.size == ChineseChessBoard.WIDTH * ChineseChessBoard.HEIGHT) {

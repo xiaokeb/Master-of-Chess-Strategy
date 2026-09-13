@@ -15,6 +15,12 @@
     <string name="restart">重开</string>
     <string name="later_features">后续能力</string>
     <string name="ai_not_available">人机对局 · 待接入</string>
+    <string name="easy_ai_game">普通人机 · 简单</string>
+    <string name="easy_ai_enabled">简单 AI 已启用 · 执黑</string>
+    <string name="ai_thinking">简单 AI 思考中…</string>
+    <string name="wait_for_ai">请等待黑方 AI 完成走子</string>
+    <string name="feedback_ai_moved">黑方 AI 已完成走子。</string>
+    <string name="feedback_ai_move_failed">AI 未能生成合法着，请重开本局。</string>
     <string name="hint_not_available">提示 · 待接入</string>
     <string name="rules_scope_note">已包含三次循环长将、直接无根子长捉与 60 回合自然限着；复杂杀着和子力交换棋例继续扩充。</string>
     <string name="feedback_select_own">请先选择己方棋子。</string>

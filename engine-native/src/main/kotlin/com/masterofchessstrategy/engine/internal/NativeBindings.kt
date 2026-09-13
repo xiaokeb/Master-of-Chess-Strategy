@@ -28,6 +28,8 @@ internal object NativeBindings {
 
     external fun chineseChessLegalMoves(handle: Long): IntArray
 
+    external fun chineseChessBestMove(handle: Long, difficultyCode: Int): IntArray
+
     external fun chineseChessGameResult(handle: Long): Int
 
     external fun serializeChineseChess(handle: Long): ByteArray

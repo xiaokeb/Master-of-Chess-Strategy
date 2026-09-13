@@ -21,6 +21,8 @@ internal interface ChineseChessBridge {
 
     fun legalMoves(handle: Long): IntArray
 
+    fun bestMove(handle: Long, difficultyCode: Int): IntArray
+
     fun gameResult(handle: Long): Int
 
     fun serialize(handle: Long): ByteArray
@@ -62,6 +64,9 @@ internal object JniChineseChessBridge : ChineseChessBridge {
 
     override fun legalMoves(handle: Long): IntArray =
         NativeBindings.chineseChessLegalMoves(handle)
+
+    override fun bestMove(handle: Long, difficultyCode: Int): IntArray =
+        NativeBindings.chineseChessBestMove(handle, difficultyCode)
 
     override fun gameResult(handle: Long): Int =
         NativeBindings.chineseChessGameResult(handle)

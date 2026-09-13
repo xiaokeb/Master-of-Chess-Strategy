@@ -1,6 +1,7 @@
 #include "mocs/engine/chinese_chess.hpp"
 
 #include <cassert>
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <vector>
@@ -8,6 +9,7 @@
 namespace {
 
 using mocs::engine::ChineseChessEngine;
+using mocs::engine::Difficulty;
 using mocs::engine::EngineError;
 using mocs::engine::GameResult;
 using mocs::engine::Piece;
@@ -318,6 +320,29 @@ void capture_resets_the_natural_limit_counter() {
     assert(engine.game_result() == GameResult::ongoing);
 }
 
+void easy_ai_returns_legal_move_without_mutating_position() {
+    ChineseChessEngine engine;
+    assert(engine.apply(make_board_move(0, 6, 0, 5)).accepted);
+    const auto before = engine.serialize();
+    const auto legal = engine.legal_actions();
+
+    const auto selected = engine.best_move(Difficulty::easy);
+
+    assert(selected);
+    assert(
+        std::any_of(
+            legal.begin(),
+            legal.end(),
+            [&selected](const auto& action) {
+                return action.kind == selected->kind &&
+                    action.arguments == selected->arguments;
+            }
+        )
+    );
+    assert(engine.serialize() == before);
+    assert(!engine.best_move(Difficulty::medium));
+}
+
 }  // namespace
 
 int main() {
@@ -333,4 +358,5 @@ int main() {
     repeated_idle_moves_are_drawn_instead_of_treated_as_long_block();
     sixty_rounds_without_capture_reaches_the_natural_limit();
     capture_resets_the_natural_limit_counter();
+    easy_ai_returns_legal_move_without_mutating_position();
 }
