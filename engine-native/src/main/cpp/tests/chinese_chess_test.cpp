@@ -1,4 +1,5 @@
 #include "mocs/engine/chinese_chess.hpp"
+#include "mocs/engine/pikafish_adapter.hpp"
 
 #include <cassert>
 #include <algorithm>
@@ -16,6 +17,7 @@ using mocs::engine::Piece;
 using mocs::engine::PieceType;
 using mocs::engine::Side;
 using mocs::engine::make_board_move;
+using mocs::engine::decode_pikafish_move;
 
 void initial_position_is_stable() {
     const ChineseChessEngine engine;
@@ -31,6 +33,24 @@ void initial_position_is_stable() {
     assert(engine.piece_at(0, 6) == red_soldier);
     assert(!engine.piece_at(1, 6));
     assert(!engine.legal_actions().empty());
+    assert(
+        engine.fen() ==
+        "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/"
+        "P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1"
+    );
+}
+
+void pikafish_coordinates_are_converted_and_validated() {
+    const auto legal = std::vector{
+        make_board_move(0, 6, 0, 5),
+        make_board_move(2, 6, 2, 5),
+    };
+
+    const auto decoded = decode_pikafish_move("a3a4", legal);
+    assert(decoded);
+    assert(decoded->arguments == legal.front().arguments);
+    assert(!decode_pikafish_move("a3b3", legal));
+    assert(!decode_pikafish_move("(none)", legal));
 }
 
 void soldier_moves_forward_but_not_sideways_before_the_river() {
@@ -373,6 +393,7 @@ void easy_ai_returns_legal_move_without_mutating_position() {
 
 int main() {
     initial_position_is_stable();
+    pikafish_coordinates_are_converted_and_validated();
     soldier_moves_forward_but_not_sideways_before_the_river();
     horse_leg_and_cannon_screen_are_enforced();
     moving_the_only_screen_between_generals_is_illegal();

@@ -56,9 +56,11 @@ import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.engine.NativeChineseChessEngine
 import com.masterofchessstrategy.game.ChineseChessFeedback
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 import com.masterofchessstrategy.game.ChineseChessGameViewModel
+import com.masterofchessstrategy.game.PikafishNetworkProvider
 import com.masterofchessstrategy.navigation.AppDestination
 import com.masterofchessstrategy.navigation.AppNavigationViewModel
 import com.masterofchessstrategy.navigation.HomeGameEntry
@@ -82,6 +84,9 @@ fun MasterOfChessStrategyApp() {
     MocsTheme {
         val navController = rememberNavController()
         val context = LocalContext.current
+        val pikafishNetworkProvider = remember(context.applicationContext) {
+            PikafishNetworkProvider(context.applicationContext)
+        }
         val database = remember { MocsDatabase.getInstance(context) }
         val gameSessionRepository = remember {
             RoomGameSessionRepository(database.activeGameDao())
@@ -288,8 +293,7 @@ fun MasterOfChessStrategyApp() {
                     ?.getInt(AppDestination.AI_DIFFICULTY_ARGUMENT)
                 val difficulty = checkNotNull(
                     Difficulty.entries.firstOrNull {
-                        it.code == difficultyCode &&
-                            it != Difficulty.MASTER
+                        it.code == difficultyCode
                     },
                 ) {
                     "Unsupported Chinese chess AI route"
@@ -298,12 +302,18 @@ fun MasterOfChessStrategyApp() {
                     gameSessionRepository,
                     statisticsViewModel,
                     difficulty,
+                    pikafishNetworkProvider,
                 ) {
                     ChineseChessGameViewModel.factory(
                         repository = gameSessionRepository,
                         mode = StoredGameMode.HUMAN_VS_AI,
                         difficulty = difficulty,
                         onMatchFinished = statisticsViewModel::record,
+                        engineFactory = {
+                            NativeChineseChessEngine(
+                                pikafishNetworkProvider::requireNetworkPath,
+                            )
+                        },
                     )
                 }
                 val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
@@ -677,6 +687,7 @@ private fun aiCapabilityText(state: ChineseChessGameUiState): Int =
         Difficulty.EASY -> R.string.easy_ai_enabled
         Difficulty.MEDIUM -> R.string.medium_ai_enabled
         Difficulty.HARD -> R.string.hard_ai_enabled
+        Difficulty.MASTER -> R.string.master_ai_enabled
         else -> R.string.ai_not_available
     }
 

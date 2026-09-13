@@ -13,4 +13,5 @@ CMakeLists.txt text eol=lf
 gradlew text eol=lf
 
 *.jar binary
+*.nnue binary
 *.webp binary

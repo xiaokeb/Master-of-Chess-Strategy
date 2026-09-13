@@ -71,8 +71,6 @@ internal fun chineseChessDifficulties(
         DifficultyEntry(
             difficulty = difficulty,
             isUnlocked = isUnlocked,
-            isPlayable =
-                isUnlocked &&
-                    difficulty != Difficulty.MASTER,
+            isPlayable = isUnlocked,
         )
     }

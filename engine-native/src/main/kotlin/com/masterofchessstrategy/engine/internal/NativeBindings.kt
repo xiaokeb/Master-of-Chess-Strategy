@@ -28,7 +28,11 @@ internal object NativeBindings {
 
     external fun chineseChessLegalMoves(handle: Long): IntArray
 
-    external fun chineseChessBestMove(handle: Long, difficultyCode: Int): IntArray
+    external fun chineseChessBestMove(
+        handle: Long,
+        difficultyCode: Int,
+        networkPath: String?,
+    ): IntArray
 
     external fun chineseChessGameResult(handle: Long): Int
 

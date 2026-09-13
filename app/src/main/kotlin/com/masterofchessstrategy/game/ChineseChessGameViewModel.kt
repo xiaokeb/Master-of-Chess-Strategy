@@ -76,9 +76,10 @@ class ChineseChessGameViewModel internal constructor(
                 !isAiGame ||
                     difficulty == Difficulty.EASY ||
                     difficulty == Difficulty.MEDIUM ||
-                    difficulty == Difficulty.HARD
+                    difficulty == Difficulty.HARD ||
+                    difficulty == Difficulty.MASTER
             ) {
-                "Human versus AI currently requires easy, medium, or hard difficulty"
+                "Human versus AI requires a supported difficulty"
             }
             engine = engineFactory().also { created ->
                 require(!isAiGame || created is ChineseChessAiEngine) {
@@ -703,6 +704,9 @@ class ChineseChessGameViewModel internal constructor(
             mode: StoredGameMode = StoredGameMode.LOCAL_TWO_PLAYER,
             difficulty: Difficulty? = null,
             onMatchFinished: (MatchOutcome) -> Unit = {},
+            engineFactory: () -> ChineseChessRuleEngine = {
+                NativeChineseChessEngine()
+            },
         ): ViewModelProvider.Factory =
             viewModelFactory {
                 initializer {
@@ -711,7 +715,7 @@ class ChineseChessGameViewModel internal constructor(
                         mode = mode,
                         difficulty = difficulty,
                         onMatchFinished = onMatchFinished,
-                        engineFactory = { NativeChineseChessEngine() },
+                        engineFactory = engineFactory,
                     )
                 }
             }

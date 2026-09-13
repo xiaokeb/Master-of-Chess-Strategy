@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace mocs::engine {
@@ -68,6 +69,7 @@ public:
         std::int32_t y
     ) const noexcept;
     [[nodiscard]] bool is_in_check(Side side) const noexcept;
+    [[nodiscard]] std::string fen() const;
     [[nodiscard]] std::optional<EngineAction> best_move(
         Difficulty difficulty
     ) const;

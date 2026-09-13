@@ -1,7 +1,43 @@
+import java.security.MessageDigest
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
+}
+
+val verifyPikafishNetwork = tasks.register("verifyPikafishNetwork") {
+    val expectedSha256 =
+        "7d13d73569a9b571ba0eb20cf1596247bc2a42738967e61afef6482b231e900e"
+    val network = layout.projectDirectory.file(
+        "src/main/assets/pikafish/pikafish.nnue",
+    )
+    inputs.file(network)
+    doLast {
+        val file = network.asFile
+        check(file.length() == 50_706_378L) {
+            "Bundled Pikafish network has an unexpected size"
+        }
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().buffered().use { input ->
+            val buffer = ByteArray(1024 * 1024)
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                digest.update(buffer, 0, count)
+            }
+        }
+        val actual = digest.digest().joinToString(separator = "") {
+            "%02x".format(it.toInt() and 0xff)
+        }
+        check(actual == expectedSha256) {
+            "Bundled Pikafish network failed SHA-256 verification"
+        }
+    }
+}
+
+tasks.named("preBuild").configure {
+    dependsOn(verifyPikafishNetwork)
 }
 
 android {
@@ -17,6 +53,11 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Pikafish uses 128-bit bitboards and supports Android only on 64-bit ABIs.
+        ndk {
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
     }
 
     buildTypes {

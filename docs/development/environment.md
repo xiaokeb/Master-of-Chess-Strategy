@@ -26,6 +26,11 @@
 
 所有 C++ 构建统一使用 NDK 30.0.16138531 自带的 LLVM/Clang 21 和 C++17，不调用 MinGW。工具目录为 E:\Backend_Env\SDK\ndk\30.0.16138531\toolchains\llvm\prebuilt\windows-x86_64\bin，CMake 来自 Android SDK。
 
+自 Pikafish 2026-09-06 大师引擎节点起，正式 ABI 收敛为 arm64-v8a 与
+x86_64。该上游版本固定使用 128 位整数棋盘，不能为 Android 32 位
+目标生成完整功能库；历史节点记录的四 ABI 结果仍代表接入前的规则
+引擎状态。
+
 已验证 aarch64-linux-android24-clang++ 能生成 Android ARM64 目标。NDK 的通用 clang++ 不提供 Windows 宿主链接环境，因此在设备或 AVD 可用前，原生测试只验证 Android 目标的编译与链接，运行状态必须标记为“因设备条件未执行”。
 
 当前 PATH 未解析到 clang++、cmake、ninja 或 g++，不存在隐式工具链覆盖。Gradle 通过 local.properties 定位 Android SDK，通过 ndkVersion 锁定 NDK；手工原生验证使用上述 SDK 内 CMake、Ninja 和 NDK toolchain 的绝对路径。local.properties 与机器绝对路径不提交到构建源码。

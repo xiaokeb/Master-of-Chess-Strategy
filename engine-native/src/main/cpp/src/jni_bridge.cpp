@@ -1,5 +1,6 @@
 #include "mocs/engine/health_check.hpp"
 #include "mocs/engine/native_engine_registry.hpp"
+#include "mocs/engine/pikafish_adapter.hpp"
 
 #include <jni.h>
 
@@ -8,6 +9,7 @@
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace {
@@ -78,6 +80,19 @@ jint encode_piece(const mocs::engine::Piece& piece) noexcept {
     return static_cast<jint>(
         side | static_cast<std::uint8_t>(piece.type)
     );
+}
+
+std::string require_utf8(JNIEnv* env, jstring value) {
+    if (value == nullptr) {
+        throw std::invalid_argument("Required Java string was null");
+    }
+    const auto* characters = env->GetStringUTFChars(value, nullptr);
+    if (characters == nullptr) {
+        throw std::runtime_error("Could not read Java string");
+    }
+    const std::string result(characters);
+    env->ReleaseStringUTFChars(value, characters);
+    return result;
 }
 
 }  // namespace
@@ -215,18 +230,29 @@ Java_com_masterofchessstrategy_engine_internal_NativeBindings_chineseChessBestMo
     JNIEnv* env,
     jobject,
     const jlong handle,
-    const jint difficulty_code
+    const jint difficulty_code,
+    jstring network_path
 ) noexcept {
-    return guard_jni<jintArray>(env, nullptr, [env, handle, difficulty_code] {
+    return guard_jni<jintArray>(
+        env,
+        nullptr,
+        [env, handle, difficulty_code, network_path] {
         if (
             difficulty_code < static_cast<jint>(mocs::engine::Difficulty::easy) ||
-            difficulty_code > static_cast<jint>(mocs::engine::Difficulty::hard)
+            difficulty_code > static_cast<jint>(mocs::engine::Difficulty::master)
         ) {
             throw std::invalid_argument("Unsupported AI difficulty");
         }
-        const auto action = require_chinese_chess_engine(handle)->best_move(
-            static_cast<mocs::engine::Difficulty>(difficulty_code)
-        );
+        const auto engine = require_chinese_chess_engine(handle);
+        const auto difficulty =
+            static_cast<mocs::engine::Difficulty>(difficulty_code);
+        const auto action = difficulty == mocs::engine::Difficulty::master
+            ? mocs::engine::choose_pikafish_move(
+                engine->fen(),
+                engine->legal_actions(),
+                require_utf8(env, network_path)
+            )
+            : engine->best_move(difficulty);
         const auto result = env->NewIntArray(action ? 4 : 0);
         if (result != nullptr && action) {
             std::array<jint, 4> flattened{};

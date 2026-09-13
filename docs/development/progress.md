@@ -26,25 +26,28 @@
 | 中国象棋中等 AI | 完成 | 两层 alpha-beta 搜索、10 个简单胜场解锁及动态难度路由已接入 |
 | 中国象棋困难 AI | 完成 | 三层 alpha-beta、确定性节点预算、15 个中等胜场解锁及困难协议已接入 |
 | 中国象棋对局控制 | 完成 | Room schema 6、分级悔棋/提示、认输确认及幂等结算已接入 |
+| 中国象棋大师 AI | 完成 | Pikafish 2026-09-06、官方 NNUE、20 个困难胜场解锁及合法着复核已接入 |
 
 ## 已验证
 
-- JVM 单元测试：73 个通过，0 失败、0 错误、0 跳过。
-- NDK：Clang 21，C++17，Android ARM64 测试目标编译和链接通过。
-- Gradle NDK：arm64-v8a、armeabi-v7a、x86、x86_64 构建通过。
-- Android：App Lint 0 错误、1 条锁定版本提示；Debug APK、App 测试 APK 与 engine-native 测试 APK 构建通过。
+- JVM 单元测试：77 个通过，0 失败、0 错误、0 跳过。
+- NDK：Clang 21，C++17，Android ARM64 测试目标及 Pikafish 静态库编译和链接通过。
+- Gradle NDK：arm64-v8a、x86_64 两个正式 64 位 ABI 构建通过。
+- Android：App Lint 0 issue；Debug APK、App 测试 APK 与 engine-native 测试 APK 构建通过。
 - 离线边界：Debug APK 不包含 android.permission.INTERNET。
-- JNI：ARM64 动态库已导出并核对 13 个 NativeBindings 符号。
+- 大师资产：NNUE 大小和 SHA-256 构建校验通过，APK 同时包含权重、许可文本和两套完整原生引擎库。
 
 ## 条件限制
 
-当前没有 Android 设备或 AVD。NativeBridgeInstrumentedTest 仅完成编译，尚未运行；该项不会标记为测试通过。C++ 构建由 CMake 强制要求 Android NDK 工具链，不接受 MinGW 或其他宿主机工具链。
+当前没有 Android 设备或 AVD。NativeBridgeInstrumentedTest 与
+PikafishMasterAiInstrumentedTest 仅完成编译，尚未运行；该项不会标记
+为测试通过。C++ 构建由 CMake 强制要求 Android NDK 工具链，不接受
+MinGW 或其他宿主机工具链。
 
 中国象棋基础规则和句柄表测试目标已完成 NDK ARM64 编译和链接，但受相同设备条件限制尚未运行。当前不能据此宣称规则用例运行通过。真实 JNI 集成测试已编译进 Android 测试 APK。
 
 ## 下一节点
 
-1. 按已批准 GPL-3.0 方案固定并接入 Pikafish，完成中国象棋大师难度。
-2. 实现正式计时、超时判负、提和、自动演局和调速。
-3. 按官方棋例继续扩充杀着、联合捉、暗根、假根、少根、价值交换及追捉集合连续性判定。
-4. 在设备或 AVD 可用后运行 Room、Compose、中国象棋与 NativeBridge 集成测试及 AI 性能基准。
+1. 实现正式计时、超时判负、提和、自动演局和调速。
+2. 按官方棋例继续扩充杀着、联合捉、暗根、假根、少根、价值交换及追捉集合连续性判定。
+3. 在设备或 AVD 可用后运行 Room、Compose、中国象棋与 NativeBridge 集成测试及 AI 性能基准。

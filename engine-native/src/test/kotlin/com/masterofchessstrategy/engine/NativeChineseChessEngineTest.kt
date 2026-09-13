@@ -92,7 +92,7 @@ class NativeChineseChessEngineTest {
     }
 
     @Test
-    fun malformedAiMoveAndUnsupportedDifficultyAreRejected() {
+    fun malformedAiMoveAndMissingMasterNetworkAreRejected() {
         val bridge = FakeChineseChessBridge().apply {
             aiMove = intArrayOf(0, 3, 0)
         }
@@ -100,10 +100,27 @@ class NativeChineseChessEngineTest {
             assertThrows(IllegalStateException::class.java) {
                 engine.chooseMove(Difficulty.EASY)
             }
-            assertThrows(IllegalArgumentException::class.java) {
+            assertThrows(IllegalStateException::class.java) {
                 engine.chooseMove(Difficulty.MASTER)
             }
         }
+    }
+
+    @Test
+    fun masterMoveUsesTheProvidedNetworkPath() {
+        val bridge = FakeChineseChessBridge()
+        NativeChineseChessEngine(
+            bridge = bridge,
+            masterNetworkPathProvider = { "private/pikafish.nnue" },
+        ).use { engine ->
+            assertEquals(
+                BoardMove(BoardPosition(0, 3), BoardPosition(0, 4)),
+                engine.chooseMove(Difficulty.MASTER),
+            )
+        }
+
+        assertEquals(Difficulty.MASTER.code, bridge.lastDifficultyCode)
+        assertEquals("private/pikafish.nnue", bridge.lastNetworkPath)
     }
 
     @Test
@@ -155,6 +172,8 @@ private class FakeChineseChessBridge : ChineseChessBridge {
     var aiMove = intArrayOf(0, 3, 0, 4)
     var currentPlayerCode = 0
     var pieceCode = 0x80 or ChineseChessPieceType.CHARIOT.code
+    var lastDifficultyCode: Int? = null
+    var lastNetworkPath: String? = null
 
     override fun create(): Long = 42L
 
@@ -180,8 +199,16 @@ private class FakeChineseChessBridge : ChineseChessBridge {
     override fun legalMoves(handle: Long): IntArray =
         observe(handle) { moves.copyOf() }
 
-    override fun bestMove(handle: Long, difficultyCode: Int): IntArray =
-        observe(handle) { aiMove.copyOf() }
+    override fun bestMove(
+        handle: Long,
+        difficultyCode: Int,
+        networkPath: String?,
+    ): IntArray =
+        observe(handle) {
+            lastDifficultyCode = difficultyCode
+            lastNetworkPath = networkPath
+            aiMove.copyOf()
+        }
 
     override fun gameResult(handle: Long): Int = observe(handle) { 0 }
 

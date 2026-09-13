@@ -123,6 +123,36 @@ void append_u32(
     return code <= static_cast<std::uint8_t>(GameResult::draw);
 }
 
+[[nodiscard]] char fen_symbol(const Piece piece) noexcept {
+    char symbol = ' ';
+    switch (piece.type) {
+        case PieceType::general:
+            symbol = 'k';
+            break;
+        case PieceType::advisor:
+            symbol = 'a';
+            break;
+        case PieceType::elephant:
+            symbol = 'b';
+            break;
+        case PieceType::horse:
+            symbol = 'n';
+            break;
+        case PieceType::chariot:
+            symbol = 'r';
+            break;
+        case PieceType::cannon:
+            symbol = 'c';
+            break;
+        case PieceType::soldier:
+            symbol = 'p';
+            break;
+    }
+    return piece.side == Side::red
+        ? static_cast<char>(symbol - ('a' - 'A'))
+        : symbol;
+}
+
 }  // namespace
 
 EngineAction make_board_move(
@@ -267,6 +297,37 @@ std::vector<EngineAction> ChineseChessEngine::legal_actions() const {
         }
     }
     return actions;
+}
+
+std::string ChineseChessEngine::fen() const {
+    std::string value;
+    value.reserve(96);
+    for (std::int32_t y = 0; y < board_height; ++y) {
+        std::int32_t empty_count = 0;
+        for (std::int32_t x = 0; x < board_width; ++x) {
+            const auto piece = board_[index(x, y)];
+            if (!piece) {
+                ++empty_count;
+                continue;
+            }
+            if (empty_count > 0) {
+                value.push_back(static_cast<char>('0' + empty_count));
+                empty_count = 0;
+            }
+            value.push_back(fen_symbol(*piece));
+        }
+        if (empty_count > 0) {
+            value.push_back(static_cast<char>('0' + empty_count));
+        }
+        if (y + 1 < board_height) {
+            value.push_back('/');
+        }
+    }
+    value += current_side_ == Side::red ? " w - - " : " b - - ";
+    value += std::to_string(no_capture_plies_);
+    value.push_back(' ');
+    value += std::to_string(history_.size() / 2 + 1);
+    return value;
 }
 
 std::optional<EngineAction> ChineseChessEngine::best_move(

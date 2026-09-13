@@ -6,6 +6,7 @@ import com.masterofchessstrategy.engine.internal.JniChineseChessBridge
 /** Thread-safe Kotlin owner for one native Chinese chess session. */
 class NativeChineseChessEngine internal constructor(
     private val bridge: ChineseChessBridge,
+    private val masterNetworkPathProvider: (() -> String)? = null,
 ) : ChineseChessAiEngine {
     private val lock = Any()
     private var handle = bridge.create().also {
@@ -13,6 +14,9 @@ class NativeChineseChessEngine internal constructor(
     }
 
     constructor() : this(JniChineseChessBridge)
+
+    constructor(masterNetworkPathProvider: () -> String) :
+        this(JniChineseChessBridge, masterNetworkPathProvider)
 
     override val gameType: GameType = GameType.CHINESE_CHESS
 
@@ -65,11 +69,15 @@ class NativeChineseChessEngine internal constructor(
     }
 
     override fun chooseMove(difficulty: Difficulty): BoardMove? {
-        require(difficulty != Difficulty.MASTER) {
-            "Master Chinese chess AI is not currently available"
+        val networkPath = if (difficulty == Difficulty.MASTER) {
+            checkNotNull(masterNetworkPathProvider) {
+                "Master Chinese chess AI requires the bundled network"
+            }.invoke()
+        } else {
+            null
         }
         val encoded = withHandle {
-            bridge.bestMove(it, difficulty.code)
+            bridge.bestMove(it, difficulty.code, networkPath)
         }
         check(encoded.size == 0 || encoded.size == MOVE_FIELD_COUNT) {
             "Native engine returned malformed AI move"

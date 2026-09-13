@@ -29,6 +29,7 @@
     <string name="medium_ai_enabled">中等 AI 已启用 · 执黑</string>
     <string name="hard_ai_game">普通人机 · 困难</string>
     <string name="hard_ai_enabled">困难 AI 已启用 · 执黑</string>
+    <string name="master_ai_enabled">Pikafish 大师 AI 已启用 · 执黑</string>
     <string name="master_ai_game">普通人机 · 大师</string>
     <string name="ai_thinking">AI 思考中…</string>
     <string name="calculating_hint">正在计算提示…</string>

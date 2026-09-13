@@ -119,4 +119,21 @@ class AppNavigationModelTest {
             AppDestination.chineseChessAiGame(Difficulty.MEDIUM),
         )
     }
+
+    @Test
+    fun masterBecomesPlayableAfterTwentyHardWins() {
+        val beforeThreshold = chineseChessDifficulties(
+            tutorialCompleted = true,
+            winsByDifficulty = mapOf(Difficulty.HARD to 19),
+        ).single { it.difficulty == Difficulty.MASTER }
+        val atThreshold = chineseChessDifficulties(
+            tutorialCompleted = true,
+            winsByDifficulty = mapOf(Difficulty.HARD to 20),
+        ).single { it.difficulty == Difficulty.MASTER }
+
+        assertFalse(beforeThreshold.isUnlocked)
+        assertFalse(beforeThreshold.isPlayable)
+        assertTrue(atThreshold.isUnlocked)
+        assertTrue(atThreshold.isPlayable)
+    }
 }
