@@ -1,6 +1,7 @@
 package com.masterofchessstrategy.data
 
 import androidx.room.Entity
+import androidx.room.ColumnInfo
 import androidx.room.PrimaryKey
 
 /** One recoverable active session per game type. */
@@ -14,6 +15,8 @@ internal data class ActiveGameEntity(
     val engineFormatVersion: Int,
     val engineState: ByteArray,
     val updatedAtEpochMillis: Long,
+    @ColumnInfo(defaultValue = "''")
+    val sessionId: String = "",
 ) {
     override fun equals(other: Any?): Boolean =
         this === other ||
@@ -26,6 +29,7 @@ internal data class ActiveGameEntity(
                     engineFormatVersion == other.engineFormatVersion &&
                     engineState.contentEquals(other.engineState) &&
                     updatedAtEpochMillis == other.updatedAtEpochMillis
+                    && sessionId == other.sessionId
                 )
 
     override fun hashCode(): Int {
@@ -36,6 +40,7 @@ internal data class ActiveGameEntity(
         result = 31 * result + engineFormatVersion
         result = 31 * result + engineState.contentHashCode()
         result = 31 * result + updatedAtEpochMillis.hashCode()
+        result = 31 * result + sessionId.hashCode()
         return result
     }
 }

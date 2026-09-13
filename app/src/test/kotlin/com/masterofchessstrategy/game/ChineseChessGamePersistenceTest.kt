@@ -134,6 +134,7 @@ class ChineseChessGamePersistenceTest {
         difficulty = null,
         engineState = bytes,
         updatedAtEpochMillis = 1L,
+        sessionId = "restored-match",
     )
 
     private class FakeSessionRepository(

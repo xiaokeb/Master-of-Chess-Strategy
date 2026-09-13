@@ -45,6 +45,7 @@ internal fun HomeScreen(
     quickStartEntries: Set<HomeGameEntry>,
     onQuickStart: (HomeGameEntry) -> Unit,
     onSettings: () -> Unit,
+    playerSummary: LocalPlayerSummary = InitialPlayerSummary,
     modifier: Modifier = Modifier,
 ) {
     Surface(modifier = modifier.fillMaxSize()) {
@@ -60,7 +61,7 @@ internal fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     PlayerSummaryCard(
-                        summary = InitialPlayerSummary,
+                        summary = playerSummary,
                         onSettings = onSettings,
                         modifier = Modifier.weight(0.4f),
                     )
@@ -77,7 +78,7 @@ internal fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     PlayerSummaryCard(
-                        summary = InitialPlayerSummary,
+                        summary = playerSummary,
                         onSettings = onSettings,
                         modifier = Modifier.fillMaxWidth(),
                     )

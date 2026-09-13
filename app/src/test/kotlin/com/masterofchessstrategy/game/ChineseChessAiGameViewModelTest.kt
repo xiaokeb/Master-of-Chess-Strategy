@@ -87,6 +87,32 @@ class ChineseChessAiGameViewModelTest {
         assertEquals(ChineseChessSide.BLACK, viewModel.uiState.pieceAt(engine.blackFrom)?.side)
     }
 
+    @Test
+    fun terminalAiMatchEmitsOneStableSettlementAndLocksUndo() = runTest(dispatcher) {
+        val engine = FakeAiEngine(
+            humanMoveResult = GameResult.FIRST_PLAYER_WIN,
+        )
+        val outcomes = mutableListOf<com.masterofchessstrategy.data.MatchOutcome>()
+        val viewModel = ChineseChessGameViewModel(
+            mode = StoredGameMode.HUMAN_VS_AI,
+            difficulty = Difficulty.EASY,
+            aiDispatcher = dispatcher,
+            matchIdFactory = { "match-final" },
+            onMatchFinished = outcomes::add,
+            engineFactory = { engine },
+        )
+
+        viewModel.onSquareTap(engine.redFrom)
+        viewModel.onSquareTap(engine.redTo)
+        viewModel.onSquareTap(engine.redTo)
+
+        assertEquals(GameResult.FIRST_PLAYER_WIN, viewModel.uiState.result)
+        assertFalse(viewModel.uiState.canUndo)
+        assertEquals(1, outcomes.size)
+        assertEquals("match-final", outcomes.single().matchId)
+        assertTrue(outcomes.single().isWin)
+    }
+
     private class RecordingSessionRepository : GameSessionRepository {
         val saved = mutableListOf<GameSessionSnapshot>()
 
@@ -100,7 +126,9 @@ class ChineseChessAiGameViewModelTest {
         override suspend fun clear(gameType: GameType) = Unit
     }
 
-    private class FakeAiEngine : ChineseChessAiEngine {
+    private class FakeAiEngine(
+        private val humanMoveResult: GameResult = GameResult.ONGOING,
+    ) : ChineseChessAiEngine {
         val redFrom = BoardPosition(0, 9)
         val redTo = BoardPosition(0, 8)
         val blackFrom = BoardPosition(0, 0)
@@ -172,7 +200,8 @@ class ChineseChessAiGameViewModelTest {
             return legalActions().single()
         }
 
-        override fun gameResult(): GameResult = GameResult.ONGOING
+        override fun gameResult(): GameResult =
+            if (history.size == 1) humanMoveResult else GameResult.ONGOING
 
         override fun serialize(): ByteArray = byteArrayOf(history.size.toByte())
 

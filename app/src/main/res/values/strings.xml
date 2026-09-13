@@ -65,6 +65,7 @@
     <string name="unlock_master">困难难度累计胜 20 场后解锁</string>
     <string name="locked">未解锁</string>
     <string name="unlocked">已解锁</string>
+    <string name="difficulty_engine_pending">条件已满足 · 引擎待接入</string>
     <string name="tutorial_title">中国象棋新手教程</string>
     <string name="tutorial_subtitle">规则讲解 · 走子练习 · 知识测试</string>
     <string name="tutorial_loading">正在读取教程进度…</string>

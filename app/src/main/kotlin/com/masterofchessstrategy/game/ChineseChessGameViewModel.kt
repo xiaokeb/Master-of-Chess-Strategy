@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.masterofchessstrategy.data.GameSessionRepository
 import com.masterofchessstrategy.data.GameSessionSnapshot
 import com.masterofchessstrategy.data.LoadGameSessionResult
+import com.masterofchessstrategy.data.MatchOutcome
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.BoardMove
@@ -29,6 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.UUID
 
 /**
  * Owns one local or human-versus-AI Chinese chess session.
@@ -43,10 +45,14 @@ class ChineseChessGameViewModel internal constructor(
     private val mode: StoredGameMode = StoredGameMode.LOCAL_TWO_PLAYER,
     private val difficulty: Difficulty? = null,
     private val aiDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val matchIdFactory: () -> String = { UUID.randomUUID().toString() },
+    private val onMatchFinished: (MatchOutcome) -> Unit = {},
     private val engineFactory: () -> ChineseChessRuleEngine,
 ) : ViewModel() {
     private var engine: ChineseChessRuleEngine? = null
     private var acceptedMoveCount = 0
+    private var matchId = createMatchId()
+    private var settlementRequested = false
 
     private val isAiGame = mode == StoredGameMode.HUMAN_VS_AI
 
@@ -128,6 +134,8 @@ class ChineseChessGameViewModel internal constructor(
         val activeEngine = engine ?: return
         if (!uiState.isInteractionEnabled) return
         runEngineOperation {
+            matchId = createMatchId()
+            settlementRequested = false
             activeEngine.reset()
             acceptedMoveCount = 0
             refresh(ChineseChessFeedback.GAME_RESTARTED)
@@ -170,7 +178,7 @@ class ChineseChessGameViewModel internal constructor(
                     ) {
                         rejectStoredSession(repository)
                     } else {
-                        restoreEngineState(repository, result.snapshot.engineState)
+                        restoreEngineState(repository, result.snapshot)
                     }
                 }
             }
@@ -179,12 +187,16 @@ class ChineseChessGameViewModel internal constructor(
 
     private suspend fun restoreEngineState(
         repository: GameSessionRepository,
-        data: ByteArray,
+        snapshot: GameSessionSnapshot,
     ) {
         val activeEngine = engine ?: return
         try {
-            when (activeEngine.restore(data)) {
+            when (activeEngine.restore(snapshot.engineState)) {
                 RestoreResult.Restored -> {
+                    matchId = snapshot.sessionId
+                        .takeIf(::isValidMatchId)
+                        ?: createMatchId()
+                    settlementRequested = false
                     acceptedMoveCount = 0
                     refresh(ChineseChessFeedback.GAME_RESTORED)
                     if (
@@ -213,6 +225,8 @@ class ChineseChessGameViewModel internal constructor(
         }
         val activeEngine = engine ?: return
         runEngineOperation {
+            matchId = createMatchId()
+            settlementRequested = false
             activeEngine.reset()
             acceptedMoveCount = 0
             refresh(ChineseChessFeedback.RESTORE_REJECTED)
@@ -232,13 +246,7 @@ class ChineseChessGameViewModel internal constructor(
             return
         }
         uiState = uiState.copy(isPersisting = true)
-        val snapshot = GameSessionSnapshot(
-            gameType = GameType.CHINESE_CHESS,
-            mode = mode,
-            difficulty = difficulty,
-            engineState = stateBytes,
-            updatedAtEpochMillis = nowEpochMillis(),
-        )
+        val snapshot = createSnapshot(stateBytes)
         viewModelScope.launch {
             try {
                 repository.save(snapshot)
@@ -320,6 +328,7 @@ class ChineseChessGameViewModel internal constructor(
                     }
                 }
             }
+            val result = activeEngine.gameResult()
             uiState = ChineseChessGameUiState(
                 board = board,
                 currentSide = when (activeEngine.currentPlayer.value) {
@@ -327,12 +336,15 @@ class ChineseChessGameViewModel internal constructor(
                     ChineseChessSide.BLACK.code -> ChineseChessSide.BLACK
                     else -> error("Engine returned an unsupported player")
                 },
-                result = activeEngine.gameResult(),
-                canUndo = acceptedMoveCount > 0,
+                result = result,
+                canUndo =
+                    acceptedMoveCount > 0 &&
+                        (!isAiGame || result == GameResult.ONGOING),
                 isAiGame = isAiGame,
                 difficulty = difficulty,
                 feedback = feedback,
             )
+            requestSettlement(result)
         }
     }
 
@@ -427,13 +439,52 @@ class ChineseChessGameViewModel internal constructor(
     private fun createSnapshot(
         activeEngine: ChineseChessRuleEngine,
     ): GameSessionSnapshot =
+        createSnapshot(activeEngine.serialize())
+
+    private fun createSnapshot(
+        engineState: ByteArray,
+    ): GameSessionSnapshot =
         GameSessionSnapshot(
             gameType = GameType.CHINESE_CHESS,
             mode = mode,
             difficulty = difficulty,
-            engineState = activeEngine.serialize(),
+            engineState = engineState,
             updatedAtEpochMillis = nowEpochMillis(),
+            sessionId = matchId,
         )
+
+    private fun requestSettlement(result: GameResult) {
+        if (
+            !isAiGame ||
+            result == GameResult.ONGOING ||
+            settlementRequested
+        ) {
+            return
+        }
+        val selectedDifficulty = difficulty ?: return
+        settlementRequested = true
+        onMatchFinished(
+            MatchOutcome(
+                matchId = matchId,
+                gameType = GameType.CHINESE_CHESS,
+                mode = StoredGameMode.HUMAN_VS_AI,
+                difficulty = selectedDifficulty,
+                playerIndex = ChineseChessSide.RED.code,
+                result = result,
+                settledAtEpochMillis = nowEpochMillis(),
+            ),
+        )
+    }
+
+    private fun createMatchId(): String =
+        matchIdFactory().also {
+            require(isValidMatchId(it)) {
+                "Generated match id must contain 1 to 64 characters"
+            }
+        }
+
+    private fun isValidMatchId(value: String): Boolean =
+        value.isNotBlank() && value.length <= MatchOutcome.MAX_MATCH_ID_LENGTH
 
     private inline fun runEngineOperation(operation: () -> Unit) {
         try {
@@ -484,6 +535,7 @@ class ChineseChessGameViewModel internal constructor(
             repository: GameSessionRepository,
             mode: StoredGameMode = StoredGameMode.LOCAL_TWO_PLAYER,
             difficulty: Difficulty? = null,
+            onMatchFinished: (MatchOutcome) -> Unit = {},
         ): ViewModelProvider.Factory =
             viewModelFactory {
                 initializer {
@@ -491,6 +543,7 @@ class ChineseChessGameViewModel internal constructor(
                         sessionRepository = repository,
                         mode = mode,
                         difficulty = difficulty,
+                        onMatchFinished = onMatchFinished,
                         engineFactory = { NativeChineseChessEngine() },
                     )
                 }

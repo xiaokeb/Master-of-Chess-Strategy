@@ -40,6 +40,7 @@ import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.data.RoomAppSettingsRepository
 import com.masterofchessstrategy.data.RoomGameSessionRepository
 import com.masterofchessstrategy.data.RoomLastSelectionRepository
+import com.masterofchessstrategy.data.RoomMatchStatisticsRepository
 import com.masterofchessstrategy.data.RoomTutorialProgressRepository
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.engine.BoardPosition
@@ -48,6 +49,7 @@ import com.masterofchessstrategy.engine.ChineseChessPieceType
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
+import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.game.ChineseChessFeedback
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 import com.masterofchessstrategy.game.ChineseChessGameViewModel
@@ -55,6 +57,7 @@ import com.masterofchessstrategy.navigation.AppDestination
 import com.masterofchessstrategy.navigation.AppNavigationViewModel
 import com.masterofchessstrategy.navigation.HomeGameEntry
 import com.masterofchessstrategy.navigation.QuickStartDestination
+import com.masterofchessstrategy.progress.PlayerStatisticsViewModel
 import com.masterofchessstrategy.settings.AppSettingsViewModel
 import com.masterofchessstrategy.tutorial.ChineseChessTutorialViewModel
 import com.masterofchessstrategy.ui.theme.MocsTheme
@@ -83,6 +86,9 @@ fun MasterOfChessStrategyApp() {
         val tutorialRepository = remember {
             RoomTutorialProgressRepository(database.tutorialProgressDao())
         }
+        val statisticsRepository = remember {
+            RoomMatchStatisticsRepository(database.matchOutcomeDao())
+        }
         val navigationFactory = remember(selectionRepository) {
             AppNavigationViewModel.factory(selectionRepository)
         }
@@ -98,6 +104,12 @@ fun MasterOfChessStrategyApp() {
         }
         val tutorialViewModel: ChineseChessTutorialViewModel = viewModel(
             factory = tutorialFactory,
+        )
+        val statisticsFactory = remember(statisticsRepository) {
+            PlayerStatisticsViewModel.factory(statisticsRepository)
+        }
+        val statisticsViewModel: PlayerStatisticsViewModel = viewModel(
+            factory = statisticsFactory,
         )
         val quickStartEntries = if (
             navigationViewModel.chineseChessQuickStartDestination() == null
@@ -154,6 +166,12 @@ fun MasterOfChessStrategyApp() {
                             launchSingleTop = true
                         }
                     },
+                    playerSummary = LocalPlayerSummary(
+                        rank = "未定级",
+                        wins = statisticsViewModel.uiState.statistics.totalWins,
+                        stars = statisticsViewModel.uiState.statistics.stars,
+                        score = statisticsViewModel.uiState.statistics.score,
+                    ),
                 )
             }
             composable(AppDestination.CHINESE_CHESS_MODES) {
@@ -183,6 +201,10 @@ fun MasterOfChessStrategyApp() {
                 ChineseChessDifficultyScreen(
                     onBack = navController::popBackStack,
                     tutorialCompleted = tutorialViewModel.uiState.progress.isCompleted,
+                    winsByDifficulty =
+                        statisticsViewModel.uiState.statistics
+                            .winsByGameAndDifficulty[GameType.CHINESE_CHESS]
+                            .orEmpty(),
                     onDifficultySelected = { difficulty ->
                         if (
                             difficulty == Difficulty.EASY &&
@@ -228,11 +250,12 @@ fun MasterOfChessStrategyApp() {
                 )
             }
             composable(AppDestination.CHINESE_CHESS_AI_GAME) {
-                val factory = remember(gameSessionRepository) {
+                val factory = remember(gameSessionRepository, statisticsViewModel) {
                     ChineseChessGameViewModel.factory(
                         repository = gameSessionRepository,
                         mode = StoredGameMode.HUMAN_VS_AI,
                         difficulty = Difficulty.EASY,
+                        onMatchFinished = statisticsViewModel::record,
                     )
                 }
                 val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)

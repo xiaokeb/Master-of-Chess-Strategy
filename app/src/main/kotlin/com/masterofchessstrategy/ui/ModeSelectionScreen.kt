@@ -80,6 +80,7 @@ internal fun ChineseChessModeScreen(
 internal fun ChineseChessDifficultyScreen(
     onBack: () -> Unit,
     tutorialCompleted: Boolean,
+    winsByDifficulty: Map<Difficulty, Int> = emptyMap(),
     onDifficultySelected: (Difficulty) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -105,7 +106,10 @@ internal fun ChineseChessDifficultyScreen(
                 ),
                 onBack = onBack,
             )
-            chineseChessDifficulties(tutorialCompleted).chunked(2).forEach { rowDifficulties ->
+            chineseChessDifficulties(
+                tutorialCompleted = tutorialCompleted,
+                winsByDifficulty = winsByDifficulty,
+            ).chunked(2).forEach { rowDifficulties ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -122,7 +126,7 @@ internal fun ChineseChessDifficultyScreen(
                                     },
                                 )
                                 .clickable(
-                                    enabled = entry.isUnlocked,
+                                    enabled = entry.isPlayable,
                                     onClick = {
                                         onDifficultySelected(entry.difficulty)
                                     },
@@ -142,8 +146,10 @@ internal fun ChineseChessDifficultyScreen(
                                 )
                                 Text(
                                     text = stringResource(
-                                        if (entry.isUnlocked) {
+                                        if (entry.isPlayable) {
                                             R.string.unlocked
+                                        } else if (entry.isUnlocked) {
+                                            R.string.difficulty_engine_pending
                                         } else {
                                             R.string.locked
                                         },

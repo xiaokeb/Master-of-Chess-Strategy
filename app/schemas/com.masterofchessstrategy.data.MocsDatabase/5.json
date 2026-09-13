@@ -1,0 +1,251 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 5,
+    "identityHash": "7d498afaaf179bd68de5a195d8d586bc",
+    "entities": [
+      {
+        "tableName": "active_games",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`gameTypeCode` INTEGER NOT NULL, `modeCode` INTEGER NOT NULL, `difficultyCode` INTEGER, `envelopeVersion` INTEGER NOT NULL, `engineFormatVersion` INTEGER NOT NULL, `engineState` BLOB NOT NULL, `updatedAtEpochMillis` INTEGER NOT NULL, `sessionId` TEXT NOT NULL DEFAULT '', PRIMARY KEY(`gameTypeCode`))",
+        "fields": [
+          {
+            "fieldPath": "gameTypeCode",
+            "columnName": "gameTypeCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modeCode",
+            "columnName": "modeCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "difficultyCode",
+            "columnName": "difficultyCode",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "envelopeVersion",
+            "columnName": "envelopeVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "engineFormatVersion",
+            "columnName": "engineFormatVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "engineState",
+            "columnName": "engineState",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAtEpochMillis",
+            "columnName": "updatedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionId",
+            "columnName": "sessionId",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "gameTypeCode"
+          ]
+        }
+      },
+      {
+        "tableName": "last_game_selections",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`gameTypeCode` INTEGER NOT NULL, `modeCode` INTEGER NOT NULL, `difficultyCode` INTEGER, `updatedAtEpochMillis` INTEGER NOT NULL, PRIMARY KEY(`gameTypeCode`))",
+        "fields": [
+          {
+            "fieldPath": "gameTypeCode",
+            "columnName": "gameTypeCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modeCode",
+            "columnName": "modeCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "difficultyCode",
+            "columnName": "difficultyCode",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "updatedAtEpochMillis",
+            "columnName": "updatedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "gameTypeCode"
+          ]
+        }
+      },
+      {
+        "tableName": "app_settings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `defaultDifficultyCode` INTEGER NOT NULL, `autoContinueEnabled` INTEGER NOT NULL, `soundEnabled` INTEGER NOT NULL, `gameDurationMinutes` INTEGER, `updatedAtEpochMillis` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultDifficultyCode",
+            "columnName": "defaultDifficultyCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "autoContinueEnabled",
+            "columnName": "autoContinueEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "soundEnabled",
+            "columnName": "soundEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gameDurationMinutes",
+            "columnName": "gameDurationMinutes",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "updatedAtEpochMillis",
+            "columnName": "updatedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "tutorial_progress",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`gameTypeCode` INTEGER NOT NULL, `contentVersion` INTEGER NOT NULL, `completedStepCount` INTEGER NOT NULL, `isCompleted` INTEGER NOT NULL, `updatedAtEpochMillis` INTEGER NOT NULL, PRIMARY KEY(`gameTypeCode`))",
+        "fields": [
+          {
+            "fieldPath": "gameTypeCode",
+            "columnName": "gameTypeCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "contentVersion",
+            "columnName": "contentVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedStepCount",
+            "columnName": "completedStepCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isCompleted",
+            "columnName": "isCompleted",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAtEpochMillis",
+            "columnName": "updatedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "gameTypeCode"
+          ]
+        }
+      },
+      {
+        "tableName": "match_outcomes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`matchId` TEXT NOT NULL, `gameTypeCode` INTEGER NOT NULL, `modeCode` INTEGER NOT NULL, `difficultyCode` INTEGER NOT NULL, `playerIndex` INTEGER NOT NULL, `resultCode` INTEGER NOT NULL, `settledAtEpochMillis` INTEGER NOT NULL, PRIMARY KEY(`matchId`))",
+        "fields": [
+          {
+            "fieldPath": "matchId",
+            "columnName": "matchId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gameTypeCode",
+            "columnName": "gameTypeCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modeCode",
+            "columnName": "modeCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "difficultyCode",
+            "columnName": "difficultyCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "playerIndex",
+            "columnName": "playerIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "resultCode",
+            "columnName": "resultCode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "settledAtEpochMillis",
+            "columnName": "settledAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "matchId"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7d498afaaf179bd68de5a195d8d586bc')"
+    ]
+  }
+}

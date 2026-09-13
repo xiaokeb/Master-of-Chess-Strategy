@@ -49,12 +49,23 @@ internal enum class ModeDestination {
 internal data class DifficultyEntry(
     val difficulty: Difficulty,
     val isUnlocked: Boolean,
+    val isPlayable: Boolean,
 )
 
-internal fun chineseChessDifficulties(tutorialCompleted: Boolean): List<DifficultyEntry> =
+internal fun chineseChessDifficulties(
+    tutorialCompleted: Boolean,
+    winsByDifficulty: Map<Difficulty, Int> = emptyMap(),
+): List<DifficultyEntry> =
     Difficulty.entries.map { difficulty ->
+        val isUnlocked = tutorialCompleted && when (difficulty) {
+            Difficulty.EASY -> true
+            Difficulty.MEDIUM -> (winsByDifficulty[Difficulty.EASY] ?: 0) >= 10
+            Difficulty.HARD -> (winsByDifficulty[Difficulty.MEDIUM] ?: 0) >= 15
+            Difficulty.MASTER -> (winsByDifficulty[Difficulty.HARD] ?: 0) >= 20
+        }
         DifficultyEntry(
             difficulty = difficulty,
-            isUnlocked = difficulty == Difficulty.EASY && tutorialCompleted,
+            isUnlocked = isUnlocked,
+            isPlayable = isUnlocked && difficulty == Difficulty.EASY,
         )
     }

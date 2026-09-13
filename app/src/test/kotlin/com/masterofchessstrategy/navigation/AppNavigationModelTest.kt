@@ -54,7 +54,20 @@ class AppNavigationModelTest {
 
         assertEquals(4, afterTutorial.size)
         assertTrue(afterTutorial.single { it.difficulty == Difficulty.EASY }.isUnlocked)
+        assertTrue(afterTutorial.single { it.difficulty == Difficulty.EASY }.isPlayable)
         assertTrue(afterTutorial.drop(1).none { it.isUnlocked })
+    }
+
+    @Test
+    fun verifiedWinsUnlockPrerequisiteWithoutPretendingEngineExists() {
+        val entries = chineseChessDifficulties(
+            tutorialCompleted = true,
+            winsByDifficulty = mapOf(Difficulty.EASY to 10),
+        )
+        val medium = entries.single { it.difficulty == Difficulty.MEDIUM }
+
+        assertTrue(medium.isUnlocked)
+        assertFalse(medium.isPlayable)
     }
 
     @Test

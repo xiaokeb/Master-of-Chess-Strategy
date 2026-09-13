@@ -22,6 +22,7 @@ class RoomGameSessionRepositoryTest {
                 difficulty = null,
                 engineState = bytes,
                 updatedAtEpochMillis = 42L,
+                sessionId = "match-42",
             ),
         )
         bytes[0] = 99
@@ -31,6 +32,7 @@ class RoomGameSessionRepositoryTest {
         assertEquals(StoredGameMode.LOCAL_TWO_PLAYER.code, stored.modeCode)
         assertEquals(1, stored.envelopeVersion)
         assertEquals(2, stored.engineFormatVersion)
+        assertEquals("match-42", stored.sessionId)
         assertArrayEquals(byteArrayOf(1, 2, 3), stored.engineState)
     }
 
@@ -46,6 +48,7 @@ class RoomGameSessionRepositoryTest {
                 engineFormatVersion = 2,
                 engineState = storedBytes,
                 updatedAtEpochMillis = 84L,
+                sessionId = "match-84",
             ),
         )
 
@@ -53,6 +56,7 @@ class RoomGameSessionRepositoryTest {
 
         val loaded = (result as LoadGameSessionResult.Loaded).snapshot
         assertEquals(StoredGameMode.LOCAL_TWO_PLAYER, loaded.mode)
+        assertEquals("match-84", loaded.sessionId)
         assertArrayEquals(storedBytes, loaded.engineState)
         assertNotSame(storedBytes, loaded.engineState)
     }

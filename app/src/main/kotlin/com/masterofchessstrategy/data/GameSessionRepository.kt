@@ -17,6 +17,7 @@ internal data class GameSessionSnapshot(
     val difficulty: Difficulty?,
     val engineState: ByteArray,
     val updatedAtEpochMillis: Long,
+    val sessionId: String = "",
 ) {
     fun defensiveCopy(): GameSessionSnapshot = copy(engineState = engineState.copyOf())
 }
@@ -63,11 +64,18 @@ internal class RoomGameSessionRepository(
                 difficulty = difficulty,
                 engineState = entity.engineState.copyOf(),
                 updatedAtEpochMillis = entity.updatedAtEpochMillis,
+                sessionId = entity.sessionId,
             ),
         )
     }
 
     override suspend fun save(snapshot: GameSessionSnapshot) {
+        require(
+            snapshot.sessionId.isNotBlank() &&
+                snapshot.sessionId.length <= MatchOutcome.MAX_MATCH_ID_LENGTH
+        ) {
+            "Session id must contain 1 to 64 characters"
+        }
         require(snapshot.engineState.size in 1..MAX_ENGINE_STATE_BYTES) {
             "Engine state size is outside the persistence boundary"
         }
@@ -80,6 +88,7 @@ internal class RoomGameSessionRepository(
                 engineFormatVersion = CHINESE_CHESS_ENGINE_FORMAT_VERSION,
                 engineState = snapshot.engineState.copyOf(),
                 updatedAtEpochMillis = snapshot.updatedAtEpochMillis,
+                sessionId = snapshot.sessionId,
             ),
         )
     }

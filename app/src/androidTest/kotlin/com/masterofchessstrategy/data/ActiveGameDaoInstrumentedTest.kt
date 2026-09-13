@@ -85,4 +85,26 @@ class ActiveGameDaoInstrumentedTest {
         assertEquals(null, database.activeGameDao().find(GameType.CHINESE_CHESS.code))
         assertEquals(null, database.lastSelectionDao().find(GameType.CHINESE_CHESS.code))
     }
+
+    @Test
+    fun matchOutcomePrimaryKeyMakesSettlementIdempotent() = runBlocking {
+        val expected = MatchOutcomeEntity(
+            matchId = "match-1",
+            gameTypeCode = GameType.CHINESE_CHESS.code,
+            modeCode = StoredGameMode.HUMAN_VS_AI.code,
+            difficultyCode = 0,
+            playerIndex = 0,
+            resultCode = 1,
+            settledAtEpochMillis = 102L,
+        )
+
+        val first = database.matchOutcomeDao().insert(expected)
+        val duplicate = database.matchOutcomeDao().insert(
+            expected.copy(resultCode = 2),
+        )
+
+        assertEquals(true, first >= 0)
+        assertEquals(-1L, duplicate)
+        assertEquals(listOf(expected), database.matchOutcomeDao().listAll())
+    }
 }

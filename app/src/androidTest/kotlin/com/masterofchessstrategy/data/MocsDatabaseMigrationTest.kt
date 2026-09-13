@@ -107,15 +107,66 @@ class MocsDatabaseMigrationTest {
         migrated.close()
     }
 
+    @Test
+    fun migrateFourToFiveAddsSessionIdentityAndOutcomeLedger() {
+        helper.createDatabase(STATISTICS_DATABASE_NAME, 4).apply {
+            execSQL(
+                """
+                INSERT INTO active_games (
+                    gameTypeCode,
+                    modeCode,
+                    difficultyCode,
+                    envelopeVersion,
+                    engineFormatVersion,
+                    engineState,
+                    updatedAtEpochMillis
+                ) VALUES (?, ?, 0, 1, 2, ?, 102)
+                """.trimIndent(),
+                arrayOf(0, 1, byteArrayOf(1, 2, 3)),
+            )
+            execSQL(
+                """
+                INSERT INTO tutorial_progress (
+                    gameTypeCode,
+                    contentVersion,
+                    completedStepCount,
+                    isCompleted,
+                    updatedAtEpochMillis
+                ) VALUES (0, 1, 4, 1, 103)
+                """.trimIndent(),
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            STATISTICS_DATABASE_NAME,
+            5,
+            true,
+            MocsDatabase.MIGRATION_4_5,
+        )
+
+        assertEquals("", migrated.singleString("SELECT sessionId FROM active_games"))
+        assertEquals(1, migrated.singleInt("SELECT COUNT(*) FROM tutorial_progress"))
+        assertEquals(0, migrated.singleInt("SELECT COUNT(*) FROM match_outcomes"))
+        migrated.close()
+    }
+
     private fun SupportSQLiteDatabase.singleInt(query: String): Int =
         this.query(query).use { cursor ->
             check(cursor.moveToFirst())
             cursor.getInt(0)
         }
 
+    private fun SupportSQLiteDatabase.singleString(query: String): String =
+        this.query(query).use { cursor ->
+            check(cursor.moveToFirst())
+            cursor.getString(0)
+        }
+
     private companion object {
         const val DATABASE_NAME = "migration-1-2-test"
         const val SETTINGS_DATABASE_NAME = "migration-2-3-test"
         const val TUTORIAL_DATABASE_NAME = "migration-3-4-test"
+        const val STATISTICS_DATABASE_NAME = "migration-4-5-test"
     }
 }
