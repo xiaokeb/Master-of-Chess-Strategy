@@ -20,12 +20,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.masterofchessstrategy.R
 import com.masterofchessstrategy.engine.Difficulty
-import com.masterofchessstrategy.navigation.ChineseChessDifficulties
 import com.masterofchessstrategy.navigation.ChineseChessMode
 import com.masterofchessstrategy.navigation.ModeDestination
+import com.masterofchessstrategy.navigation.chineseChessDifficulties
 
 internal const val MODE_LOCAL_GAME_TAG = "mode_local_game"
 internal const val MODE_AI_GAME_TAG = "mode_ai_game"
+internal const val MODE_TUTORIAL_TAG = "mode_tutorial"
 internal const val DIFFICULTY_SCREEN_TAG = "difficulty_screen"
 
 @Composable
@@ -33,6 +34,7 @@ internal fun ChineseChessModeScreen(
     onBack: () -> Unit,
     onLocalGame: () -> Unit,
     onAiDifficulty: () -> Unit,
+    onTutorial: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(modifier = modifier.fillMaxSize()) {
@@ -58,6 +60,7 @@ internal fun ChineseChessModeScreen(
                             onClick = when (mode.destination) {
                                 ModeDestination.GAME -> onLocalGame
                                 ModeDestination.DIFFICULTY -> onAiDifficulty
+                                ModeDestination.TUTORIAL -> onTutorial
                                 ModeDestination.LOCKED -> ({})
                             },
                             modifier = Modifier.weight(1f),
@@ -75,6 +78,7 @@ internal fun ChineseChessModeScreen(
 @Composable
 internal fun ChineseChessDifficultyScreen(
     onBack: () -> Unit,
+    tutorialCompleted: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -90,10 +94,16 @@ internal fun ChineseChessDifficultyScreen(
         ) {
             PageHeader(
                 title = stringResource(R.string.choose_difficulty),
-                subtitle = stringResource(R.string.difficulty_locked_summary),
+                subtitle = stringResource(
+                    if (tutorialCompleted) {
+                        R.string.difficulty_easy_unlocked_summary
+                    } else {
+                        R.string.difficulty_locked_summary
+                    },
+                ),
                 onBack = onBack,
             )
-            ChineseChessDifficulties.chunked(2).forEach { rowDifficulties ->
+            chineseChessDifficulties(tutorialCompleted).chunked(2).forEach { rowDifficulties ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -113,7 +123,13 @@ internal fun ChineseChessDifficultyScreen(
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                                 Text(
-                                    text = stringResource(R.string.locked),
+                                    text = stringResource(
+                                        if (entry.isUnlocked) {
+                                            R.string.unlocked
+                                        } else {
+                                            R.string.locked
+                                        },
+                                    ),
                                     color = MaterialTheme.colorScheme.primary,
                                 )
                             }
@@ -163,6 +179,7 @@ private fun ModeCard(
                 when (mode) {
                     ChineseChessMode.LOCAL_TWO_PLAYER -> Modifier.testTag(MODE_LOCAL_GAME_TAG)
                     ChineseChessMode.HUMAN_VS_AI -> Modifier.testTag(MODE_AI_GAME_TAG)
+                    ChineseChessMode.TUTORIAL -> Modifier.testTag(MODE_TUTORIAL_TAG)
                     else -> Modifier
                 },
             )
@@ -180,6 +197,7 @@ private fun ModeCard(
                 text = when (mode.destination) {
                     ModeDestination.GAME -> stringResource(R.string.available_now)
                     ModeDestination.DIFFICULTY -> stringResource(R.string.view_unlock_rules)
+                    ModeDestination.TUTORIAL -> stringResource(R.string.available_now)
                     ModeDestination.LOCKED -> stringResource(R.string.future_slice)
                 },
                 color = MaterialTheme.colorScheme.primary,

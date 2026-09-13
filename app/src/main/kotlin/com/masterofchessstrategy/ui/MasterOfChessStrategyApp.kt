@@ -40,6 +40,7 @@ import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.data.RoomAppSettingsRepository
 import com.masterofchessstrategy.data.RoomGameSessionRepository
 import com.masterofchessstrategy.data.RoomLastSelectionRepository
+import com.masterofchessstrategy.data.RoomTutorialProgressRepository
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessPiece
@@ -54,6 +55,7 @@ import com.masterofchessstrategy.navigation.AppNavigationViewModel
 import com.masterofchessstrategy.navigation.HomeGameEntry
 import com.masterofchessstrategy.navigation.QuickStartDestination
 import com.masterofchessstrategy.settings.AppSettingsViewModel
+import com.masterofchessstrategy.tutorial.ChineseChessTutorialViewModel
 import com.masterofchessstrategy.ui.theme.MocsTheme
 
 internal const val UNDO_BUTTON_TAG = "undo_button"
@@ -77,6 +79,9 @@ fun MasterOfChessStrategyApp() {
         val settingsRepository = remember {
             RoomAppSettingsRepository(database.appSettingsDao())
         }
+        val tutorialRepository = remember {
+            RoomTutorialProgressRepository(database.tutorialProgressDao())
+        }
         val navigationFactory = remember(selectionRepository) {
             AppNavigationViewModel.factory(selectionRepository)
         }
@@ -87,6 +92,12 @@ fun MasterOfChessStrategyApp() {
             AppSettingsViewModel.factory(settingsRepository)
         }
         val settingsViewModel: AppSettingsViewModel = viewModel(factory = settingsFactory)
+        val tutorialFactory = remember(tutorialRepository) {
+            ChineseChessTutorialViewModel.factory(tutorialRepository)
+        }
+        val tutorialViewModel: ChineseChessTutorialViewModel = viewModel(
+            factory = tutorialFactory,
+        )
         val quickStartEntries = if (
             navigationViewModel.chineseChessQuickStartDestination() == null
         ) {
@@ -114,6 +125,10 @@ fun MasterOfChessStrategyApp() {
                                 QuickStartDestination.GAME -> AppDestination.CHINESE_CHESS_GAME
                                 QuickStartDestination.DIFFICULTY -> {
                                     AppDestination.CHINESE_CHESS_DIFFICULTY
+                                }
+
+                                QuickStartDestination.TUTORIAL -> {
+                                    AppDestination.CHINESE_CHESS_TUTORIAL
                                 }
 
                                 QuickStartDestination.MODE_SELECTION -> {
@@ -147,10 +162,30 @@ fun MasterOfChessStrategyApp() {
                         )
                         navController.navigate(AppDestination.CHINESE_CHESS_DIFFICULTY)
                     },
+                    onTutorial = {
+                        navigationViewModel.recordChineseChessSelection(
+                            StoredGameMode.TUTORIAL,
+                        )
+                        navController.navigate(AppDestination.CHINESE_CHESS_TUTORIAL)
+                    },
                 )
             }
             composable(AppDestination.CHINESE_CHESS_DIFFICULTY) {
-                ChineseChessDifficultyScreen(onBack = navController::popBackStack)
+                ChineseChessDifficultyScreen(
+                    onBack = navController::popBackStack,
+                    tutorialCompleted = tutorialViewModel.uiState.progress.isCompleted,
+                )
+            }
+            composable(AppDestination.CHINESE_CHESS_TUTORIAL) {
+                ChineseChessTutorialScreen(
+                    state = tutorialViewModel.uiState,
+                    onBack = navController::popBackStack,
+                    onContinueReading = tutorialViewModel::advanceReadingStep,
+                    onPracticeSquareTap = tutorialViewModel::onPracticeSquareTap,
+                    onCompletePractice = tutorialViewModel::completePractice,
+                    onAnswerQuiz = tutorialViewModel::answerQuiz,
+                    onCompleteQuiz = tutorialViewModel::completeQuiz,
+                )
             }
             composable(AppDestination.CHINESE_CHESS_GAME) {
                 val factory = remember(gameSessionRepository) {

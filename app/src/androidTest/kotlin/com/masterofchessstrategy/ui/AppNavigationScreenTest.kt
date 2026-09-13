@@ -31,6 +31,17 @@ class AppNavigationScreenTest {
     }
 
     @Test
+    fun chineseChessModesCanOpenTutorial() {
+        composeRule.setContent {
+            MasterOfChessStrategyApp()
+        }
+
+        composeRule.onNodeWithTag(HOME_CHINESE_CHESS_TAG).performClick()
+        composeRule.onNodeWithTag(MODE_TUTORIAL_TAG).performClick()
+        composeRule.onNodeWithTag(TUTORIAL_SCREEN_TAG).assertExists()
+    }
+
+    @Test
     fun homeExposesQuickStartOnlyWhenHistoryExists() {
         var quickStarts = 0
         composeRule.setContent {

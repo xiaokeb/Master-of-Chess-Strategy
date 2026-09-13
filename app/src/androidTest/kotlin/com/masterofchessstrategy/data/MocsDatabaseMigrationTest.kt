@@ -77,6 +77,36 @@ class MocsDatabaseMigrationTest {
         migrated.close()
     }
 
+    @Test
+    fun migrateThreeToFourPreservesSettingsAndAddsTutorialProgress() {
+        helper.createDatabase(TUTORIAL_DATABASE_NAME, 3).apply {
+            execSQL(
+                """
+                INSERT INTO app_settings (
+                    id,
+                    defaultDifficultyCode,
+                    autoContinueEnabled,
+                    soundEnabled,
+                    gameDurationMinutes,
+                    updatedAtEpochMillis
+                ) VALUES (0, 0, 0, 1, NULL, 101)
+                """.trimIndent(),
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            TUTORIAL_DATABASE_NAME,
+            4,
+            true,
+            MocsDatabase.MIGRATION_3_4,
+        )
+
+        assertEquals(1, migrated.singleInt("SELECT COUNT(*) FROM app_settings"))
+        assertEquals(0, migrated.singleInt("SELECT COUNT(*) FROM tutorial_progress"))
+        migrated.close()
+    }
+
     private fun SupportSQLiteDatabase.singleInt(query: String): Int =
         this.query(query).use { cursor ->
             check(cursor.moveToFirst())
@@ -86,5 +116,6 @@ class MocsDatabaseMigrationTest {
     private companion object {
         const val DATABASE_NAME = "migration-1-2-test"
         const val SETTINGS_DATABASE_NAME = "migration-2-3-test"
+        const val TUTORIAL_DATABASE_NAME = "migration-3-4-test"
     }
 }

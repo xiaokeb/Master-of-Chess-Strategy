@@ -24,6 +24,7 @@ internal data class AppNavigationUiState(
 internal enum class QuickStartDestination {
     MODE_SELECTION,
     DIFFICULTY,
+    TUTORIAL,
     GAME,
 }
 
@@ -31,9 +32,9 @@ internal fun LastGameSelection.quickStartDestination(): QuickStartDestination =
     when (mode) {
         StoredGameMode.LOCAL_TWO_PLAYER -> QuickStartDestination.GAME
         StoredGameMode.HUMAN_VS_AI -> QuickStartDestination.DIFFICULTY
+        StoredGameMode.TUTORIAL -> QuickStartDestination.TUTORIAL
         StoredGameMode.AI_AUTO_PLAY,
         StoredGameMode.ENDGAME,
-        StoredGameMode.TUTORIAL,
         -> QuickStartDestination.MODE_SELECTION
     }
 

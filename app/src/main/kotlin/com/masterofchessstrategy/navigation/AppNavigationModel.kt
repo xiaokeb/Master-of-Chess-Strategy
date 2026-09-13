@@ -7,6 +7,7 @@ internal object AppDestination {
     const val HOME = "home"
     const val CHINESE_CHESS_MODES = "chinese-chess/modes"
     const val CHINESE_CHESS_DIFFICULTY = "chinese-chess/difficulty"
+    const val CHINESE_CHESS_TUTORIAL = "chinese-chess/tutorial"
     const val CHINESE_CHESS_GAME = "chinese-chess/game"
     const val SETTINGS = "settings"
 }
@@ -33,12 +34,13 @@ internal enum class ChineseChessMode(
     HUMAN_VS_AI(ModeDestination.DIFFICULTY),
     AI_AUTO_PLAY(ModeDestination.LOCKED),
     ENDGAME(ModeDestination.LOCKED),
-    TUTORIAL(ModeDestination.LOCKED),
+    TUTORIAL(ModeDestination.TUTORIAL),
 }
 
 internal enum class ModeDestination {
     GAME,
     DIFFICULTY,
+    TUTORIAL,
     LOCKED,
 }
 
@@ -48,6 +50,10 @@ internal data class DifficultyEntry(
     val isUnlocked: Boolean,
 )
 
-internal val ChineseChessDifficulties = Difficulty.entries.map {
-    DifficultyEntry(difficulty = it, isUnlocked = false)
-}
+internal fun chineseChessDifficulties(tutorialCompleted: Boolean): List<DifficultyEntry> =
+    Difficulty.entries.map { difficulty ->
+        DifficultyEntry(
+            difficulty = difficulty,
+            isUnlocked = difficulty == Difficulty.EASY && tutorialCompleted,
+        )
+    }

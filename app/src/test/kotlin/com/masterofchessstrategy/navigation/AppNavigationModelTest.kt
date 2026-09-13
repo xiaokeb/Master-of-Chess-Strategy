@@ -2,6 +2,7 @@ package com.masterofchessstrategy.navigation
 
 import com.masterofchessstrategy.data.LastGameSelection
 import com.masterofchessstrategy.data.StoredGameMode
+import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -36,24 +37,28 @@ class AppNavigationModelTest {
             ModeDestination.DIFFICULTY,
             ChineseChessMode.HUMAN_VS_AI.destination,
         )
+        assertEquals(
+            ModeDestination.TUTORIAL,
+            ChineseChessMode.TUTORIAL.destination,
+        )
         assertTrue(
-            ChineseChessMode.entries
-                .filterNot {
-                    it == ChineseChessMode.LOCAL_TWO_PLAYER ||
-                        it == ChineseChessMode.HUMAN_VS_AI
-                }
+            listOf(ChineseChessMode.AI_AUTO_PLAY, ChineseChessMode.ENDGAME)
                 .all { it.destination == ModeDestination.LOCKED },
         )
     }
 
     @Test
-    fun allAiDifficultiesStayLockedBeforeTutorialExists() {
-        assertEquals(4, ChineseChessDifficulties.size)
-        assertTrue(ChineseChessDifficulties.none { it.isUnlocked })
+    fun tutorialUnlocksOnlyEasyDifficulty() {
+        assertTrue(chineseChessDifficulties(tutorialCompleted = false).none { it.isUnlocked })
+        val afterTutorial = chineseChessDifficulties(tutorialCompleted = true)
+
+        assertEquals(4, afterTutorial.size)
+        assertTrue(afterTutorial.single { it.difficulty == Difficulty.EASY }.isUnlocked)
+        assertTrue(afterTutorial.drop(1).none { it.isUnlocked })
     }
 
     @Test
-    fun lockedHistoricalModeReturnsToModeSelection() {
+    fun tutorialHistoryReturnsDirectlyToTutorial() {
         val selection = LastGameSelection(
             gameType = GameType.CHINESE_CHESS,
             mode = StoredGameMode.TUTORIAL,
@@ -62,7 +67,7 @@ class AppNavigationModelTest {
         )
 
         assertEquals(
-            QuickStartDestination.MODE_SELECTION,
+            QuickStartDestination.TUTORIAL,
             selection.quickStartDestination(),
         )
     }

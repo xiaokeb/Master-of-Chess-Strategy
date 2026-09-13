@@ -12,8 +12,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ActiveGameEntity::class,
         LastSelectionEntity::class,
         AppSettingsEntity::class,
+        TutorialProgressEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -22,6 +23,8 @@ internal abstract class MocsDatabase : RoomDatabase() {
     abstract fun lastSelectionDao(): LastSelectionDao
 
     abstract fun appSettingsDao(): AppSettingsDao
+
+    abstract fun tutorialProgressDao(): TutorialProgressDao
 
     companion object {
         internal val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -58,6 +61,23 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS tutorial_progress (
+                        gameTypeCode INTEGER NOT NULL,
+                        contentVersion INTEGER NOT NULL,
+                        completedStepCount INTEGER NOT NULL,
+                        isCompleted INTEGER NOT NULL,
+                        updatedAtEpochMillis INTEGER NOT NULL,
+                        PRIMARY KEY(gameTypeCode)
+                    )
+                    """.trimIndent(),
+                )
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -68,7 +88,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                     MocsDatabase::class.java,
                     DATABASE_NAME,
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .build()
                     .also { instance = it }
             }

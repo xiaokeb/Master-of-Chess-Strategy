@@ -1,6 +1,6 @@
 # 开发进度
 
-更新时间：2026-09-12
+更新时间：2026-09-13
 
 ## Foundation 节点
 
@@ -20,13 +20,14 @@
 | 上次模式与快速进入 | 完成 | Room schema 2、显式 1→2 迁移及首页可信长按路由已接入 |
 | 本地设置 | 完成 | Room schema 3、显式 2→3 迁移、四类偏好及首页/对局入口已接入 |
 | 中国象棋历史裁定核心 | 进行中 | 长将、直接无根子长捉、允许循环、自然限着与 MOCX 2 已编译；复杂棋例待扩充 |
+| 中国象棋教程与简单解锁 | 完成 | Room schema 4、四步教程、恢复/回滚及简单难度解锁已接入 |
 
 ## 已验证
 
-- JVM 单元测试：50 个通过，0 失败、0 跳过。
+- JVM 单元测试：56 个通过，0 失败、0 错误、0 跳过。
 - NDK：Clang 21，C++17，Android ARM64 测试目标编译和链接通过。
 - Gradle NDK：arm64-v8a、armeabi-v7a、x86、x86_64 构建通过。
-- Android：App Lint 0 error、1 个锁定版本更新提示；Debug APK、App 测试 APK 与 engine-native 测试 APK 构建通过。
+- Android：App Lint 0 issue；Debug APK、App 测试 APK 与 engine-native 测试 APK 构建通过。
 - 离线边界：Debug APK 不包含 android.permission.INTERNET。
 - JNI：ARM64 动态库已导出并核对 12 个 NativeBindings 符号。
 
@@ -38,6 +39,6 @@
 
 ## 下一节点
 
-1. 按官方棋例扩充杀着、联合捉、暗根、假根、少根、价值交换及追捉集合连续性判定。
-2. 在设备或 AVD 可用后运行 Room、Compose、中国象棋与 NativeBridge 集成测试。
-3. 历史裁定完整后进入中国象棋教程与简单难度解锁纵切。
+1. 接入中国象棋简单难度 AI 对局，并让已解锁难度可正式选择和开始对局。
+2. 按官方棋例继续扩充杀着、联合捉、暗根、假根、少根、价值交换及追捉集合连续性判定。
+3. 在设备或 AVD 可用后运行 Room、Compose、中国象棋与 NativeBridge 集成测试。
