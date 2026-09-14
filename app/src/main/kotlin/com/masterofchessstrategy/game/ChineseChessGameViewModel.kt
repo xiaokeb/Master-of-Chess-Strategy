@@ -31,7 +31,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -78,6 +81,10 @@ class ChineseChessGameViewModel internal constructor(
     private var completedAutoGames = 0
     private var clockJob: Job? = null
     private var automationJob: Job? = null
+    private val mutableSoundEvents = MutableSharedFlow<ChineseChessSoundCue>(
+        extraBufferCapacity = SOUND_EVENT_BUFFER_CAPACITY,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
 
     private val isAiGame =
         mode == StoredGameMode.HUMAN_VS_AI ||
@@ -93,6 +100,12 @@ class ChineseChessGameViewModel internal constructor(
         ),
     )
         private set
+
+    /**
+     * Live-only sound events. replay remains zero so restore and recomposition
+     * never repeat an action that happened before the current collector.
+     */
+    val soundEvents = mutableSoundEvents.asSharedFlow()
 
     constructor() : this(engineFactory = { NativeChineseChessEngine() })
 
@@ -239,6 +252,7 @@ class ChineseChessGameViewModel internal constructor(
         turnStartedAtEpochMillis = null
         pendingDrawOfferSide = null
         refresh(ChineseChessFeedback.PLAYER_RESIGNED)
+        emitTerminalSound(requireNotNull(resultOverride))
         persistCurrentSession()
     }
 
@@ -268,6 +282,7 @@ class ChineseChessGameViewModel internal constructor(
                 resultOverride = GameResult.DRAW
                 turnStartedAtEpochMillis = null
                 refresh(ChineseChessFeedback.DRAW_ACCEPTED)
+                emitSound(ChineseChessSoundCue.DRAW)
                 persistCurrentSession()
             }
         }
@@ -525,6 +540,7 @@ class ChineseChessGameViewModel internal constructor(
         runEngineOperation {
             val now = nowEpochMillis()
             val movingSide = uiState.currentSide
+            val isCapture = uiState.pieceAt(move.to) != null
             if (!commitActiveClock(now)) return@runEngineOperation
             when (val result = activeEngine.apply(move)) {
                 ActionResult.Accepted -> {
@@ -537,6 +553,7 @@ class ChineseChessGameViewModel internal constructor(
                         pendingDrawOfferSide = null
                     }
                     refresh()
+                    emitMoveSound(activeEngine.gameResult(), isCapture)
                     if (
                         mode == StoredGameMode.HUMAN_VS_AI &&
                         activeEngine.currentPlayer.value == ChineseChessSide.BLACK.code &&
@@ -821,6 +838,7 @@ class ChineseChessGameViewModel internal constructor(
             }
             when (activeEngine.apply(move)) {
                 ActionResult.Accepted -> {
+                    val isCapture = uiState.pieceAt(move.to) != null
                     acceptedMoveCount++
                     turnStartedAtEpochMillis = timeControlMinutes?.let { now }
                     refresh(
@@ -830,6 +848,7 @@ class ChineseChessGameViewModel internal constructor(
                             ChineseChessFeedback.AI_MOVED
                         },
                     )
+                    emitMoveSound(activeEngine.gameResult(), isCapture)
                     if (isAutoPlay) {
                         automationJob = null
                     }
@@ -921,6 +940,7 @@ class ChineseChessGameViewModel internal constructor(
             GameResult.FIRST_PLAYER_WIN
         }
         refresh(ChineseChessFeedback.TIME_EXPIRED)
+        emitTerminalSound(requireNotNull(resultOverride))
         if (isAutoPlay) {
             automationJob = null
         }
@@ -954,6 +974,40 @@ class ChineseChessGameViewModel internal constructor(
         } else {
             blackRemainingMillis = millis
         }
+    }
+
+    private fun emitMoveSound(result: GameResult, isCapture: Boolean) {
+        if (result == GameResult.ONGOING) {
+            emitSound(
+                if (isCapture) {
+                    ChineseChessSoundCue.CAPTURE
+                } else {
+                    ChineseChessSoundCue.MOVE
+                },
+            )
+        } else {
+            emitTerminalSound(result)
+        }
+    }
+
+    private fun emitTerminalSound(result: GameResult) {
+        val cue = when (result) {
+            GameResult.ONGOING -> return
+            GameResult.DRAW -> ChineseChessSoundCue.DRAW
+            GameResult.FIRST_PLAYER_WIN -> ChineseChessSoundCue.VICTORY
+            GameResult.SECOND_PLAYER_WIN -> {
+                if (mode == StoredGameMode.HUMAN_VS_AI) {
+                    ChineseChessSoundCue.DEFEAT
+                } else {
+                    ChineseChessSoundCue.VICTORY
+                }
+            }
+        }
+        emitSound(cue)
+    }
+
+    private fun emitSound(cue: ChineseChessSoundCue) {
+        mutableSoundEvents.tryEmit(cue)
     }
 
     private fun handleAutoPlayTerminal(result: GameResult) {
@@ -1147,6 +1201,7 @@ class ChineseChessGameViewModel internal constructor(
         private const val DEFAULT_AUTO_PLAY_SPEED = 1_000
         private const val MIN_AUTO_PLAY_SPEED = 0.5f
         private const val MAX_AUTO_PLAY_SPEED = 4f
+        private const val SOUND_EVENT_BUFFER_CAPACITY = 8
 
         internal fun factory(
             repository: GameSessionRepository,

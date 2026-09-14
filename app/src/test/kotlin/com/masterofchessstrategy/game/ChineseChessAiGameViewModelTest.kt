@@ -19,6 +19,9 @@ import com.masterofchessstrategy.engine.PlayerId
 import com.masterofchessstrategy.engine.RestoreResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -104,11 +107,15 @@ class ChineseChessAiGameViewModelTest {
             onMatchFinished = outcomes::add,
             engineFactory = { engine },
         )
+        val soundEvent = async(start = CoroutineStart.UNDISPATCHED) {
+            viewModel.soundEvents.first()
+        }
 
         viewModel.onSquareTap(engine.redFrom)
         viewModel.onSquareTap(engine.redTo)
         viewModel.onSquareTap(engine.redTo)
 
+        assertEquals(ChineseChessSoundCue.VICTORY, soundEvent.await())
         assertEquals(GameResult.FIRST_PLAYER_WIN, viewModel.uiState.result)
         assertFalse(viewModel.uiState.canUndo)
         assertEquals(1, outcomes.size)
@@ -208,10 +215,14 @@ class ChineseChessAiGameViewModelTest {
         )
         advanceUntilIdle()
 
+        val soundEvent = async(start = CoroutineStart.UNDISPATCHED) {
+            viewModel.soundEvents.first()
+        }
         viewModel.resign()
         advanceUntilIdle()
         viewModel.resign()
 
+        assertEquals(ChineseChessSoundCue.DEFEAT, soundEvent.await())
         assertEquals(GameResult.SECOND_PLAYER_WIN, viewModel.uiState.result)
         assertFalse(viewModel.uiState.canUndo)
         assertEquals(1, outcomes.size)

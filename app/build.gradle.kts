@@ -36,8 +36,68 @@ val verifyPikafishNetwork = tasks.register("verifyPikafishNetwork") {
     }
 }
 
+val verifyGameSounds = tasks.register("verifyGameSounds") {
+    val names = listOf(
+        "chess_capture.wav",
+        "chess_move.wav",
+        "game_defeat.wav",
+        "game_draw.wav",
+        "game_victory.wav",
+    )
+    val soundFiles = names.associateWith {
+        layout.projectDirectory.file("src/main/res/raw/$it")
+    }
+    inputs.files(soundFiles.values)
+    doLast {
+        val expectedSounds = mapOf(
+            "chess_capture.wav" to Pair(
+                7_542L,
+                "5e790742af8cec7e9bf4f71a961bc8e147e8f42afdc8e6bbde07d1aa451f3d49",
+            ),
+            "chess_move.wav" to Pair(
+                4_896L,
+                "768674eedef76dfd6d33584c0ca85d4166ff964ea857a1694bb91a59057f3387",
+            ),
+            "game_defeat.wav" to Pair(
+                22_274L,
+                "67a2fb5c692ce58082fb3fd6a4e2760a5068632ce27d48dadbff02d67b520f44",
+            ),
+            "game_draw.wav" to Pair(
+                13_980L,
+                "cfd71d1c55979325ad10a615a79ec767c9318666b551e2d638cb2c214d8867f2",
+            ),
+            "game_victory.wav" to Pair(
+                19_622L,
+                "a49ab42725f2d7eca65da11a542f925bf4193ef6659a08f815e2b05ae819122e",
+            ),
+        )
+        expectedSounds.forEach { (name, expected) ->
+            val file = soundFiles.getValue(name).asFile
+            check(file.length() == expected.first) {
+                "Game sound $name has an unexpected size"
+            }
+            val digest = MessageDigest.getInstance("SHA-256")
+            file.inputStream().buffered().use { input ->
+                val buffer = ByteArray(64 * 1024)
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    digest.update(buffer, 0, count)
+                }
+            }
+            val actual = digest.digest().joinToString(separator = "") {
+                "%02x".format(it.toInt() and 0xff)
+            }
+            check(actual == expected.second) {
+                "Game sound $name failed SHA-256 verification"
+            }
+        }
+    }
+}
+
 tasks.named("preBuild").configure {
     dependsOn(verifyPikafishNetwork)
+    dependsOn(verifyGameSounds)
 }
 
 android {

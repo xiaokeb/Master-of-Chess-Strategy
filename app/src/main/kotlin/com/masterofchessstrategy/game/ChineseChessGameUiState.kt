@@ -37,6 +37,15 @@ enum class ChineseChessFeedback {
     AUTO_PLAY_RESUMED,
 }
 
+/** Short, non-replaying audio cues emitted by live game actions. */
+enum class ChineseChessSoundCue {
+    MOVE,
+    CAPTURE,
+    VICTORY,
+    DEFEAT,
+    DRAW,
+}
+
 /**
  * Immutable snapshot consumed by the game screen.
  *

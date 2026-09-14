@@ -24,9 +24,12 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,6 +63,7 @@ import com.masterofchessstrategy.engine.NativeChineseChessEngine
 import com.masterofchessstrategy.game.ChineseChessFeedback
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 import com.masterofchessstrategy.game.ChineseChessGameViewModel
+import com.masterofchessstrategy.game.ChineseChessSoundPlayer
 import com.masterofchessstrategy.game.PikafishNetworkProvider
 import com.masterofchessstrategy.navigation.AppDestination
 import com.masterofchessstrategy.navigation.AppNavigationViewModel
@@ -318,6 +322,10 @@ fun MasterOfChessStrategyApp() {
                     )
                 }
                 val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
+                ChineseChessGameSoundEffect(
+                    gameViewModel,
+                    settingsViewModel.uiState.settings.soundEnabled,
+                )
                 ChineseChessGameScreen(
                     state = gameViewModel.uiState,
                     onSquareTap = gameViewModel::onSquareTap,
@@ -373,6 +381,10 @@ fun MasterOfChessStrategyApp() {
                     )
                 }
                 val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
+                ChineseChessGameSoundEffect(
+                    gameViewModel,
+                    settingsViewModel.uiState.settings.soundEnabled,
+                )
                 ChineseChessGameScreen(
                     state = gameViewModel.uiState,
                     onSquareTap = gameViewModel::onSquareTap,
@@ -428,6 +440,10 @@ fun MasterOfChessStrategyApp() {
                     )
                 }
                 val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
+                ChineseChessGameSoundEffect(
+                    gameViewModel,
+                    settingsViewModel.uiState.settings.soundEnabled,
+                )
                 ChineseChessGameScreen(
                     state = gameViewModel.uiState,
                     onSquareTap = gameViewModel::onSquareTap,
@@ -460,6 +476,26 @@ fun MasterOfChessStrategyApp() {
                     onTimeLimitEnabled = settingsViewModel::setTimeLimitEnabled,
                     onAdjustDuration = settingsViewModel::adjustDuration,
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChineseChessGameSoundEffect(
+    viewModel: ChineseChessGameViewModel,
+    soundEnabled: Boolean,
+) {
+    val context = LocalContext.current.applicationContext
+    val player = remember(context) { ChineseChessSoundPlayer(context) }
+    val currentSoundEnabled = rememberUpdatedState(soundEnabled)
+    DisposableEffect(player) {
+        onDispose(player::close)
+    }
+    LaunchedEffect(viewModel, player) {
+        viewModel.soundEvents.collect { cue ->
+            if (currentSoundEnabled.value) {
+                player.play(cue)
             }
         }
     }

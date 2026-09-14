@@ -12,6 +12,10 @@ import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.PlayerId
 import com.masterofchessstrategy.engine.RestoreResult
 import com.masterofchessstrategy.data.StoredGameMode
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -45,12 +49,16 @@ class ChineseChessGameViewModelTest {
     }
 
     @Test
-    fun legalDestinationAppliesMoveAndSwitchesSide() {
+    fun legalDestinationAppliesMoveAndSwitchesSide() = runTest {
         val viewModel = ChineseChessGameViewModel { FakeChineseChessEngine() }
+        val soundEvent = async(start = CoroutineStart.UNDISPATCHED) {
+            viewModel.soundEvents.first()
+        }
 
         viewModel.onSquareTap(redRook)
         viewModel.onSquareTap(redRookDestination)
 
+        assertEquals(ChineseChessSoundCue.MOVE, soundEvent.await())
         assertNull(viewModel.uiState.pieceAt(redRook))
         assertEquals(ChineseChessSide.RED, viewModel.uiState.pieceAt(redRookDestination)?.side)
         assertEquals(ChineseChessSide.BLACK, viewModel.uiState.currentSide)
@@ -99,7 +107,22 @@ class ChineseChessGameViewModelTest {
     }
 
     @Test
-    fun timedGameChargesOnlyActiveSideAndTimeoutLoses() {
+    fun captureEmitsCaptureSound() = runTest {
+        val viewModel = ChineseChessGameViewModel {
+            FakeChineseChessEngine(captureAtDestination = true)
+        }
+        val soundEvent = async(start = CoroutineStart.UNDISPATCHED) {
+            viewModel.soundEvents.first()
+        }
+
+        viewModel.onSquareTap(redRook)
+        viewModel.onSquareTap(redRookDestination)
+
+        assertEquals(ChineseChessSoundCue.CAPTURE, soundEvent.await())
+    }
+
+    @Test
+    fun timedGameChargesOnlyActiveSideAndTimeoutLoses() = runTest {
         var now = 1_000L
         val viewModel = ChineseChessGameViewModel(
             nowEpochMillis = { now },
@@ -116,16 +139,20 @@ class ChineseChessGameViewModelTest {
         assertEquals(298_000L, viewModel.uiState.redRemainingMillis)
         assertEquals(300_000L, viewModel.uiState.blackRemainingMillis)
 
+        val soundEvent = async(start = CoroutineStart.UNDISPATCHED) {
+            viewModel.soundEvents.first()
+        }
         now += 300_001L
         viewModel.synchronizeClock()
 
+        assertEquals(ChineseChessSoundCue.VICTORY, soundEvent.await())
         assertEquals(0L, viewModel.uiState.blackRemainingMillis)
         assertEquals(GameResult.FIRST_PLAYER_WIN, viewModel.uiState.result)
         assertEquals(ChineseChessFeedback.TIME_EXPIRED, viewModel.uiState.feedback)
     }
 
     @Test
-    fun drawRequiresTheOtherSideToAccept() {
+    fun drawRequiresTheOtherSideToAccept() = runTest {
         val viewModel = ChineseChessGameViewModel { FakeChineseChessEngine() }
 
         viewModel.offerOrAcceptDraw()
@@ -134,19 +161,32 @@ class ChineseChessGameViewModelTest {
 
         viewModel.onSquareTap(redRook)
         viewModel.onSquareTap(redRookDestination)
+        val soundEvent = async(start = CoroutineStart.UNDISPATCHED) {
+            viewModel.soundEvents.first()
+        }
         viewModel.offerOrAcceptDraw()
 
+        assertEquals(ChineseChessSoundCue.DRAW, soundEvent.await())
         assertEquals(GameResult.DRAW, viewModel.uiState.result)
         assertNull(viewModel.uiState.pendingDrawOfferSide)
         assertEquals(ChineseChessFeedback.DRAW_ACCEPTED, viewModel.uiState.feedback)
     }
 
-    private inner class FakeChineseChessEngine : ChineseChessRuleEngine {
+    private inner class FakeChineseChessEngine(
+        private val captureAtDestination: Boolean = false,
+    ) : ChineseChessRuleEngine {
         override val gameType = GameType.CHINESE_CHESS
         private val positions = mutableMapOf(
             redRook to ChineseChessPiece(ChineseChessPieceType.CHARIOT, ChineseChessSide.RED),
             blackRook to ChineseChessPiece(ChineseChessPieceType.CHARIOT, ChineseChessSide.BLACK),
-        )
+        ).apply {
+            if (captureAtDestination) {
+                this[redRookDestination] = ChineseChessPiece(
+                    ChineseChessPieceType.SOLDIER,
+                    ChineseChessSide.BLACK,
+                )
+            }
+        }
         private var player = PlayerId(ChineseChessSide.RED.code)
         private var canUndo = false
         var resetCalls = 0
@@ -162,6 +202,12 @@ class ChineseChessGameViewModelTest {
                 ChineseChessPiece(ChineseChessPieceType.CHARIOT, ChineseChessSide.RED)
             positions[blackRook] =
                 ChineseChessPiece(ChineseChessPieceType.CHARIOT, ChineseChessSide.BLACK)
+            if (captureAtDestination) {
+                positions[redRookDestination] = ChineseChessPiece(
+                    ChineseChessPieceType.SOLDIER,
+                    ChineseChessSide.BLACK,
+                )
+            }
             player = PlayerId(ChineseChessSide.RED.code)
             canUndo = false
         }

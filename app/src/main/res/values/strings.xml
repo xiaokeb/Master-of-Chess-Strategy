@@ -152,7 +152,7 @@
     <string name="auto_continue_limit_decrease">减少 1 局</string>
     <string name="auto_continue_limit_increase">增加 1 局</string>
     <string name="sound_title">音效</string>
-    <string name="sound_summary">控制后续落子、操作与胜负音效。</string>
+    <string name="sound_summary">控制落子、吃子与胜负和音效。</string>
     <string name="game_duration_title">对局时长</string>
     <string name="unlimited_duration">不限时</string>
     <string name="duration_minutes">%1$d 分钟</string>
