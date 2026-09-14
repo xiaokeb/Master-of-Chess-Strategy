@@ -24,6 +24,7 @@ import com.masterofchessstrategy.navigation.HomeGameEntry
 
 internal const val HOME_CHINESE_CHESS_TAG = "home_chinese_chess"
 internal const val HOME_SETTINGS_TAG = "home_settings"
+internal const val HOME_RECORDS_TAG = "home_records"
 
 internal data class LocalPlayerSummary(
     val rank: String,
@@ -45,6 +46,7 @@ internal fun HomeScreen(
     quickStartEntries: Set<HomeGameEntry>,
     onQuickStart: (HomeGameEntry) -> Unit,
     onSettings: () -> Unit,
+    onRecords: () -> Unit,
     modifier: Modifier = Modifier,
     playerSummary: LocalPlayerSummary = InitialPlayerSummary,
 ) {
@@ -63,6 +65,7 @@ internal fun HomeScreen(
                     PlayerSummaryCard(
                         summary = playerSummary,
                         onSettings = onSettings,
+                        onRecords = onRecords,
                         modifier = Modifier.weight(0.4f),
                     )
                     GameCatalog(
@@ -80,6 +83,7 @@ internal fun HomeScreen(
                     PlayerSummaryCard(
                         summary = playerSummary,
                         onSettings = onSettings,
+                        onRecords = onRecords,
                         modifier = Modifier.fillMaxWidth(),
                     )
                     GameCatalog(
@@ -98,6 +102,7 @@ internal fun HomeScreen(
 private fun PlayerSummaryCard(
     summary: LocalPlayerSummary,
     onSettings: () -> Unit,
+    onRecords: () -> Unit,
     modifier: Modifier,
 ) {
     Card(modifier = modifier) {
@@ -118,6 +123,12 @@ private fun PlayerSummaryCard(
             Text(stringResource(R.string.profile_wins, summary.wins))
             Text(stringResource(R.string.profile_stars, summary.stars))
             Text(stringResource(R.string.profile_score, summary.score))
+            OutlinedButton(
+                onClick = onRecords,
+                modifier = Modifier.testTag(HOME_RECORDS_TAG),
+            ) {
+                Text(stringResource(R.string.records_open))
+            }
             OutlinedButton(
                 onClick = onSettings,
                 modifier = Modifier.testTag(HOME_SETTINGS_TAG),

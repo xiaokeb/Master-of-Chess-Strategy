@@ -12,6 +12,7 @@ import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.PlayerId
 import com.masterofchessstrategy.engine.RestoreResult
 import com.masterofchessstrategy.data.StoredGameMode
+import com.masterofchessstrategy.data.GameRecord
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -124,9 +125,11 @@ class ChineseChessGameViewModelTest {
     @Test
     fun timedGameChargesOnlyActiveSideAndTimeoutLoses() = runTest {
         var now = 1_000L
+        val records = mutableListOf<GameRecord>()
         val viewModel = ChineseChessGameViewModel(
             nowEpochMillis = { now },
             mode = StoredGameMode.LOCAL_TWO_PLAYER,
+            onGameRecorded = records::add,
             initialTimeControlMinutes = 5,
             clockTickIntervalMillis = null,
             engineFactory = { FakeChineseChessEngine() },
@@ -149,6 +152,12 @@ class ChineseChessGameViewModelTest {
         assertEquals(0L, viewModel.uiState.blackRemainingMillis)
         assertEquals(GameResult.FIRST_PLAYER_WIN, viewModel.uiState.result)
         assertEquals(ChineseChessFeedback.TIME_EXPIRED, viewModel.uiState.feedback)
+        assertEquals(1, records.size)
+        assertEquals(GameResult.FIRST_PLAYER_WIN, records.single().result)
+        assertEquals(1, records.single().moveCount)
+
+        viewModel.synchronizeClock()
+        assertEquals(1, records.size)
     }
 
     @Test
@@ -241,7 +250,7 @@ class ChineseChessGameViewModelTest {
 
         override fun gameResult(): GameResult = GameResult.ONGOING
 
-        override fun serialize(): ByteArray = byteArrayOf()
+        override fun serialize(): ByteArray = byteArrayOf(1)
 
         override fun restore(data: ByteArray): RestoreResult = RestoreResult.Restored
 

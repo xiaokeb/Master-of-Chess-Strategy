@@ -48,6 +48,7 @@ import com.masterofchessstrategy.R
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.RoomAppSettingsRepository
 import com.masterofchessstrategy.data.RoomGameSessionRepository
+import com.masterofchessstrategy.data.RoomGameRecordRepository
 import com.masterofchessstrategy.data.RoomLastSelectionRepository
 import com.masterofchessstrategy.data.RoomMatchStatisticsRepository
 import com.masterofchessstrategy.data.RoomTutorialProgressRepository
@@ -71,6 +72,8 @@ import com.masterofchessstrategy.navigation.HomeGameEntry
 import com.masterofchessstrategy.navigation.QuickStartDestination
 import com.masterofchessstrategy.navigation.chineseChessDifficulties
 import com.masterofchessstrategy.progress.PlayerStatisticsViewModel
+import com.masterofchessstrategy.records.ChineseChessReplayViewModel
+import com.masterofchessstrategy.records.GameRecordsViewModel
 import com.masterofchessstrategy.settings.AppSettingsViewModel
 import com.masterofchessstrategy.tutorial.ChineseChessTutorialViewModel
 import com.masterofchessstrategy.ui.theme.MocsTheme
@@ -109,6 +112,9 @@ fun MasterOfChessStrategyApp() {
         val statisticsRepository = remember {
             RoomMatchStatisticsRepository(database.matchOutcomeDao())
         }
+        val gameRecordRepository = remember {
+            RoomGameRecordRepository(database.gameRecordDao())
+        }
         val navigationFactory = remember(selectionRepository) {
             AppNavigationViewModel.factory(selectionRepository)
         }
@@ -130,6 +136,12 @@ fun MasterOfChessStrategyApp() {
         }
         val statisticsViewModel: PlayerStatisticsViewModel = viewModel(
             factory = statisticsFactory,
+        )
+        val gameRecordsFactory = remember(gameRecordRepository) {
+            GameRecordsViewModel.factory(gameRecordRepository)
+        }
+        val gameRecordsViewModel: GameRecordsViewModel = viewModel(
+            factory = gameRecordsFactory,
         )
         val quickStartEntries = if (
             navigationViewModel.chineseChessQuickStartDestination() == null
@@ -214,6 +226,11 @@ fun MasterOfChessStrategyApp() {
                     },
                     onSettings = {
                         navController.navigate(AppDestination.SETTINGS) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onRecords = {
+                        navController.navigate(AppDestination.GAME_RECORDS) {
                             launchSingleTop = true
                         }
                     },
@@ -315,10 +332,15 @@ fun MasterOfChessStrategyApp() {
             composable(AppDestination.CHINESE_CHESS_GAME) {
                 val timeControlMinutes =
                     settingsViewModel.uiState.settings.gameDurationMinutes
-                val factory = remember(gameSessionRepository, timeControlMinutes) {
+                val factory = remember(
+                    gameSessionRepository,
+                    gameRecordsViewModel,
+                    timeControlMinutes,
+                ) {
                     ChineseChessGameViewModel.factory(
                         repository = gameSessionRepository,
                         timeControlMinutes = timeControlMinutes,
+                        onGameRecorded = gameRecordsViewModel::record,
                     )
                 }
                 val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
@@ -362,6 +384,7 @@ fun MasterOfChessStrategyApp() {
                 val factory = remember(
                     gameSessionRepository,
                     statisticsViewModel,
+                    gameRecordsViewModel,
                     difficulty,
                     settingsViewModel.uiState.settings.gameDurationMinutes,
                     pikafishNetworkProvider,
@@ -371,6 +394,7 @@ fun MasterOfChessStrategyApp() {
                         mode = StoredGameMode.HUMAN_VS_AI,
                         difficulty = difficulty,
                         onMatchFinished = statisticsViewModel::record,
+                        onGameRecorded = gameRecordsViewModel::record,
                         timeControlMinutes =
                             settingsViewModel.uiState.settings.gameDurationMinutes,
                         engineFactory = {
@@ -419,6 +443,7 @@ fun MasterOfChessStrategyApp() {
                 val settings = settingsViewModel.uiState.settings
                 val factory = remember(
                     gameSessionRepository,
+                    gameRecordsViewModel,
                     difficulty,
                     settings.gameDurationMinutes,
                     settings.autoContinueEnabled,
@@ -429,6 +454,7 @@ fun MasterOfChessStrategyApp() {
                         repository = gameSessionRepository,
                         mode = StoredGameMode.AI_AUTO_PLAY,
                         difficulty = difficulty,
+                        onGameRecorded = gameRecordsViewModel::record,
                         timeControlMinutes = settings.gameDurationMinutes,
                         autoContinueEnabled = settings.autoContinueEnabled,
                         autoContinueGameLimit = settings.autoContinueGameLimit,
@@ -462,6 +488,47 @@ fun MasterOfChessStrategyApp() {
                             launchSingleTop = true
                         }
                     },
+                )
+            }
+            composable(AppDestination.GAME_RECORDS) {
+                GameRecordsScreen(
+                    state = gameRecordsViewModel.uiState,
+                    onBack = navController::popBackStack,
+                    onCategorySelected = gameRecordsViewModel::selectCategory,
+                    onToggleFavorite = gameRecordsViewModel::toggleFavorite,
+                    onOpenRecord = { recordId ->
+                        navController.navigate(AppDestination.chineseChessRecord(recordId))
+                    },
+                )
+            }
+            composable(
+                route = AppDestination.CHINESE_CHESS_RECORD,
+                arguments = listOf(
+                    navArgument(AppDestination.GAME_RECORD_ID_ARGUMENT) {
+                        type = NavType.StringType
+                    },
+                ),
+            ) { backStackEntry ->
+                val recordId = checkNotNull(
+                    backStackEntry.arguments?.getString(AppDestination.GAME_RECORD_ID_ARGUMENT),
+                )
+                val factory = remember(recordId, gameRecordRepository) {
+                    ChineseChessReplayViewModel.factory(
+                        recordId = recordId,
+                        repository = gameRecordRepository,
+                        engineFactory = { NativeChineseChessEngine() },
+                    )
+                }
+                val replayViewModel: ChineseChessReplayViewModel = viewModel(factory = factory)
+                ChineseChessReplayScreen(
+                    state = replayViewModel.uiState,
+                    onBack = navController::popBackStack,
+                    onPrevious = replayViewModel::previous,
+                    onNext = replayViewModel::next,
+                    onJumpToStart = replayViewModel::jumpToStart,
+                    onJumpToEnd = replayViewModel::jumpToEnd,
+                    onTogglePlayback = replayViewModel::togglePlayback,
+                    onSpeedChange = replayViewModel::setSpeed,
                 )
             }
             composable(AppDestination.SETTINGS) {

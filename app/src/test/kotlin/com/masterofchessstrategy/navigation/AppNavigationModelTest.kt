@@ -156,4 +156,9 @@ class AppNavigationModelTest {
         assertTrue(atThreshold.isUnlocked)
         assertTrue(atThreshold.isPlayable)
     }
+
+    @Test
+    fun recordRouteKeepsStableLocalIdentifier() {
+        assertEquals("records/match-123", AppDestination.chineseChessRecord("match-123"))
+    }
 }

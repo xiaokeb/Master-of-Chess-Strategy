@@ -18,12 +18,20 @@ internal object AppDestination {
         "chinese-chess/auto-play/{$AI_DIFFICULTY_ARGUMENT}"
     const val SETTINGS = "settings"
     const val OPEN_SOURCE_LICENSES = "settings/open-source-licenses"
+    const val GAME_RECORDS = "records"
+    const val GAME_RECORD_ID_ARGUMENT = "recordId"
+    const val CHINESE_CHESS_RECORD = "records/{$GAME_RECORD_ID_ARGUMENT}"
 
     fun chineseChessAiGame(difficulty: Difficulty): String =
         "chinese-chess/ai-game/" + difficulty.code
 
     fun chineseChessAutoPlayGame(difficulty: Difficulty): String =
         "chinese-chess/auto-play/" + difficulty.code
+
+    fun chineseChessRecord(recordId: String): String {
+        require(recordId.isNotBlank() && '/' !in recordId)
+        return "records/$recordId"
+    }
 }
 
 /** Five first-level cards required by the product layout. */

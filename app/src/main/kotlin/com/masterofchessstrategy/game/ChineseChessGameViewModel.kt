@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.data.GameSessionRepository
 import com.masterofchessstrategy.data.GameSessionSnapshot
+import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.LoadGameSessionResult
 import com.masterofchessstrategy.data.MatchOutcome
 import com.masterofchessstrategy.data.StoredGameMode
@@ -55,6 +56,7 @@ class ChineseChessGameViewModel internal constructor(
     private val aiDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val matchIdFactory: () -> String = { UUID.randomUUID().toString() },
     private val onMatchFinished: (MatchOutcome) -> Unit = {},
+    private val onGameRecorded: (GameRecord) -> Unit = {},
     private val initialTimeControlMinutes: Int? = null,
     private val autoContinueEnabled: Boolean = false,
     private val autoContinueGameLimit: Int = 10,
@@ -69,6 +71,7 @@ class ChineseChessGameViewModel internal constructor(
     private var matchId = createMatchId()
     private var settlementRequested = false
     private var terminalHandled = false
+    private var recordRequested = false
     private var timeControlMinutes = initialTimeControlMinutes
     private var redRemainingMillis = initialTimeControlMinutes?.toClockMillis()
     private var blackRemainingMillis = initialTimeControlMinutes?.toClockMillis()
@@ -636,6 +639,7 @@ class ChineseChessGameViewModel internal constructor(
                 feedback = feedback,
             )
             requestSettlement(result)
+            requestCompletedRecord(result, activeEngine)
         }
     }
 
@@ -1056,6 +1060,7 @@ class ChineseChessGameViewModel internal constructor(
         matchId = createMatchId()
         settlementRequested = false
         terminalHandled = false
+        recordRequested = false
         acceptedMoveCount = 0
         undoUseCount = 0
         hintUseCount = 0
@@ -1135,6 +1140,41 @@ class ChineseChessGameViewModel internal constructor(
         )
     }
 
+    private fun requestCompletedRecord(
+        result: GameResult,
+        activeEngine: ChineseChessRuleEngine,
+    ) {
+        if (result == GameResult.ONGOING || recordRequested) return
+        val state = try {
+            activeEngine.serialize()
+        } catch (_: RuntimeException) {
+            return
+        } catch (_: LinkageError) {
+            return
+        }
+        val record = try {
+            GameRecord(
+                recordId = matchId,
+                gameType = GameType.CHINESE_CHESS,
+                mode = mode,
+                difficulty = difficulty,
+                result = result,
+                engineState = state,
+                moveCount = acceptedMoveCount,
+                isEndgame = mode == StoredGameMode.ENDGAME,
+                completedAtEpochMillis = nowEpochMillis(),
+            )
+        } catch (_: IllegalArgumentException) {
+            return
+        }
+        try {
+            onGameRecorded(record)
+            recordRequested = true
+        } catch (_: RuntimeException) {
+            // A record storage failure must not invalidate the completed game.
+        }
+    }
+
     private fun createMatchId(): String =
         matchIdFactory().also {
             require(isValidMatchId(it)) {
@@ -1208,6 +1248,7 @@ class ChineseChessGameViewModel internal constructor(
             mode: StoredGameMode = StoredGameMode.LOCAL_TWO_PLAYER,
             difficulty: Difficulty? = null,
             onMatchFinished: (MatchOutcome) -> Unit = {},
+            onGameRecorded: (GameRecord) -> Unit = {},
             timeControlMinutes: Int? = null,
             autoContinueEnabled: Boolean = false,
             autoContinueGameLimit: Int = 10,
@@ -1222,6 +1263,7 @@ class ChineseChessGameViewModel internal constructor(
                         mode = mode,
                         difficulty = difficulty,
                         onMatchFinished = onMatchFinished,
+                        onGameRecorded = onGameRecorded,
                         initialTimeControlMinutes = timeControlMinutes,
                         autoContinueEnabled = autoContinueEnabled,
                         autoContinueGameLimit = autoContinueGameLimit,

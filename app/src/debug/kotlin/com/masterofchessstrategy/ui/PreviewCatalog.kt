@@ -3,13 +3,20 @@ package com.masterofchessstrategy.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.masterofchessstrategy.data.AppSettings
+import com.masterofchessstrategy.data.GameRecord
+import com.masterofchessstrategy.data.GameRecordCategory
+import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.engine.ChineseChessBoard
 import com.masterofchessstrategy.engine.ChineseChessPiece
 import com.masterofchessstrategy.engine.ChineseChessPieceType
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.Difficulty
+import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 import com.masterofchessstrategy.navigation.HomeGameEntry
+import com.masterofchessstrategy.records.ChineseChessReplayFrame
+import com.masterofchessstrategy.records.ChineseChessReplayUiState
+import com.masterofchessstrategy.records.GameRecordsUiState
 import com.masterofchessstrategy.settings.AppSettingsUiState
 import com.masterofchessstrategy.ui.theme.MocsTheme
 
@@ -34,6 +41,7 @@ private fun HomeScreenPreview() {
             quickStartEntries = setOf(HomeGameEntry.CHINESE_CHESS),
             onQuickStart = {},
             onSettings = {},
+            onRecords = {},
             playerSummary = LocalPlayerSummary(
                 rank = "棋士",
                 wins = 27,
@@ -156,6 +164,74 @@ private fun OpenSourceLicensesScreenPreview() {
         )
     }
 }
+
+@Preview(
+    name = "06 棋谱管理",
+    group = "已完成界面",
+    widthDp = 960,
+    heightDp = 540,
+    showBackground = true,
+)
+@Composable
+private fun GameRecordsScreenPreview() {
+    MocsTheme {
+        GameRecordsScreen(
+            state = GameRecordsUiState(
+                category = GameRecordCategory.ALL,
+                records = listOf(previewRecord()),
+                isLoading = false,
+            ),
+            onBack = {},
+            onCategorySelected = {},
+            onToggleFavorite = {},
+            onOpenRecord = {},
+        )
+    }
+}
+
+@Preview(
+    name = "07 棋谱回放",
+    group = "已完成界面",
+    widthDp = 960,
+    heightDp = 540,
+    showBackground = true,
+)
+@Composable
+private fun ChineseChessReplayScreenPreview() {
+    MocsTheme {
+        ChineseChessReplayScreen(
+            state = ChineseChessReplayUiState(
+                record = previewRecord(),
+                frames = listOf(
+                    ChineseChessReplayFrame(
+                        board = standardChineseChessBoard(),
+                        sideToMove = ChineseChessSide.RED,
+                    ),
+                ),
+                isLoading = false,
+            ),
+            onBack = {},
+            onPrevious = {},
+            onNext = {},
+            onJumpToStart = {},
+            onJumpToEnd = {},
+            onTogglePlayback = {},
+            onSpeedChange = {},
+        )
+    }
+}
+
+private fun previewRecord() = GameRecord(
+    recordId = "preview-record",
+    gameType = com.masterofchessstrategy.engine.GameType.CHINESE_CHESS,
+    mode = StoredGameMode.HUMAN_VS_AI,
+    difficulty = Difficulty.HARD,
+    result = GameResult.FIRST_PLAYER_WIN,
+    engineState = byteArrayOf(1),
+    moveCount = 42,
+    isFavorite = true,
+    completedAtEpochMillis = 1_789_315_200_000L,
+)
 
 private fun standardChineseChessBoard(): List<ChineseChessPiece?> {
     val board = MutableList<ChineseChessPiece?>(

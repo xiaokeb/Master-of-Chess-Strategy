@@ -14,8 +14,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         AppSettingsEntity::class,
         TutorialProgressEntity::class,
         MatchOutcomeEntity::class,
+        GameRecordEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -28,6 +29,8 @@ internal abstract class MocsDatabase : RoomDatabase() {
     abstract fun tutorialProgressDao(): TutorialProgressDao
 
     abstract fun matchOutcomeDao(): MatchOutcomeDao
+
+    abstract fun gameRecordDao(): GameRecordDao
 
     companion object {
         internal val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -168,6 +171,29 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS game_records (
+                        recordId TEXT NOT NULL,
+                        gameTypeCode INTEGER NOT NULL,
+                        modeCode INTEGER NOT NULL,
+                        difficultyCode INTEGER,
+                        resultCode INTEGER NOT NULL,
+                        engineFormatVersion INTEGER NOT NULL,
+                        engineState BLOB NOT NULL,
+                        moveCount INTEGER NOT NULL,
+                        isFavorite INTEGER NOT NULL DEFAULT 0,
+                        isEndgame INTEGER NOT NULL DEFAULT 0,
+                        completedAtEpochMillis INTEGER NOT NULL,
+                        PRIMARY KEY(recordId)
+                    )
+                    """.trimIndent(),
+                )
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -185,6 +211,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_4_5,
                         MIGRATION_5_6,
                         MIGRATION_6_7,
+                        MIGRATION_7_8,
                     )
                     .build()
                     .also { instance = it }

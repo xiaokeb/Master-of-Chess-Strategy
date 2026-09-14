@@ -52,6 +52,7 @@ class AppNavigationScreenTest {
                 quickStartEntries = setOf(HomeGameEntry.CHINESE_CHESS),
                 onQuickStart = { quickStarts++ },
                 onSettings = {},
+                onRecords = {},
             )
         }
 
@@ -72,6 +73,7 @@ class AppNavigationScreenTest {
                 quickStartEntries = emptySet(),
                 onQuickStart = {},
                 onSettings = {},
+                onRecords = {},
             )
         }
 
@@ -87,6 +89,16 @@ class AppNavigationScreenTest {
 
         composeRule.onNodeWithTag(HOME_SETTINGS_TAG).performClick()
         composeRule.onNodeWithTag(SETTINGS_SCREEN_TAG).assertExists()
+    }
+
+    @Test
+    fun homeCanOpenGameRecords() {
+        composeRule.setContent {
+            MasterOfChessStrategyApp()
+        }
+
+        composeRule.onNodeWithTag(HOME_RECORDS_TAG).performClick()
+        composeRule.onNodeWithTag(GAME_RECORDS_SCREEN_TAG).assertExists()
     }
 
     @Test
