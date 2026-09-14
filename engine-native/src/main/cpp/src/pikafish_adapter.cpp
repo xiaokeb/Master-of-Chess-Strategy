@@ -6,8 +6,10 @@
 #include "engine.h"
 #include "position.h"
 #include "search.h"
+#include "uci.h"
 
 #include <algorithm>
+#include <deque>
 #include <filesystem>
 #include <memory>
 #include <mutex>
@@ -20,6 +22,14 @@ namespace mocs::engine {
 namespace {
 
 constexpr std::int32_t board_last_rank = 9;
+std::once_flag pikafish_initialization_flag;
+
+void initialize_pikafish() {
+    std::call_once(pikafish_initialization_flag, [] {
+        Stockfish::Attacks::init();
+        Stockfish::Position::init();
+    });
+}
 
 class PikafishRuntime final {
 public:
@@ -68,10 +78,7 @@ private:
             return;
         }
 
-        std::call_once(initialization_flag_, [] {
-            Stockfish::Attacks::init();
-            Stockfish::Position::init();
-        });
+        initialize_pikafish();
 
         auto engine = std::make_unique<Stockfish::Engine>();
         engine->set_on_update_no_moves(
@@ -104,7 +111,6 @@ private:
 
     std::mutex mutex_;
     std::mutex callback_mutex_;
-    std::once_flag initialization_flag_;
     std::unique_ptr<Stockfish::Engine> engine_;
     std::string loaded_network_path_;
     std::string best_move_;
@@ -162,6 +168,50 @@ std::optional<EngineAction> choose_pikafish_move(
         return std::nullopt;
     }
     return runtime().choose(fen, legal_actions, network_path);
+}
+
+std::optional<GameResult> adjudicate_pikafish_repetition(
+    const std::string& initial_fen,
+    const std::vector<std::string>& moves
+) noexcept {
+    try {
+        initialize_pikafish();
+        auto states = Stockfish::StateListPtr(
+            new std::deque<Stockfish::StateInfo>(1)
+        );
+        Stockfish::Position position;
+        if (position.set(initial_fen, &states->back())) {
+            return std::nullopt;
+        }
+        for (const auto& encoded_move : moves) {
+            const auto move = Stockfish::UCIEngine::to_move(
+                position,
+                encoded_move
+            );
+            if (move == Stockfish::Move::none()) {
+                return std::nullopt;
+            }
+            states->emplace_back();
+            position.do_move(move, states->back(), nullptr);
+        }
+
+        Stockfish::Value value = Stockfish::VALUE_DRAW;
+        if (!position.rule_judge(value)) {
+            return std::nullopt;
+        }
+        if (value == Stockfish::VALUE_DRAW) {
+            return GameResult::draw;
+        }
+        const auto side_to_move_is_red =
+            position.side_to_move() == Stockfish::WHITE;
+        const auto side_to_move_wins = value > Stockfish::VALUE_DRAW;
+        const auto red_wins = side_to_move_is_red == side_to_move_wins;
+        return red_wins
+            ? GameResult::first_player_win
+            : GameResult::second_player_win;
+    } catch (...) {
+        return std::nullopt;
+    }
 }
 
 }  // namespace mocs::engine

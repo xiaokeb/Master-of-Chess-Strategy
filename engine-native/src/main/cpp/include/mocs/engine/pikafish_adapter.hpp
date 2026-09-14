@@ -35,4 +35,17 @@ inline constexpr std::int64_t pikafish_move_time_millis = 1'200;
     const std::string& network_path
 );
 
+/**
+ * Replays one completed repetition window through Pikafish's rule judge.
+ *
+ * The initial FEN and UCI moves must describe a legal history. A terminal
+ * result is returned only when Pikafish can validate and adjudicate it;
+ * malformed or non-terminal input returns std::nullopt so the caller can use
+ * its conservative local fallback.
+ */
+[[nodiscard]] std::optional<GameResult> adjudicate_pikafish_repetition(
+    const std::string& initial_fen,
+    const std::vector<std::string>& moves
+) noexcept;
+
 }  // namespace mocs::engine

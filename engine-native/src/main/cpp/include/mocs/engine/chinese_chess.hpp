@@ -88,6 +88,18 @@ private:
         chase = 2,
     };
 
+    enum class ChaseKind : std::uint8_t {
+        none = 0,
+        direct = 1,
+        joint = 2,
+    };
+
+    struct TacticalAnalysis {
+        bool check;
+        bool kill;
+        std::array<ChaseKind, board_size> chase_targets;
+    };
+
     struct MoveRecord {
         std::int32_t from_x;
         std::int32_t from_y;
@@ -158,6 +170,43 @@ private:
         std::int32_t to_x,
         std::int32_t to_y
     ) noexcept;
+    [[nodiscard]] static bool is_legal_move_on_board(
+        const Board& board,
+        Side side,
+        std::int32_t from_x,
+        std::int32_t from_y,
+        std::int32_t to_x,
+        std::int32_t to_y
+    ) noexcept;
+    [[nodiscard]] static bool has_legal_action_on_board(
+        const Board& board,
+        Side side
+    ) noexcept;
+    [[nodiscard]] static bool has_general_on_board(
+        const Board& board,
+        Side side
+    ) noexcept;
+    [[nodiscard]] static bool has_mating_move(
+        const Board& board,
+        Side attacker
+    ) noexcept;
+    [[nodiscard]] static std::int32_t exchange_gain(
+        const Board& board,
+        Side perspective,
+        Side side_to_capture,
+        std::int32_t target_x,
+        std::int32_t target_y
+    ) noexcept;
+    [[nodiscard]] static std::array<ChaseKind, board_size>
+    chase_targets(
+        const Board& board,
+        Side attacker
+    ) noexcept;
+    [[nodiscard]] static TacticalAnalysis analyze_tactical_move(
+        const Board& before,
+        const Board& after,
+        Side mover
+    ) noexcept;
     [[nodiscard]] static std::array<bool, board_size> unrooted_targets(
         const Board& board,
         Side attacker
@@ -192,6 +241,15 @@ private:
         std::int32_t beta,
         SearchContext& context
     ) const;
+    [[nodiscard]] static std::string encode_fen(
+        const Board& board,
+        Side side,
+        std::uint16_t no_capture_plies,
+        std::size_t completed_plies
+    );
+    [[nodiscard]] std::optional<GameResult> adjudicate_2020_cycle(
+        std::size_t cycle_start
+    ) const noexcept;
     void adjudicate_history() noexcept;
 
     Board board_{};

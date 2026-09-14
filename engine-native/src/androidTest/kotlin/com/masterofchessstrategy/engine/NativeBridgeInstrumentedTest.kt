@@ -5,6 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.zip.CRC32
 
 @RunWith(AndroidJUnit4::class)
 class NativeBridgeInstrumentedTest {
@@ -62,5 +63,91 @@ class NativeBridgeInstrumentedTest {
             )
             assertTrue(initial.contentEquals(engine.serialize()))
         }
+    }
+
+    @Test
+    fun nativeChineseChessSessionAdjudicatesRepeatedJointChase() {
+        NativeChineseChessEngine().use { engine ->
+            val restored = engine.restore(
+                customPosition(
+                    side = ChineseChessSide.BLACK,
+                    pieces = listOf(
+                        PositionedPiece(4, 9, ChineseChessPieceType.GENERAL, ChineseChessSide.RED),
+                        PositionedPiece(4, 0, ChineseChessPieceType.GENERAL, ChineseChessSide.BLACK),
+                        PositionedPiece(3, 5, ChineseChessPieceType.CANNON, ChineseChessSide.RED),
+                        PositionedPiece(4, 7, ChineseChessPieceType.HORSE, ChineseChessSide.RED),
+                        PositionedPiece(4, 3, ChineseChessPieceType.HORSE, ChineseChessSide.BLACK),
+                        PositionedPiece(5, 1, ChineseChessPieceType.CANNON, ChineseChessSide.BLACK),
+                        PositionedPiece(3, 3, ChineseChessPieceType.SOLDIER, ChineseChessSide.BLACK),
+                        PositionedPiece(5, 3, ChineseChessPieceType.SOLDIER, ChineseChessSide.BLACK),
+                    ),
+                ),
+            )
+            assertEquals(RestoreResult.Restored, restored)
+
+            repeat(2) {
+                assertAccepted(engine, 5, 1, 3, 1)
+                assertAccepted(engine, 3, 5, 5, 5)
+                assertAccepted(engine, 3, 1, 5, 1)
+                assertAccepted(engine, 5, 5, 3, 5)
+            }
+
+            assertEquals(GameResult.FIRST_PLAYER_WIN, engine.gameResult())
+        }
+    }
+
+    private fun assertAccepted(
+        engine: NativeChineseChessEngine,
+        fromX: Int,
+        fromY: Int,
+        toX: Int,
+        toY: Int,
+    ) {
+        assertEquals(
+            ActionResult.Accepted,
+            engine.apply(
+                BoardMove(
+                    BoardPosition(fromX, fromY),
+                    BoardPosition(toX, toY),
+                ),
+            ),
+        )
+    }
+
+    private fun customPosition(
+        side: ChineseChessSide,
+        pieces: List<PositionedPiece>,
+    ): ByteArray {
+        val data = ByteArray(POSITION_HEADER_SIZE + POSITION_BOARD_SIZE + CHECKSUM_SIZE)
+        "MOCX".encodeToByteArray().copyInto(data)
+        data[4] = 2
+        data[5] = GameType.CHINESE_CHESS.code.toByte()
+        data[6] = side.code.toByte()
+        pieces.forEach { piece ->
+            val sideBit = if (piece.side == ChineseChessSide.BLACK) 0x80 else 0
+            data[POSITION_HEADER_SIZE + piece.y * ChineseChessBoard.WIDTH + piece.x] =
+                (sideBit or piece.type.code).toByte()
+        }
+        val crc = CRC32().apply {
+            update(data, 0, data.size - CHECKSUM_SIZE)
+        }.value
+        repeat(CHECKSUM_SIZE) { byteIndex ->
+            data[data.size - CHECKSUM_SIZE + byteIndex] =
+                ((crc shr (byteIndex * Byte.SIZE_BITS)) and 0xff).toByte()
+        }
+        return data
+    }
+
+    private data class PositionedPiece(
+        val x: Int,
+        val y: Int,
+        val type: ChineseChessPieceType,
+        val side: ChineseChessSide,
+    )
+
+    private companion object {
+        const val POSITION_HEADER_SIZE = 12
+        const val POSITION_BOARD_SIZE = ChineseChessBoard.WIDTH * ChineseChessBoard.HEIGHT
+        const val CHECKSUM_SIZE = 4
     }
 }

@@ -17,6 +17,7 @@ using mocs::engine::Piece;
 using mocs::engine::PieceType;
 using mocs::engine::Side;
 using mocs::engine::make_board_move;
+using mocs::engine::adjudicate_pikafish_repetition;
 using mocs::engine::decode_pikafish_move;
 
 void initial_position_is_stable() {
@@ -51,6 +52,33 @@ void pikafish_coordinates_are_converted_and_validated() {
     assert(decoded->arguments == legal.front().arguments);
     assert(!decode_pikafish_move("a3b3", legal));
     assert(!decode_pikafish_move("(none)", legal));
+}
+
+void pikafish_history_judge_validates_repetition_windows() {
+    const auto idle_result = adjudicate_pikafish_repetition(
+        "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/"
+        "P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1",
+        {
+            "b0c2", "b9c7", "c2b0", "c7b9",
+            "b0c2", "b9c7", "c2b0", "c7b9",
+        }
+    );
+    assert(idle_result == GameResult::draw);
+
+    const auto checking_result = adjudicate_pikafish_repetition(
+        "4k4/3R5/9/9/9/4P4/9/9/9/4K4 w - - 0 1",
+        {
+            "d8e8", "e9d9", "e8d8", "d9e9",
+            "d8e8", "e9d9", "e8d8", "d9e9",
+        }
+    );
+    assert(checking_result == GameResult::second_player_win);
+    assert(
+        !adjudicate_pikafish_repetition(
+            "not-a-position",
+            {"a0a1"}
+        )
+    );
 }
 
 void soldier_moves_forward_but_not_sideways_before_the_river() {
@@ -270,6 +298,36 @@ void repeated_unrooted_chase_loses_for_the_chasing_side() {
     assert(engine.game_result() == GameResult::second_player_win);
 }
 
+void repeated_joint_chase_loses_against_idle_defense() {
+    ChineseChessEngine engine;
+    assert(
+        engine.restore(
+            custom_position(
+                Side::black,
+                {
+                    {4, 9, {PieceType::general, Side::red}},
+                    {4, 0, {PieceType::general, Side::black}},
+                    {3, 5, {PieceType::cannon, Side::red}},
+                    {4, 7, {PieceType::horse, Side::red}},
+                    {4, 3, {PieceType::horse, Side::black}},
+                    {5, 1, {PieceType::cannon, Side::black}},
+                    {3, 3, {PieceType::soldier, Side::black}},
+                    {5, 3, {PieceType::soldier, Side::black}},
+                }
+            )
+        ).restored
+    );
+
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        assert(engine.apply(make_board_move(5, 1, 3, 1)).accepted);
+        assert(engine.apply(make_board_move(3, 5, 5, 5)).accepted);
+        assert(engine.apply(make_board_move(3, 1, 5, 1)).accepted);
+        assert(engine.apply(make_board_move(5, 5, 3, 5)).accepted);
+    }
+
+    assert(engine.game_result() == GameResult::first_player_win);
+}
+
 void repeated_idle_moves_are_drawn_instead_of_treated_as_long_block() {
     ChineseChessEngine engine;
     assert(
@@ -394,6 +452,7 @@ void easy_ai_returns_legal_move_without_mutating_position() {
 int main() {
     initial_position_is_stable();
     pikafish_coordinates_are_converted_and_validated();
+    pikafish_history_judge_validates_repetition_windows();
     soldier_moves_forward_but_not_sideways_before_the_river();
     horse_leg_and_cannon_screen_are_enforced();
     moving_the_only_screen_between_generals_is_illegal();
@@ -402,6 +461,7 @@ int main() {
     wrong_game_type_is_rejected_after_checksum_validation();
     repeated_long_check_loses_for_the_checking_side();
     repeated_unrooted_chase_loses_for_the_chasing_side();
+    repeated_joint_chase_loses_against_idle_defense();
     repeated_idle_moves_are_drawn_instead_of_treated_as_long_block();
     sixty_rounds_without_capture_reaches_the_natural_limit();
     capture_resets_the_natural_limit_counter();

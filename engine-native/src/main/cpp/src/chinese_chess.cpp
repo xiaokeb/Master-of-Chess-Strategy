@@ -1,7 +1,9 @@
 #include "mocs/engine/chinese_chess.hpp"
+#include "mocs/engine/pikafish_adapter.hpp"
 
 #include <algorithm>
 #include <array>
+#include <bitset>
 #include <cmath>
 #include <limits>
 #include <utility>
@@ -300,12 +302,26 @@ std::vector<EngineAction> ChineseChessEngine::legal_actions() const {
 }
 
 std::string ChineseChessEngine::fen() const {
+    return encode_fen(
+        board_,
+        current_side_,
+        no_capture_plies_,
+        history_.size()
+    );
+}
+
+std::string ChineseChessEngine::encode_fen(
+    const Board& board,
+    const Side side,
+    const std::uint16_t no_capture_plies,
+    const std::size_t completed_plies
+) {
     std::string value;
     value.reserve(96);
     for (std::int32_t y = 0; y < board_height; ++y) {
         std::int32_t empty_count = 0;
         for (std::int32_t x = 0; x < board_width; ++x) {
-            const auto piece = board_[index(x, y)];
+            const auto piece = board[index(x, y)];
             if (!piece) {
                 ++empty_count;
                 continue;
@@ -323,10 +339,10 @@ std::string ChineseChessEngine::fen() const {
             value.push_back('/');
         }
     }
-    value += current_side_ == Side::red ? " w - - " : " b - - ";
-    value += std::to_string(no_capture_plies_);
+    value += side == Side::red ? " w - - " : " b - - ";
+    value += std::to_string(no_capture_plies);
     value.push_back(' ');
-    value += std::to_string(history_.size() / 2 + 1);
+    value += std::to_string(completed_plies / 2 + 1);
     return value;
 }
 
@@ -835,6 +851,321 @@ bool ChineseChessEngine::is_legal_capture(
     return !is_in_check(next, side);
 }
 
+bool ChineseChessEngine::is_legal_move_on_board(
+    const Board& board,
+    const Side side,
+    const std::int32_t from_x,
+    const std::int32_t from_y,
+    const std::int32_t to_x,
+    const std::int32_t to_y
+) noexcept {
+    if (!is_inside(from_x, from_y) ||
+        !is_inside(to_x, to_y) ||
+        (from_x == to_x && from_y == to_y)) {
+        return false;
+    }
+    const auto moving = board[index(from_x, from_y)];
+    const auto target = board[index(to_x, to_y)];
+    if (!moving ||
+        moving->side != side ||
+        (target && target->side == side) ||
+        !piece_attacks_square(
+            board,
+            *moving,
+            from_x,
+            from_y,
+            to_x,
+            to_y
+        )) {
+        return false;
+    }
+    auto next = board;
+    next[index(to_x, to_y)] = moving;
+    next[index(from_x, from_y)].reset();
+    return !is_in_check(next, side);
+}
+
+bool ChineseChessEngine::has_legal_action_on_board(
+    const Board& board,
+    const Side side
+) noexcept {
+    for (std::int32_t from_y = 0; from_y < board_height; ++from_y) {
+        for (std::int32_t from_x = 0; from_x < board_width; ++from_x) {
+            const auto piece = board[index(from_x, from_y)];
+            if (!piece || piece->side != side) {
+                continue;
+            }
+            for (std::int32_t to_y = 0; to_y < board_height; ++to_y) {
+                for (std::int32_t to_x = 0; to_x < board_width; ++to_x) {
+                    if (is_legal_move_on_board(
+                            board,
+                            side,
+                            from_x,
+                            from_y,
+                            to_x,
+                            to_y
+                        )) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool ChineseChessEngine::has_general_on_board(
+    const Board& board,
+    const Side side
+) noexcept {
+    return std::any_of(
+        board.begin(),
+        board.end(),
+        [side](const auto& piece) {
+            return piece &&
+                piece->side == side &&
+                piece->type == PieceType::general;
+        }
+    );
+}
+
+bool ChineseChessEngine::has_mating_move(
+    const Board& board,
+    const Side attacker
+) noexcept {
+    const auto defender = opposite(attacker);
+    for (std::int32_t from_y = 0; from_y < board_height; ++from_y) {
+        for (std::int32_t from_x = 0; from_x < board_width; ++from_x) {
+            const auto piece = board[index(from_x, from_y)];
+            if (!piece || piece->side != attacker) {
+                continue;
+            }
+            for (std::int32_t to_y = 0; to_y < board_height; ++to_y) {
+                for (std::int32_t to_x = 0; to_x < board_width; ++to_x) {
+                    if (!is_legal_move_on_board(
+                            board,
+                            attacker,
+                            from_x,
+                            from_y,
+                            to_x,
+                            to_y
+                        )) {
+                        continue;
+                    }
+                    auto next = board;
+                    next[index(to_x, to_y)] = piece;
+                    next[index(from_x, from_y)].reset();
+                    if (
+                        !has_general_on_board(next, defender) ||
+                        (
+                            is_in_check(next, defender) &&
+                            !has_legal_action_on_board(next, defender)
+                        )
+                    ) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+std::int32_t ChineseChessEngine::exchange_gain(
+    const Board& board,
+    const Side perspective,
+    const Side side_to_capture,
+    const std::int32_t target_x,
+    const std::int32_t target_y
+) noexcept {
+    const auto target = board[index(target_x, target_y)];
+    if (!target || target->side == side_to_capture) {
+        return 0;
+    }
+    auto best = 0;
+    for (std::int32_t from_y = 0; from_y < board_height; ++from_y) {
+        for (std::int32_t from_x = 0; from_x < board_width; ++from_x) {
+            if (!is_legal_capture(
+                    board,
+                    side_to_capture,
+                    from_x,
+                    from_y,
+                    target_x,
+                    target_y
+                )) {
+                continue;
+            }
+            const auto moving = board[index(from_x, from_y)];
+            auto next = board;
+            next[index(target_x, target_y)] = moving;
+            next[index(from_x, from_y)].reset();
+            const auto immediate = side_to_capture == perspective
+                ? piece_value(target->type)
+                : -piece_value(target->type);
+            const auto score = immediate + exchange_gain(
+                next,
+                perspective,
+                opposite(side_to_capture),
+                target_x,
+                target_y
+            );
+            best = side_to_capture == perspective
+                ? std::max(best, score)
+                : std::min(best, score);
+        }
+    }
+    return best;
+}
+
+std::array<ChineseChessEngine::ChaseKind, ChineseChessEngine::board_size>
+ChineseChessEngine::chase_targets(
+    const Board& board,
+    const Side attacker
+) noexcept {
+    std::array<ChaseKind, board_size> targets{};
+    for (std::int32_t target_y = 0; target_y < board_height; ++target_y) {
+        for (std::int32_t target_x = 0; target_x < board_width; ++target_x) {
+            const auto target = board[index(target_x, target_y)];
+            if (!target ||
+                target->side == attacker ||
+                target->type == PieceType::general) {
+                continue;
+            }
+
+            bool has_regular_source = false;
+            bool has_joint_source = false;
+            bool has_direct_source = false;
+            std::size_t profitable_sources = 0;
+            for (std::int32_t from_y = 0; from_y < board_height; ++from_y) {
+                for (std::int32_t from_x = 0; from_x < board_width; ++from_x) {
+                    const auto moving = board[index(from_x, from_y)];
+                    if (!moving ||
+                        moving->side != attacker ||
+                        !is_legal_capture(
+                            board,
+                            attacker,
+                            from_x,
+                            from_y,
+                            target_x,
+                            target_y
+                        )) {
+                        continue;
+                    }
+
+                    if (
+                        moving->type == target->type &&
+                        is_legal_capture(
+                            board,
+                            opposite(attacker),
+                            target_x,
+                            target_y,
+                            from_x,
+                            from_y
+                        )
+                    ) {
+                        continue;
+                    }
+
+                    auto after_capture = board;
+                    after_capture[index(target_x, target_y)] = moving;
+                    after_capture[index(from_x, from_y)].reset();
+                    if (has_mating_move(
+                            after_capture,
+                            opposite(attacker)
+                        )) {
+                        continue;
+                    }
+                    const auto gain = piece_value(target->type) +
+                        exchange_gain(
+                            after_capture,
+                            attacker,
+                            opposite(attacker),
+                            target_x,
+                            target_y
+                        );
+                    if (gain <= 0) {
+                        continue;
+                    }
+                    ++profitable_sources;
+                    const auto regular_source =
+                        moving->type != PieceType::general &&
+                        moving->type != PieceType::soldier;
+                    has_regular_source = has_regular_source || regular_source;
+
+                    bool can_recapture = false;
+                    for (
+                        std::int32_t y = 0;
+                        y < board_height && !can_recapture;
+                        ++y
+                    ) {
+                        for (std::int32_t x = 0; x < board_width; ++x) {
+                            if (is_legal_capture(
+                                    after_capture,
+                                    opposite(attacker),
+                                    x,
+                                    y,
+                                    target_x,
+                                    target_y
+                                )) {
+                                can_recapture = true;
+                                break;
+                            }
+                        }
+                    }
+                    const auto direct_gain = piece_value(target->type) -
+                        (can_recapture ? piece_value(moving->type) : 0);
+                    if (regular_source && direct_gain > 0) {
+                        has_direct_source = true;
+                    } else if (regular_source || can_recapture) {
+                        has_joint_source = true;
+                    }
+                }
+            }
+
+            if (has_direct_source) {
+                targets[index(target_x, target_y)] = ChaseKind::direct;
+            } else if (
+                has_regular_source &&
+                has_joint_source &&
+                profitable_sources >= 1
+            ) {
+                targets[index(target_x, target_y)] = ChaseKind::joint;
+            }
+        }
+    }
+    return targets;
+}
+
+ChineseChessEngine::TacticalAnalysis
+ChineseChessEngine::analyze_tactical_move(
+    const Board& before,
+    const Board& after,
+    const Side mover
+) noexcept {
+    TacticalAnalysis result{};
+    result.check = is_in_check(after, opposite(mover));
+    if (result.check) {
+        return result;
+    }
+    result.kill =
+        has_mating_move(after, mover) &&
+        !has_mating_move(before, mover);
+    if (result.kill) {
+        return result;
+    }
+    const auto before_targets = chase_targets(before, mover);
+    const auto after_targets = chase_targets(after, mover);
+    for (std::size_t square = 0; square < board_size; ++square) {
+        if (
+            after_targets[square] != ChaseKind::none &&
+            before_targets[square] == ChaseKind::none
+        ) {
+            result.chase_targets[square] = after_targets[square];
+        }
+    }
+    return result;
+}
+
 std::array<bool, ChineseChessEngine::board_size>
 ChineseChessEngine::unrooted_targets(
     const Board& board,
@@ -920,63 +1251,22 @@ bool ChineseChessEngine::is_legal_move(
     const std::int32_t to_x,
     const std::int32_t to_y
 ) const noexcept {
-    if (!is_inside(from_x, from_y) ||
-        !is_inside(to_x, to_y) ||
-        (from_x == to_x && from_y == to_y)) {
-        return false;
-    }
-
-    const auto moving = board_[index(from_x, from_y)];
-    const auto target = board_[index(to_x, to_y)];
-    if (!moving ||
-        moving->side != current_side_ ||
-        (target && target->side == moving->side) ||
-        !piece_attacks_square(
-            board_,
-            *moving,
-            from_x,
-            from_y,
-            to_x,
-            to_y
-        )) {
-        return false;
-    }
-
-    auto next = board_;
-    next[index(to_x, to_y)] = moving;
-    next[index(from_x, from_y)].reset();
-    return !is_in_check(next, moving->side);
-}
-
-bool ChineseChessEngine::has_general(const Side side) const noexcept {
-    return std::any_of(
-        board_.begin(),
-        board_.end(),
-        [side](const auto& piece) {
-            return piece &&
-                piece->side == side &&
-                piece->type == PieceType::general;
-        }
+    return is_legal_move_on_board(
+        board_,
+        current_side_,
+        from_x,
+        from_y,
+        to_x,
+        to_y
     );
 }
 
+bool ChineseChessEngine::has_general(const Side side) const noexcept {
+    return has_general_on_board(board_, side);
+}
+
 bool ChineseChessEngine::has_legal_action() const noexcept {
-    for (std::int32_t from_y = 0; from_y < board_height; ++from_y) {
-        for (std::int32_t from_x = 0; from_x < board_width; ++from_x) {
-            const auto piece = board_[index(from_x, from_y)];
-            if (!piece || piece->side != current_side_) {
-                continue;
-            }
-            for (std::int32_t to_y = 0; to_y < board_height; ++to_y) {
-                for (std::int32_t to_x = 0; to_x < board_width; ++to_x) {
-                    if (is_legal_move(from_x, from_y, to_x, to_y)) {
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-    return false;
+    return has_legal_action_on_board(board_, current_side_);
 }
 
 std::int32_t ChineseChessEngine::piece_value(
@@ -1140,6 +1430,220 @@ std::int32_t ChineseChessEngine::search_score(
     return best;
 }
 
+std::optional<GameResult> ChineseChessEngine::adjudicate_2020_cycle(
+    const std::size_t cycle_start
+) const noexcept {
+    struct SideProfile {
+        bool found{false};
+        bool all_check{true};
+        bool all_attack{true};
+        bool only_chase{true};
+        bool saw_chase{false};
+        std::bitset<board_size> common_chase{};
+        std::bitset<board_size> common_direct{};
+        std::bitset<board_size> common_joint{};
+
+        [[nodiscard]] bool prohibited() const noexcept {
+            return found &&
+                all_attack &&
+                (!saw_chase || common_chase.any());
+        }
+    };
+
+    std::array<std::int16_t, board_size> piece_ids{};
+    piece_ids.fill(-1);
+    std::array<PieceType, board_size> piece_types{};
+    std::array<bool, board_size> piece_type_present{};
+    std::array<std::size_t, board_size> last_moved_ply{};
+    last_moved_ply.fill(std::numeric_limits<std::size_t>::max());
+    std::array<bool, board_size> last_move_crossed_river{};
+    std::size_t next_piece_id = 0;
+    const auto& cycle_board = position_history_[cycle_start].board;
+    for (std::size_t square = 0; square < board_size; ++square) {
+        if (!cycle_board[square]) {
+            continue;
+        }
+        piece_ids[square] = static_cast<std::int16_t>(next_piece_id);
+        piece_types[next_piece_id] = cycle_board[square]->type;
+        piece_type_present[next_piece_id] = true;
+        ++next_piece_id;
+    }
+
+    std::array<SideProfile, 2> profiles{};
+    for (std::size_t ply = cycle_start; ply < history_.size(); ++ply) {
+        const auto& move = history_[ply];
+        const auto from = index(move.from_x, move.from_y);
+        const auto to = index(move.to_x, move.to_y);
+        const auto moved_id = piece_ids[from];
+        if (moved_id < 0) {
+            return std::nullopt;
+        }
+        piece_ids[to] = moved_id;
+        piece_ids[from] = -1;
+        const auto moved_id_index = static_cast<std::size_t>(moved_id);
+        last_moved_ply[moved_id_index] = ply;
+        if (move.moved.type == PieceType::soldier) {
+            const auto was_crossed = move.moved.side == Side::red
+                ? move.from_y <= 4
+                : move.from_y >= 5;
+            const auto is_crossed = move.moved.side == Side::red
+                ? move.to_y <= 4
+                : move.to_y >= 5;
+            last_move_crossed_river[moved_id_index] =
+                !was_crossed && is_crossed;
+        } else {
+            last_move_crossed_river[moved_id_index] = false;
+        }
+
+        const auto analysis = analyze_tactical_move(
+            position_history_[ply].board,
+            position_history_[ply + 1].board,
+            move.previous_side
+        );
+        std::bitset<board_size> direct_targets;
+        std::bitset<board_size> joint_targets;
+        const auto& after_board = position_history_[ply + 1].board;
+        for (std::size_t square = 0; square < board_size; ++square) {
+            const auto chase_kind = analysis.chase_targets[square];
+            if (chase_kind == ChaseKind::none || piece_ids[square] < 0) {
+                continue;
+            }
+            const auto target = after_board[square];
+            const auto target_id = static_cast<std::size_t>(piece_ids[square]);
+            if (!target || target->type == PieceType::general) {
+                continue;
+            }
+            if (target->type == PieceType::soldier) {
+                const auto target_y = static_cast<std::int32_t>(
+                    square / static_cast<std::size_t>(board_width)
+                );
+                const auto crossed = target->side == Side::red
+                    ? target_y <= 4
+                    : target_y >= 5;
+                const auto just_crossed =
+                    last_moved_ply[target_id] !=
+                        std::numeric_limits<std::size_t>::max() &&
+                    last_moved_ply[target_id] + 1 == ply &&
+                    last_move_crossed_river[target_id];
+                if (!crossed || just_crossed) {
+                    continue;
+                }
+            }
+            if (chase_kind == ChaseKind::direct) {
+                direct_targets.set(target_id);
+            } else {
+                joint_targets.set(target_id);
+            }
+        }
+        const auto chase_targets_for_move = direct_targets | joint_targets;
+        auto& profile = profiles[static_cast<std::size_t>(move.previous_side)];
+        profile.found = true;
+        if (analysis.check) {
+            profile.only_chase = false;
+            continue;
+        }
+        profile.all_check = false;
+        if (analysis.kill) {
+            profile.only_chase = false;
+            continue;
+        }
+        if (chase_targets_for_move.none()) {
+            profile.all_attack = false;
+            profile.only_chase = false;
+            continue;
+        }
+        if (!profile.saw_chase) {
+            profile.common_chase = chase_targets_for_move;
+            profile.common_direct = direct_targets;
+            profile.common_joint = joint_targets;
+            profile.saw_chase = true;
+        } else {
+            profile.common_chase &= chase_targets_for_move;
+            profile.common_direct &= direct_targets;
+            profile.common_joint &= joint_targets;
+        }
+    }
+
+    const auto& red = profiles[static_cast<std::size_t>(Side::red)];
+    const auto& black = profiles[static_cast<std::size_t>(Side::black)];
+    if (red.all_check != black.all_check) {
+        return red.all_check
+            ? GameResult::second_player_win
+            : GameResult::first_player_win;
+    }
+
+    const auto red_prohibited = red.prohibited();
+    const auto black_prohibited = black.prohibited();
+    if (red_prohibited != black_prohibited) {
+        return red_prohibited
+            ? GameResult::second_player_win
+            : GameResult::first_player_win;
+    }
+    if (!red_prohibited) {
+        return std::nullopt;
+    }
+
+    const auto has_type = [&piece_types, &piece_type_present](
+        const std::bitset<board_size>& targets,
+        const PieceType type
+    ) noexcept {
+        for (std::size_t id = 0; id < board_size; ++id) {
+            if (
+                targets.test(id) &&
+                piece_type_present[id] &&
+                piece_types[id] == type
+            ) {
+                return true;
+            }
+        }
+        return false;
+    };
+    const auto has_non_chariot = [&piece_types, &piece_type_present](
+        const std::bitset<board_size>& targets
+    ) noexcept {
+        for (std::size_t id = 0; id < board_size; ++id) {
+            if (
+                targets.test(id) &&
+                piece_type_present[id] &&
+                piece_types[id] != PieceType::chariot
+            ) {
+                return true;
+            }
+        }
+        return false;
+    };
+    const auto red_direct_over_joint =
+        red.only_chase && black.only_chase &&
+        (
+            (
+                has_type(red.common_direct, PieceType::chariot) &&
+                has_type(black.common_joint, PieceType::chariot)
+            ) ||
+            (
+                has_non_chariot(red.common_direct) &&
+                has_non_chariot(black.common_joint)
+            )
+        );
+    const auto black_direct_over_joint =
+        red.only_chase && black.only_chase &&
+        (
+            (
+                has_type(black.common_direct, PieceType::chariot) &&
+                has_type(red.common_joint, PieceType::chariot)
+            ) ||
+            (
+                has_non_chariot(black.common_direct) &&
+                has_non_chariot(red.common_joint)
+            )
+        );
+    if (red_direct_over_joint != black_direct_over_joint) {
+        return red_direct_over_joint
+            ? GameResult::second_player_win
+            : GameResult::first_player_win;
+    }
+    return GameResult::draw;
+}
+
 void ChineseChessEngine::adjudicate_history() noexcept {
     if (no_capture_plies_ >= natural_limit_plies) {
         adjudicated_result_ = GameResult::draw;
@@ -1165,6 +1669,52 @@ void ChineseChessEngine::adjudicate_history() noexcept {
     }
 
     const auto cycle_start = occurrences.back();
+    const auto local_2020_result = adjudicate_2020_cycle(cycle_start);
+    const auto cycle_no_capture_plies = cycle_start < history_.size()
+        ? history_[cycle_start].previous_no_capture_plies
+        : no_capture_plies_;
+    std::vector<std::string> pikafish_moves;
+    pikafish_moves.reserve(history_.size() - cycle_start);
+    for (std::size_t i = cycle_start; i < history_.size(); ++i) {
+        const auto& move = history_[i];
+        std::string encoded{"a0a0"};
+        encoded[0] = static_cast<char>('a' + move.from_x);
+        encoded[1] = static_cast<char>('0' + 9 - move.from_y);
+        encoded[2] = static_cast<char>('a' + move.to_x);
+        encoded[3] = static_cast<char>('0' + 9 - move.to_y);
+        pikafish_moves.push_back(std::move(encoded));
+    }
+    const auto pikafish_result = adjudicate_pikafish_repetition(
+        encode_fen(
+            position_history_[cycle_start].board,
+            position_history_[cycle_start].side,
+            cycle_no_capture_plies,
+            cycle_start
+        ),
+        pikafish_moves
+    );
+    // Pikafish is the mature baseline for checks and direct chases. Keep its
+    // decisive result when both judges recognize the cycle. The local 2020
+    // overlay extends a Pikafish draw with kill and joint-chase outcomes.
+    if (
+        pikafish_result &&
+        *pikafish_result != GameResult::draw
+    ) {
+        adjudicated_result_ = *pikafish_result;
+        return;
+    }
+    if (
+        local_2020_result &&
+        *local_2020_result != GameResult::draw
+    ) {
+        adjudicated_result_ = *local_2020_result;
+        return;
+    }
+    if (pikafish_result || local_2020_result) {
+        adjudicated_result_ = GameResult::draw;
+        return;
+    }
+
     const auto all_moves_match = [this, cycle_start](
         const Side side,
         const auto predicate
