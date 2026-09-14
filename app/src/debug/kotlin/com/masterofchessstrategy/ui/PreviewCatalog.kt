@@ -130,6 +130,29 @@ private fun SettingsScreenPreview() {
             onSoundEnabled = {},
             onTimeLimitEnabled = {},
             onAdjustDuration = {},
+            onOpenSourceLicenses = {},
+        )
+    }
+}
+
+@Preview(
+    name = "05 开源许可",
+    group = "已完成界面",
+    widthDp = 960,
+    heightDp = 540,
+    showBackground = true,
+)
+@Composable
+private fun OpenSourceLicensesScreenPreview() {
+    MocsTheme {
+        OpenSourceLicensesContent(
+            documents = LegalDocuments(
+                notices = "Master of Chess Strategy 采用 GPL-3.0-or-later。\n\n" +
+                    "Pikafish 引擎采用 GPL-3.0-or-later。",
+                gpl = "GNU GENERAL PUBLIC LICENSE\nVersion 3, 29 June 2007",
+                network = "Pikafish NNUE 权重仅限合法用途；未经许可不得商用。",
+            ),
+            onBack = {},
         )
     }
 }

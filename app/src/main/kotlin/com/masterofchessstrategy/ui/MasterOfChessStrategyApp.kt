@@ -475,7 +475,15 @@ fun MasterOfChessStrategyApp() {
                     onSoundEnabled = settingsViewModel::setSoundEnabled,
                     onTimeLimitEnabled = settingsViewModel::setTimeLimitEnabled,
                     onAdjustDuration = settingsViewModel::adjustDuration,
+                    onOpenSourceLicenses = {
+                        navController.navigate(AppDestination.OPEN_SOURCE_LICENSES) {
+                            launchSingleTop = true
+                        }
+                    },
                 )
+            }
+            composable(AppDestination.OPEN_SOURCE_LICENSES) {
+                OpenSourceLicensesScreen(onBack = navController::popBackStack)
             }
         }
     }

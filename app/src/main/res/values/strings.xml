@@ -158,5 +158,16 @@
     <string name="duration_minutes">%1$d 分钟</string>
     <string name="duration_decrease">减少 5 分钟</string>
     <string name="duration_increase">增加 5 分钟</string>
-    <string name="settings_scope_note">对局时长按双方独立棋钟执行；自动续局与最大局数用于 AI 自动演局。音效将在资源节点接入。</string>
+    <string name="settings_scope_note">对局时长按双方独立棋钟执行；自动续局与最大局数用于 AI 自动演局。</string>
+    <string name="open_source_licenses_title">开源许可与法律边界</string>
+    <string name="open_source_licenses_summary">查看 GPL、Pikafish、NNUE 权重条款及对应源码获取方式。</string>
+    <string name="open_source_licenses_action">查看许可</string>
+    <string name="open_source_licenses_subtitle">GPL-3.0-or-later · Pikafish · NNUE</string>
+    <string name="open_source_copyright">Copyright © 2026 Master of Chess Strategy contributors</string>
+    <string name="open_source_warranty_notice">本软件不提供任何担保；您可以依据 GNU GPL 第 3 版或更高版本传播和修改程序。</string>
+    <string name="open_source_source_offer">对应源码：https://github.com/xiaokeb/Master-of-Chess-Strategy</string>
+    <string name="open_source_network_boundary">内置 Pikafish NNUE 权重仅限合法用途；未经权利人许可不得商用，也不得用于网络作弊。</string>
+    <string name="open_source_notices_tab">项目与组件</string>
+    <string name="open_source_gpl_tab">GPLv3 全文</string>
+    <string name="open_source_network_tab">NNUE 条款</string>
 </resources>

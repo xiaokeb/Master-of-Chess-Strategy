@@ -30,6 +30,7 @@ import com.masterofchessstrategy.settings.SettingsFeedback
 
 internal const val SETTINGS_SCREEN_TAG = "settings_screen"
 internal const val SETTINGS_SOUND_TAG = "settings_sound"
+internal const val SETTINGS_LICENSES_TAG = "settings_licenses"
 
 @Composable
 internal fun SettingsScreen(
@@ -41,6 +42,7 @@ internal fun SettingsScreen(
     onSoundEnabled: (Boolean) -> Unit,
     onTimeLimitEnabled: (Boolean) -> Unit,
     onAdjustDuration: (Int) -> Unit,
+    onOpenSourceLicenses: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -80,6 +82,27 @@ internal fun SettingsScreen(
                 switchTag = SETTINGS_SOUND_TAG,
             )
             DurationSetting(state, onTimeLimitEnabled, onAdjustDuration)
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.open_source_licenses_title),
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                    Text(
+                        text = stringResource(R.string.open_source_licenses_summary),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    OutlinedButton(
+                        onClick = onOpenSourceLicenses,
+                        modifier = Modifier.testTag(SETTINGS_LICENSES_TAG),
+                    ) {
+                        Text(stringResource(R.string.open_source_licenses_action))
+                    }
+                }
+            }
             Text(
                 text = stringResource(R.string.settings_scope_note),
                 style = MaterialTheme.typography.bodySmall,

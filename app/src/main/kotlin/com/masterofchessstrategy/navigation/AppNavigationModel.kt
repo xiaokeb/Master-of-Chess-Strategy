@@ -17,6 +17,7 @@ internal object AppDestination {
     const val CHINESE_CHESS_AUTO_PLAY_GAME =
         "chinese-chess/auto-play/{$AI_DIFFICULTY_ARGUMENT}"
     const val SETTINGS = "settings"
+    const val OPEN_SOURCE_LICENSES = "settings/open-source-licenses"
 
     fun chineseChessAiGame(difficulty: Difficulty): String =
         "chinese-chess/ai-game/" + difficulty.code

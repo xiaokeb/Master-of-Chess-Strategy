@@ -105,6 +105,7 @@ class AppNavigationScreenTest {
                 onSoundEnabled = { requestedSound = it },
                 onTimeLimitEnabled = {},
                 onAdjustDuration = {},
+                onOpenSourceLicenses = {},
             )
         }
 
@@ -113,6 +114,18 @@ class AppNavigationScreenTest {
         composeRule.runOnIdle {
             assertFalse(requestedSound)
         }
+    }
+
+    @Test
+    fun settingsCanOpenBundledLegalNotices() {
+        composeRule.setContent {
+            MasterOfChessStrategyApp()
+        }
+
+        composeRule.onNodeWithTag(HOME_SETTINGS_TAG).performClick()
+        composeRule.onNodeWithTag(SETTINGS_LICENSES_TAG).performClick()
+        composeRule.onNodeWithTag(OPEN_SOURCE_LICENSES_SCREEN_TAG).assertExists()
+        composeRule.onNodeWithText("本软件不提供任何担保", substring = true).assertExists()
     }
 
     @Test

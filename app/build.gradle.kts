@@ -95,9 +95,29 @@ val verifyGameSounds = tasks.register("verifyGameSounds") {
     }
 }
 
+val verifyBundledLegalDocuments = tasks.register("verifyBundledLegalDocuments") {
+    val legalCopies = listOf(
+        rootProject.file("LICENSE") to
+            layout.projectDirectory.file("src/main/assets/legal/GPL-3.0.txt").asFile,
+        rootProject.file("NOTICE.md") to
+            layout.projectDirectory.file("src/main/assets/legal/OPEN-SOURCE-NOTICES.md").asFile,
+        rootProject.file("third_party/pikafish-network/UPSTREAM-README.md") to
+            layout.projectDirectory.file("src/main/assets/pikafish/NETWORK-LICENSE.md").asFile,
+    )
+    inputs.files(legalCopies.flatMap { listOf(it.first, it.second) })
+    doLast {
+        legalCopies.forEach { (source, bundled) ->
+            check(source.readBytes().contentEquals(bundled.readBytes())) {
+                "Bundled legal document ${bundled.name} differs from ${source.path}"
+            }
+        }
+    }
+}
+
 tasks.named("preBuild").configure {
     dependsOn(verifyPikafishNetwork)
     dependsOn(verifyGameSounds)
+    dependsOn(verifyBundledLegalDocuments)
 }
 
 android {
