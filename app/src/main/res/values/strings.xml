@@ -118,6 +118,16 @@
     <string name="extension_assessment_summary">通过定级对局计算专项棋力评分。</string>
     <string name="extension_opening">定式学习</string>
     <string name="extension_opening_summary">按步骤学习并演练典型开局。</string>
+    <string name="timed_challenge_title">中国象棋 · 限时挑战</string>
+    <string name="timed_challenge_subtitle">选择已解锁 AI 与每步独立思考时间</string>
+    <string name="timed_challenge_choose_clock">每步时限</string>
+    <string name="timed_challenge_seconds">%1$d 秒</string>
+    <string name="timed_challenge_rules">每次轮到一方时重新获得完整时限；思考、AI 搜索与应用退到后台的时间均计入，归零立即判当前方负。</string>
+    <string name="timed_challenge_start">开始限时挑战</string>
+    <string name="timed_challenge_continue">继续上次挑战（%1$s · %2$d 秒）</string>
+    <string name="timed_challenge_mode">限时挑战</string>
+    <string name="timed_challenge_ai_game">限时挑战 · %1$s AI · 每步 %2$d 秒</string>
+    <string name="timed_challenge_active_clock">%1$s剩余 %2$s</string>
     <string name="custom_position_title">中国象棋 · 自由摆局</string>
     <string name="custom_position_subtitle">摆放合法棋子，选择行棋方与已解锁 AI</string>
     <string name="custom_position_piece_side">棋子阵营</string>

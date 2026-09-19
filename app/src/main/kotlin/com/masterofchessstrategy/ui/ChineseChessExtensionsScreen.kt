@@ -28,6 +28,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.masterofchessstrategy.R
+import com.masterofchessstrategy.challenge.ChineseChessTimedChallengeUiState
+import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.custom.ChineseChessSetupFeedback
 import com.masterofchessstrategy.custom.ChineseChessSetupUiState
 import com.masterofchessstrategy.engine.BoardPosition
@@ -37,12 +39,15 @@ import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 
 internal const val EXTENSIONS_SCREEN_TAG = "extensions_screen"
+internal const val TIMED_CHALLENGE_ENTRY_TAG = "timed_challenge_entry"
+internal const val TIMED_CHALLENGE_SETUP_TAG = "timed_challenge_setup"
+internal const val TIMED_CHALLENGE_START_TAG = "timed_challenge_start"
 internal const val CUSTOM_SETUP_ENTRY_TAG = "custom_setup_entry"
 internal const val CUSTOM_SETUP_SCREEN_TAG = "custom_setup_screen"
 internal const val CUSTOM_SETUP_START_TAG = "custom_setup_start"
 
 private enum class ExtensionEntry(val available: Boolean) {
-    TIMED(false),
+    TIMED(true),
     STREAK(false),
     BLIND(false),
     CUSTOM_POSITION(true),
@@ -53,6 +58,7 @@ private enum class ExtensionEntry(val available: Boolean) {
 @Composable
 internal fun ChineseChessExtensionsScreen(
     onBack: () -> Unit,
+    onTimedChallenge: () -> Unit,
     onCustomPosition: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -82,15 +88,23 @@ internal fun ChineseChessExtensionsScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .then(
-                                    if (entry == ExtensionEntry.CUSTOM_POSITION) {
-                                        Modifier.testTag(CUSTOM_SETUP_ENTRY_TAG)
-                                    } else {
-                                        Modifier
+                                    when (entry) {
+                                        ExtensionEntry.TIMED ->
+                                            Modifier.testTag(TIMED_CHALLENGE_ENTRY_TAG)
+                                        ExtensionEntry.CUSTOM_POSITION ->
+                                            Modifier.testTag(CUSTOM_SETUP_ENTRY_TAG)
+                                        else -> Modifier
                                     },
                                 )
                                 .clickable(
                                     enabled = entry.available,
-                                    onClick = onCustomPosition,
+                                    onClick = {
+                                        when (entry) {
+                                            ExtensionEntry.TIMED -> onTimedChallenge()
+                                            ExtensionEntry.CUSTOM_POSITION -> onCustomPosition()
+                                            else -> Unit
+                                        }
+                                    },
                                 ),
                         ) {
                             Column(
@@ -116,6 +130,94 @@ internal fun ChineseChessExtensionsScreen(
                                     color = MaterialTheme.colorScheme.primary,
                                 )
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun ChineseChessTimedChallengeScreen(
+    state: ChineseChessTimedChallengeUiState,
+    onBack: () -> Unit,
+    onDifficultySelected: (Difficulty) -> Unit,
+    onSecondsSelected: (Int) -> Unit,
+    onStart: () -> Unit,
+    onContinueSaved: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxSize()
+            .testTag(TIMED_CHALLENGE_SETUP_TAG),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            PageHeader(
+                title = stringResource(R.string.timed_challenge_title),
+                subtitle = stringResource(R.string.timed_challenge_subtitle),
+                onBack = onBack,
+            )
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        stringResource(R.string.choose_difficulty),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    ChoiceRow(
+                        entries = Difficulty.entries,
+                        selected = state.difficulty,
+                        enabled = { it in state.unlockedDifficulties },
+                        label = { it.difficultyName() },
+                        onSelected = onDifficultySelected,
+                    )
+                    Text(
+                        stringResource(R.string.timed_challenge_choose_clock),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    ChoiceRow(
+                        entries = TimedChallengeConfig.ALLOWED_SECONDS,
+                        selected = state.secondsPerMove,
+                        label = {
+                            stringResource(R.string.timed_challenge_seconds, it)
+                        },
+                        onSelected = onSecondsSelected,
+                    )
+                    Text(
+                        stringResource(R.string.timed_challenge_rules),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Button(
+                        onClick = onStart,
+                        enabled = state.unlockedDifficulties.isNotEmpty(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(TIMED_CHALLENGE_START_TAG),
+                    ) {
+                        Text(stringResource(R.string.timed_challenge_start))
+                    }
+                    state.savedChallenge?.let { saved ->
+                        OutlinedButton(
+                            onClick = onContinueSaved,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                stringResource(
+                                    R.string.timed_challenge_continue,
+                                    saved.difficulty.difficultyName(),
+                                    saved.secondsPerMove,
+                                ),
+                            )
                         }
                     }
                 }

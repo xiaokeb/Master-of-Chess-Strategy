@@ -2,6 +2,7 @@ package com.masterofchessstrategy.navigation
 
 import com.masterofchessstrategy.data.LastGameSelection
 import com.masterofchessstrategy.data.StoredGameMode
+import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameType
@@ -205,6 +206,32 @@ class AppNavigationModelTest {
 
         assertEquals(
             QuickStartDestination.CUSTOM_SETUP,
+            selection.quickStartDestination(),
+        )
+    }
+
+    @Test
+    fun timedChallengeRouteUsesCanonicalDifficultyAndClock() {
+        val route = AppDestination.chineseChessTimedGame(Difficulty.MEDIUM, 30)
+
+        assertEquals("chinese-chess/extensions/timed/1/30", route)
+        assertEquals(
+            "timed:30",
+            TimedChallengeConfig.sessionVariant(route.substringAfterLast('/').toInt()),
+        )
+    }
+
+    @Test
+    fun timedChallengeHistoryReturnsToItsSetupScreen() {
+        val selection = LastGameSelection(
+            gameType = GameType.CHINESE_CHESS,
+            mode = StoredGameMode.TIMED_CHALLENGE,
+            difficulty = Difficulty.EASY,
+            updatedAtEpochMillis = 1L,
+        )
+
+        assertEquals(
+            QuickStartDestination.TIMED_SETUP,
             selection.quickStartDestination(),
         )
     }

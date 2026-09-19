@@ -78,6 +78,8 @@ data class ChineseChessGameUiState(
     val difficulty: Difficulty? = null,
     val isEndgame: Boolean = false,
     val isCustomPosition: Boolean = false,
+    val isTimedChallenge: Boolean = false,
+    val perMoveTimeLimitSeconds: Int? = null,
     val endgameTitle: String? = null,
     val endgamePlayerMovesUsed: Int = 0,
     val endgameMaxPlayerMoves: Int? = null,
@@ -111,6 +113,12 @@ data class ChineseChessGameUiState(
         }
         require(!isEndgame || !isCustomPosition) {
             "A game cannot be both an endgame level and a custom position"
+        }
+        require(
+            isTimedChallenge ==
+                (perMoveTimeLimitSeconds != null),
+        ) {
+            "Timed challenge state requires a per-move limit"
         }
     }
 

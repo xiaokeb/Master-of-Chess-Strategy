@@ -8,6 +8,8 @@ import com.masterofchessstrategy.data.GameRecordCategory
 import com.masterofchessstrategy.data.CompletedEndgameLevel
 import com.masterofchessstrategy.data.EndgameProgress
 import com.masterofchessstrategy.data.StoredGameMode
+import com.masterofchessstrategy.challenge.ChineseChessTimedChallengeUiState
+import com.masterofchessstrategy.challenge.PreparedTimedChallenge
 import com.masterofchessstrategy.custom.ChineseChessSetupUiState
 import com.masterofchessstrategy.engine.ChineseChessBoard
 import com.masterofchessstrategy.engine.BoardMove
@@ -303,6 +305,36 @@ private fun ChineseChessSetupScreenPreview() {
             onDifficultySelected = {},
             onClear = {},
             onResetStandard = {},
+            onStart = {},
+            onContinueSaved = {},
+        )
+    }
+}
+
+@Preview(
+    name = "10 中国象棋限时挑战",
+    group = "已完成界面",
+    widthDp = 960,
+    heightDp = 540,
+    showBackground = true,
+)
+@Composable
+private fun ChineseChessTimedChallengeScreenPreview() {
+    MocsTheme {
+        ChineseChessTimedChallengeScreen(
+            state = ChineseChessTimedChallengeUiState(
+                difficulty = Difficulty.MEDIUM,
+                secondsPerMove = 30,
+                unlockedDifficulties = Difficulty.entries.toSet(),
+                isLoadingSavedGame = false,
+                savedChallenge = PreparedTimedChallenge(
+                    difficulty = Difficulty.EASY,
+                    secondsPerMove = 10,
+                ),
+            ),
+            onBack = {},
+            onDifficultySelected = {},
+            onSecondsSelected = {},
             onStart = {},
             onContinueSaved = {},
         )

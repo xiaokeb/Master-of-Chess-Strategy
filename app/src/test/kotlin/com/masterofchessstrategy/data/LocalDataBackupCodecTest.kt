@@ -1,5 +1,6 @@
 package com.masterofchessstrategy.data
 
+import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
@@ -97,6 +98,43 @@ class LocalDataBackupCodecTest {
             CustomPositionStateCodec.sessionVariant(initial),
             restored.activeSessions.single().sessionVariantId,
         )
+    }
+
+    @Test
+    fun timedChallengeRoundTripsAndRejectsClockAboveItsPerMoveLimit() {
+        val session = GameSessionSnapshot(
+            gameType = GameType.CHINESE_CHESS,
+            mode = StoredGameMode.TIMED_CHALLENGE,
+            difficulty = Difficulty.EASY,
+            engineState = byteArrayOf(7),
+            updatedAtEpochMillis = 2L,
+            sessionId = "timed-1",
+            timeControlMinutes = TimedChallengeConfig.BACKING_CLOCK_MINUTES,
+            redRemainingMillis = 10_000L,
+            blackRemainingMillis = 4_000L,
+            turnStartedAtEpochMillis = 1L,
+            sessionVariantId = TimedChallengeConfig.sessionVariant(10),
+        )
+        val source = LocalDataSnapshot(
+            createdAtEpochMillis = 1L,
+            activeSessions = listOf(session),
+        )
+
+        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+
+        assertEquals(
+            TimedChallengeConfig.sessionVariant(10),
+            restored.activeSessions.single().sessionVariantId,
+        )
+        assertThrows(IllegalArgumentException::class.java) {
+            LocalDataBackupCodec.encode(
+                source.copy(
+                    activeSessions = listOf(
+                        session.copy(redRemainingMillis = 10_001L),
+                    ),
+                ),
+            )
+        }
     }
 
     private fun completeSnapshot(): LocalDataSnapshot = LocalDataSnapshot(

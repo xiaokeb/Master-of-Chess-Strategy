@@ -1,5 +1,6 @@
 package com.masterofchessstrategy.data
 
+import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.GameResult
@@ -178,6 +179,52 @@ class RoomGameSessionRepositoryTest {
         )
 
         dao.entity = requireNotNull(dao.entity).copy(sessionVariantId = "custom:xyz")
+        assertSame(
+            LoadGameSessionResult.Incompatible,
+            repository.load(GameType.CHINESE_CHESS),
+        )
+    }
+
+    @Test
+    fun timedChallengeAcceptsOnlyCanonicalClockBoundaries() = runBlocking {
+        val dao = FakeActiveGameDao(
+            ActiveGameEntity(
+                gameTypeCode = GameType.CHINESE_CHESS.code,
+                modeCode = StoredGameMode.TIMED_CHALLENGE.code,
+                difficultyCode = Difficulty.EASY.code,
+                envelopeVersion = 4,
+                engineFormatVersion = 2,
+                engineState = byteArrayOf(9),
+                updatedAtEpochMillis = 1L,
+                sessionId = "timed-session",
+                timeControlMinutes = TimedChallengeConfig.BACKING_CLOCK_MINUTES,
+                redRemainingMillis = 30_000L,
+                blackRemainingMillis = 24_000L,
+                turnStartedAtEpochMillis = 1L,
+                sessionVariantId = TimedChallengeConfig.sessionVariant(30),
+            ),
+        )
+        val repository = RoomGameSessionRepository(dao)
+
+        val loaded = repository.load(GameType.CHINESE_CHESS)
+
+        assertEquals(
+            30,
+            TimedChallengeConfig.decodeSessionVariant(
+                (loaded as LoadGameSessionResult.Loaded).snapshot.sessionVariantId,
+            ),
+        )
+
+        dao.entity = requireNotNull(dao.entity).copy(redRemainingMillis = 30_001L)
+        assertSame(
+            LoadGameSessionResult.Incompatible,
+            repository.load(GameType.CHINESE_CHESS),
+        )
+
+        dao.entity = requireNotNull(dao.entity).copy(
+            redRemainingMillis = 30_000L,
+            sessionVariantId = "timed:030",
+        )
         assertSame(
             LoadGameSessionResult.Incompatible,
             repository.load(GameType.CHINESE_CHESS),

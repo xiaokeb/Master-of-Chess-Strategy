@@ -50,6 +50,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.masterofchessstrategy.R
+import com.masterofchessstrategy.challenge.ChineseChessTimedChallengeViewModel
+import com.masterofchessstrategy.challenge.PreparedTimedChallenge
+import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.RoomAppSettingsRepository
 import com.masterofchessstrategy.data.RoomGameSessionRepository
@@ -275,6 +278,10 @@ fun MasterOfChessStrategyApp() {
                                     AppDestination.CHINESE_CHESS_CUSTOM_SETUP
                                 }
 
+                                QuickStartDestination.TIMED_SETUP -> {
+                                    AppDestination.CHINESE_CHESS_TIMED_SETUP
+                                }
+
                                 QuickStartDestination.MODE_SELECTION -> {
                                     AppDestination.CHINESE_CHESS_MODES
                                 }
@@ -347,8 +354,116 @@ fun MasterOfChessStrategyApp() {
             composable(AppDestination.CHINESE_CHESS_EXTENSIONS) {
                 ChineseChessExtensionsScreen(
                     onBack = navController::popBackStack,
+                    onTimedChallenge = {
+                        navController.navigate(AppDestination.CHINESE_CHESS_TIMED_SETUP)
+                    },
                     onCustomPosition = {
                         navController.navigate(AppDestination.CHINESE_CHESS_CUSTOM_SETUP)
+                    },
+                )
+            }
+            composable(AppDestination.CHINESE_CHESS_TIMED_SETUP) {
+                val unlocked = difficultyEntries
+                    .filter { it.isPlayable }
+                    .mapTo(linkedSetOf()) { it.difficulty }
+                val factory = remember(gameSessionRepository, unlocked) {
+                    ChineseChessTimedChallengeViewModel.factory(
+                        repository = gameSessionRepository,
+                        unlockedDifficulties = unlocked,
+                    )
+                }
+                val timedViewModel: ChineseChessTimedChallengeViewModel =
+                    viewModel(factory = factory)
+                val openChallenge: (PreparedTimedChallenge) -> Unit = { prepared ->
+                    navigationViewModel.recordChineseChessSelection(
+                        StoredGameMode.TIMED_CHALLENGE,
+                        prepared.difficulty,
+                    )
+                    navController.navigate(
+                        AppDestination.chineseChessTimedGame(
+                            prepared.difficulty,
+                            prepared.secondsPerMove,
+                        ),
+                    )
+                }
+                ChineseChessTimedChallengeScreen(
+                    state = timedViewModel.uiState,
+                    onBack = navController::popBackStack,
+                    onDifficultySelected = timedViewModel::selectDifficulty,
+                    onSecondsSelected = timedViewModel::selectSecondsPerMove,
+                    onStart = {
+                        timedViewModel.prepareNewChallenge()?.let(openChallenge)
+                    },
+                    onContinueSaved = {
+                        timedViewModel.continueSavedChallenge()?.let(openChallenge)
+                    },
+                )
+            }
+            composable(
+                route = AppDestination.CHINESE_CHESS_TIMED_GAME,
+                arguments = listOf(
+                    navArgument(AppDestination.TIMED_DIFFICULTY_ARGUMENT) {
+                        type = NavType.IntType
+                    },
+                    navArgument(AppDestination.TIMED_SECONDS_ARGUMENT) {
+                        type = NavType.IntType
+                    },
+                ),
+            ) { backStackEntry ->
+                val difficultyCode = backStackEntry.arguments
+                    ?.getInt(AppDestination.TIMED_DIFFICULTY_ARGUMENT)
+                val difficulty = checkNotNull(
+                    Difficulty.entries.firstOrNull { it.code == difficultyCode },
+                ) { "Unsupported timed-challenge difficulty" }
+                check(
+                    difficultyEntries.any {
+                        it.difficulty == difficulty && it.isPlayable
+                    },
+                ) { "Timed-challenge difficulty is locked" }
+                val secondsPerMove = backStackEntry.arguments
+                    ?.getInt(AppDestination.TIMED_SECONDS_ARGUMENT)
+                    ?: error("Timed challenge clock is missing")
+                val sessionVariant =
+                    TimedChallengeConfig.sessionVariant(secondsPerMove)
+                val factory = remember(
+                    gameSessionRepository,
+                    gameRecordsViewModel,
+                    difficulty,
+                    secondsPerMove,
+                    pikafishNetworkProvider,
+                ) {
+                    ChineseChessGameViewModel.factory(
+                        repository = gameSessionRepository,
+                        mode = StoredGameMode.TIMED_CHALLENGE,
+                        difficulty = difficulty,
+                        onGameRecorded = gameRecordsViewModel::record,
+                        perMoveTimeLimitSeconds = secondsPerMove,
+                        sessionVariantId = sessionVariant,
+                        engineFactory = {
+                            NativeChineseChessEngine(
+                                pikafishNetworkProvider::requireNetworkPath,
+                            )
+                        },
+                    )
+                }
+                val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
+                ChineseChessGameSoundEffect(
+                    gameViewModel,
+                    settingsViewModel.uiState.settings.soundEnabled,
+                )
+                ChineseChessGameScreen(
+                    state = gameViewModel.uiState,
+                    onSquareTap = gameViewModel::onSquareTap,
+                    onUndo = gameViewModel::undo,
+                    onHint = gameViewModel::requestHint,
+                    onResign = gameViewModel::resign,
+                    onDraw = gameViewModel::offerOrAcceptDraw,
+                    onRestart = gameViewModel::restart,
+                    onBack = navController::popBackStack,
+                    onSettings = {
+                        navController.navigate(AppDestination.SETTINGS) {
+                            launchSingleTop = true
+                        }
                     },
                 )
             }
@@ -1066,18 +1181,42 @@ private fun GameHeader(
                     style = MaterialTheme.typography.titleLarge,
                 )
                 Text(
-                    text = if (state.timeControlMinutes == null) {
-                        stringResource(R.string.unlimited_duration)
-                    } else {
-                        val red = stringResource(
-                            R.string.red_clock,
-                            formatClock(state.redRemainingMillis),
-                        )
-                        val black = stringResource(
-                            R.string.black_clock,
-                            formatClock(state.blackRemainingMillis),
-                        )
-                        "$red · $black"
+                    text = when {
+                        state.isTimedChallenge -> {
+                            val side = stringResource(
+                                if (state.currentSide == ChineseChessSide.RED) {
+                                    R.string.red_side
+                                } else {
+                                    R.string.black_side
+                                },
+                            )
+                            val remaining = if (
+                                state.currentSide == ChineseChessSide.RED
+                            ) {
+                                state.redRemainingMillis
+                            } else {
+                                state.blackRemainingMillis
+                            }
+                            stringResource(
+                                R.string.timed_challenge_active_clock,
+                                side,
+                                formatClock(remaining),
+                            )
+                        }
+                        state.timeControlMinutes == null -> {
+                            stringResource(R.string.unlimited_duration)
+                        }
+                        else -> {
+                            val red = stringResource(
+                                R.string.red_clock,
+                                formatClock(state.redRemainingMillis),
+                            )
+                            val black = stringResource(
+                                R.string.black_clock,
+                                formatClock(state.blackRemainingMillis),
+                            )
+                            "$red · $black"
+                        }
                     },
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -1350,6 +1489,13 @@ private fun gameStatusText(state: ChineseChessGameUiState): String =
 
 @Composable
 private fun gameModeTitle(state: ChineseChessGameUiState): String {
+    if (state.isTimedChallenge) {
+        return stringResource(
+            R.string.timed_challenge_ai_game,
+            difficultyTitle(requireNotNull(state.difficulty)),
+            requireNotNull(state.perMoveTimeLimitSeconds),
+        )
+    }
     if (state.isCustomPosition) {
         return stringResource(
             R.string.custom_position_ai_game,

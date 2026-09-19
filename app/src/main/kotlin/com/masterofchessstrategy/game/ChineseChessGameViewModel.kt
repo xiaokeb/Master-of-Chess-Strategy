@@ -15,6 +15,7 @@ import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.LoadGameSessionResult
 import com.masterofchessstrategy.data.MatchOutcome
 import com.masterofchessstrategy.data.StoredGameMode
+import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.BoardMove
@@ -59,6 +60,7 @@ class ChineseChessGameViewModel internal constructor(
     private val onMatchFinished: (MatchOutcome) -> Unit = {},
     private val onGameRecorded: (GameRecord) -> Unit = {},
     private val initialTimeControlMinutes: Int? = null,
+    private val perMoveTimeLimitSeconds: Int? = null,
     private val autoContinueEnabled: Boolean = false,
     private val autoContinueGameLimit: Int = 10,
     private val clockTickIntervalMillis: Long? = CLOCK_TICK_MILLIS,
@@ -78,10 +80,18 @@ class ChineseChessGameViewModel internal constructor(
     private var settlementRequested = false
     private var terminalHandled = false
     private var recordRequested = false
-    private var timeControlMinutes = initialTimeControlMinutes
-    private var redRemainingMillis = initialTimeControlMinutes?.toClockMillis()
-    private var blackRemainingMillis = initialTimeControlMinutes?.toClockMillis()
-    private var turnStartedAtEpochMillis = initialTimeControlMinutes?.let {
+    private val perMoveTimeLimitMillis = perMoveTimeLimitSeconds?.times(1_000L)
+    private val initialClockMillis =
+        perMoveTimeLimitMillis ?: initialTimeControlMinutes?.toClockMillis()
+    private var timeControlMinutes =
+        if (perMoveTimeLimitSeconds == null) {
+            initialTimeControlMinutes
+        } else {
+            TimedChallengeConfig.BACKING_CLOCK_MINUTES
+        }
+    private var redRemainingMillis = initialClockMillis
+    private var blackRemainingMillis = initialClockMillis
+    private var turnStartedAtEpochMillis = initialClockMillis?.let {
         nowEpochMillis()
     }
     private var pendingDrawOfferSide: ChineseChessSide? = null
@@ -98,7 +108,8 @@ class ChineseChessGameViewModel internal constructor(
     private val isHumanControlledAiGame =
         mode == StoredGameMode.HUMAN_VS_AI ||
             mode == StoredGameMode.ENDGAME ||
-            mode == StoredGameMode.CUSTOM_POSITION
+            mode == StoredGameMode.CUSTOM_POSITION ||
+            mode == StoredGameMode.TIMED_CHALLENGE
     private val isAiGame =
         isHumanControlledAiGame || mode == StoredGameMode.AI_AUTO_PLAY
     private val isAutoPlay = mode == StoredGameMode.AI_AUTO_PLAY
@@ -111,6 +122,8 @@ class ChineseChessGameViewModel internal constructor(
             difficulty = difficulty,
             isEndgame = mode == StoredGameMode.ENDGAME,
             isCustomPosition = mode == StoredGameMode.CUSTOM_POSITION,
+            isTimedChallenge = mode == StoredGameMode.TIMED_CHALLENGE,
+            perMoveTimeLimitSeconds = perMoveTimeLimitSeconds,
             endgameTitle = endgameTitle,
             endgameMaxPlayerMoves = endgameMaxPlayerMoves,
         ),
@@ -172,6 +185,18 @@ class ChineseChessGameViewModel internal constructor(
                             )
                         )
             ) { "Custom-position mode requires a versioned initial position" }
+            require(
+                if (mode == StoredGameMode.TIMED_CHALLENGE) {
+                    initialTimeControlMinutes == null &&
+                        perMoveTimeLimitSeconds != null &&
+                        perMoveTimeLimitSeconds in TimedChallengeConfig.ALLOWED_SECONDS &&
+                        sessionVariantId == TimedChallengeConfig.sessionVariant(
+                            requireNotNull(perMoveTimeLimitSeconds),
+                        )
+                } else {
+                    perMoveTimeLimitSeconds == null
+                },
+            ) { "Timed challenge requires a canonical per-move clock" }
             engine = engineFactory().also { created ->
                 require(!isAiGame || created is ChineseChessAiEngine) {
                     "AI modes require an AI-capable engine"
@@ -243,7 +268,7 @@ class ChineseChessGameViewModel internal constructor(
             if (undoTurn(activeEngine)) {
                 undoUseCount++
                 pendingDrawOfferSide = null
-                turnStartedAtEpochMillis = timeControlMinutes?.let { now }
+                startClockForCurrentTurn(activeEngine, now)
                 refresh(ChineseChessFeedback.MOVE_UNDONE)
                 persistCurrentSession()
             } else {
@@ -603,7 +628,7 @@ class ChineseChessGameViewModel internal constructor(
                     ) {
                         resultOverride = GameResult.SECOND_PLAYER_WIN
                     }
-                    turnStartedAtEpochMillis = timeControlMinutes?.let { now }
+                    startClockForCurrentTurn(activeEngine, now)
                     if (
                         pendingDrawOfferSide != null &&
                         pendingDrawOfferSide != movingSide
@@ -680,6 +705,8 @@ class ChineseChessGameViewModel internal constructor(
                 difficulty = difficulty,
                 isEndgame = mode == StoredGameMode.ENDGAME,
                 isCustomPosition = mode == StoredGameMode.CUSTOM_POSITION,
+                isTimedChallenge = mode == StoredGameMode.TIMED_CHALLENGE,
+                perMoveTimeLimitSeconds = perMoveTimeLimitSeconds,
                 endgameTitle = endgameTitle,
                 endgamePlayerMovesUsed = endgamePlayerMoveCount(),
                 endgameMaxPlayerMoves = endgameMaxPlayerMoves,
@@ -908,7 +935,7 @@ class ChineseChessGameViewModel internal constructor(
                 ActionResult.Accepted -> {
                     val isCapture = uiState.pieceAt(move.to) != null
                     acceptedMoveCount++
-                    turnStartedAtEpochMillis = timeControlMinutes?.let { now }
+                    startClockForCurrentTurn(activeEngine, now)
                     refresh(
                         if (aiDeclinedDraw) {
                             ChineseChessFeedback.DRAW_DECLINED
@@ -1044,6 +1071,25 @@ class ChineseChessGameViewModel internal constructor(
         }
     }
 
+    private fun startClockForCurrentTurn(
+        activeEngine: ChineseChessRuleEngine,
+        now: Long,
+    ) {
+        if (timeControlMinutes == null) {
+            turnStartedAtEpochMillis = null
+            return
+        }
+        perMoveTimeLimitMillis?.let { limit ->
+            val side = when (activeEngine.currentPlayer.value) {
+                ChineseChessSide.RED.code -> ChineseChessSide.RED
+                ChineseChessSide.BLACK.code -> ChineseChessSide.BLACK
+                else -> error("Engine returned an unsupported player")
+            }
+            setRemaining(side, limit)
+        }
+        turnStartedAtEpochMillis = now
+    }
+
     private fun emitMoveSound(result: GameResult, isCapture: Boolean) {
         if (result == GameResult.ONGOING) {
             emitSound(
@@ -1134,9 +1180,9 @@ class ChineseChessGameViewModel internal constructor(
             completedAutoGames = 0
             autoPlayPaused = false
         }
-        redRemainingMillis = timeControlMinutes?.toClockMillis()
-        blackRemainingMillis = timeControlMinutes?.toClockMillis()
-        turnStartedAtEpochMillis = timeControlMinutes?.let { nowEpochMillis() }
+        redRemainingMillis = initialClockMillis
+        blackRemainingMillis = initialClockMillis
+        turnStartedAtEpochMillis = initialClockMillis?.let { nowEpochMillis() }
     }
 
     private fun canRunControl(): Boolean =
@@ -1330,6 +1376,7 @@ class ChineseChessGameViewModel internal constructor(
             onMatchFinished: (MatchOutcome) -> Unit = {},
             onGameRecorded: (GameRecord) -> Unit = {},
             timeControlMinutes: Int? = null,
+            perMoveTimeLimitSeconds: Int? = null,
             autoContinueEnabled: Boolean = false,
             autoContinueGameLimit: Int = 10,
             initialPositionState: ByteArray? = null,
@@ -1349,6 +1396,7 @@ class ChineseChessGameViewModel internal constructor(
                         onMatchFinished = onMatchFinished,
                         onGameRecorded = onGameRecorded,
                         initialTimeControlMinutes = timeControlMinutes,
+                        perMoveTimeLimitSeconds = perMoveTimeLimitSeconds,
                         autoContinueEnabled = autoContinueEnabled,
                         autoContinueGameLimit = autoContinueGameLimit,
                         initialPositionState = initialPositionState,

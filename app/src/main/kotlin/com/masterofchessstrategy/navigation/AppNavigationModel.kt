@@ -2,6 +2,7 @@ package com.masterofchessstrategy.navigation
 
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 
 internal object AppDestination {
@@ -13,6 +14,12 @@ internal object AppDestination {
     const val CHINESE_CHESS_TUTORIAL = "chinese-chess/tutorial"
     const val CHINESE_CHESS_ENDGAMES = "chinese-chess/endgames"
     const val CHINESE_CHESS_EXTENSIONS = "chinese-chess/extensions"
+    const val CHINESE_CHESS_TIMED_SETUP = "chinese-chess/extensions/timed/setup"
+    const val TIMED_DIFFICULTY_ARGUMENT = "timedDifficultyCode"
+    const val TIMED_SECONDS_ARGUMENT = "timedSeconds"
+    const val CHINESE_CHESS_TIMED_GAME =
+        "chinese-chess/extensions/timed/{$TIMED_DIFFICULTY_ARGUMENT}/" +
+            "{$TIMED_SECONDS_ARGUMENT}"
     const val CHINESE_CHESS_CUSTOM_SETUP = "chinese-chess/extensions/custom/setup"
     const val CUSTOM_DIFFICULTY_ARGUMENT = "customDifficultyCode"
     const val CUSTOM_POSITION_ARGUMENT = "customPosition"
@@ -53,6 +60,11 @@ internal object AppDestination {
     fun chineseChessCustomGame(difficulty: Difficulty, position: ByteArray): String =
         "chinese-chess/extensions/custom/${difficulty.code}/" +
             CustomPositionStateCodec.encode(position)
+
+    fun chineseChessTimedGame(difficulty: Difficulty, secondsPerMove: Int): String {
+        TimedChallengeConfig.sessionVariant(secondsPerMove)
+        return "chinese-chess/extensions/timed/${difficulty.code}/$secondsPerMove"
+    }
 }
 
 /** Five first-level cards required by the product layout. */

@@ -72,6 +72,19 @@ class AppNavigationScreenTest {
     }
 
     @Test
+    fun chineseChessExtensionsCanOpenTimedChallengeSetup() {
+        composeRule.setContent {
+            MasterOfChessStrategyApp()
+        }
+
+        composeRule.onNodeWithTag(HOME_CHINESE_CHESS_TAG).performClick()
+        composeRule.onNodeWithTag(MODE_EXTENSIONS_TAG).performClick()
+        composeRule.onNodeWithTag(TIMED_CHALLENGE_ENTRY_TAG).performClick()
+        composeRule.onNodeWithTag(TIMED_CHALLENGE_SETUP_TAG).assertExists()
+        composeRule.onNodeWithTag(TIMED_CHALLENGE_START_TAG).assertExists()
+    }
+
+    @Test
     fun homeExposesQuickStartOnlyWhenHistoryExists() {
         var quickStarts = 0
         composeRule.setContent {

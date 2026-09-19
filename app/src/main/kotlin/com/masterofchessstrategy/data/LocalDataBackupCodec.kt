@@ -216,16 +216,7 @@ internal object LocalDataBackupCodec {
             },
         )
         val variantId = this[19].decodeText(MAX_TEXT_BYTES)
-        require(
-            if (
-                mode == StoredGameMode.ENDGAME ||
-                mode == StoredGameMode.CUSTOM_POSITION
-            ) {
-                variantId.isNotBlank()
-            } else {
-                variantId.isEmpty()
-            },
-        )
+        require(mode.acceptsSessionVariant(variantId))
         return GameSessionSnapshot(
             gameType = gameType,
             mode = mode,
@@ -257,7 +248,8 @@ internal object LocalDataBackupCodec {
             if (
                 mode == StoredGameMode.HUMAN_VS_AI ||
                 mode == StoredGameMode.AI_AUTO_PLAY ||
-                mode == StoredGameMode.CUSTOM_POSITION
+                mode == StoredGameMode.CUSTOM_POSITION ||
+                mode == StoredGameMode.TIMED_CHALLENGE
             ) {
                 true
             } else {
@@ -362,16 +354,8 @@ internal object LocalDataBackupCodec {
             require(it.sessionId.isNotBlank() && it.sessionId.length <= MatchOutcome.MAX_MATCH_ID_LENGTH)
             require(it.engineState.size in 1..GameRecord.MAX_ENGINE_STATE_BYTES)
             require(if (it.mode == StoredGameMode.LOCAL_TWO_PLAYER) it.difficulty == null else it.difficulty != null)
-            require(
-                if (
-                    it.mode == StoredGameMode.ENDGAME ||
-                    it.mode == StoredGameMode.CUSTOM_POSITION
-                ) {
-                    it.sessionVariantId.isNotBlank()
-                } else {
-                    it.sessionVariantId.isEmpty()
-                },
-            )
+            require(it.mode.acceptsSessionVariant(it.sessionVariantId))
+            require(it.hasValidPersistedClock())
         }
         snapshot.lastSelections.forEach { require(it.updatedAtEpochMillis >= 0L) }
         snapshot.settings?.let { require(it.updatedAtEpochMillis >= 0L) }
@@ -502,5 +486,6 @@ internal object LocalDataBackupCodec {
         StoredGameMode.AI_AUTO_PLAY,
         StoredGameMode.ENDGAME,
         StoredGameMode.CUSTOM_POSITION,
+        StoredGameMode.TIMED_CHALLENGE,
     )
 }

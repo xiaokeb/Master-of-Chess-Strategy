@@ -4,6 +4,7 @@ import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.ChineseChessSide
+import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 
 internal enum class StoredGameMode(val code: Int) {
@@ -13,6 +14,7 @@ internal enum class StoredGameMode(val code: Int) {
     ENDGAME(3),
     TUTORIAL(4),
     CUSTOM_POSITION(5),
+    TIMED_CHALLENGE(6),
 }
 
 internal data class GameSessionSnapshot(
@@ -70,19 +72,25 @@ internal class RoomGameSessionRepository(
             entity.hintUseCount !in 0..MAX_TRACKED_ACTIONS ||
             entity.autoPlaySpeedPermille !in AUTO_PLAY_SPEED_RANGE ||
             entity.completedAutoGames !in 0..MAX_TRACKED_ACTIONS ||
-            entity.sessionVariantId.length > MAX_SESSION_VARIANT_ID_LENGTH ||
-            !isValidClock(
-                entity.timeControlMinutes,
-                entity.redRemainingMillis,
-                entity.blackRemainingMillis,
-                entity.turnStartedAtEpochMillis,
-            )
+            entity.sessionVariantId.length > MAX_SESSION_VARIANT_ID_LENGTH
         ) {
             return LoadGameSessionResult.Incompatible
         }
         val mode = StoredGameMode.entries.firstOrNull { it.code == entity.modeCode }
             ?: return LoadGameSessionResult.Incompatible
         if (!mode.acceptsSessionVariant(entity.sessionVariantId)) {
+            return LoadGameSessionResult.Incompatible
+        }
+        if (
+            !isValidPersistedClock(
+                mode = mode,
+                sessionVariantId = entity.sessionVariantId,
+                timeControlMinutes = entity.timeControlMinutes,
+                redRemainingMillis = entity.redRemainingMillis,
+                blackRemainingMillis = entity.blackRemainingMillis,
+                turnStartedAtEpochMillis = entity.turnStartedAtEpochMillis,
+            )
+        ) {
             return LoadGameSessionResult.Incompatible
         }
         val difficulty = entity.difficultyCode?.let { code ->
@@ -152,12 +160,7 @@ internal class RoomGameSessionRepository(
             "Session variant is incompatible with the game mode"
         }
         require(
-            isValidClock(
-                snapshot.timeControlMinutes,
-                snapshot.redRemainingMillis,
-                snapshot.blackRemainingMillis,
-                snapshot.turnStartedAtEpochMillis,
-            )
+            snapshot.hasValidPersistedClock()
         ) {
             "Game clock is outside the persistence boundary"
         }
@@ -200,18 +203,6 @@ internal class RoomGameSessionRepository(
         const val MAX_SESSION_VARIANT_ID_LENGTH = 320
         val AUTO_PLAY_SPEED_RANGE = 500..4_000
 
-        fun StoredGameMode.acceptsSessionVariant(variantId: String): Boolean =
-            when (this) {
-                StoredGameMode.ENDGAME -> variantId.isNotBlank()
-                StoredGameMode.CUSTOM_POSITION -> try {
-                    CustomPositionStateCodec.decodeSessionVariant(variantId)
-                    true
-                } catch (_: IllegalArgumentException) {
-                    false
-                }
-                else -> variantId.isEmpty()
-            }
-
         const val RESULT_FIRST_PLAYER_WIN = 1
         const val RESULT_SECOND_PLAYER_WIN = 2
         const val RESULT_DRAW = 3
@@ -232,24 +223,67 @@ internal class RoomGameSessionRepository(
                 else -> null
             }
 
-        fun isValidClock(
-            timeControlMinutes: Int?,
-            redRemainingMillis: Long?,
-            blackRemainingMillis: Long?,
-            turnStartedAtEpochMillis: Long?,
-        ): Boolean {
-            if (timeControlMinutes == null) {
-                return redRemainingMillis == null &&
-                    blackRemainingMillis == null &&
-                    turnStartedAtEpochMillis == null
-            }
-            if (timeControlMinutes !in AppSettings.DURATION_RANGE) return false
-            val maximum = timeControlMinutes * 60_000L
-            return redRemainingMillis != null &&
-                blackRemainingMillis != null &&
-                redRemainingMillis in 0L..maximum &&
-                blackRemainingMillis in 0L..maximum &&
-                (turnStartedAtEpochMillis == null || turnStartedAtEpochMillis >= 0L)
-        }
     }
+}
+
+internal fun StoredGameMode.acceptsSessionVariant(variantId: String): Boolean =
+    when (this) {
+        StoredGameMode.ENDGAME -> variantId.isNotBlank()
+        StoredGameMode.CUSTOM_POSITION -> try {
+            CustomPositionStateCodec.decodeSessionVariant(variantId)
+            true
+        } catch (_: IllegalArgumentException) {
+            false
+        }
+        StoredGameMode.TIMED_CHALLENGE -> try {
+            TimedChallengeConfig.decodeSessionVariant(variantId)
+            true
+        } catch (_: IllegalArgumentException) {
+            false
+        }
+        else -> variantId.isEmpty()
+    }
+
+internal fun GameSessionSnapshot.hasValidPersistedClock(): Boolean =
+    isValidPersistedClock(
+        mode = mode,
+        sessionVariantId = sessionVariantId,
+        timeControlMinutes = timeControlMinutes,
+        redRemainingMillis = redRemainingMillis,
+        blackRemainingMillis = blackRemainingMillis,
+        turnStartedAtEpochMillis = turnStartedAtEpochMillis,
+    )
+
+private fun isValidPersistedClock(
+    mode: StoredGameMode,
+    sessionVariantId: String,
+    timeControlMinutes: Int?,
+    redRemainingMillis: Long?,
+    blackRemainingMillis: Long?,
+    turnStartedAtEpochMillis: Long?,
+): Boolean {
+    val maximum = if (mode == StoredGameMode.TIMED_CHALLENGE) {
+        val seconds = try {
+            TimedChallengeConfig.decodeSessionVariant(sessionVariantId)
+        } catch (_: IllegalArgumentException) {
+            return false
+        }
+        if (timeControlMinutes != TimedChallengeConfig.BACKING_CLOCK_MINUTES) {
+            return false
+        }
+        seconds * 1_000L
+    } else {
+        if (timeControlMinutes == null) {
+            return redRemainingMillis == null &&
+                blackRemainingMillis == null &&
+                turnStartedAtEpochMillis == null
+        }
+        if (timeControlMinutes !in AppSettings.DURATION_RANGE) return false
+        timeControlMinutes * 60_000L
+    }
+    return redRemainingMillis != null &&
+        blackRemainingMillis != null &&
+        redRemainingMillis in 0L..maximum &&
+        blackRemainingMillis in 0L..maximum &&
+        (turnStartedAtEpochMillis == null || turnStartedAtEpochMillis >= 0L)
 }

@@ -1,5 +1,6 @@
 package com.masterofchessstrategy.game
 
+import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.data.GameSessionRepository
 import com.masterofchessstrategy.data.GameSessionSnapshot
@@ -500,6 +501,56 @@ class ChineseChessAiGameViewModelTest {
         assertEquals(StoredGameMode.CUSTOM_POSITION, records.single().mode)
         assertFalse(records.single().isEndgame)
     }
+
+    @Test
+    fun timedChallengeResetsEachTurnAndTimeoutDoesNotAffectRankedWins() =
+        runTest(dispatcher) {
+            var now = 1_000L
+            val engine = FakeAiEngine()
+            val repository = RecordingSessionRepository()
+            val outcomes = mutableListOf<com.masterofchessstrategy.data.MatchOutcome>()
+            val records = mutableListOf<GameRecord>()
+            val viewModel = ChineseChessGameViewModel(
+                sessionRepository = repository,
+                nowEpochMillis = { now },
+                mode = StoredGameMode.TIMED_CHALLENGE,
+                difficulty = Difficulty.EASY,
+                aiDispatcher = dispatcher,
+                clockTickIntervalMillis = null,
+                perMoveTimeLimitSeconds = 30,
+                sessionVariantId = TimedChallengeConfig.sessionVariant(30),
+                onMatchFinished = outcomes::add,
+                onGameRecorded = records::add,
+                engineFactory = { engine },
+            )
+            advanceUntilIdle()
+
+            now += 5_000L
+            viewModel.onSquareTap(engine.redFrom)
+            viewModel.onSquareTap(engine.redTo)
+            advanceUntilIdle()
+
+            assertTrue(viewModel.uiState.isTimedChallenge)
+            assertEquals(30_000L, viewModel.uiState.redRemainingMillis)
+            assertEquals(30, viewModel.uiState.perMoveTimeLimitSeconds)
+            assertEquals(
+                TimedChallengeConfig.sessionVariant(30),
+                repository.saved.last().sessionVariantId,
+            )
+
+            val soundEvent = async(start = CoroutineStart.UNDISPATCHED) {
+                viewModel.soundEvents.first()
+            }
+            now += 30_001L
+            viewModel.synchronizeClock()
+            advanceUntilIdle()
+
+            assertEquals(ChineseChessSoundCue.DEFEAT, soundEvent.await())
+            assertEquals(GameResult.SECOND_PLAYER_WIN, viewModel.uiState.result)
+            assertEquals(ChineseChessFeedback.TIME_EXPIRED, viewModel.uiState.feedback)
+            assertTrue(outcomes.isEmpty())
+            assertEquals(StoredGameMode.TIMED_CHALLENGE, records.single().mode)
+        }
 
     @Test
     fun endgameCheckmateRecordsPlayerVictoryWithoutAiReply() = runTest(dispatcher) {
