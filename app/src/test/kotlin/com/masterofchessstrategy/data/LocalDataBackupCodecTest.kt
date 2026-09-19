@@ -1,6 +1,8 @@
 package com.masterofchessstrategy.data
 
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
+import com.masterofchessstrategy.challenge.StreakChallengeState
+import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
@@ -135,6 +137,48 @@ class LocalDataBackupCodecTest {
                 ),
             )
         }
+    }
+
+    @Test
+    fun streakChallengeSessionAndSelectionRoundTripTogether() {
+        val state = StreakChallengeState(
+            currentStreak = 4,
+            bestStreak = 6,
+            winsAtDifficulty = 1,
+        )
+        val source = LocalDataSnapshot(
+            createdAtEpochMillis = 1L,
+            activeSessions = listOf(
+                GameSessionSnapshot(
+                    gameType = GameType.CHINESE_CHESS,
+                    mode = StoredGameMode.STREAK_CHALLENGE,
+                    difficulty = Difficulty.MEDIUM,
+                    engineState = byteArrayOf(7, 8),
+                    updatedAtEpochMillis = 2L,
+                    sessionId = "streak-1",
+                    sessionVariantId = StreakChallengeStateCodec.encode(state),
+                ),
+            ),
+            lastSelections = listOf(
+                LastGameSelection(
+                    gameType = GameType.CHINESE_CHESS,
+                    mode = StoredGameMode.STREAK_CHALLENGE,
+                    difficulty = Difficulty.MEDIUM,
+                    updatedAtEpochMillis = 3L,
+                ),
+            ),
+        )
+
+        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+
+        assertEquals(StoredGameMode.STREAK_CHALLENGE, restored.activeSessions.single().mode)
+        assertEquals(Difficulty.MEDIUM, restored.lastSelections.single().difficulty)
+        assertEquals(
+            state,
+            StreakChallengeStateCodec.decode(
+                restored.activeSessions.single().sessionVariantId,
+            ),
+        )
     }
 
     private fun completeSnapshot(): LocalDataSnapshot = LocalDataSnapshot(

@@ -305,6 +305,7 @@ private fun StoredGameMode.displayName(): String = stringResource(
         StoredGameMode.TUTORIAL -> R.string.tutorial_mode
         StoredGameMode.CUSTOM_POSITION -> R.string.custom_position_mode
         StoredGameMode.TIMED_CHALLENGE -> R.string.timed_challenge_mode
+        StoredGameMode.STREAK_CHALLENGE -> R.string.streak_challenge_mode
     },
 )
 

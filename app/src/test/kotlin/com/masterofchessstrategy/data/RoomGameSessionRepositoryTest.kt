@@ -1,6 +1,8 @@
 package com.masterofchessstrategy.data
 
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
+import com.masterofchessstrategy.challenge.StreakChallengeState
+import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.GameResult
@@ -224,6 +226,53 @@ class RoomGameSessionRepositoryTest {
         dao.entity = requireNotNull(dao.entity).copy(
             redRemainingMillis = 30_000L,
             sessionVariantId = "timed:030",
+        )
+        assertSame(
+            LoadGameSessionResult.Incompatible,
+            repository.load(GameType.CHINESE_CHESS),
+        )
+    }
+
+    @Test
+    fun streakChallengeAcceptsOnlyCanonicalStateAndDifficulty() = runBlocking {
+        val state = StreakChallengeState(
+            currentStreak = 2,
+            bestStreak = 4,
+            winsAtDifficulty = 2,
+        )
+        val dao = FakeActiveGameDao(
+            ActiveGameEntity(
+                gameTypeCode = GameType.CHINESE_CHESS.code,
+                modeCode = StoredGameMode.STREAK_CHALLENGE.code,
+                difficultyCode = Difficulty.EASY.code,
+                envelopeVersion = 4,
+                engineFormatVersion = 2,
+                engineState = byteArrayOf(9),
+                updatedAtEpochMillis = 1L,
+                sessionId = "streak-session",
+                sessionVariantId = StreakChallengeStateCodec.encode(state),
+            ),
+        )
+        val repository = RoomGameSessionRepository(dao)
+
+        val loaded = repository.load(GameType.CHINESE_CHESS)
+
+        assertEquals(
+            state,
+            StreakChallengeStateCodec.decode(
+                (loaded as LoadGameSessionResult.Loaded).snapshot.sessionVariantId,
+            ),
+        )
+
+        dao.entity = requireNotNull(dao.entity).copy(sessionVariantId = "streak:02:4:2:0:n")
+        assertSame(
+            LoadGameSessionResult.Incompatible,
+            repository.load(GameType.CHINESE_CHESS),
+        )
+
+        dao.entity = requireNotNull(dao.entity).copy(
+            difficultyCode = null,
+            sessionVariantId = StreakChallengeStateCodec.encode(state),
         )
         assertSame(
             LoadGameSessionResult.Incompatible,

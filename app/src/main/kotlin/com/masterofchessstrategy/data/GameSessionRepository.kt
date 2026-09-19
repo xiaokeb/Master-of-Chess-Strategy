@@ -5,6 +5,7 @@ import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
+import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 
 internal enum class StoredGameMode(val code: Int) {
@@ -15,6 +16,7 @@ internal enum class StoredGameMode(val code: Int) {
     TUTORIAL(4),
     CUSTOM_POSITION(5),
     TIMED_CHALLENGE(6),
+    STREAK_CHALLENGE(7),
 }
 
 internal data class GameSessionSnapshot(
@@ -97,6 +99,9 @@ internal class RoomGameSessionRepository(
             Difficulty.entries.firstOrNull { it.code == code }
                 ?: return LoadGameSessionResult.Incompatible
         }
+        if (!mode.acceptsSessionDifficulty(difficulty)) {
+            return LoadGameSessionResult.Incompatible
+        }
         val resultOverride = entity.resultOverrideCode?.let { code ->
             decodeTerminalResult(code) ?: return LoadGameSessionResult.Incompatible
         }
@@ -158,6 +163,9 @@ internal class RoomGameSessionRepository(
         }
         require(snapshot.mode.acceptsSessionVariant(snapshot.sessionVariantId)) {
             "Session variant is incompatible with the game mode"
+        }
+        require(snapshot.mode.acceptsSessionDifficulty(snapshot.difficulty)) {
+            "Difficulty is incompatible with the game mode"
         }
         require(
             snapshot.hasValidPersistedClock()
@@ -241,7 +249,26 @@ internal fun StoredGameMode.acceptsSessionVariant(variantId: String): Boolean =
         } catch (_: IllegalArgumentException) {
             false
         }
+        StoredGameMode.STREAK_CHALLENGE -> try {
+            StreakChallengeStateCodec.decode(variantId)
+            true
+        } catch (_: IllegalArgumentException) {
+            false
+        }
         else -> variantId.isEmpty()
+    }
+
+internal fun StoredGameMode.acceptsSessionDifficulty(difficulty: Difficulty?): Boolean =
+    when (this) {
+        StoredGameMode.LOCAL_TWO_PLAYER -> difficulty == null
+        StoredGameMode.HUMAN_VS_AI,
+        StoredGameMode.AI_AUTO_PLAY,
+        StoredGameMode.ENDGAME,
+        StoredGameMode.CUSTOM_POSITION,
+        StoredGameMode.TIMED_CHALLENGE,
+        StoredGameMode.STREAK_CHALLENGE,
+        -> difficulty != null
+        StoredGameMode.TUTORIAL -> false
     }
 
 internal fun GameSessionSnapshot.hasValidPersistedClock(): Boolean =

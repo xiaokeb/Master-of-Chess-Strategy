@@ -3,6 +3,8 @@ package com.masterofchessstrategy.navigation
 import com.masterofchessstrategy.data.LastGameSelection
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
+import com.masterofchessstrategy.challenge.StreakChallengeState
+import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameType
@@ -232,6 +234,31 @@ class AppNavigationModelTest {
 
         assertEquals(
             QuickStartDestination.TIMED_SETUP,
+            selection.quickStartDestination(),
+        )
+    }
+
+    @Test
+    fun streakRouteCarriesCanonicalSeriesState() {
+        val state = StreakChallengeState(currentStreak = 2, bestStreak = 4)
+        val route = AppDestination.chineseChessStreakGame(Difficulty.HARD, state)
+        val encoded = route.substringAfterLast('/')
+
+        assertEquals("chinese-chess/extensions/streak/2/streak:2:4:0:0:n", route)
+        assertEquals(state, StreakChallengeStateCodec.decode(encoded))
+    }
+
+    @Test
+    fun streakHistoryReturnsToItsSetupScreen() {
+        val selection = LastGameSelection(
+            gameType = GameType.CHINESE_CHESS,
+            mode = StoredGameMode.STREAK_CHALLENGE,
+            difficulty = Difficulty.EASY,
+            updatedAtEpochMillis = 1L,
+        )
+
+        assertEquals(
+            QuickStartDestination.STREAK_SETUP,
             selection.quickStartDestination(),
         )
     }

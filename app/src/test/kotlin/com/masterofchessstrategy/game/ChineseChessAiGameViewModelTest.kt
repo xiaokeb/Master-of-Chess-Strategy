@@ -1,6 +1,8 @@
 package com.masterofchessstrategy.game
 
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
+import com.masterofchessstrategy.challenge.StreakChallengeState
+import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.data.GameSessionRepository
 import com.masterofchessstrategy.data.GameSessionSnapshot
@@ -550,6 +552,86 @@ class ChineseChessAiGameViewModelTest {
             assertEquals(ChineseChessFeedback.TIME_EXPIRED, viewModel.uiState.feedback)
             assertTrue(outcomes.isEmpty())
             assertEquals(StoredGameMode.TIMED_CHALLENGE, records.single().mode)
+        }
+
+    @Test
+    fun streakChallengePromotesPersistsAndRestoresAcrossRouteRecreation() =
+        runTest(dispatcher) {
+            val engine = FakeAiEngine(humanMoveResult = GameResult.FIRST_PLAYER_WIN)
+            val initialState = StreakChallengeState(
+                currentStreak = 2,
+                bestStreak = 2,
+                winsAtDifficulty = 2,
+            )
+            val initialSnapshot = GameSessionSnapshot(
+                gameType = GameType.CHINESE_CHESS,
+                mode = StoredGameMode.STREAK_CHALLENGE,
+                difficulty = Difficulty.EASY,
+                engineState = byteArrayOf(0),
+                updatedAtEpochMillis = 1L,
+                sessionId = "streak-match",
+                sessionVariantId = StreakChallengeStateCodec.encode(initialState),
+            )
+            val repository = RecordingSessionRepository(
+                LoadGameSessionResult.Loaded(initialSnapshot),
+            )
+            val outcomes = mutableListOf<com.masterofchessstrategy.data.MatchOutcome>()
+            val records = mutableListOf<GameRecord>()
+            val viewModel = ChineseChessGameViewModel(
+                sessionRepository = repository,
+                mode = StoredGameMode.STREAK_CHALLENGE,
+                difficulty = Difficulty.EASY,
+                aiDispatcher = dispatcher,
+                initialStreakState = initialState,
+                sessionVariantId = StreakChallengeStateCodec.encode(initialState),
+                onMatchFinished = outcomes::add,
+                onGameRecorded = records::add,
+                engineFactory = { engine },
+            )
+            advanceUntilIdle()
+
+            viewModel.onSquareTap(engine.redFrom)
+            viewModel.onSquareTap(engine.redTo)
+            advanceUntilIdle()
+
+            assertEquals(3, viewModel.uiState.currentStreak)
+            assertEquals(3, viewModel.uiState.bestStreak)
+            assertEquals(Difficulty.MEDIUM, viewModel.uiState.streakNextDifficulty)
+            assertEquals(Difficulty.EASY, records.single().difficulty)
+            assertTrue(outcomes.isEmpty())
+
+            viewModel.continueStreakChallenge()
+            advanceUntilIdle()
+
+            assertEquals(GameResult.ONGOING, viewModel.uiState.result)
+            assertEquals(Difficulty.MEDIUM, viewModel.uiState.difficulty)
+            assertEquals(null, viewModel.uiState.streakNextDifficulty)
+            val continuedSnapshot = repository.saved.last()
+            assertEquals(Difficulty.MEDIUM, continuedSnapshot.difficulty)
+            assertEquals(
+                3,
+                StreakChallengeStateCodec.decode(
+                    continuedSnapshot.sessionVariantId,
+                ).currentStreak,
+            )
+
+            val recreated = ChineseChessGameViewModel(
+                sessionRepository = RecordingSessionRepository(
+                    LoadGameSessionResult.Loaded(continuedSnapshot),
+                ),
+                mode = StoredGameMode.STREAK_CHALLENGE,
+                difficulty = Difficulty.EASY,
+                aiDispatcher = dispatcher,
+                initialStreakState = StreakChallengeState(),
+                sessionVariantId = StreakChallengeStateCodec.encode(
+                    StreakChallengeState(),
+                ),
+                engineFactory = { FakeAiEngine() },
+            )
+            advanceUntilIdle()
+
+            assertEquals(Difficulty.MEDIUM, recreated.uiState.difficulty)
+            assertEquals(3, recreated.uiState.currentStreak)
         }
 
     @Test

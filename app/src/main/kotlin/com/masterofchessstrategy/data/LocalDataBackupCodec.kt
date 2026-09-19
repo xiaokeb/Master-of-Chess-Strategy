@@ -249,7 +249,8 @@ internal object LocalDataBackupCodec {
                 mode == StoredGameMode.HUMAN_VS_AI ||
                 mode == StoredGameMode.AI_AUTO_PLAY ||
                 mode == StoredGameMode.CUSTOM_POSITION ||
-                mode == StoredGameMode.TIMED_CHALLENGE
+                mode == StoredGameMode.TIMED_CHALLENGE ||
+                mode == StoredGameMode.STREAK_CHALLENGE
             ) {
                 true
             } else {
@@ -353,7 +354,7 @@ internal object LocalDataBackupCodec {
             require(it.updatedAtEpochMillis >= 0L)
             require(it.sessionId.isNotBlank() && it.sessionId.length <= MatchOutcome.MAX_MATCH_ID_LENGTH)
             require(it.engineState.size in 1..GameRecord.MAX_ENGINE_STATE_BYTES)
-            require(if (it.mode == StoredGameMode.LOCAL_TWO_PLAYER) it.difficulty == null else it.difficulty != null)
+            require(it.mode.acceptsSessionDifficulty(it.difficulty))
             require(it.mode.acceptsSessionVariant(it.sessionVariantId))
             require(it.hasValidPersistedClock())
         }
@@ -487,5 +488,6 @@ internal object LocalDataBackupCodec {
         StoredGameMode.ENDGAME,
         StoredGameMode.CUSTOM_POSITION,
         StoredGameMode.TIMED_CHALLENGE,
+        StoredGameMode.STREAK_CHALLENGE,
     )
 }

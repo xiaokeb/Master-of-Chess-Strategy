@@ -3,6 +3,8 @@ package com.masterofchessstrategy.navigation
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
+import com.masterofchessstrategy.challenge.StreakChallengeState
+import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 
 internal object AppDestination {
@@ -20,6 +22,12 @@ internal object AppDestination {
     const val CHINESE_CHESS_TIMED_GAME =
         "chinese-chess/extensions/timed/{$TIMED_DIFFICULTY_ARGUMENT}/" +
             "{$TIMED_SECONDS_ARGUMENT}"
+    const val CHINESE_CHESS_STREAK_SETUP = "chinese-chess/extensions/streak/setup"
+    const val STREAK_DIFFICULTY_ARGUMENT = "streakDifficultyCode"
+    const val STREAK_STATE_ARGUMENT = "streakState"
+    const val CHINESE_CHESS_STREAK_GAME =
+        "chinese-chess/extensions/streak/{$STREAK_DIFFICULTY_ARGUMENT}/" +
+            "{$STREAK_STATE_ARGUMENT}"
     const val CHINESE_CHESS_CUSTOM_SETUP = "chinese-chess/extensions/custom/setup"
     const val CUSTOM_DIFFICULTY_ARGUMENT = "customDifficultyCode"
     const val CUSTOM_POSITION_ARGUMENT = "customPosition"
@@ -65,6 +73,13 @@ internal object AppDestination {
         TimedChallengeConfig.sessionVariant(secondsPerMove)
         return "chinese-chess/extensions/timed/${difficulty.code}/$secondsPerMove"
     }
+
+    fun chineseChessStreakGame(
+        difficulty: Difficulty,
+        state: StreakChallengeState,
+    ): String =
+        "chinese-chess/extensions/streak/${difficulty.code}/" +
+            StreakChallengeStateCodec.encode(state)
 }
 
 /** Five first-level cards required by the product layout. */

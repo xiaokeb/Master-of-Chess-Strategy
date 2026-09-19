@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.masterofchessstrategy.R
 import com.masterofchessstrategy.challenge.ChineseChessTimedChallengeUiState
+import com.masterofchessstrategy.challenge.ChineseChessStreakUiState
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.custom.ChineseChessSetupFeedback
 import com.masterofchessstrategy.custom.ChineseChessSetupUiState
@@ -42,13 +43,16 @@ internal const val EXTENSIONS_SCREEN_TAG = "extensions_screen"
 internal const val TIMED_CHALLENGE_ENTRY_TAG = "timed_challenge_entry"
 internal const val TIMED_CHALLENGE_SETUP_TAG = "timed_challenge_setup"
 internal const val TIMED_CHALLENGE_START_TAG = "timed_challenge_start"
+internal const val STREAK_CHALLENGE_ENTRY_TAG = "streak_challenge_entry"
+internal const val STREAK_CHALLENGE_SETUP_TAG = "streak_challenge_setup"
+internal const val STREAK_CHALLENGE_START_TAG = "streak_challenge_start"
 internal const val CUSTOM_SETUP_ENTRY_TAG = "custom_setup_entry"
 internal const val CUSTOM_SETUP_SCREEN_TAG = "custom_setup_screen"
 internal const val CUSTOM_SETUP_START_TAG = "custom_setup_start"
 
 private enum class ExtensionEntry(val available: Boolean) {
     TIMED(true),
-    STREAK(false),
+    STREAK(true),
     BLIND(false),
     CUSTOM_POSITION(true),
     ASSESSMENT(false),
@@ -59,6 +63,7 @@ private enum class ExtensionEntry(val available: Boolean) {
 internal fun ChineseChessExtensionsScreen(
     onBack: () -> Unit,
     onTimedChallenge: () -> Unit,
+    onStreakChallenge: () -> Unit,
     onCustomPosition: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -91,6 +96,8 @@ internal fun ChineseChessExtensionsScreen(
                                     when (entry) {
                                         ExtensionEntry.TIMED ->
                                             Modifier.testTag(TIMED_CHALLENGE_ENTRY_TAG)
+                                        ExtensionEntry.STREAK ->
+                                            Modifier.testTag(STREAK_CHALLENGE_ENTRY_TAG)
                                         ExtensionEntry.CUSTOM_POSITION ->
                                             Modifier.testTag(CUSTOM_SETUP_ENTRY_TAG)
                                         else -> Modifier
@@ -101,6 +108,7 @@ internal fun ChineseChessExtensionsScreen(
                                     onClick = {
                                         when (entry) {
                                             ExtensionEntry.TIMED -> onTimedChallenge()
+                                            ExtensionEntry.STREAK -> onStreakChallenge()
                                             ExtensionEntry.CUSTOM_POSITION -> onCustomPosition()
                                             else -> Unit
                                         }
@@ -130,6 +138,81 @@ internal fun ChineseChessExtensionsScreen(
                                     color = MaterialTheme.colorScheme.primary,
                                 )
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun ChineseChessStreakChallengeScreen(
+    state: ChineseChessStreakUiState,
+    onBack: () -> Unit,
+    onDifficultySelected: (Difficulty) -> Unit,
+    onStart: () -> Unit,
+    onContinueSaved: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxSize()
+            .testTag(STREAK_CHALLENGE_SETUP_TAG),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            PageHeader(
+                title = stringResource(R.string.streak_challenge_title),
+                subtitle = stringResource(R.string.streak_challenge_subtitle),
+                onBack = onBack,
+            )
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        stringResource(R.string.streak_choose_starting_difficulty),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    ChoiceRow(
+                        entries = Difficulty.entries,
+                        selected = state.startingDifficulty,
+                        enabled = { it in state.unlockedDifficulties },
+                        label = { it.difficultyName() },
+                        onSelected = onDifficultySelected,
+                    )
+                    Text(
+                        stringResource(R.string.streak_challenge_rules),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Button(
+                        onClick = onStart,
+                        enabled = state.unlockedDifficulties.isNotEmpty(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(STREAK_CHALLENGE_START_TAG),
+                    ) {
+                        Text(stringResource(R.string.streak_challenge_start))
+                    }
+                    state.savedChallenge?.let { saved ->
+                        OutlinedButton(
+                            onClick = onContinueSaved,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                stringResource(
+                                    R.string.streak_challenge_continue,
+                                    saved.state.currentStreak,
+                                    saved.state.bestStreak,
+                                ),
+                            )
                         }
                     }
                 }

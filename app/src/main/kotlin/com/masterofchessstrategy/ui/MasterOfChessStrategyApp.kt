@@ -51,7 +51,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.masterofchessstrategy.R
 import com.masterofchessstrategy.challenge.ChineseChessTimedChallengeViewModel
+import com.masterofchessstrategy.challenge.ChineseChessStreakViewModel
 import com.masterofchessstrategy.challenge.PreparedTimedChallenge
+import com.masterofchessstrategy.challenge.PreparedStreakChallenge
+import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.RoomAppSettingsRepository
@@ -97,6 +100,7 @@ import com.masterofchessstrategy.ui.theme.MocsTheme
 
 internal const val UNDO_BUTTON_TAG = "undo_button"
 internal const val RESTART_BUTTON_TAG = "restart_button"
+internal const val STREAK_NEXT_GAME_TAG = "streak_next_game"
 internal const val HINT_BUTTON_TAG = "hint_button"
 internal const val RESIGN_BUTTON_TAG = "resign_button"
 internal const val DRAW_BUTTON_TAG = "draw_button"
@@ -282,6 +286,10 @@ fun MasterOfChessStrategyApp() {
                                     AppDestination.CHINESE_CHESS_TIMED_SETUP
                                 }
 
+                                QuickStartDestination.STREAK_SETUP -> {
+                                    AppDestination.CHINESE_CHESS_STREAK_SETUP
+                                }
+
                                 QuickStartDestination.MODE_SELECTION -> {
                                     AppDestination.CHINESE_CHESS_MODES
                                 }
@@ -357,8 +365,115 @@ fun MasterOfChessStrategyApp() {
                     onTimedChallenge = {
                         navController.navigate(AppDestination.CHINESE_CHESS_TIMED_SETUP)
                     },
+                    onStreakChallenge = {
+                        navController.navigate(AppDestination.CHINESE_CHESS_STREAK_SETUP)
+                    },
                     onCustomPosition = {
                         navController.navigate(AppDestination.CHINESE_CHESS_CUSTOM_SETUP)
+                    },
+                )
+            }
+            composable(AppDestination.CHINESE_CHESS_STREAK_SETUP) {
+                val unlocked = difficultyEntries
+                    .filter { it.isPlayable }
+                    .mapTo(linkedSetOf()) { it.difficulty }
+                val factory = remember(gameSessionRepository, unlocked) {
+                    ChineseChessStreakViewModel.factory(
+                        repository = gameSessionRepository,
+                        unlockedDifficulties = unlocked,
+                    )
+                }
+                val streakViewModel: ChineseChessStreakViewModel =
+                    viewModel(factory = factory)
+                val openChallenge: (PreparedStreakChallenge) -> Unit = { prepared ->
+                    navigationViewModel.recordChineseChessSelection(
+                        StoredGameMode.STREAK_CHALLENGE,
+                        prepared.difficulty,
+                    )
+                    navController.navigate(
+                        AppDestination.chineseChessStreakGame(
+                            prepared.difficulty,
+                            prepared.state,
+                        ),
+                    )
+                }
+                ChineseChessStreakChallengeScreen(
+                    state = streakViewModel.uiState,
+                    onBack = navController::popBackStack,
+                    onDifficultySelected = streakViewModel::selectStartingDifficulty,
+                    onStart = {
+                        streakViewModel.prepareNewChallenge()?.let(openChallenge)
+                    },
+                    onContinueSaved = {
+                        streakViewModel.continueSavedChallenge()?.let(openChallenge)
+                    },
+                )
+            }
+            composable(
+                route = AppDestination.CHINESE_CHESS_STREAK_GAME,
+                arguments = listOf(
+                    navArgument(AppDestination.STREAK_DIFFICULTY_ARGUMENT) {
+                        type = NavType.IntType
+                    },
+                    navArgument(AppDestination.STREAK_STATE_ARGUMENT) {
+                        type = NavType.StringType
+                    },
+                ),
+            ) { backStackEntry ->
+                val difficultyCode = backStackEntry.arguments
+                    ?.getInt(AppDestination.STREAK_DIFFICULTY_ARGUMENT)
+                val difficulty = checkNotNull(
+                    Difficulty.entries.firstOrNull { it.code == difficultyCode },
+                ) { "Unsupported streak-challenge difficulty" }
+                val encodedState = checkNotNull(
+                    backStackEntry.arguments?.getString(
+                        AppDestination.STREAK_STATE_ARGUMENT,
+                    ),
+                )
+                val streakState = StreakChallengeStateCodec.decode(encodedState)
+                val factory = remember(
+                    gameSessionRepository,
+                    gameRecordsViewModel,
+                    difficulty,
+                    encodedState,
+                    settingsViewModel.uiState.settings.gameDurationMinutes,
+                    pikafishNetworkProvider,
+                ) {
+                    ChineseChessGameViewModel.factory(
+                        repository = gameSessionRepository,
+                        mode = StoredGameMode.STREAK_CHALLENGE,
+                        difficulty = difficulty,
+                        onGameRecorded = gameRecordsViewModel::record,
+                        timeControlMinutes =
+                            settingsViewModel.uiState.settings.gameDurationMinutes,
+                        sessionVariantId = encodedState,
+                        streakState = streakState,
+                        engineFactory = {
+                            NativeChineseChessEngine(
+                                pikafishNetworkProvider::requireNetworkPath,
+                            )
+                        },
+                    )
+                }
+                val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
+                ChineseChessGameSoundEffect(
+                    gameViewModel,
+                    settingsViewModel.uiState.settings.soundEnabled,
+                )
+                ChineseChessGameScreen(
+                    state = gameViewModel.uiState,
+                    onSquareTap = gameViewModel::onSquareTap,
+                    onUndo = gameViewModel::undo,
+                    onHint = gameViewModel::requestHint,
+                    onResign = gameViewModel::resign,
+                    onDraw = gameViewModel::offerOrAcceptDraw,
+                    onRestart = gameViewModel::restart,
+                    onContinueStreak = gameViewModel::continueStreakChallenge,
+                    onBack = navController::popBackStack,
+                    onSettings = {
+                        navController.navigate(AppDestination.SETTINGS) {
+                            launchSingleTop = true
+                        }
                     },
                 )
             }
@@ -1057,6 +1172,7 @@ internal fun ChineseChessGameScreen(
     onAutoPlaySpeedChange: (Float) -> Unit = {},
     onAutoPlaySpeedChangeFinished: () -> Unit = {},
     onSettings: () -> Unit = {},
+    onContinueStreak: () -> Unit = {},
 ) {
     BackHandler(
         enabled =
@@ -1101,6 +1217,7 @@ internal fun ChineseChessGameScreen(
                                 onAutoPlaySpeedChangeFinished =
                                     onAutoPlaySpeedChangeFinished,
                                 onRestart = onRestart,
+                                onContinueStreak = onContinueStreak,
                                 modifier = Modifier
                                     .widthIn(min = 240.dp, max = 320.dp)
                                     .fillMaxHeight(),
@@ -1129,6 +1246,7 @@ internal fun ChineseChessGameScreen(
                                 onAutoPlaySpeedChangeFinished =
                                     onAutoPlaySpeedChangeFinished,
                                 onRestart = onRestart,
+                                onContinueStreak = onContinueStreak,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         }
@@ -1268,6 +1386,7 @@ private fun GameControls(
     onAutoPlaySpeedChange: (Float) -> Unit,
     onAutoPlaySpeedChangeFinished: () -> Unit,
     onRestart: () -> Unit,
+    onContinueStreak: () -> Unit,
     modifier: Modifier,
 ) {
     val controlAvailable =
@@ -1326,6 +1445,26 @@ private fun GameControls(
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
+            if (state.isStreakChallenge) {
+                Text(
+                    text = stringResource(
+                        R.string.streak_challenge_progress,
+                        state.currentStreak,
+                        state.bestStreak,
+                    ),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                state.streakNextDifficulty?.let { next ->
+                    Text(
+                        text = stringResource(
+                            R.string.streak_challenge_next_difficulty,
+                            difficultyTitle(next),
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
 
             state.feedback?.let { feedback ->
                 Surface(
@@ -1353,14 +1492,37 @@ private fun GameControls(
                 ) {
                     Text(undoButtonText(state))
                 }
-                OutlinedButton(
-                    onClick = onRestart,
-                    enabled = controlAvailable,
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag(RESTART_BUTTON_TAG),
-                ) {
-                    Text(stringResource(R.string.restart))
+                if (state.isStreakChallenge) {
+                    Button(
+                        onClick = onContinueStreak,
+                        enabled =
+                            controlAvailable &&
+                                state.result != GameResult.ONGOING &&
+                                state.streakNextDifficulty != null,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(STREAK_NEXT_GAME_TAG),
+                    ) {
+                        Text(
+                            stringResource(
+                                if (state.result == GameResult.ONGOING) {
+                                    R.string.streak_challenge_in_progress
+                                } else {
+                                    R.string.streak_challenge_next_game
+                                },
+                            ),
+                        )
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = onRestart,
+                        enabled = controlAvailable,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(RESTART_BUTTON_TAG),
+                    ) {
+                        Text(stringResource(R.string.restart))
+                    }
                 }
             }
 
@@ -1489,6 +1651,12 @@ private fun gameStatusText(state: ChineseChessGameUiState): String =
 
 @Composable
 private fun gameModeTitle(state: ChineseChessGameUiState): String {
+    if (state.isStreakChallenge) {
+        return stringResource(
+            R.string.streak_challenge_ai_game,
+            difficultyTitle(requireNotNull(state.difficulty)),
+        )
+    }
     if (state.isTimedChallenge) {
         return stringResource(
             R.string.timed_challenge_ai_game,
@@ -1597,6 +1765,7 @@ private fun feedbackText(feedback: ChineseChessFeedback): String =
             ChineseChessFeedback.TIME_EXPIRED -> R.string.feedback_time_expired
             ChineseChessFeedback.AUTO_PLAY_PAUSED -> R.string.feedback_auto_play_paused
             ChineseChessFeedback.AUTO_PLAY_RESUMED -> R.string.feedback_auto_play_resumed
+            ChineseChessFeedback.STREAK_NEXT_GAME -> R.string.feedback_streak_next_game
         },
     )
 

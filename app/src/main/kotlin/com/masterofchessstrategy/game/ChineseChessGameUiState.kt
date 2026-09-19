@@ -35,6 +35,7 @@ enum class ChineseChessFeedback {
     TIME_EXPIRED,
     AUTO_PLAY_PAUSED,
     AUTO_PLAY_RESUMED,
+    STREAK_NEXT_GAME,
 }
 
 /** Short, non-replaying audio cues emitted by live game actions. */
@@ -80,6 +81,10 @@ data class ChineseChessGameUiState(
     val isCustomPosition: Boolean = false,
     val isTimedChallenge: Boolean = false,
     val perMoveTimeLimitSeconds: Int? = null,
+    val isStreakChallenge: Boolean = false,
+    val currentStreak: Int = 0,
+    val bestStreak: Int = 0,
+    val streakNextDifficulty: Difficulty? = null,
     val endgameTitle: String? = null,
     val endgamePlayerMovesUsed: Int = 0,
     val endgameMaxPlayerMoves: Int? = null,
@@ -119,6 +124,17 @@ data class ChineseChessGameUiState(
                 (perMoveTimeLimitSeconds != null),
         ) {
             "Timed challenge state requires a per-move limit"
+        }
+        require(currentStreak >= 0 && bestStreak >= currentStreak)
+        require(
+            isStreakChallenge ||
+                (
+                    currentStreak == 0 &&
+                        bestStreak == 0 &&
+                        streakNextDifficulty == null
+                    ),
+        ) {
+            "Streak metadata belongs only to streak challenge mode"
         }
     }
 

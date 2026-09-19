@@ -5,6 +5,8 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import com.masterofchessstrategy.game.ChineseChessGameUiState
+import com.masterofchessstrategy.engine.Difficulty
+import com.masterofchessstrategy.engine.GameResult
 import org.junit.Rule
 import org.junit.Test
 
@@ -80,5 +82,32 @@ class ChineseChessGameScreenTest {
         composeRule.onNodeWithTag(AUTO_PLAY_TOGGLE_TAG).assertIsEnabled()
         composeRule.onNodeWithTag(AUTO_PLAY_SPEED_TAG).assertIsEnabled()
         composeRule.onNodeWithTag(RESIGN_BUTTON_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun completedStreakGameOffersDedicatedNextGameAction() {
+        composeRule.setContent {
+            ChineseChessGameScreen(
+                state = ChineseChessGameUiState(
+                    result = GameResult.FIRST_PLAYER_WIN,
+                    isAiGame = true,
+                    difficulty = Difficulty.EASY,
+                    isStreakChallenge = true,
+                    currentStreak = 3,
+                    bestStreak = 3,
+                    streakNextDifficulty = Difficulty.MEDIUM,
+                ),
+                onSquareTap = {},
+                onUndo = {},
+                onHint = {},
+                onResign = {},
+                onRestart = {},
+                onContinueStreak = {},
+                onBack = {},
+            )
+        }
+
+        composeRule.onNodeWithTag(STREAK_NEXT_GAME_TAG).assertIsEnabled()
+        composeRule.onNodeWithTag(RESTART_BUTTON_TAG).assertDoesNotExist()
     }
 }

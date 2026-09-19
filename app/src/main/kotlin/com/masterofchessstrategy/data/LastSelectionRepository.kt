@@ -82,6 +82,7 @@ internal class RoomLastSelectionRepository(
             StoredGameMode.HUMAN_VS_AI,
             StoredGameMode.AI_AUTO_PLAY,
             StoredGameMode.TIMED_CHALLENGE,
+            StoredGameMode.STREAK_CHALLENGE,
             -> true
 
             StoredGameMode.CUSTOM_POSITION -> difficulty != null

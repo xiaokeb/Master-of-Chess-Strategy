@@ -9,7 +9,10 @@ import com.masterofchessstrategy.data.CompletedEndgameLevel
 import com.masterofchessstrategy.data.EndgameProgress
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.challenge.ChineseChessTimedChallengeUiState
+import com.masterofchessstrategy.challenge.ChineseChessStreakUiState
 import com.masterofchessstrategy.challenge.PreparedTimedChallenge
+import com.masterofchessstrategy.challenge.PreparedStreakChallenge
+import com.masterofchessstrategy.challenge.StreakChallengeState
 import com.masterofchessstrategy.custom.ChineseChessSetupUiState
 import com.masterofchessstrategy.engine.ChineseChessBoard
 import com.masterofchessstrategy.engine.BoardMove
@@ -335,6 +338,38 @@ private fun ChineseChessTimedChallengeScreenPreview() {
             onBack = {},
             onDifficultySelected = {},
             onSecondsSelected = {},
+            onStart = {},
+            onContinueSaved = {},
+        )
+    }
+}
+
+@Preview(
+    name = "11 中国象棋连胜模式",
+    group = "已完成界面",
+    widthDp = 960,
+    heightDp = 540,
+    showBackground = true,
+)
+@Composable
+private fun ChineseChessStreakChallengeScreenPreview() {
+    MocsTheme {
+        ChineseChessStreakChallengeScreen(
+            state = ChineseChessStreakUiState(
+                startingDifficulty = Difficulty.MEDIUM,
+                unlockedDifficulties = Difficulty.entries.toSet(),
+                isLoadingSavedGame = false,
+                savedChallenge = PreparedStreakChallenge(
+                    difficulty = Difficulty.HARD,
+                    state = StreakChallengeState(
+                        currentStreak = 4,
+                        bestStreak = 7,
+                        winsAtDifficulty = 1,
+                    ),
+                ),
+            ),
+            onBack = {},
+            onDifficultySelected = {},
             onStart = {},
             onContinueSaved = {},
         )
