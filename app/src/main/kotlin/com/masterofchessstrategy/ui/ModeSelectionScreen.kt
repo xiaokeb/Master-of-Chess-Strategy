@@ -29,6 +29,7 @@ internal const val MODE_AI_GAME_TAG = "mode_ai_game"
 internal const val MODE_AUTO_PLAY_TAG = "mode_auto_play"
 internal const val MODE_TUTORIAL_TAG = "mode_tutorial"
 internal const val MODE_ENDGAME_TAG = "mode_endgame"
+internal const val MODE_EXTENSIONS_TAG = "mode_extensions"
 internal const val DIFFICULTY_SCREEN_TAG = "difficulty_screen"
 internal const val DIFFICULTY_EASY_TAG = "difficulty_easy"
 
@@ -40,6 +41,7 @@ internal fun ChineseChessModeScreen(
     onAutoPlayDifficulty: () -> Unit,
     onTutorial: () -> Unit,
     onEndgame: () -> Unit,
+    onExtensions: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(modifier = modifier.fillMaxSize()) {
@@ -70,6 +72,7 @@ internal fun ChineseChessModeScreen(
                                 }
                                 ModeDestination.TUTORIAL -> onTutorial
                                 ModeDestination.ENDGAME_CATALOG -> onEndgame
+                                ModeDestination.EXTENSIONS -> onExtensions
                                 ModeDestination.LOCKED -> ({})
                             },
                             modifier = Modifier.weight(1f),
@@ -214,6 +217,7 @@ private fun ModeCard(
                     ChineseChessMode.AI_AUTO_PLAY -> Modifier.testTag(MODE_AUTO_PLAY_TAG)
                     ChineseChessMode.TUTORIAL -> Modifier.testTag(MODE_TUTORIAL_TAG)
                     ChineseChessMode.ENDGAME -> Modifier.testTag(MODE_ENDGAME_TAG)
+                    ChineseChessMode.EXTENSIONS -> Modifier.testTag(MODE_EXTENSIONS_TAG)
                 },
             )
             .clickable(enabled = enabled, onClick = onClick),
@@ -235,6 +239,7 @@ private fun ModeCard(
                     }
                     ModeDestination.TUTORIAL -> stringResource(R.string.available_now)
                     ModeDestination.ENDGAME_CATALOG -> stringResource(R.string.available_now)
+                    ModeDestination.EXTENSIONS -> stringResource(R.string.available_now)
                     ModeDestination.LOCKED -> stringResource(R.string.future_slice)
                 },
                 color = MaterialTheme.colorScheme.primary,
@@ -251,6 +256,7 @@ private fun ChineseChessMode.titleResource(): Int =
         ChineseChessMode.AI_AUTO_PLAY -> R.string.ai_auto_play
         ChineseChessMode.ENDGAME -> R.string.endgame_mode
         ChineseChessMode.TUTORIAL -> R.string.tutorial_mode
+        ChineseChessMode.EXTENSIONS -> R.string.extension_mode
     }
 
 private fun Difficulty.titleResource(): Int =

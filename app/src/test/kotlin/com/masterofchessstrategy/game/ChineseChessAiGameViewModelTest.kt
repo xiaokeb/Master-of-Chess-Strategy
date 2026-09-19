@@ -5,6 +5,7 @@ import com.masterofchessstrategy.data.GameSessionRepository
 import com.masterofchessstrategy.data.GameSessionSnapshot
 import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.LoadGameSessionResult
+import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.BoardMove
 import com.masterofchessstrategy.engine.BoardPosition
@@ -445,6 +446,59 @@ class ChineseChessAiGameViewModelTest {
         assertEquals(0, engine.chooseCalls)
         assertEquals(1, records.size)
         assertTrue(records.single().isEndgame)
+    }
+
+    @Test
+    fun customPositionUsesAiAndPersistsItsInitialPositionVariant() = runTest(dispatcher) {
+        val engine = FakeAiEngine()
+        val repository = RecordingSessionRepository()
+        val initial = byteArrayOf(9)
+        val variant = CustomPositionStateCodec.sessionVariant(initial)
+        val viewModel = ChineseChessGameViewModel(
+            sessionRepository = repository,
+            mode = StoredGameMode.CUSTOM_POSITION,
+            difficulty = Difficulty.EASY,
+            aiDispatcher = dispatcher,
+            initialPositionState = initial,
+            sessionVariantId = variant,
+            engineFactory = { engine },
+        )
+        advanceUntilIdle()
+
+        viewModel.onSquareTap(engine.redFrom)
+        viewModel.onSquareTap(engine.redTo)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.isCustomPosition)
+        assertEquals(1, engine.chooseCalls)
+        assertEquals(StoredGameMode.CUSTOM_POSITION, repository.saved.last().mode)
+        assertEquals(variant, repository.saved.last().sessionVariantId)
+    }
+
+    @Test
+    fun customPositionResultIsRecordedButDoesNotChangeRankedStatistics() = runTest(dispatcher) {
+        val engine = FakeAiEngine(humanMoveResult = GameResult.FIRST_PLAYER_WIN)
+        val outcomes = mutableListOf<com.masterofchessstrategy.data.MatchOutcome>()
+        val records = mutableListOf<GameRecord>()
+        val initial = byteArrayOf(9)
+        val viewModel = ChineseChessGameViewModel(
+            mode = StoredGameMode.CUSTOM_POSITION,
+            difficulty = Difficulty.EASY,
+            aiDispatcher = dispatcher,
+            initialPositionState = initial,
+            sessionVariantId = CustomPositionStateCodec.sessionVariant(initial),
+            onMatchFinished = outcomes::add,
+            onGameRecorded = records::add,
+            engineFactory = { engine },
+        )
+
+        viewModel.onSquareTap(engine.redFrom)
+        viewModel.onSquareTap(engine.redTo)
+        advanceUntilIdle()
+
+        assertTrue(outcomes.isEmpty())
+        assertEquals(StoredGameMode.CUSTOM_POSITION, records.single().mode)
+        assertFalse(records.single().isEndgame)
     }
 
     @Test

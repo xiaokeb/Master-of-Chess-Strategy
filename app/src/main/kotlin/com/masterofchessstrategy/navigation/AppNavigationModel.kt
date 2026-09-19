@@ -2,6 +2,7 @@ package com.masterofchessstrategy.navigation
 
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.custom.CustomPositionStateCodec
 
 internal object AppDestination {
     const val HOME = "home"
@@ -11,6 +12,13 @@ internal object AppDestination {
         "chinese-chess/auto-play/difficulty"
     const val CHINESE_CHESS_TUTORIAL = "chinese-chess/tutorial"
     const val CHINESE_CHESS_ENDGAMES = "chinese-chess/endgames"
+    const val CHINESE_CHESS_EXTENSIONS = "chinese-chess/extensions"
+    const val CHINESE_CHESS_CUSTOM_SETUP = "chinese-chess/extensions/custom/setup"
+    const val CUSTOM_DIFFICULTY_ARGUMENT = "customDifficultyCode"
+    const val CUSTOM_POSITION_ARGUMENT = "customPosition"
+    const val CHINESE_CHESS_CUSTOM_GAME =
+        "chinese-chess/extensions/custom/{$CUSTOM_DIFFICULTY_ARGUMENT}/" +
+            "{$CUSTOM_POSITION_ARGUMENT}"
     const val ENDGAME_LEVEL_ARGUMENT = "levelId"
     const val CHINESE_CHESS_ENDGAME_GAME =
         "chinese-chess/endgames/{$ENDGAME_LEVEL_ARGUMENT}"
@@ -41,6 +49,10 @@ internal object AppDestination {
         require(levelId.isNotBlank() && '/' !in levelId)
         return "chinese-chess/endgames/$levelId"
     }
+
+    fun chineseChessCustomGame(difficulty: Difficulty, position: ByteArray): String =
+        "chinese-chess/extensions/custom/${difficulty.code}/" +
+            CustomPositionStateCodec.encode(position)
 }
 
 /** Five first-level cards required by the product layout. */
@@ -66,6 +78,7 @@ internal enum class ChineseChessMode(
     AI_AUTO_PLAY(ModeDestination.AUTO_PLAY_DIFFICULTY),
     ENDGAME(ModeDestination.ENDGAME_CATALOG),
     TUTORIAL(ModeDestination.TUTORIAL),
+    EXTENSIONS(ModeDestination.EXTENSIONS),
 }
 
 internal enum class ModeDestination {
@@ -74,6 +87,7 @@ internal enum class ModeDestination {
     AUTO_PLAY_DIFFICULTY,
     TUTORIAL,
     ENDGAME_CATALOG,
+    EXTENSIONS,
     LOCKED,
 }
 

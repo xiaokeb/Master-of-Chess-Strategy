@@ -4,6 +4,7 @@ import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.ChineseChessSide
+import com.masterofchessstrategy.custom.CustomPositionStateCodec
 
 internal enum class StoredGameMode(val code: Int) {
     LOCAL_TWO_PLAYER(0),
@@ -11,6 +12,7 @@ internal enum class StoredGameMode(val code: Int) {
     AI_AUTO_PLAY(2),
     ENDGAME(3),
     TUTORIAL(4),
+    CUSTOM_POSITION(5),
 }
 
 internal data class GameSessionSnapshot(
@@ -195,14 +197,19 @@ internal class RoomGameSessionRepository(
         const val CHINESE_CHESS_ENGINE_FORMAT_VERSION = 2
         const val MAX_ENGINE_STATE_BYTES = 64 * 1024
         const val MAX_TRACKED_ACTIONS = 10_000
-        const val MAX_SESSION_VARIANT_ID_LENGTH = 80
+        const val MAX_SESSION_VARIANT_ID_LENGTH = 320
         val AUTO_PLAY_SPEED_RANGE = 500..4_000
 
         fun StoredGameMode.acceptsSessionVariant(variantId: String): Boolean =
-            if (this == StoredGameMode.ENDGAME) {
-                variantId.isNotBlank()
-            } else {
-                variantId.isEmpty()
+            when (this) {
+                StoredGameMode.ENDGAME -> variantId.isNotBlank()
+                StoredGameMode.CUSTOM_POSITION -> try {
+                    CustomPositionStateCodec.decodeSessionVariant(variantId)
+                    true
+                } catch (_: IllegalArgumentException) {
+                    false
+                }
+                else -> variantId.isEmpty()
             }
 
         const val RESULT_FIRST_PLAYER_WIN = 1

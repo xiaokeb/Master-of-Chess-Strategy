@@ -57,6 +57,21 @@ class AppNavigationScreenTest {
     }
 
     @Test
+    fun chineseChessModesCanOpenCustomPositionEditor() {
+        composeRule.setContent {
+            MasterOfChessStrategyApp()
+        }
+
+        composeRule.onNodeWithTag(HOME_CHINESE_CHESS_TAG).performClick()
+        composeRule.onNodeWithTag(MODE_EXTENSIONS_TAG).performClick()
+        composeRule.onNodeWithTag(EXTENSIONS_SCREEN_TAG).assertExists()
+        composeRule.onNodeWithTag(CUSTOM_SETUP_ENTRY_TAG).performClick()
+        composeRule.onNodeWithTag(CUSTOM_SETUP_SCREEN_TAG).assertExists()
+        composeRule.onNodeWithTag(CHINESE_CHESS_BOARD_TAG).assertExists()
+        composeRule.onNodeWithTag(CUSTOM_SETUP_START_TAG).assertExists()
+    }
+
+    @Test
     fun homeExposesQuickStartOnlyWhenHistoryExists() {
         var quickStarts = 0
         composeRule.setContent {

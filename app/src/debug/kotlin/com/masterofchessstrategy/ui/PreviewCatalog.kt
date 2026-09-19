@@ -8,6 +8,7 @@ import com.masterofchessstrategy.data.GameRecordCategory
 import com.masterofchessstrategy.data.CompletedEndgameLevel
 import com.masterofchessstrategy.data.EndgameProgress
 import com.masterofchessstrategy.data.StoredGameMode
+import com.masterofchessstrategy.custom.ChineseChessSetupUiState
 import com.masterofchessstrategy.engine.ChineseChessBoard
 import com.masterofchessstrategy.engine.BoardMove
 import com.masterofchessstrategy.engine.BoardPosition
@@ -78,6 +79,7 @@ private fun ChineseChessModeScreenPreview() {
             onAutoPlayDifficulty = {},
             onTutorial = {},
             onEndgame = {},
+            onExtensions = {},
         )
     }
 }
@@ -272,6 +274,37 @@ private fun ChineseChessEndgameScreenPreview() {
             onThemeSelected = {},
             onRandomChallenge = {},
             onLevelSelected = {},
+        )
+    }
+}
+
+@Preview(
+    name = "09 中国象棋自由摆局",
+    group = "已完成界面",
+    widthDp = 960,
+    heightDp = 540,
+    showBackground = true,
+)
+@Composable
+private fun ChineseChessSetupScreenPreview() {
+    MocsTheme {
+        ChineseChessSetupScreen(
+            state = ChineseChessSetupUiState(
+                board = standardChineseChessBoard(),
+                unlockedDifficulties = Difficulty.entries.toSet(),
+                isLoadingSavedGame = false,
+                savedGameAvailable = true,
+            ),
+            onBack = {},
+            onSquareTap = {},
+            onSideSelected = {},
+            onPieceSelected = {},
+            onSideToMoveSelected = {},
+            onDifficultySelected = {},
+            onClear = {},
+            onResetStandard = {},
+            onStart = {},
+            onContinueSaved = {},
         )
     }
 }

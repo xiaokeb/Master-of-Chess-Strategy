@@ -60,6 +60,9 @@ import com.masterofchessstrategy.data.RoomLocalDataBackupRepository
 import com.masterofchessstrategy.data.RoomMatchStatisticsRepository
 import com.masterofchessstrategy.data.RoomTutorialProgressRepository
 import com.masterofchessstrategy.data.StoredGameMode
+import com.masterofchessstrategy.custom.ChineseChessSetupViewModel
+import com.masterofchessstrategy.custom.CustomPositionStateCodec
+import com.masterofchessstrategy.custom.PreparedCustomPosition
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessPiece
 import com.masterofchessstrategy.engine.ChineseChessPieceType
@@ -268,6 +271,10 @@ fun MasterOfChessStrategyApp() {
                                     AppDestination.CHINESE_CHESS_ENDGAMES
                                 }
 
+                                QuickStartDestination.CUSTOM_SETUP -> {
+                                    AppDestination.CHINESE_CHESS_CUSTOM_SETUP
+                                }
+
                                 QuickStartDestination.MODE_SELECTION -> {
                                     AppDestination.CHINESE_CHESS_MODES
                                 }
@@ -331,6 +338,133 @@ fun MasterOfChessStrategyApp() {
                             StoredGameMode.ENDGAME,
                         )
                         navController.navigate(AppDestination.CHINESE_CHESS_ENDGAMES)
+                    },
+                    onExtensions = {
+                        navController.navigate(AppDestination.CHINESE_CHESS_EXTENSIONS)
+                    },
+                )
+            }
+            composable(AppDestination.CHINESE_CHESS_EXTENSIONS) {
+                ChineseChessExtensionsScreen(
+                    onBack = navController::popBackStack,
+                    onCustomPosition = {
+                        navController.navigate(AppDestination.CHINESE_CHESS_CUSTOM_SETUP)
+                    },
+                )
+            }
+            composable(AppDestination.CHINESE_CHESS_CUSTOM_SETUP) {
+                val unlocked = difficultyEntries
+                    .filter { it.isPlayable }
+                    .mapTo(linkedSetOf()) { it.difficulty }
+                val factory = remember(gameSessionRepository, unlocked) {
+                    ChineseChessSetupViewModel.factory(
+                        repository = gameSessionRepository,
+                        unlockedDifficulties = unlocked,
+                    )
+                }
+                val setupViewModel: ChineseChessSetupViewModel = viewModel(factory = factory)
+                val openPreparedPosition: (PreparedCustomPosition) -> Unit =
+                    { prepared ->
+                        navigationViewModel.recordChineseChessSelection(
+                            StoredGameMode.CUSTOM_POSITION,
+                            prepared.difficulty,
+                        )
+                        navController.navigate(
+                            AppDestination.chineseChessCustomGame(
+                                prepared.difficulty,
+                                prepared.engineState,
+                            ),
+                        )
+                    }
+                ChineseChessSetupScreen(
+                    state = setupViewModel.uiState,
+                    onBack = navController::popBackStack,
+                    onSquareTap = setupViewModel::onSquareTap,
+                    onSideSelected = setupViewModel::selectSide,
+                    onPieceSelected = setupViewModel::selectPieceType,
+                    onSideToMoveSelected = setupViewModel::selectSideToMove,
+                    onDifficultySelected = setupViewModel::selectDifficulty,
+                    onClear = setupViewModel::clearBoard,
+                    onResetStandard = setupViewModel::resetStandardPosition,
+                    onStart = {
+                        setupViewModel.prepareNewGame()?.let(openPreparedPosition)
+                    },
+                    onContinueSaved = {
+                        setupViewModel.continueSavedGame()?.let(openPreparedPosition)
+                    },
+                )
+            }
+            composable(
+                route = AppDestination.CHINESE_CHESS_CUSTOM_GAME,
+                arguments = listOf(
+                    navArgument(AppDestination.CUSTOM_DIFFICULTY_ARGUMENT) {
+                        type = NavType.IntType
+                    },
+                    navArgument(AppDestination.CUSTOM_POSITION_ARGUMENT) {
+                        type = NavType.StringType
+                    },
+                ),
+            ) { backStackEntry ->
+                val difficultyCode = backStackEntry.arguments
+                    ?.getInt(AppDestination.CUSTOM_DIFFICULTY_ARGUMENT)
+                val difficulty = checkNotNull(
+                    Difficulty.entries.firstOrNull { it.code == difficultyCode },
+                ) { "Unsupported custom-position difficulty" }
+                check(
+                    difficultyEntries.any {
+                        it.difficulty == difficulty && it.isPlayable
+                    },
+                ) { "Custom-position difficulty is locked" }
+                val encodedPosition = CustomPositionStateCodec.decode(
+                    checkNotNull(
+                        backStackEntry.arguments?.getString(
+                            AppDestination.CUSTOM_POSITION_ARGUMENT,
+                        ),
+                    ),
+                )
+                val sessionVariant = CustomPositionStateCodec.sessionVariant(encodedPosition)
+                val factory = remember(
+                    gameSessionRepository,
+                    gameRecordsViewModel,
+                    difficulty,
+                    sessionVariant,
+                    settingsViewModel.uiState.settings.gameDurationMinutes,
+                    pikafishNetworkProvider,
+                ) {
+                    ChineseChessGameViewModel.factory(
+                        repository = gameSessionRepository,
+                        mode = StoredGameMode.CUSTOM_POSITION,
+                        difficulty = difficulty,
+                        initialPositionState = encodedPosition,
+                        sessionVariantId = sessionVariant,
+                        onGameRecorded = gameRecordsViewModel::record,
+                        timeControlMinutes =
+                            settingsViewModel.uiState.settings.gameDurationMinutes,
+                        engineFactory = {
+                            NativeChineseChessEngine(
+                                pikafishNetworkProvider::requireNetworkPath,
+                            )
+                        },
+                    )
+                }
+                val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
+                ChineseChessGameSoundEffect(
+                    gameViewModel,
+                    settingsViewModel.uiState.settings.soundEnabled,
+                )
+                ChineseChessGameScreen(
+                    state = gameViewModel.uiState,
+                    onSquareTap = gameViewModel::onSquareTap,
+                    onUndo = gameViewModel::undo,
+                    onHint = gameViewModel::requestHint,
+                    onResign = gameViewModel::resign,
+                    onDraw = gameViewModel::offerOrAcceptDraw,
+                    onRestart = gameViewModel::restart,
+                    onBack = navController::popBackStack,
+                    onSettings = {
+                        navController.navigate(AppDestination.SETTINGS) {
+                            launchSingleTop = true
+                        }
                     },
                 )
             }
@@ -1216,6 +1350,12 @@ private fun gameStatusText(state: ChineseChessGameUiState): String =
 
 @Composable
 private fun gameModeTitle(state: ChineseChessGameUiState): String {
+    if (state.isCustomPosition) {
+        return stringResource(
+            R.string.custom_position_ai_game,
+            difficultyTitle(requireNotNull(state.difficulty)),
+        )
+    }
     if (state.isEndgame) {
         return stringResource(
             R.string.endgame_game_title,
@@ -1242,6 +1382,17 @@ private fun gameModeTitle(state: ChineseChessGameUiState): String {
         )
     }
 }
+
+@Composable
+private fun difficultyTitle(difficulty: Difficulty): String =
+    stringResource(
+        when (difficulty) {
+            Difficulty.EASY -> R.string.difficulty_easy
+            Difficulty.MEDIUM -> R.string.difficulty_medium
+            Difficulty.HARD -> R.string.difficulty_hard
+            Difficulty.MASTER -> R.string.difficulty_master
+        },
+    )
 
 private fun formatClock(millis: Long?): String {
     if (millis == null) return "--:--"

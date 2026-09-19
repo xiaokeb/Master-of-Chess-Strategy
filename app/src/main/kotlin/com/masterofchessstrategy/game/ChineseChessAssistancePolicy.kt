@@ -26,7 +26,8 @@ internal data class ChineseChessAssistancePolicy(
         ): ChineseChessAssistancePolicy =
             if (
                 mode != StoredGameMode.HUMAN_VS_AI &&
-                mode != StoredGameMode.ENDGAME
+                mode != StoredGameMode.ENDGAME &&
+                mode != StoredGameMode.CUSTOM_POSITION
             ) {
                 ChineseChessAssistancePolicy(
                     undoLimit = null,

@@ -4,6 +4,7 @@ import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -70,6 +71,32 @@ class LocalDataBackupCodecTest {
                 source.copy(activeSessions = listOf(invalidSession)),
             )
         }
+    }
+
+    @Test
+    fun customPositionSessionRoundTripsItsCanonicalInitialState() {
+        val initial = byteArrayOf(1, 2, 3)
+        val source = LocalDataSnapshot(
+            createdAtEpochMillis = 1L,
+            activeSessions = listOf(
+                GameSessionSnapshot(
+                    gameType = GameType.CHINESE_CHESS,
+                    mode = StoredGameMode.CUSTOM_POSITION,
+                    difficulty = Difficulty.EASY,
+                    engineState = byteArrayOf(4, 5, 6),
+                    updatedAtEpochMillis = 2L,
+                    sessionId = "custom-1",
+                    sessionVariantId = CustomPositionStateCodec.sessionVariant(initial),
+                ),
+            ),
+        )
+
+        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+
+        assertEquals(
+            CustomPositionStateCodec.sessionVariant(initial),
+            restored.activeSessions.single().sessionVariantId,
+        )
     }
 
     private fun completeSnapshot(): LocalDataSnapshot = LocalDataSnapshot(

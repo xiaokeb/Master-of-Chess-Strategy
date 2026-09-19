@@ -2,8 +2,10 @@ package com.masterofchessstrategy.navigation
 
 import com.masterofchessstrategy.data.LastGameSelection
 import com.masterofchessstrategy.data.StoredGameMode
+import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameType
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -48,6 +50,10 @@ class AppNavigationModelTest {
         assertEquals(
             ModeDestination.ENDGAME_CATALOG,
             ChineseChessMode.ENDGAME.destination,
+        )
+        assertEquals(
+            ModeDestination.EXTENSIONS,
+            ChineseChessMode.EXTENSIONS.destination,
         )
     }
 
@@ -170,6 +176,36 @@ class AppNavigationModelTest {
         assertEquals(
             "chinese-chess/endgames/xq-easy-001",
             AppDestination.chineseChessEndgame("xq-easy-001"),
+        )
+    }
+
+    @Test
+    fun customPositionRouteRoundTripsCanonicalBytes() {
+        val state = byteArrayOf(0, 1, 15, 16, 127, -1)
+
+        val route = AppDestination.chineseChessCustomGame(Difficulty.HARD, state)
+        val encoded = route.substringAfterLast('/')
+
+        assertEquals("chinese-chess/extensions/custom/2/00010f107fff", route)
+        assertArrayEquals(state, CustomPositionStateCodec.decode(encoded))
+        assertEquals(
+            "custom:00010f107fff",
+            CustomPositionStateCodec.sessionVariant(state),
+        )
+    }
+
+    @Test
+    fun customPositionHistoryReturnsToItsSetupScreen() {
+        val selection = LastGameSelection(
+            gameType = GameType.CHINESE_CHESS,
+            mode = StoredGameMode.CUSTOM_POSITION,
+            difficulty = Difficulty.EASY,
+            updatedAtEpochMillis = 1L,
+        )
+
+        assertEquals(
+            QuickStartDestination.CUSTOM_SETUP,
+            selection.quickStartDestination(),
         )
     }
 }

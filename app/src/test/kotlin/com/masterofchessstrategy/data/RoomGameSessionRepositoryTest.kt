@@ -1,5 +1,6 @@
 package com.masterofchessstrategy.data
 
+import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.ChineseChessSide
@@ -149,6 +150,37 @@ class RoomGameSessionRepositoryTest {
         assertSame(
             LoadGameSessionResult.Incompatible,
             RoomGameSessionRepository(dao).load(GameType.CHINESE_CHESS),
+        )
+    }
+
+    @Test
+    fun customPositionAcceptsOnlyCanonicalInitialStateVariant() = runBlocking {
+        val canonical = CustomPositionStateCodec.sessionVariant(byteArrayOf(1, 2, 3))
+        val dao = FakeActiveGameDao(
+            ActiveGameEntity(
+                gameTypeCode = GameType.CHINESE_CHESS.code,
+                modeCode = StoredGameMode.CUSTOM_POSITION.code,
+                difficultyCode = Difficulty.EASY.code,
+                envelopeVersion = 4,
+                engineFormatVersion = 2,
+                engineState = byteArrayOf(9),
+                updatedAtEpochMillis = 1L,
+                sessionId = "custom-session",
+                sessionVariantId = canonical,
+            ),
+        )
+        val repository = RoomGameSessionRepository(dao)
+
+        val loaded = repository.load(GameType.CHINESE_CHESS)
+        assertEquals(
+            canonical,
+            (loaded as LoadGameSessionResult.Loaded).snapshot.sessionVariantId,
+        )
+
+        dao.entity = requireNotNull(dao.entity).copy(sessionVariantId = "custom:xyz")
+        assertSame(
+            LoadGameSessionResult.Incompatible,
+            repository.load(GameType.CHINESE_CHESS),
         )
     }
 

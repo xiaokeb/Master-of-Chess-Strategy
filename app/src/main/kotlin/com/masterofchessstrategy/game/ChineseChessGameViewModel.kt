@@ -15,6 +15,7 @@ import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.LoadGameSessionResult
 import com.masterofchessstrategy.data.MatchOutcome
 import com.masterofchessstrategy.data.StoredGameMode
+import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.BoardMove
 import com.masterofchessstrategy.engine.BoardPosition
@@ -96,7 +97,8 @@ class ChineseChessGameViewModel internal constructor(
 
     private val isHumanControlledAiGame =
         mode == StoredGameMode.HUMAN_VS_AI ||
-            mode == StoredGameMode.ENDGAME
+            mode == StoredGameMode.ENDGAME ||
+            mode == StoredGameMode.CUSTOM_POSITION
     private val isAiGame =
         isHumanControlledAiGame || mode == StoredGameMode.AI_AUTO_PLAY
     private val isAutoPlay = mode == StoredGameMode.AI_AUTO_PLAY
@@ -108,6 +110,7 @@ class ChineseChessGameViewModel internal constructor(
             isAutoPlay = isAutoPlay,
             difficulty = difficulty,
             isEndgame = mode == StoredGameMode.ENDGAME,
+            isCustomPosition = mode == StoredGameMode.CUSTOM_POSITION,
             endgameTitle = endgameTitle,
             endgameMaxPlayerMoves = endgameMaxPlayerMoves,
         ),
@@ -159,6 +162,16 @@ class ChineseChessGameViewModel internal constructor(
                 mode == StoredGameMode.ENDGAME ||
                     (endgameTitle == null && endgameMaxPlayerMoves == null)
             ) { "Endgame metadata is only valid in endgame mode" }
+            require(
+                mode != StoredGameMode.CUSTOM_POSITION ||
+                    (
+                        this.initialPositionState != null &&
+                            sessionVariantId ==
+                            CustomPositionStateCodec.sessionVariant(
+                                this.initialPositionState,
+                            )
+                        )
+            ) { "Custom-position mode requires a versioned initial position" }
             engine = engineFactory().also { created ->
                 require(!isAiGame || created is ChineseChessAiEngine) {
                     "AI modes require an AI-capable engine"
@@ -666,6 +679,7 @@ class ChineseChessGameViewModel internal constructor(
                 autoContinueGameLimit = autoContinueGameLimit,
                 difficulty = difficulty,
                 isEndgame = mode == StoredGameMode.ENDGAME,
+                isCustomPosition = mode == StoredGameMode.CUSTOM_POSITION,
                 endgameTitle = endgameTitle,
                 endgamePlayerMovesUsed = endgamePlayerMoveCount(),
                 endgameMaxPlayerMoves = endgameMaxPlayerMoves,
@@ -847,7 +861,8 @@ class ChineseChessGameViewModel internal constructor(
                 }
             }
             val aiDeclinedDraw =
-                mode == StoredGameMode.HUMAN_VS_AI &&
+                isHumanControlledAiGame &&
+                    mode != StoredGameMode.ENDGAME &&
                     pendingDrawOfferSide == ChineseChessSide.RED &&
                     activeEngine.currentPlayer.value == ChineseChessSide.BLACK.code
             if (aiDeclinedDraw) {
@@ -1305,7 +1320,7 @@ class ChineseChessGameViewModel internal constructor(
         private const val MIN_AUTO_PLAY_SPEED = 0.5f
         private const val MAX_AUTO_PLAY_SPEED = 4f
         private const val SOUND_EVENT_BUFFER_CAPACITY = 8
-        private const val MAX_SESSION_VARIANT_ID_LENGTH = 80
+        private const val MAX_SESSION_VARIANT_ID_LENGTH = 320
         private const val MAX_ENDGAME_PLAYER_MOVES = 100
 
         internal fun factory(

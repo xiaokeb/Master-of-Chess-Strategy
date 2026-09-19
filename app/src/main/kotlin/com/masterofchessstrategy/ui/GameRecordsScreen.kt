@@ -303,6 +303,7 @@ private fun StoredGameMode.displayName(): String = stringResource(
         StoredGameMode.AI_AUTO_PLAY -> R.string.ai_auto_play
         StoredGameMode.ENDGAME -> R.string.endgame_mode
         StoredGameMode.TUTORIAL -> R.string.tutorial_mode
+        StoredGameMode.CUSTOM_POSITION -> R.string.custom_position_mode
     },
 )
 

@@ -77,6 +77,7 @@ data class ChineseChessGameUiState(
     val autoContinueGameLimit: Int = 0,
     val difficulty: Difficulty? = null,
     val isEndgame: Boolean = false,
+    val isCustomPosition: Boolean = false,
     val endgameTitle: String? = null,
     val endgamePlayerMovesUsed: Int = 0,
     val endgameMaxPlayerMoves: Int? = null,
@@ -107,6 +108,9 @@ data class ChineseChessGameUiState(
         require(endgameMaxPlayerMoves == null || endgameMaxPlayerMoves > 0)
         require(!isEndgame || (!endgameTitle.isNullOrBlank() && endgameMaxPlayerMoves != null)) {
             "Endgame UI state requires a title and move limit"
+        }
+        require(!isEndgame || !isCustomPosition) {
+            "A game cannot be both an endgame level and a custom position"
         }
     }
 
