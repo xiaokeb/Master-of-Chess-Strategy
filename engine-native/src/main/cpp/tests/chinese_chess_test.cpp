@@ -225,6 +225,77 @@ void corrupted_positions_are_rejected() {
     assert(result.error == EngineError::corrupted_data);
 }
 
+void bundled_seed_endgames_are_checkmate_in_one() {
+    const auto verify = [](
+        const std::vector<PositionedPiece>& pieces
+    ) {
+        ChineseChessEngine engine;
+        assert(engine.restore(custom_position(Side::red, pieces)).restored);
+        assert(engine.game_result() == GameResult::ongoing);
+        assert(engine.apply(make_board_move(3, 1, 4, 1)).accepted);
+        assert(engine.game_result() == GameResult::first_player_win);
+    };
+
+    verify({
+        {4, 9, {PieceType::general, Side::red}},
+        {4, 0, {PieceType::general, Side::black}},
+        {4, 5, {PieceType::soldier, Side::red}},
+        {3, 1, {PieceType::chariot, Side::red}},
+        {0, 1, {PieceType::chariot, Side::red}},
+        {4, 2, {PieceType::horse, Side::red}},
+    });
+    verify({
+        {4, 9, {PieceType::general, Side::red}},
+        {4, 0, {PieceType::general, Side::black}},
+        {4, 5, {PieceType::soldier, Side::red}},
+        {3, 1, {PieceType::chariot, Side::red}},
+        {0, 1, {PieceType::chariot, Side::red}},
+        {4, 2, {PieceType::horse, Side::red}},
+        {0, 3, {PieceType::soldier, Side::black}},
+        {2, 3, {PieceType::soldier, Side::black}},
+        {6, 3, {PieceType::soldier, Side::black}},
+        {8, 3, {PieceType::soldier, Side::black}},
+    });
+    verify({
+        {4, 9, {PieceType::general, Side::red}},
+        {4, 0, {PieceType::general, Side::black}},
+        {4, 5, {PieceType::soldier, Side::red}},
+        {3, 1, {PieceType::chariot, Side::red}},
+        {4, 3, {PieceType::cannon, Side::red}},
+        {2, 2, {PieceType::horse, Side::red}},
+        {6, 2, {PieceType::horse, Side::red}},
+    });
+    verify({
+        {4, 9, {PieceType::general, Side::red}},
+        {4, 0, {PieceType::general, Side::black}},
+        {4, 5, {PieceType::soldier, Side::red}},
+        {3, 1, {PieceType::chariot, Side::red}},
+        {4, 3, {PieceType::cannon, Side::red}},
+        {2, 2, {PieceType::horse, Side::red}},
+        {6, 2, {PieceType::horse, Side::red}},
+        {0, 0, {PieceType::chariot, Side::black}},
+        {8, 0, {PieceType::chariot, Side::black}},
+        {3, 9, {PieceType::advisor, Side::red}},
+        {5, 9, {PieceType::advisor, Side::red}},
+    });
+    verify({
+        {4, 9, {PieceType::general, Side::red}},
+        {4, 0, {PieceType::general, Side::black}},
+        {4, 5, {PieceType::soldier, Side::red}},
+        {3, 1, {PieceType::chariot, Side::red}},
+        {0, 1, {PieceType::chariot, Side::red}},
+        {4, 2, {PieceType::horse, Side::red}},
+        {2, 0, {PieceType::elephant, Side::black}},
+        {6, 0, {PieceType::elephant, Side::black}},
+        {1, 2, {PieceType::cannon, Side::black}},
+        {7, 2, {PieceType::cannon, Side::black}},
+        {0, 3, {PieceType::soldier, Side::black}},
+        {2, 3, {PieceType::soldier, Side::black}},
+        {6, 3, {PieceType::soldier, Side::black}},
+        {8, 3, {PieceType::soldier, Side::black}},
+    });
+}
+
 void wrong_game_type_is_rejected_after_checksum_validation() {
     ChineseChessEngine engine;
     auto data = engine.serialize();
@@ -458,6 +529,7 @@ int main() {
     moving_the_only_screen_between_generals_is_illegal();
     undo_and_serialization_restore_state();
     corrupted_positions_are_rejected();
+    bundled_seed_endgames_are_checkmate_in_one();
     wrong_game_type_is_rejected_after_checksum_validation();
     repeated_long_check_loses_for_the_checking_side();
     repeated_unrooted_chase_loses_for_the_chasing_side();

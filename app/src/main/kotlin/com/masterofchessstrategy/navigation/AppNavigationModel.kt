@@ -10,6 +10,10 @@ internal object AppDestination {
     const val CHINESE_CHESS_AUTO_PLAY_DIFFICULTY =
         "chinese-chess/auto-play/difficulty"
     const val CHINESE_CHESS_TUTORIAL = "chinese-chess/tutorial"
+    const val CHINESE_CHESS_ENDGAMES = "chinese-chess/endgames"
+    const val ENDGAME_LEVEL_ARGUMENT = "levelId"
+    const val CHINESE_CHESS_ENDGAME_GAME =
+        "chinese-chess/endgames/{$ENDGAME_LEVEL_ARGUMENT}"
     const val CHINESE_CHESS_GAME = "chinese-chess/game"
     const val AI_DIFFICULTY_ARGUMENT = "difficultyCode"
     const val CHINESE_CHESS_AI_GAME =
@@ -31,6 +35,11 @@ internal object AppDestination {
     fun chineseChessRecord(recordId: String): String {
         require(recordId.isNotBlank() && '/' !in recordId)
         return "records/$recordId"
+    }
+
+    fun chineseChessEndgame(levelId: String): String {
+        require(levelId.isNotBlank() && '/' !in levelId)
+        return "chinese-chess/endgames/$levelId"
     }
 }
 
@@ -55,7 +64,7 @@ internal enum class ChineseChessMode(
     LOCAL_TWO_PLAYER(ModeDestination.GAME),
     HUMAN_VS_AI(ModeDestination.DIFFICULTY),
     AI_AUTO_PLAY(ModeDestination.AUTO_PLAY_DIFFICULTY),
-    ENDGAME(ModeDestination.LOCKED),
+    ENDGAME(ModeDestination.ENDGAME_CATALOG),
     TUTORIAL(ModeDestination.TUTORIAL),
 }
 
@@ -64,6 +73,7 @@ internal enum class ModeDestination {
     DIFFICULTY,
     AUTO_PLAY_DIFFICULTY,
     TUTORIAL,
+    ENDGAME_CATALOG,
     LOCKED,
 }
 

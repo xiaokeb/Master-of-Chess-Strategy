@@ -15,8 +15,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TutorialProgressEntity::class,
         MatchOutcomeEntity::class,
         GameRecordEntity::class,
+        EndgameProgressEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -31,6 +32,8 @@ internal abstract class MocsDatabase : RoomDatabase() {
     abstract fun matchOutcomeDao(): MatchOutcomeDao
 
     abstract fun gameRecordDao(): GameRecordDao
+
+    abstract fun endgameProgressDao(): EndgameProgressDao
 
     companion object {
         internal val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -194,6 +197,33 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE active_games " +
+                        "ADD COLUMN sessionVariantId TEXT NOT NULL DEFAULT ''",
+                )
+                db.execSQL(
+                    "UPDATE active_games SET envelopeVersion = 4 " +
+                        "WHERE envelopeVersion = 3",
+                )
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS endgame_progress (
+                        levelId TEXT NOT NULL,
+                        contentVersion INTEGER NOT NULL,
+                        difficultyCode INTEGER NOT NULL,
+                        bestPlayerMoves INTEGER NOT NULL,
+                        starsAwarded INTEGER NOT NULL,
+                        scoreAwarded INTEGER NOT NULL,
+                        completedAtEpochMillis INTEGER NOT NULL,
+                        PRIMARY KEY(levelId)
+                    )
+                    """.trimIndent(),
+                )
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -212,6 +242,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_5_6,
                         MIGRATION_6_7,
                         MIGRATION_7_8,
+                        MIGRATION_8_9,
                     )
                     .build()
                     .also { instance = it }

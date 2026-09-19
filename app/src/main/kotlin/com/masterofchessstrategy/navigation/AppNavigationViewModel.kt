@@ -27,6 +27,7 @@ internal enum class QuickStartDestination {
     TUTORIAL,
     AI_GAME,
     AUTO_PLAY_GAME,
+    ENDGAME_CATALOG,
     GAME,
 }
 
@@ -45,8 +46,7 @@ internal fun LastGameSelection.quickStartDestination(): QuickStartDestination =
             QuickStartDestination.AUTO_PLAY_GAME
         }
 
-        StoredGameMode.ENDGAME,
-        -> QuickStartDestination.MODE_SELECTION
+        StoredGameMode.ENDGAME -> QuickStartDestination.ENDGAME_CATALOG
     }
 
 /**

@@ -32,6 +32,7 @@ internal data class GameSessionSnapshot(
     val autoPlayPaused: Boolean = false,
     val autoPlaySpeedPermille: Int = 1_000,
     val completedAutoGames: Int = 0,
+    val sessionVariantId: String = "",
 ) {
     fun defensiveCopy(): GameSessionSnapshot = copy(engineState = engineState.copyOf())
 }
@@ -67,6 +68,7 @@ internal class RoomGameSessionRepository(
             entity.hintUseCount !in 0..MAX_TRACKED_ACTIONS ||
             entity.autoPlaySpeedPermille !in AUTO_PLAY_SPEED_RANGE ||
             entity.completedAutoGames !in 0..MAX_TRACKED_ACTIONS ||
+            entity.sessionVariantId.length > MAX_SESSION_VARIANT_ID_LENGTH ||
             !isValidClock(
                 entity.timeControlMinutes,
                 entity.redRemainingMillis,
@@ -78,6 +80,9 @@ internal class RoomGameSessionRepository(
         }
         val mode = StoredGameMode.entries.firstOrNull { it.code == entity.modeCode }
             ?: return LoadGameSessionResult.Incompatible
+        if (!mode.acceptsSessionVariant(entity.sessionVariantId)) {
+            return LoadGameSessionResult.Incompatible
+        }
         val difficulty = entity.difficultyCode?.let { code ->
             Difficulty.entries.firstOrNull { it.code == code }
                 ?: return LoadGameSessionResult.Incompatible
@@ -109,6 +114,7 @@ internal class RoomGameSessionRepository(
                 autoPlayPaused = entity.autoPlayPaused,
                 autoPlaySpeedPermille = entity.autoPlaySpeedPermille,
                 completedAutoGames = entity.completedAutoGames,
+                sessionVariantId = entity.sessionVariantId,
             ),
         )
     }
@@ -135,9 +141,13 @@ internal class RoomGameSessionRepository(
         }
         require(
             snapshot.autoPlaySpeedPermille in AUTO_PLAY_SPEED_RANGE &&
-                snapshot.completedAutoGames in 0..MAX_TRACKED_ACTIONS
+                snapshot.completedAutoGames in 0..MAX_TRACKED_ACTIONS &&
+                snapshot.sessionVariantId.length <= MAX_SESSION_VARIANT_ID_LENGTH
         ) {
-            "Auto-play state is outside the persistence boundary"
+            "Session metadata is outside the persistence boundary"
+        }
+        require(snapshot.mode.acceptsSessionVariant(snapshot.sessionVariantId)) {
+            "Session variant is incompatible with the game mode"
         }
         require(
             isValidClock(
@@ -171,6 +181,7 @@ internal class RoomGameSessionRepository(
                 autoPlayPaused = snapshot.autoPlayPaused,
                 autoPlaySpeedPermille = snapshot.autoPlaySpeedPermille,
                 completedAutoGames = snapshot.completedAutoGames,
+                sessionVariantId = snapshot.sessionVariantId,
             ),
         )
     }
@@ -180,11 +191,19 @@ internal class RoomGameSessionRepository(
     }
 
     private companion object {
-        const val CURRENT_ENVELOPE_VERSION = 3
+        const val CURRENT_ENVELOPE_VERSION = 4
         const val CHINESE_CHESS_ENGINE_FORMAT_VERSION = 2
         const val MAX_ENGINE_STATE_BYTES = 64 * 1024
         const val MAX_TRACKED_ACTIONS = 10_000
+        const val MAX_SESSION_VARIANT_ID_LENGTH = 80
         val AUTO_PLAY_SPEED_RANGE = 500..4_000
+
+        fun StoredGameMode.acceptsSessionVariant(variantId: String): Boolean =
+            if (this == StoredGameMode.ENDGAME) {
+                variantId.isNotBlank()
+            } else {
+                variantId.isEmpty()
+            }
 
         const val RESULT_FIRST_PLAYER_WIN = 1
         const val RESULT_SECOND_PLAYER_WIN = 2

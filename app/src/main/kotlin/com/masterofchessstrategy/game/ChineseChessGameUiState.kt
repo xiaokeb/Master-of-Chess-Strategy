@@ -76,6 +76,10 @@ data class ChineseChessGameUiState(
     val completedAutoGames: Int = 0,
     val autoContinueGameLimit: Int = 0,
     val difficulty: Difficulty? = null,
+    val isEndgame: Boolean = false,
+    val endgameTitle: String? = null,
+    val endgamePlayerMovesUsed: Int = 0,
+    val endgameMaxPlayerMoves: Int? = null,
     val timeControlMinutes: Int? = null,
     val redRemainingMillis: Long? = null,
     val blackRemainingMillis: Long? = null,
@@ -98,6 +102,11 @@ data class ChineseChessGameUiState(
     init {
         require(board.size == ChineseChessBoard.WIDTH * ChineseChessBoard.HEIGHT) {
             "Chinese chess board must contain exactly 90 intersections"
+        }
+        require(endgamePlayerMovesUsed >= 0)
+        require(endgameMaxPlayerMoves == null || endgameMaxPlayerMoves > 0)
+        require(!isEndgame || (!endgameTitle.isNullOrBlank() && endgameMaxPlayerMoves != null)) {
+            "Endgame UI state requires a title and move limit"
         }
     }
 

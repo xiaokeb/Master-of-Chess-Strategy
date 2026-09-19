@@ -61,8 +61,13 @@ class ChineseChessGameViewModel internal constructor(
     private val autoContinueEnabled: Boolean = false,
     private val autoContinueGameLimit: Int = 10,
     private val clockTickIntervalMillis: Long? = CLOCK_TICK_MILLIS,
+    initialPositionState: ByteArray? = null,
+    private val sessionVariantId: String = "",
+    private val endgameTitle: String? = null,
+    private val endgameMaxPlayerMoves: Int? = null,
     private val engineFactory: () -> ChineseChessRuleEngine,
 ) : ViewModel() {
+    private val initialPositionState = initialPositionState?.copyOf()
     private var engine: ChineseChessRuleEngine? = null
     private var acceptedMoveCount = 0
     private var undoUseCount = 0
@@ -89,9 +94,11 @@ class ChineseChessGameViewModel internal constructor(
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    private val isAiGame =
+    private val isHumanControlledAiGame =
         mode == StoredGameMode.HUMAN_VS_AI ||
-            mode == StoredGameMode.AI_AUTO_PLAY
+            mode == StoredGameMode.ENDGAME
+    private val isAiGame =
+        isHumanControlledAiGame || mode == StoredGameMode.AI_AUTO_PLAY
     private val isAutoPlay = mode == StoredGameMode.AI_AUTO_PLAY
     private val assistancePolicy = ChineseChessAssistancePolicy.resolve(mode, difficulty)
 
@@ -100,6 +107,9 @@ class ChineseChessGameViewModel internal constructor(
             isAiGame = isAiGame,
             isAutoPlay = isAutoPlay,
             difficulty = difficulty,
+            isEndgame = mode == StoredGameMode.ENDGAME,
+            endgameTitle = endgameTitle,
+            endgameMaxPlayerMoves = endgameMaxPlayerMoves,
         ),
     )
         private set
@@ -132,9 +142,31 @@ class ChineseChessGameViewModel internal constructor(
             ) {
                 "AI modes require a supported difficulty"
             }
+            require(sessionVariantId.length <= MAX_SESSION_VARIANT_ID_LENGTH)
+            require(
+                mode != StoredGameMode.ENDGAME ||
+                    (
+                        sessionVariantId.isNotBlank() &&
+                            this.initialPositionState != null &&
+                            !endgameTitle.isNullOrBlank() &&
+                            endgameMaxPlayerMoves != null &&
+                            endgameMaxPlayerMoves in 1..MAX_ENDGAME_PLAYER_MOVES
+                        )
+            ) {
+                "Endgame mode requires level metadata and an initial position"
+            }
+            require(
+                mode == StoredGameMode.ENDGAME ||
+                    (endgameTitle == null && endgameMaxPlayerMoves == null)
+            ) { "Endgame metadata is only valid in endgame mode" }
             engine = engineFactory().also { created ->
                 require(!isAiGame || created is ChineseChessAiEngine) {
                     "AI modes require an AI-capable engine"
+                }
+                this.initialPositionState?.let { initial ->
+                    require(created.restore(initial) is RestoreResult.Restored) {
+                        "Initial Chinese chess position is incompatible"
+                    }
                 }
             }
             refresh()
@@ -212,7 +244,7 @@ class ChineseChessGameViewModel internal constructor(
         val activeEngine = engine ?: return
         if (!canRunControl()) return
         runEngineOperation {
-            activeEngine.reset()
+            resetPosition(activeEngine)
             resetSessionState(resetAutoGameCount = true)
             refresh(ChineseChessFeedback.GAME_RESTARTED)
             persistCurrentSession()
@@ -403,7 +435,8 @@ class ChineseChessGameViewModel internal constructor(
                 is LoadGameSessionResult.Loaded -> {
                     if (
                         result.snapshot.mode != mode ||
-                        result.snapshot.difficulty != difficulty
+                        result.snapshot.difficulty != difficulty ||
+                        result.snapshot.sessionVariantId != sessionVariantId
                     ) {
                         rejectStoredSession(repository)
                     } else {
@@ -466,7 +499,7 @@ class ChineseChessGameViewModel internal constructor(
         }
         val activeEngine = engine ?: return
         runEngineOperation {
-            activeEngine.reset()
+            resetPosition(activeEngine)
             resetSessionState(resetAutoGameCount = true)
             refresh(ChineseChessFeedback.RESTORE_REJECTED)
             persistCurrentSession()
@@ -548,6 +581,15 @@ class ChineseChessGameViewModel internal constructor(
             when (val result = activeEngine.apply(move)) {
                 ActionResult.Accepted -> {
                     acceptedMoveCount++
+                    val engineResult = activeEngine.gameResult()
+                    if (
+                        mode == StoredGameMode.ENDGAME &&
+                        movingSide == ChineseChessSide.RED &&
+                        engineResult == GameResult.ONGOING &&
+                        endgamePlayerMoveCount() >= requireNotNull(endgameMaxPlayerMoves)
+                    ) {
+                        resultOverride = GameResult.SECOND_PLAYER_WIN
+                    }
                     turnStartedAtEpochMillis = timeControlMinutes?.let { now }
                     if (
                         pendingDrawOfferSide != null &&
@@ -556,11 +598,12 @@ class ChineseChessGameViewModel internal constructor(
                         pendingDrawOfferSide = null
                     }
                     refresh()
-                    emitMoveSound(activeEngine.gameResult(), isCapture)
+                    val resolvedResult = resultOverride ?: engineResult
+                    emitMoveSound(resolvedResult, isCapture)
                     if (
-                        mode == StoredGameMode.HUMAN_VS_AI &&
+                        isHumanControlledAiGame &&
                         activeEngine.currentPlayer.value == ChineseChessSide.BLACK.code &&
-                        activeEngine.gameResult() == GameResult.ONGOING
+                        resolvedResult == GameResult.ONGOING
                     ) {
                         startAiTurn(activeEngine)
                     } else {
@@ -622,6 +665,10 @@ class ChineseChessGameViewModel internal constructor(
                 completedAutoGames = completedAutoGames,
                 autoContinueGameLimit = autoContinueGameLimit,
                 difficulty = difficulty,
+                isEndgame = mode == StoredGameMode.ENDGAME,
+                endgameTitle = endgameTitle,
+                endgamePlayerMovesUsed = endgamePlayerMoveCount(),
+                endgameMaxPlayerMoves = endgameMaxPlayerMoves,
                 timeControlMinutes = timeControlMinutes,
                 redRemainingMillis = remainingFor(
                     ChineseChessSide.RED,
@@ -635,7 +682,9 @@ class ChineseChessGameViewModel internal constructor(
                 ),
                 pendingDrawOfferSide = pendingDrawOfferSide,
                 canOfferOrAcceptDraw =
-                    !isAutoPlay && result == GameResult.ONGOING,
+                    !isAutoPlay &&
+                        mode != StoredGameMode.ENDGAME &&
+                        result == GameResult.ONGOING,
                 feedback = feedback,
             )
             requestSettlement(result)
@@ -764,7 +813,7 @@ class ChineseChessGameViewModel internal constructor(
             return
         }
         val humanSnapshot = if (
-            saveHumanPosition && mode == StoredGameMode.HUMAN_VS_AI
+            saveHumanPosition && isHumanControlledAiGame
         ) {
             createSnapshot(activeEngine)
         } else {
@@ -893,7 +942,7 @@ class ChineseChessGameViewModel internal constructor(
                 startAiTurn(activeEngine, saveHumanPosition = false)
             }
 
-            mode == StoredGameMode.HUMAN_VS_AI &&
+            isHumanControlledAiGame &&
                 activeEngine.currentPlayer.value == ChineseChessSide.BLACK.code -> {
                 startAiTurn(activeEngine, saveHumanPosition = false)
             }
@@ -1000,7 +1049,7 @@ class ChineseChessGameViewModel internal constructor(
             GameResult.DRAW -> ChineseChessSoundCue.DRAW
             GameResult.FIRST_PLAYER_WIN -> ChineseChessSoundCue.VICTORY
             GameResult.SECOND_PLAYER_WIN -> {
-                if (mode == StoredGameMode.HUMAN_VS_AI) {
+                if (isHumanControlledAiGame) {
                     ChineseChessSoundCue.DEFEAT
                 } else {
                     ChineseChessSoundCue.VICTORY
@@ -1115,6 +1164,7 @@ class ChineseChessGameViewModel internal constructor(
             autoPlayPaused = autoPlayPaused,
             autoPlaySpeedPermille = autoPlaySpeedPermille,
             completedAutoGames = completedAutoGames,
+            sessionVariantId = sessionVariantId,
         )
 
     private fun requestSettlement(result: GameResult) {
@@ -1139,6 +1189,19 @@ class ChineseChessGameViewModel internal constructor(
             ),
         )
     }
+
+    private fun resetPosition(activeEngine: ChineseChessRuleEngine) {
+        val initial = initialPositionState
+        if (initial == null) {
+            activeEngine.reset()
+        } else {
+            require(activeEngine.restore(initial) is RestoreResult.Restored) {
+                "Initial Chinese chess position became incompatible"
+            }
+        }
+    }
+
+    private fun endgamePlayerMoveCount(): Int = (acceptedMoveCount + 1) / 2
 
     private fun requestCompletedRecord(
         result: GameResult,
@@ -1242,6 +1305,8 @@ class ChineseChessGameViewModel internal constructor(
         private const val MIN_AUTO_PLAY_SPEED = 0.5f
         private const val MAX_AUTO_PLAY_SPEED = 4f
         private const val SOUND_EVENT_BUFFER_CAPACITY = 8
+        private const val MAX_SESSION_VARIANT_ID_LENGTH = 80
+        private const val MAX_ENDGAME_PLAYER_MOVES = 100
 
         internal fun factory(
             repository: GameSessionRepository,
@@ -1252,6 +1317,10 @@ class ChineseChessGameViewModel internal constructor(
             timeControlMinutes: Int? = null,
             autoContinueEnabled: Boolean = false,
             autoContinueGameLimit: Int = 10,
+            initialPositionState: ByteArray? = null,
+            sessionVariantId: String = "",
+            endgameTitle: String? = null,
+            endgameMaxPlayerMoves: Int? = null,
             engineFactory: () -> ChineseChessRuleEngine = {
                 NativeChineseChessEngine()
             },
@@ -1267,6 +1336,10 @@ class ChineseChessGameViewModel internal constructor(
                         initialTimeControlMinutes = timeControlMinutes,
                         autoContinueEnabled = autoContinueEnabled,
                         autoContinueGameLimit = autoContinueGameLimit,
+                        initialPositionState = initialPositionState,
+                        sessionVariantId = sessionVariantId,
+                        endgameTitle = endgameTitle,
+                        endgameMaxPlayerMoves = endgameMaxPlayerMoves,
                         engineFactory = engineFactory,
                     )
                 }

@@ -3,6 +3,7 @@ package com.masterofchessstrategy.game
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.data.GameSessionRepository
 import com.masterofchessstrategy.data.GameSessionSnapshot
+import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.LoadGameSessionResult
 import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.BoardMove
@@ -416,6 +417,60 @@ class ChineseChessAiGameViewModelTest {
         assertEquals(0, engine.chooseCalls)
         assertTrue(viewModel.uiState.isAutoPlayPaused)
         assertEquals(1.75f, viewModel.uiState.autoPlaySpeed)
+    }
+
+    @Test
+    fun endgameMoveLimitEndsBeforeAiTurnAndRecordsFailure() = runTest(dispatcher) {
+        val engine = FakeAiEngine()
+        val records = mutableListOf<GameRecord>()
+        val viewModel = ChineseChessGameViewModel(
+            mode = StoredGameMode.ENDGAME,
+            difficulty = Difficulty.EASY,
+            aiDispatcher = dispatcher,
+            onGameRecorded = records::add,
+            clockTickIntervalMillis = null,
+            initialPositionState = byteArrayOf(9),
+            sessionVariantId = "xq-easy-001",
+            endgameTitle = "一步杀",
+            endgameMaxPlayerMoves = 1,
+            engineFactory = { engine },
+        )
+
+        viewModel.onSquareTap(engine.redFrom)
+        viewModel.onSquareTap(engine.redTo)
+        advanceUntilIdle()
+
+        assertEquals(GameResult.SECOND_PLAYER_WIN, viewModel.uiState.result)
+        assertEquals(1, viewModel.uiState.endgamePlayerMovesUsed)
+        assertEquals(0, engine.chooseCalls)
+        assertEquals(1, records.size)
+        assertTrue(records.single().isEndgame)
+    }
+
+    @Test
+    fun endgameCheckmateRecordsPlayerVictoryWithoutAiReply() = runTest(dispatcher) {
+        val engine = FakeAiEngine(humanMoveResult = GameResult.FIRST_PLAYER_WIN)
+        val records = mutableListOf<GameRecord>()
+        val viewModel = ChineseChessGameViewModel(
+            mode = StoredGameMode.ENDGAME,
+            difficulty = Difficulty.EASY,
+            aiDispatcher = dispatcher,
+            onGameRecorded = records::add,
+            clockTickIntervalMillis = null,
+            initialPositionState = byteArrayOf(9),
+            sessionVariantId = "xq-easy-001",
+            endgameTitle = "一步杀",
+            endgameMaxPlayerMoves = 1,
+            engineFactory = { engine },
+        )
+
+        viewModel.onSquareTap(engine.redFrom)
+        viewModel.onSquareTap(engine.redTo)
+        advanceUntilIdle()
+
+        assertEquals(GameResult.FIRST_PLAYER_WIN, viewModel.uiState.result)
+        assertEquals(0, engine.chooseCalls)
+        assertEquals(GameResult.FIRST_PLAYER_WIN, records.single().result)
     }
 
     private class RecordingSessionRepository(

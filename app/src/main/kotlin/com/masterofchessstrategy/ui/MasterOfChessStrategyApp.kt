@@ -49,6 +49,7 @@ import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.RoomAppSettingsRepository
 import com.masterofchessstrategy.data.RoomGameSessionRepository
 import com.masterofchessstrategy.data.RoomGameRecordRepository
+import com.masterofchessstrategy.data.RoomEndgameProgressRepository
 import com.masterofchessstrategy.data.RoomLastSelectionRepository
 import com.masterofchessstrategy.data.RoomMatchStatisticsRepository
 import com.masterofchessstrategy.data.RoomTutorialProgressRepository
@@ -61,6 +62,8 @@ import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.NativeChineseChessEngine
+import com.masterofchessstrategy.endgame.ChineseChessEndgamePackParser
+import com.masterofchessstrategy.endgame.ChineseChessEndgameViewModel
 import com.masterofchessstrategy.game.ChineseChessFeedback
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 import com.masterofchessstrategy.game.ChineseChessGameViewModel
@@ -115,6 +118,12 @@ fun MasterOfChessStrategyApp() {
         val gameRecordRepository = remember {
             RoomGameRecordRepository(database.gameRecordDao())
         }
+        val endgamePack = remember(context.applicationContext) {
+            ChineseChessEndgamePackParser.loadBundled(context.assets)
+        }
+        val endgameRepository = remember(database, endgamePack) {
+            RoomEndgameProgressRepository(database.endgameProgressDao(), endgamePack)
+        }
         val navigationFactory = remember(selectionRepository) {
             AppNavigationViewModel.factory(selectionRepository)
         }
@@ -142,6 +151,12 @@ fun MasterOfChessStrategyApp() {
         }
         val gameRecordsViewModel: GameRecordsViewModel = viewModel(
             factory = gameRecordsFactory,
+        )
+        val endgameFactory = remember(endgamePack, endgameRepository) {
+            ChineseChessEndgameViewModel.factory(endgamePack, endgameRepository)
+        }
+        val endgameViewModel: ChineseChessEndgameViewModel = viewModel(
+            factory = endgameFactory,
         )
         val quickStartEntries = if (
             navigationViewModel.chineseChessQuickStartDestination() == null
@@ -215,6 +230,10 @@ fun MasterOfChessStrategyApp() {
                                     }
                                 }
 
+                                QuickStartDestination.ENDGAME_CATALOG -> {
+                                    AppDestination.CHINESE_CHESS_ENDGAMES
+                                }
+
                                 QuickStartDestination.MODE_SELECTION -> {
                                     AppDestination.CHINESE_CHESS_MODES
                                 }
@@ -237,8 +256,10 @@ fun MasterOfChessStrategyApp() {
                     playerSummary = LocalPlayerSummary(
                         rank = "未定级",
                         wins = statisticsViewModel.uiState.statistics.totalWins,
-                        stars = statisticsViewModel.uiState.statistics.stars,
-                        score = statisticsViewModel.uiState.statistics.score,
+                        stars = statisticsViewModel.uiState.statistics.stars +
+                            endgameViewModel.uiState.progress.totalStars,
+                        score = statisticsViewModel.uiState.statistics.score +
+                            endgameViewModel.uiState.progress.totalScore,
                     ),
                 )
             }
@@ -270,6 +291,12 @@ fun MasterOfChessStrategyApp() {
                             StoredGameMode.TUTORIAL,
                         )
                         navController.navigate(AppDestination.CHINESE_CHESS_TUTORIAL)
+                    },
+                    onEndgame = {
+                        navigationViewModel.recordChineseChessSelection(
+                            StoredGameMode.ENDGAME,
+                        )
+                        navController.navigate(AppDestination.CHINESE_CHESS_ENDGAMES)
                     },
                 )
             }
@@ -327,6 +354,91 @@ fun MasterOfChessStrategyApp() {
                     onCompletePractice = tutorialViewModel::completePractice,
                     onAnswerQuiz = tutorialViewModel::answerQuiz,
                     onCompleteQuiz = tutorialViewModel::completeQuiz,
+                )
+            }
+            composable(AppDestination.CHINESE_CHESS_ENDGAMES) {
+                ChineseChessEndgameScreen(
+                    state = endgameViewModel.uiState,
+                    onBack = navController::popBackStack,
+                    onModeSelected = endgameViewModel::selectMode,
+                    onDifficultySelected = endgameViewModel::selectDifficulty,
+                    onThemeSelected = endgameViewModel::selectTheme,
+                    onRandomChallenge = endgameViewModel::randomChallenge,
+                    onLevelSelected = { levelId ->
+                        val entry = endgameViewModel.uiState.entries.firstOrNull {
+                            it.level.id == levelId
+                        }
+                        if (entry?.isUnlocked == true) {
+                            navController.navigate(AppDestination.chineseChessEndgame(levelId))
+                        }
+                    },
+                )
+            }
+            composable(
+                route = AppDestination.CHINESE_CHESS_ENDGAME_GAME,
+                arguments = listOf(
+                    navArgument(AppDestination.ENDGAME_LEVEL_ARGUMENT) {
+                        type = NavType.StringType
+                    },
+                ),
+            ) { backStackEntry ->
+                val levelId = checkNotNull(
+                    backStackEntry.arguments?.getString(
+                        AppDestination.ENDGAME_LEVEL_ARGUMENT,
+                    ),
+                )
+                val level = checkNotNull(endgameViewModel.level(levelId)) {
+                    "Unknown Chinese chess endgame route"
+                }
+                val factory = remember(
+                    gameSessionRepository,
+                    gameRecordsViewModel,
+                    endgameViewModel,
+                    level,
+                    pikafishNetworkProvider,
+                ) {
+                    ChineseChessGameViewModel.factory(
+                        repository = gameSessionRepository,
+                        mode = StoredGameMode.ENDGAME,
+                        difficulty = level.difficulty,
+                        initialPositionState = level.initialEngineState,
+                        sessionVariantId = level.id,
+                        endgameTitle = level.title,
+                        endgameMaxPlayerMoves = level.maxPlayerMoves,
+                        onGameRecorded = { record ->
+                            gameRecordsViewModel.record(record)
+                            if (record.result == GameResult.FIRST_PLAYER_WIN) {
+                                endgameViewModel.complete(
+                                    level.id,
+                                    (record.moveCount + 1) / 2,
+                                )
+                            }
+                        },
+                        engineFactory = {
+                            NativeChineseChessEngine(
+                                pikafishNetworkProvider::requireNetworkPath,
+                            )
+                        },
+                    )
+                }
+                val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
+                ChineseChessGameSoundEffect(
+                    gameViewModel,
+                    settingsViewModel.uiState.settings.soundEnabled,
+                )
+                ChineseChessGameScreen(
+                    state = gameViewModel.uiState,
+                    onSquareTap = gameViewModel::onSquareTap,
+                    onUndo = gameViewModel::undo,
+                    onHint = gameViewModel::requestHint,
+                    onResign = gameViewModel::resign,
+                    onRestart = gameViewModel::restart,
+                    onBack = navController::popBackStack,
+                    onSettings = {
+                        navController.navigate(AppDestination.SETTINGS) {
+                            launchSingleTop = true
+                        }
+                    },
                 )
             }
             composable(AppDestination.CHINESE_CHESS_GAME) {
@@ -825,6 +937,17 @@ private fun GameControls(
                 text = selectionText(state),
                 style = MaterialTheme.typography.bodyLarge,
             )
+            if (state.isEndgame) {
+                Text(
+                    text = stringResource(
+                        R.string.endgame_move_goal,
+                        requireNotNull(state.endgameMaxPlayerMoves),
+                        state.endgamePlayerMovesUsed,
+                    ),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
 
             state.feedback?.let { feedback ->
                 Surface(
@@ -988,6 +1111,12 @@ private fun gameStatusText(state: ChineseChessGameUiState): String =
 
 @Composable
 private fun gameModeTitle(state: ChineseChessGameUiState): String {
+    if (state.isEndgame) {
+        return stringResource(
+            R.string.endgame_game_title,
+            requireNotNull(state.endgameTitle),
+        )
+    }
     val title = when (state.difficulty) {
         Difficulty.EASY -> R.string.difficulty_easy
         Difficulty.MEDIUM -> R.string.difficulty_medium

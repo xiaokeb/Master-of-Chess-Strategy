@@ -5,13 +5,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.GameRecordCategory
+import com.masterofchessstrategy.data.CompletedEndgameLevel
+import com.masterofchessstrategy.data.EndgameProgress
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.engine.ChineseChessBoard
+import com.masterofchessstrategy.engine.BoardMove
+import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessPiece
 import com.masterofchessstrategy.engine.ChineseChessPieceType
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
+import com.masterofchessstrategy.engine.PositionedChineseChessPiece
+import com.masterofchessstrategy.endgame.ChineseChessEndgameLevel
+import com.masterofchessstrategy.endgame.ChineseChessEndgameUiState
+import com.masterofchessstrategy.endgame.EndgameLevelEntry
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 import com.masterofchessstrategy.navigation.HomeGameEntry
 import com.masterofchessstrategy.records.ChineseChessReplayFrame
@@ -68,6 +76,7 @@ private fun ChineseChessModeScreenPreview() {
             onAiDifficulty = {},
             onAutoPlayDifficulty = {},
             onTutorial = {},
+            onEndgame = {},
         )
     }
 }
@@ -221,6 +230,48 @@ private fun ChineseChessReplayScreenPreview() {
     }
 }
 
+@Preview(
+    name = "08 中国象棋残局",
+    group = "已完成界面",
+    widthDp = 960,
+    heightDp = 540,
+    showBackground = true,
+)
+@Composable
+private fun ChineseChessEndgameScreenPreview() {
+    val first = previewEndgameLevel("xq-easy-001", 1, "卧槽马锁宫")
+    val second = previewEndgameLevel("xq-easy-002", 2, "双马架炮")
+    val completion = CompletedEndgameLevel(
+        levelId = first.id,
+        difficulty = Difficulty.EASY,
+        bestPlayerMoves = 1,
+        starsAwarded = 1,
+        scoreAwarded = 10,
+        completedAtEpochMillis = 1L,
+    )
+    val entries = listOf(
+        EndgameLevelEntry(first, true, true, completion),
+        EndgameLevelEntry(second, true, true, null),
+    )
+    MocsTheme {
+        ChineseChessEndgameScreen(
+            state = ChineseChessEndgameUiState(
+                entries = entries,
+                visibleEntries = entries,
+                themes = listOf("一步杀"),
+                progress = EndgameProgress(mapOf(first.id to completion)),
+                isLoading = false,
+            ),
+            onBack = {},
+            onModeSelected = {},
+            onDifficultySelected = {},
+            onThemeSelected = {},
+            onRandomChallenge = {},
+            onLevelSelected = {},
+        )
+    }
+}
+
 private fun previewRecord() = GameRecord(
     recordId = "preview-record",
     gameType = com.masterofchessstrategy.engine.GameType.CHINESE_CHESS,
@@ -231,6 +282,33 @@ private fun previewRecord() = GameRecord(
     moveCount = 42,
     isFavorite = true,
     completedAtEpochMillis = 1_789_315_200_000L,
+)
+
+private fun previewEndgameLevel(
+    id: String,
+    order: Int,
+    title: String,
+) = ChineseChessEndgameLevel(
+    id = id,
+    difficulty = Difficulty.EASY,
+    chapterOrder = order,
+    title = title,
+    theme = "一步杀",
+    sideToMove = ChineseChessSide.RED,
+    maxPlayerMoves = 1,
+    starReward = 1,
+    scoreReward = 10,
+    pieces = listOf(
+        PositionedChineseChessPiece(
+            BoardPosition(4, 9),
+            ChineseChessPiece(ChineseChessPieceType.GENERAL, ChineseChessSide.RED),
+        ),
+        PositionedChineseChessPiece(
+            BoardPosition(4, 0),
+            ChineseChessPiece(ChineseChessPieceType.GENERAL, ChineseChessSide.BLACK),
+        ),
+    ),
+    principalVariation = listOf(BoardMove(BoardPosition(4, 9), BoardPosition(4, 8))),
 )
 
 private fun standardChineseChessBoard(): List<ChineseChessPiece?> {

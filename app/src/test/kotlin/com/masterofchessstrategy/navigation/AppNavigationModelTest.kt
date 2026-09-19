@@ -45,7 +45,10 @@ class AppNavigationModelTest {
             ModeDestination.AUTO_PLAY_DIFFICULTY,
             ChineseChessMode.AI_AUTO_PLAY.destination,
         )
-        assertEquals(ModeDestination.LOCKED, ChineseChessMode.ENDGAME.destination)
+        assertEquals(
+            ModeDestination.ENDGAME_CATALOG,
+            ChineseChessMode.ENDGAME.destination,
+        )
     }
 
     @Test
@@ -160,5 +163,13 @@ class AppNavigationModelTest {
     @Test
     fun recordRouteKeepsStableLocalIdentifier() {
         assertEquals("records/match-123", AppDestination.chineseChessRecord("match-123"))
+    }
+
+    @Test
+    fun endgameRouteKeepsStablePackIdentifier() {
+        assertEquals(
+            "chinese-chess/endgames/xq-easy-001",
+            AppDestination.chineseChessEndgame("xq-easy-001"),
+        )
     }
 }

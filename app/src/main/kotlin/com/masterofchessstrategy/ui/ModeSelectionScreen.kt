@@ -28,6 +28,7 @@ internal const val MODE_LOCAL_GAME_TAG = "mode_local_game"
 internal const val MODE_AI_GAME_TAG = "mode_ai_game"
 internal const val MODE_AUTO_PLAY_TAG = "mode_auto_play"
 internal const val MODE_TUTORIAL_TAG = "mode_tutorial"
+internal const val MODE_ENDGAME_TAG = "mode_endgame"
 internal const val DIFFICULTY_SCREEN_TAG = "difficulty_screen"
 internal const val DIFFICULTY_EASY_TAG = "difficulty_easy"
 
@@ -38,6 +39,7 @@ internal fun ChineseChessModeScreen(
     onAiDifficulty: () -> Unit,
     onAutoPlayDifficulty: () -> Unit,
     onTutorial: () -> Unit,
+    onEndgame: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(modifier = modifier.fillMaxSize()) {
@@ -67,6 +69,7 @@ internal fun ChineseChessModeScreen(
                                     onAutoPlayDifficulty
                                 }
                                 ModeDestination.TUTORIAL -> onTutorial
+                                ModeDestination.ENDGAME_CATALOG -> onEndgame
                                 ModeDestination.LOCKED -> ({})
                             },
                             modifier = Modifier.weight(1f),
@@ -210,7 +213,7 @@ private fun ModeCard(
                     ChineseChessMode.HUMAN_VS_AI -> Modifier.testTag(MODE_AI_GAME_TAG)
                     ChineseChessMode.AI_AUTO_PLAY -> Modifier.testTag(MODE_AUTO_PLAY_TAG)
                     ChineseChessMode.TUTORIAL -> Modifier.testTag(MODE_TUTORIAL_TAG)
-                    else -> Modifier
+                    ChineseChessMode.ENDGAME -> Modifier.testTag(MODE_ENDGAME_TAG)
                 },
             )
             .clickable(enabled = enabled, onClick = onClick),
@@ -231,6 +234,7 @@ private fun ModeCard(
                         stringResource(R.string.view_unlock_rules)
                     }
                     ModeDestination.TUTORIAL -> stringResource(R.string.available_now)
+                    ModeDestination.ENDGAME_CATALOG -> stringResource(R.string.available_now)
                     ModeDestination.LOCKED -> stringResource(R.string.future_slice)
                 },
                 color = MaterialTheme.colorScheme.primary,

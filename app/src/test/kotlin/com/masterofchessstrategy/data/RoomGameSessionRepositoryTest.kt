@@ -3,6 +3,7 @@ package com.masterofchessstrategy.data
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.ChineseChessSide
+import com.masterofchessstrategy.engine.Difficulty
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -44,7 +45,7 @@ class RoomGameSessionRepositoryTest {
         val stored = requireNotNull(dao.entity)
         assertEquals(GameType.CHINESE_CHESS.code, stored.gameTypeCode)
         assertEquals(StoredGameMode.LOCAL_TWO_PLAYER.code, stored.modeCode)
-        assertEquals(3, stored.envelopeVersion)
+        assertEquals(4, stored.envelopeVersion)
         assertEquals(2, stored.engineFormatVersion)
         assertEquals("match-42", stored.sessionId)
         assertEquals(8, stored.acceptedMoveCount)
@@ -57,6 +58,7 @@ class RoomGameSessionRepositoryTest {
         assertEquals(true, stored.autoPlayPaused)
         assertEquals(2_000, stored.autoPlaySpeedPermille)
         assertEquals(4, stored.completedAutoGames)
+        assertEquals("", stored.sessionVariantId)
         assertArrayEquals(byteArrayOf(1, 2, 3), stored.engineState)
     }
 
@@ -66,9 +68,9 @@ class RoomGameSessionRepositoryTest {
         val dao = FakeActiveGameDao(
             ActiveGameEntity(
                 gameTypeCode = GameType.CHINESE_CHESS.code,
-                modeCode = StoredGameMode.LOCAL_TWO_PLAYER.code,
-                difficultyCode = null,
-                envelopeVersion = 3,
+                modeCode = StoredGameMode.ENDGAME.code,
+                difficultyCode = Difficulty.EASY.code,
+                envelopeVersion = 4,
                 engineFormatVersion = 2,
                 engineState = storedBytes,
                 updatedAtEpochMillis = 84L,
@@ -85,13 +87,15 @@ class RoomGameSessionRepositoryTest {
                 autoPlayPaused = false,
                 autoPlaySpeedPermille = 500,
                 completedAutoGames = 2,
+                sessionVariantId = "xq-easy-001",
             ),
         )
 
         val result = RoomGameSessionRepository(dao).load(GameType.CHINESE_CHESS)
 
         val loaded = (result as LoadGameSessionResult.Loaded).snapshot
-        assertEquals(StoredGameMode.LOCAL_TWO_PLAYER, loaded.mode)
+        assertEquals(StoredGameMode.ENDGAME, loaded.mode)
+        assertEquals(Difficulty.EASY, loaded.difficulty)
         assertEquals("match-84", loaded.sessionId)
         assertEquals(4, loaded.acceptedMoveCount)
         assertEquals(1, loaded.undoUseCount)
@@ -102,6 +106,7 @@ class RoomGameSessionRepositoryTest {
         assertEquals(ChineseChessSide.BLACK, loaded.pendingDrawOfferSide)
         assertEquals(500, loaded.autoPlaySpeedPermille)
         assertEquals(2, loaded.completedAutoGames)
+        assertEquals("xq-easy-001", loaded.sessionVariantId)
         assertArrayEquals(storedBytes, loaded.engineState)
         assertNotSame(storedBytes, loaded.engineState)
     }
@@ -123,6 +128,28 @@ class RoomGameSessionRepositoryTest {
         val result = RoomGameSessionRepository(dao).load(GameType.CHINESE_CHESS)
 
         assertSame(LoadGameSessionResult.Incompatible, result)
+    }
+
+    @Test
+    fun sessionVariantMustMatchEndgameMode() = runBlocking {
+        val dao = FakeActiveGameDao(
+            ActiveGameEntity(
+                gameTypeCode = GameType.CHINESE_CHESS.code,
+                modeCode = StoredGameMode.LOCAL_TWO_PLAYER.code,
+                difficultyCode = null,
+                envelopeVersion = 4,
+                engineFormatVersion = 2,
+                engineState = byteArrayOf(1),
+                updatedAtEpochMillis = 1L,
+                sessionId = "match-invalid-variant",
+                sessionVariantId = "xq-easy-001",
+            ),
+        )
+
+        assertSame(
+            LoadGameSessionResult.Incompatible,
+            RoomGameSessionRepository(dao).load(GameType.CHINESE_CHESS),
+        )
     }
 
     private class FakeActiveGameDao(

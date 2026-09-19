@@ -44,6 +44,18 @@ class AppNavigationScreenTest {
     }
 
     @Test
+    fun chineseChessModesCanOpenEndgameCatalog() {
+        composeRule.setContent {
+            MasterOfChessStrategyApp()
+        }
+
+        composeRule.onNodeWithTag(HOME_CHINESE_CHESS_TAG).performClick()
+        composeRule.onNodeWithTag(MODE_ENDGAME_TAG).performClick()
+        composeRule.onNodeWithTag(ENDGAME_SCREEN_TAG).assertExists()
+        composeRule.onNodeWithTag(ENDGAME_LEVEL_PREFIX + "xq-easy-001").assertExists()
+    }
+
+    @Test
     fun homeExposesQuickStartOnlyWhenHistoryExists() {
         var quickStarts = 0
         composeRule.setContent {

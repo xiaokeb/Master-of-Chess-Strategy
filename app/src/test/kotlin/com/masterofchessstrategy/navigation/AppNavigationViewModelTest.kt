@@ -63,6 +63,21 @@ class AppNavigationViewModelTest {
     }
 
     @Test
+    fun endgameHistoryQuickStartsCatalog() = runTest(dispatcher) {
+        val selection = selection(StoredGameMode.ENDGAME)
+        val viewModel = AppNavigationViewModel(
+            FakeLastSelectionRepository(LoadLastSelectionResult.Loaded(selection)),
+        )
+
+        advanceUntilIdle()
+
+        assertEquals(
+            QuickStartDestination.ENDGAME_CATALOG,
+            viewModel.chineseChessQuickStartDestination(),
+        )
+    }
+
+    @Test
     fun recordModePersistsAndRefreshesQuickStart() = runTest(dispatcher) {
         val repository = FakeLastSelectionRepository(LoadLastSelectionResult.NotFound)
         val viewModel = AppNavigationViewModel(repository, nowEpochMillis = { 88L })

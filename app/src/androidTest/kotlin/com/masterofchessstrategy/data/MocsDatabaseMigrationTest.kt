@@ -251,6 +251,39 @@ class MocsDatabaseMigrationTest {
         migrated.close()
     }
 
+    @Test
+    fun migrateEightToNineAddsEndgameProgressAndSessionVariant() {
+        helper.createDatabase(ENDGAME_DATABASE_NAME, 8).apply {
+            execSQL(
+                """
+                INSERT INTO active_games (
+                    gameTypeCode,
+                    modeCode,
+                    difficultyCode,
+                    envelopeVersion,
+                    engineFormatVersion,
+                    engineState,
+                    updatedAtEpochMillis
+                ) VALUES (?, ?, NULL, 3, 2, ?, 106)
+                """.trimIndent(),
+                arrayOf(0, 0, byteArrayOf(1, 2, 3)),
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            ENDGAME_DATABASE_NAME,
+            9,
+            true,
+            MocsDatabase.MIGRATION_8_9,
+        )
+
+        assertEquals(4, migrated.singleInt("SELECT envelopeVersion FROM active_games"))
+        assertEquals("", migrated.singleString("SELECT sessionVariantId FROM active_games"))
+        assertEquals(0, migrated.singleInt("SELECT COUNT(*) FROM endgame_progress"))
+        migrated.close()
+    }
+
     private fun SupportSQLiteDatabase.singleInt(query: String): Int =
         this.query(query).use { cursor ->
             check(cursor.moveToFirst())
@@ -277,5 +310,6 @@ class MocsDatabaseMigrationTest {
         const val CONTROL_STATE_DATABASE_NAME = "migration-5-6-test"
         const val AUTOMATION_DATABASE_NAME = "migration-6-7-test"
         const val RECORD_DATABASE_NAME = "migration-7-8-test"
+        const val ENDGAME_DATABASE_NAME = "migration-8-9-test"
     }
 }
