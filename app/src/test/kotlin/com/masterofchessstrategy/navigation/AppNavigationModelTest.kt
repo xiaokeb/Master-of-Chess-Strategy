@@ -262,4 +262,27 @@ class AppNavigationModelTest {
             selection.quickStartDestination(),
         )
     }
+
+    @Test
+    fun blindChallengeRouteUsesStableDifficulty() {
+        assertEquals(
+            "chinese-chess/extensions/blind/2",
+            AppDestination.chineseChessBlindGame(Difficulty.HARD),
+        )
+    }
+
+    @Test
+    fun blindChallengeHistoryReturnsToItsSetupScreen() {
+        val selection = LastGameSelection(
+            gameType = GameType.CHINESE_CHESS,
+            mode = StoredGameMode.BLIND_CHALLENGE,
+            difficulty = Difficulty.EASY,
+            updatedAtEpochMillis = 1L,
+        )
+
+        assertEquals(
+            QuickStartDestination.BLIND_SETUP,
+            selection.quickStartDestination(),
+        )
+    }
 }

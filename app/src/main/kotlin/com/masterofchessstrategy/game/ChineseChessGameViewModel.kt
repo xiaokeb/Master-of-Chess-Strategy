@@ -114,7 +114,8 @@ class ChineseChessGameViewModel internal constructor(
             mode == StoredGameMode.ENDGAME ||
             mode == StoredGameMode.CUSTOM_POSITION ||
             mode == StoredGameMode.TIMED_CHALLENGE ||
-            mode == StoredGameMode.STREAK_CHALLENGE
+            mode == StoredGameMode.STREAK_CHALLENGE ||
+            mode == StoredGameMode.BLIND_CHALLENGE
     private val isAiGame =
         isHumanControlledAiGame || mode == StoredGameMode.AI_AUTO_PLAY
     private val isAutoPlay = mode == StoredGameMode.AI_AUTO_PLAY
@@ -134,6 +135,7 @@ class ChineseChessGameViewModel internal constructor(
             currentStreak = initialStreakState?.currentStreak ?: 0,
             bestStreak = initialStreakState?.bestStreak ?: 0,
             streakNextDifficulty = initialStreakState?.nextDifficulty,
+            isBlindChess = mode == StoredGameMode.BLIND_CHALLENGE,
             endgameTitle = endgameTitle,
             endgameMaxPlayerMoves = endgameMaxPlayerMoves,
         ),
@@ -793,6 +795,7 @@ class ChineseChessGameViewModel internal constructor(
                 currentStreak = streakState?.currentStreak ?: 0,
                 bestStreak = streakState?.bestStreak ?: 0,
                 streakNextDifficulty = streakState?.nextDifficulty,
+                isBlindChess = mode == StoredGameMode.BLIND_CHALLENGE,
                 endgameTitle = endgameTitle,
                 endgamePlayerMovesUsed = endgamePlayerMoveCount(),
                 endgameMaxPlayerMoves = endgameMaxPlayerMoves,

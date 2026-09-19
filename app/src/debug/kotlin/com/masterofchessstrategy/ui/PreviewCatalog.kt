@@ -13,6 +13,8 @@ import com.masterofchessstrategy.challenge.ChineseChessStreakUiState
 import com.masterofchessstrategy.challenge.PreparedTimedChallenge
 import com.masterofchessstrategy.challenge.PreparedStreakChallenge
 import com.masterofchessstrategy.challenge.StreakChallengeState
+import com.masterofchessstrategy.challenge.ChineseChessBlindUiState
+import com.masterofchessstrategy.challenge.PreparedBlindChallenge
 import com.masterofchessstrategy.custom.ChineseChessSetupUiState
 import com.masterofchessstrategy.engine.ChineseChessBoard
 import com.masterofchessstrategy.engine.BoardMove
@@ -374,6 +376,61 @@ private fun ChineseChessStreakChallengeScreenPreview() {
             onContinueSaved = {},
         )
     }
+}
+
+@Preview(
+    name = "12 中国象棋盲棋设置",
+    group = "已完成界面",
+    widthDp = 960,
+    heightDp = 540,
+    showBackground = true,
+)
+@Composable
+private fun ChineseChessBlindChallengeScreenPreview() {
+    MocsTheme {
+        ChineseChessBlindChallengeScreen(
+            state = ChineseChessBlindUiState(
+                difficulty = Difficulty.MEDIUM,
+                unlockedDifficulties = Difficulty.entries.toSet(),
+                isLoadingSavedGame = false,
+                savedChallenge = PreparedBlindChallenge(Difficulty.EASY),
+            ),
+            onBack = {},
+            onDifficultySelected = {},
+            onStart = {},
+            onContinueSaved = {},
+        )
+    }
+}
+
+@Preview(
+    name = "13 中国象棋盲棋对局",
+    group = "已完成界面",
+    widthDp = 960,
+    heightDp = 540,
+    showBackground = true,
+)
+@Composable
+private fun ChineseChessBlindGameScreenPreview() {
+    ChineseChessGameScreen(
+        state = ChineseChessGameUiState(
+            board = standardChineseChessBoard(),
+            isAiGame = true,
+            difficulty = Difficulty.MEDIUM,
+            isBlindChess = true,
+            timeControlMinutes = 30,
+            redRemainingMillis = 1_620_000L,
+            blackRemainingMillis = 1_574_000L,
+        ),
+        onSquareTap = {},
+        onUndo = {},
+        onHint = {},
+        onResign = {},
+        onDraw = {},
+        onRestart = {},
+        onBack = {},
+        onSettings = {},
+    )
 }
 
 private fun previewRecord() = GameRecord(

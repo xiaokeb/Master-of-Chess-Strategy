@@ -17,6 +17,7 @@ internal enum class StoredGameMode(val code: Int) {
     CUSTOM_POSITION(5),
     TIMED_CHALLENGE(6),
     STREAK_CHALLENGE(7),
+    BLIND_CHALLENGE(8),
 }
 
 internal data class GameSessionSnapshot(
@@ -267,6 +268,7 @@ internal fun StoredGameMode.acceptsSessionDifficulty(difficulty: Difficulty?): B
         StoredGameMode.CUSTOM_POSITION,
         StoredGameMode.TIMED_CHALLENGE,
         StoredGameMode.STREAK_CHALLENGE,
+        StoredGameMode.BLIND_CHALLENGE,
         -> difficulty != null
         StoredGameMode.TUTORIAL -> false
     }

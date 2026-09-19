@@ -635,6 +635,38 @@ class ChineseChessAiGameViewModelTest {
         }
 
     @Test
+    fun blindChallengeUsesAiPersistsAndRecordsWithoutRankedOutcome() =
+        runTest(dispatcher) {
+            val engine = FakeAiEngine(humanMoveResult = GameResult.FIRST_PLAYER_WIN)
+            val repository = RecordingSessionRepository()
+            val outcomes = mutableListOf<com.masterofchessstrategy.data.MatchOutcome>()
+            val records = mutableListOf<GameRecord>()
+            val viewModel = ChineseChessGameViewModel(
+                sessionRepository = repository,
+                mode = StoredGameMode.BLIND_CHALLENGE,
+                difficulty = Difficulty.EASY,
+                aiDispatcher = dispatcher,
+                onMatchFinished = outcomes::add,
+                onGameRecorded = records::add,
+                engineFactory = { engine },
+            )
+            advanceUntilIdle()
+
+            assertTrue(viewModel.uiState.isBlindChess)
+            assertFalse(viewModel.uiState.canUndo)
+            assertFalse(viewModel.uiState.canRequestHint)
+
+            viewModel.onSquareTap(engine.redFrom)
+            viewModel.onSquareTap(engine.redTo)
+            advanceUntilIdle()
+
+            assertEquals(GameResult.FIRST_PLAYER_WIN, viewModel.uiState.result)
+            assertEquals(StoredGameMode.BLIND_CHALLENGE, repository.saved.last().mode)
+            assertEquals(StoredGameMode.BLIND_CHALLENGE, records.single().mode)
+            assertTrue(outcomes.isEmpty())
+        }
+
+    @Test
     fun endgameCheckmateRecordsPlayerVictoryWithoutAiReply() = runTest(dispatcher) {
         val engine = FakeAiEngine(humanMoveResult = GameResult.FIRST_PLAYER_WIN)
         val records = mutableListOf<GameRecord>()

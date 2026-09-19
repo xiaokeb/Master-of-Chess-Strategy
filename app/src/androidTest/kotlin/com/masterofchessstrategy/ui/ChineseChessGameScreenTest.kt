@@ -110,4 +110,30 @@ class ChineseChessGameScreenTest {
         composeRule.onNodeWithTag(STREAK_NEXT_GAME_TAG).assertIsEnabled()
         composeRule.onNodeWithTag(RESTART_BUTTON_TAG).assertDoesNotExist()
     }
+
+    @Test
+    fun blindChallengeKeepsBoardButDisablesMemoryAids() {
+        composeRule.setContent {
+            ChineseChessGameScreen(
+                state = ChineseChessGameUiState(
+                    board = List(90) { null },
+                    isAiGame = true,
+                    difficulty = Difficulty.EASY,
+                    isBlindChess = true,
+                    canUndo = false,
+                    canRequestHint = false,
+                ),
+                onSquareTap = {},
+                onUndo = {},
+                onHint = {},
+                onResign = {},
+                onRestart = {},
+                onBack = {},
+            )
+        }
+
+        composeRule.onNodeWithTag(CHINESE_CHESS_BOARD_TAG).assertExists()
+        composeRule.onNodeWithTag(UNDO_BUTTON_TAG).assertIsNotEnabled()
+        composeRule.onNodeWithTag(HINT_BUTTON_TAG).assertIsNotEnabled()
+    }
 }

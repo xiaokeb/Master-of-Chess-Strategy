@@ -46,4 +46,18 @@ class ChineseChessAssistancePolicyTest {
         assertEquals(0, policy.hintRemaining(0))
         assertEquals(ChineseChessHintMode.NONE, policy.hintMode)
     }
+
+    @Test
+    fun blindChallengeDisablesUndoAndHintsAtEveryDifficulty() {
+        Difficulty.entries.forEach { difficulty ->
+            val policy = ChineseChessAssistancePolicy.resolve(
+                StoredGameMode.BLIND_CHALLENGE,
+                difficulty,
+            )
+
+            assertEquals(0, policy.undoLimit)
+            assertEquals(0, policy.hintLimit)
+            assertEquals(ChineseChessHintMode.NONE, policy.hintMode)
+        }
+    }
 }

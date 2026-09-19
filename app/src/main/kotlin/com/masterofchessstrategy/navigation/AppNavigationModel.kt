@@ -28,6 +28,10 @@ internal object AppDestination {
     const val CHINESE_CHESS_STREAK_GAME =
         "chinese-chess/extensions/streak/{$STREAK_DIFFICULTY_ARGUMENT}/" +
             "{$STREAK_STATE_ARGUMENT}"
+    const val CHINESE_CHESS_BLIND_SETUP = "chinese-chess/extensions/blind/setup"
+    const val BLIND_DIFFICULTY_ARGUMENT = "blindDifficultyCode"
+    const val CHINESE_CHESS_BLIND_GAME =
+        "chinese-chess/extensions/blind/{$BLIND_DIFFICULTY_ARGUMENT}"
     const val CHINESE_CHESS_CUSTOM_SETUP = "chinese-chess/extensions/custom/setup"
     const val CUSTOM_DIFFICULTY_ARGUMENT = "customDifficultyCode"
     const val CUSTOM_POSITION_ARGUMENT = "customPosition"
@@ -80,6 +84,9 @@ internal object AppDestination {
     ): String =
         "chinese-chess/extensions/streak/${difficulty.code}/" +
             StreakChallengeStateCodec.encode(state)
+
+    fun chineseChessBlindGame(difficulty: Difficulty): String =
+        "chinese-chess/extensions/blind/${difficulty.code}"
 }
 
 /** Five first-level cards required by the product layout. */

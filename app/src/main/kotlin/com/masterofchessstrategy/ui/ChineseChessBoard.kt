@@ -182,7 +182,7 @@ internal fun ChineseChessBoard(
             canvas.nativeCanvas.drawText("汉界", origin.x + 6f * cell, riverY, riverPaint)
         }
 
-        state.legalDestinations.forEach { destination ->
+        state.legalDestinations.takeUnless { state.isBlindChess }.orEmpty().forEach { destination ->
             drawCircle(
                 color = legalColor,
                 radius = cell * 0.11f,
@@ -190,7 +190,7 @@ internal fun ChineseChessBoard(
             )
         }
 
-        state.hintedDestinations.forEach { destination ->
+        state.hintedDestinations.takeUnless { state.isBlindChess }.orEmpty().forEach { destination ->
             drawCircle(
                 color = hintColor,
                 radius = cell * 0.15f,
@@ -199,7 +199,7 @@ internal fun ChineseChessBoard(
             )
         }
 
-        state.hintedOrigins.forEach { originPosition ->
+        state.hintedOrigins.takeUnless { state.isBlindChess }.orEmpty().forEach { originPosition ->
             drawCircle(
                 color = hintColor,
                 radius = cell * 0.47f,
@@ -240,10 +240,24 @@ internal fun ChineseChessBoard(
                 center = center,
                 style = Stroke(width = cell * 0.045f),
             )
-            piecePaint.color = sideColor.toArgb()
-            drawIntoCanvas { canvas ->
-                val baseline = center.y - (piecePaint.ascent() + piecePaint.descent()) / 2f
-                canvas.nativeCanvas.drawText(piece.label(), center.x, baseline, piecePaint)
+            if (state.isBlindChess) {
+                drawCircle(
+                    color = sideColor.copy(alpha = 0.2f),
+                    radius = cell * 0.22f,
+                    center = center,
+                )
+                drawCircle(
+                    color = sideColor,
+                    radius = cell * 0.14f,
+                    center = center,
+                    style = Stroke(width = cell * 0.035f),
+                )
+            } else {
+                piecePaint.color = sideColor.toArgb()
+                drawIntoCanvas { canvas ->
+                    val baseline = center.y - (piecePaint.ascent() + piecePaint.descent()) / 2f
+                    canvas.nativeCanvas.drawText(piece.label(), center.x, baseline, piecePaint)
+                }
             }
         }
     }

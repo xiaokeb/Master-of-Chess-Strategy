@@ -181,6 +181,37 @@ class LocalDataBackupCodecTest {
         )
     }
 
+    @Test
+    fun blindChallengeSessionAndSelectionRoundTripTogether() {
+        val source = LocalDataSnapshot(
+            createdAtEpochMillis = 1L,
+            activeSessions = listOf(
+                GameSessionSnapshot(
+                    gameType = GameType.CHINESE_CHESS,
+                    mode = StoredGameMode.BLIND_CHALLENGE,
+                    difficulty = Difficulty.MEDIUM,
+                    engineState = byteArrayOf(7, 8),
+                    updatedAtEpochMillis = 2L,
+                    sessionId = "blind-1",
+                ),
+            ),
+            lastSelections = listOf(
+                LastGameSelection(
+                    gameType = GameType.CHINESE_CHESS,
+                    mode = StoredGameMode.BLIND_CHALLENGE,
+                    difficulty = Difficulty.MEDIUM,
+                    updatedAtEpochMillis = 3L,
+                ),
+            ),
+        )
+
+        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+
+        assertEquals(StoredGameMode.BLIND_CHALLENGE, restored.activeSessions.single().mode)
+        assertEquals(Difficulty.MEDIUM, restored.lastSelections.single().difficulty)
+        assertEquals("", restored.activeSessions.single().sessionVariantId)
+    }
+
     private fun completeSnapshot(): LocalDataSnapshot = LocalDataSnapshot(
         createdAtEpochMillis = 900L,
         activeSessions = listOf(

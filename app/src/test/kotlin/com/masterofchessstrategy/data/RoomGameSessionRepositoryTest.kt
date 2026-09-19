@@ -280,6 +280,38 @@ class RoomGameSessionRepositoryTest {
         )
     }
 
+    @Test
+    fun blindChallengeRequiresDifficultyAndEmptyVariant() = runBlocking {
+        val dao = FakeActiveGameDao(
+            ActiveGameEntity(
+                gameTypeCode = GameType.CHINESE_CHESS.code,
+                modeCode = StoredGameMode.BLIND_CHALLENGE.code,
+                difficultyCode = Difficulty.MEDIUM.code,
+                envelopeVersion = 4,
+                engineFormatVersion = 2,
+                engineState = byteArrayOf(9),
+                updatedAtEpochMillis = 1L,
+                sessionId = "blind-session",
+            ),
+        )
+        val repository = RoomGameSessionRepository(dao)
+
+        val loaded = repository.load(GameType.CHINESE_CHESS)
+        assertEquals(
+            StoredGameMode.BLIND_CHALLENGE,
+            (loaded as LoadGameSessionResult.Loaded).snapshot.mode,
+        )
+
+        dao.entity = requireNotNull(dao.entity).copy(sessionVariantId = "blind:leak")
+        assertSame(LoadGameSessionResult.Incompatible, repository.load(GameType.CHINESE_CHESS))
+
+        dao.entity = requireNotNull(dao.entity).copy(
+            difficultyCode = null,
+            sessionVariantId = "",
+        )
+        assertSame(LoadGameSessionResult.Incompatible, repository.load(GameType.CHINESE_CHESS))
+    }
+
     private class FakeActiveGameDao(
         var entity: ActiveGameEntity? = null,
     ) : ActiveGameDao {

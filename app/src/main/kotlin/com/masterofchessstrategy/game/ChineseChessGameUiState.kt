@@ -85,6 +85,7 @@ data class ChineseChessGameUiState(
     val currentStreak: Int = 0,
     val bestStreak: Int = 0,
     val streakNextDifficulty: Difficulty? = null,
+    val isBlindChess: Boolean = false,
     val endgameTitle: String? = null,
     val endgamePlayerMovesUsed: Int = 0,
     val endgameMaxPlayerMoves: Int? = null,

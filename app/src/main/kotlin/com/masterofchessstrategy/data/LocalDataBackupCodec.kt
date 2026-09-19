@@ -250,7 +250,8 @@ internal object LocalDataBackupCodec {
                 mode == StoredGameMode.AI_AUTO_PLAY ||
                 mode == StoredGameMode.CUSTOM_POSITION ||
                 mode == StoredGameMode.TIMED_CHALLENGE ||
-                mode == StoredGameMode.STREAK_CHALLENGE
+                mode == StoredGameMode.STREAK_CHALLENGE ||
+                mode == StoredGameMode.BLIND_CHALLENGE
             ) {
                 true
             } else {
@@ -489,5 +490,6 @@ internal object LocalDataBackupCodec {
         StoredGameMode.CUSTOM_POSITION,
         StoredGameMode.TIMED_CHALLENGE,
         StoredGameMode.STREAK_CHALLENGE,
+        StoredGameMode.BLIND_CHALLENGE,
     )
 }

@@ -52,8 +52,10 @@ import androidx.navigation.navArgument
 import com.masterofchessstrategy.R
 import com.masterofchessstrategy.challenge.ChineseChessTimedChallengeViewModel
 import com.masterofchessstrategy.challenge.ChineseChessStreakViewModel
+import com.masterofchessstrategy.challenge.ChineseChessBlindViewModel
 import com.masterofchessstrategy.challenge.PreparedTimedChallenge
 import com.masterofchessstrategy.challenge.PreparedStreakChallenge
+import com.masterofchessstrategy.challenge.PreparedBlindChallenge
 import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.data.MocsDatabase
@@ -290,6 +292,10 @@ fun MasterOfChessStrategyApp() {
                                     AppDestination.CHINESE_CHESS_STREAK_SETUP
                                 }
 
+                                QuickStartDestination.BLIND_SETUP -> {
+                                    AppDestination.CHINESE_CHESS_BLIND_SETUP
+                                }
+
                                 QuickStartDestination.MODE_SELECTION -> {
                                     AppDestination.CHINESE_CHESS_MODES
                                 }
@@ -368,8 +374,100 @@ fun MasterOfChessStrategyApp() {
                     onStreakChallenge = {
                         navController.navigate(AppDestination.CHINESE_CHESS_STREAK_SETUP)
                     },
+                    onBlindChallenge = {
+                        navController.navigate(AppDestination.CHINESE_CHESS_BLIND_SETUP)
+                    },
                     onCustomPosition = {
                         navController.navigate(AppDestination.CHINESE_CHESS_CUSTOM_SETUP)
+                    },
+                )
+            }
+            composable(AppDestination.CHINESE_CHESS_BLIND_SETUP) {
+                val unlocked = difficultyEntries
+                    .filter { it.isPlayable }
+                    .mapTo(linkedSetOf()) { it.difficulty }
+                val factory = remember(gameSessionRepository, unlocked) {
+                    ChineseChessBlindViewModel.factory(gameSessionRepository, unlocked)
+                }
+                val blindViewModel: ChineseChessBlindViewModel = viewModel(factory = factory)
+                val openChallenge: (PreparedBlindChallenge) -> Unit = { prepared ->
+                    navigationViewModel.recordChineseChessSelection(
+                        StoredGameMode.BLIND_CHALLENGE,
+                        prepared.difficulty,
+                    )
+                    navController.navigate(
+                        AppDestination.chineseChessBlindGame(prepared.difficulty),
+                    )
+                }
+                ChineseChessBlindChallengeScreen(
+                    state = blindViewModel.uiState,
+                    onBack = navController::popBackStack,
+                    onDifficultySelected = blindViewModel::selectDifficulty,
+                    onStart = {
+                        blindViewModel.prepareNewChallenge()?.let(openChallenge)
+                    },
+                    onContinueSaved = {
+                        blindViewModel.continueSavedChallenge()?.let(openChallenge)
+                    },
+                )
+            }
+            composable(
+                route = AppDestination.CHINESE_CHESS_BLIND_GAME,
+                arguments = listOf(
+                    navArgument(AppDestination.BLIND_DIFFICULTY_ARGUMENT) {
+                        type = NavType.IntType
+                    },
+                ),
+            ) { backStackEntry ->
+                val difficultyCode = backStackEntry.arguments
+                    ?.getInt(AppDestination.BLIND_DIFFICULTY_ARGUMENT)
+                val difficulty = checkNotNull(
+                    Difficulty.entries.firstOrNull { it.code == difficultyCode },
+                ) { "Unsupported blind-challenge difficulty" }
+                check(
+                    difficultyEntries.any {
+                        it.difficulty == difficulty && it.isPlayable
+                    },
+                ) { "Blind-challenge difficulty is locked" }
+                val factory = remember(
+                    gameSessionRepository,
+                    gameRecordsViewModel,
+                    difficulty,
+                    settingsViewModel.uiState.settings.gameDurationMinutes,
+                    pikafishNetworkProvider,
+                ) {
+                    ChineseChessGameViewModel.factory(
+                        repository = gameSessionRepository,
+                        mode = StoredGameMode.BLIND_CHALLENGE,
+                        difficulty = difficulty,
+                        onGameRecorded = gameRecordsViewModel::record,
+                        timeControlMinutes =
+                            settingsViewModel.uiState.settings.gameDurationMinutes,
+                        engineFactory = {
+                            NativeChineseChessEngine(
+                                pikafishNetworkProvider::requireNetworkPath,
+                            )
+                        },
+                    )
+                }
+                val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
+                ChineseChessGameSoundEffect(
+                    gameViewModel,
+                    settingsViewModel.uiState.settings.soundEnabled,
+                )
+                ChineseChessGameScreen(
+                    state = gameViewModel.uiState,
+                    onSquareTap = gameViewModel::onSquareTap,
+                    onUndo = gameViewModel::undo,
+                    onHint = gameViewModel::requestHint,
+                    onResign = gameViewModel::resign,
+                    onDraw = gameViewModel::offerOrAcceptDraw,
+                    onRestart = gameViewModel::restart,
+                    onBack = navController::popBackStack,
+                    onSettings = {
+                        navController.navigate(AppDestination.SETTINGS) {
+                            launchSingleTop = true
+                        }
                     },
                 )
             }
@@ -1651,6 +1749,12 @@ private fun gameStatusText(state: ChineseChessGameUiState): String =
 
 @Composable
 private fun gameModeTitle(state: ChineseChessGameUiState): String {
+    if (state.isBlindChess) {
+        return stringResource(
+            R.string.blind_challenge_ai_game,
+            difficultyTitle(requireNotNull(state.difficulty)),
+        )
+    }
     if (state.isStreakChallenge) {
         return stringResource(
             R.string.streak_challenge_ai_game,

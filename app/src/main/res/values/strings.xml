@@ -112,6 +112,13 @@
     <string name="extension_streak_summary">连胜统计并随表现自动调整难度。</string>
     <string name="extension_blind">盲棋模式</string>
     <string name="extension_blind_summary">隐藏棋子身份进行记忆对战。</string>
+    <string name="blind_challenge_title">中国象棋 · 盲棋模式</string>
+    <string name="blind_challenge_subtitle">标准规则 · 棋子背面 · 记忆对战</string>
+    <string name="blind_challenge_rules">玩家执红，全部存活棋子只显示阵营色背面。棋种、合法落点和提示均不显示，且不能悔棋；请依据初始局面和每步变化完成对局。走法、胜负、计时与普通中国象棋完全一致。</string>
+    <string name="blind_challenge_start">开始盲棋对局</string>
+    <string name="blind_challenge_continue">继续保存的%1$s盲棋</string>
+    <string name="blind_challenge_mode">盲棋模式</string>
+    <string name="blind_challenge_ai_game">盲棋 · %1$s AI</string>
     <string name="extension_custom_position">自由摆局</string>
     <string name="extension_custom_position_summary">自定义合法局面并由 AI 陪练。</string>
     <string name="extension_assessment">棋力评测</string>
