@@ -12,6 +12,7 @@ import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.navigation.HomeGameEntry
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.settings.AppSettingsUiState
+import com.masterofchessstrategy.settings.LocalDataBackupUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Rule
@@ -129,6 +130,9 @@ class AppNavigationScreenTest {
                 onSoundEnabled = { requestedSound = it },
                 onTimeLimitEnabled = {},
                 onAdjustDuration = {},
+                backupState = LocalDataBackupUiState(),
+                onExportData = {},
+                onRestoreData = {},
                 onOpenSourceLicenses = {},
             )
         }
@@ -137,6 +141,39 @@ class AppNavigationScreenTest {
 
         composeRule.runOnIdle {
             assertFalse(requestedSound)
+        }
+    }
+
+    @Test
+    fun settingsDataActionsRemainExplicitUserActions() {
+        var exportRequests = 0
+        var restoreRequests = 0
+        composeRule.setContent {
+            SettingsScreen(
+                state = AppSettingsUiState(
+                    settings = AppSettings.DEFAULT,
+                    isLoading = false,
+                ),
+                onBack = {},
+                onDefaultDifficulty = {},
+                onAutoContinue = {},
+                onAdjustAutoContinueLimit = {},
+                onSoundEnabled = {},
+                onTimeLimitEnabled = {},
+                onAdjustDuration = {},
+                backupState = LocalDataBackupUiState(),
+                onExportData = { exportRequests++ },
+                onRestoreData = { restoreRequests++ },
+                onOpenSourceLicenses = {},
+            )
+        }
+
+        composeRule.onNodeWithTag(SETTINGS_EXPORT_DATA_TAG).performClick()
+        composeRule.onNodeWithTag(SETTINGS_RESTORE_DATA_TAG).performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(1, exportRequests)
+            assertEquals(1, restoreRequests)
         }
     }
 

@@ -12,4 +12,10 @@ internal interface MatchOutcomeDao {
 
     @Query("SELECT * FROM match_outcomes ORDER BY settledAtEpochMillis, matchId")
     suspend fun listAll(): List<MatchOutcomeEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(entities: List<MatchOutcomeEntity>)
+
+    @Query("DELETE FROM match_outcomes")
+    suspend fun deleteAll()
 }

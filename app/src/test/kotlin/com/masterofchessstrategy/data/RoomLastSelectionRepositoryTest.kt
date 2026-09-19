@@ -79,5 +79,9 @@ class RoomLastSelectionRepositoryTest {
         override suspend fun delete(gameTypeCode: Int) {
             if (entity?.gameTypeCode == gameTypeCode) entity = null
         }
+
+        override suspend fun deleteAll() {
+            entity = null
+        }
     }
 }

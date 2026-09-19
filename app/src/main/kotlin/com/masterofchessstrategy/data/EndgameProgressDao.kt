@@ -18,4 +18,7 @@ internal interface EndgameProgressDao {
             "WHERE levelId = :levelId AND bestPlayerMoves > :moves",
     )
     suspend fun updateBest(levelId: String, moves: Int): Int
+
+    @Query("DELETE FROM endgame_progress")
+    suspend fun deleteAll()
 }

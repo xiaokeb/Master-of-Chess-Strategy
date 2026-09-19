@@ -71,5 +71,9 @@ class RoomTutorialProgressRepositoryTest {
         override suspend fun delete(gameTypeCode: Int) {
             entity = null
         }
+
+        override suspend fun deleteAll() {
+            entity = null
+        }
     }
 }

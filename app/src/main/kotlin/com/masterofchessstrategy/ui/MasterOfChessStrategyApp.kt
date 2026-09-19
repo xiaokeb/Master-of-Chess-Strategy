@@ -1,5 +1,10 @@
 package com.masterofchessstrategy.ui
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -51,6 +56,7 @@ import com.masterofchessstrategy.data.RoomGameSessionRepository
 import com.masterofchessstrategy.data.RoomGameRecordRepository
 import com.masterofchessstrategy.data.RoomEndgameProgressRepository
 import com.masterofchessstrategy.data.RoomLastSelectionRepository
+import com.masterofchessstrategy.data.RoomLocalDataBackupRepository
 import com.masterofchessstrategy.data.RoomMatchStatisticsRepository
 import com.masterofchessstrategy.data.RoomTutorialProgressRepository
 import com.masterofchessstrategy.data.StoredGameMode
@@ -62,6 +68,7 @@ import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.NativeChineseChessEngine
+import com.masterofchessstrategy.engine.RestoreResult
 import com.masterofchessstrategy.endgame.ChineseChessEndgamePackParser
 import com.masterofchessstrategy.endgame.ChineseChessEndgameViewModel
 import com.masterofchessstrategy.game.ChineseChessFeedback
@@ -78,6 +85,7 @@ import com.masterofchessstrategy.progress.PlayerStatisticsViewModel
 import com.masterofchessstrategy.records.ChineseChessReplayViewModel
 import com.masterofchessstrategy.records.GameRecordsViewModel
 import com.masterofchessstrategy.settings.AppSettingsViewModel
+import com.masterofchessstrategy.settings.LocalDataBackupViewModel
 import com.masterofchessstrategy.tutorial.ChineseChessTutorialViewModel
 import com.masterofchessstrategy.ui.theme.MocsTheme
 
@@ -124,6 +132,13 @@ fun MasterOfChessStrategyApp() {
         val endgameRepository = remember(database, endgamePack) {
             RoomEndgameProgressRepository(database.endgameProgressDao(), endgamePack)
         }
+        val backupRepository = remember(database, endgamePack) {
+            RoomLocalDataBackupRepository(
+                database = database,
+                endgamePack = endgamePack,
+                validateEngineState = ::isValidChineseChessState,
+            )
+        }
         val navigationFactory = remember(selectionRepository) {
             AppNavigationViewModel.factory(selectionRepository)
         }
@@ -134,6 +149,25 @@ fun MasterOfChessStrategyApp() {
             AppSettingsViewModel.factory(settingsRepository)
         }
         val settingsViewModel: AppSettingsViewModel = viewModel(factory = settingsFactory)
+        val backupFactory = remember(backupRepository) {
+            LocalDataBackupViewModel.factory(backupRepository)
+        }
+        val backupViewModel: LocalDataBackupViewModel = viewModel(factory = backupFactory)
+        var pendingRestoreUri by remember { mutableStateOf<android.net.Uri?>(null) }
+        val createBackupDocument = rememberLauncherForActivityResult(
+            ActivityResultContracts.CreateDocument("application/octet-stream"),
+        ) { uri ->
+            if (uri != null) {
+                backupViewModel.export {
+                    context.contentResolver.openOutputStream(uri, "w")
+                }
+            }
+        }
+        val openBackupDocument = rememberLauncherForActivityResult(
+            ActivityResultContracts.OpenDocument(),
+        ) { uri ->
+            pendingRestoreUri = uri
+        }
         val tutorialFactory = remember(tutorialRepository) {
             ChineseChessTutorialViewModel.factory(tutorialRepository)
         }
@@ -654,12 +688,63 @@ fun MasterOfChessStrategyApp() {
                     onSoundEnabled = settingsViewModel::setSoundEnabled,
                     onTimeLimitEnabled = settingsViewModel::setTimeLimitEnabled,
                     onAdjustDuration = settingsViewModel::adjustDuration,
+                    backupState = backupViewModel.uiState,
+                    onExportData = {
+                        createBackupDocument.launch(BACKUP_FILE_NAME)
+                    },
+                    onRestoreData = {
+                        openBackupDocument.launch(
+                            arrayOf("application/octet-stream", "text/plain"),
+                        )
+                    },
                     onOpenSourceLicenses = {
                         navController.navigate(AppDestination.OPEN_SOURCE_LICENSES) {
                             launchSingleTop = true
                         }
                     },
                 )
+                val restoreUri = pendingRestoreUri
+                if (restoreUri != null) {
+                    AlertDialog(
+                        onDismissRequest = { pendingRestoreUri = null },
+                        title = {
+                            Text(stringResource(R.string.data_backup_restore_confirm_title))
+                        },
+                        text = {
+                            Text(stringResource(R.string.data_backup_restore_confirm_body))
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    pendingRestoreUri = null
+                                    navController.navigate(AppDestination.SETTINGS) {
+                                        popUpTo(AppDestination.HOME)
+                                        launchSingleTop = true
+                                    }
+                                    backupViewModel.restore(
+                                        openInputStream = {
+                                            context.contentResolver.openInputStream(restoreUri)
+                                        },
+                                        onRestored = {
+                                            context.findActivity()?.recreate()
+                                        },
+                                    )
+                                },
+                            ) {
+                                Text(
+                                    stringResource(
+                                        R.string.data_backup_restore_confirm_action,
+                                    ),
+                                )
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { pendingRestoreUri = null }) {
+                                Text(stringResource(R.string.data_backup_restore_cancel))
+                            }
+                        },
+                    )
+                }
             }
             composable(AppDestination.OPEN_SOURCE_LICENSES) {
                 OpenSourceLicensesScreen(onBack = navController::popBackStack)
@@ -667,6 +752,26 @@ fun MasterOfChessStrategyApp() {
         }
     }
 }
+
+private fun isValidChineseChessState(bytes: ByteArray): Boolean =
+    try {
+        NativeChineseChessEngine().use { engine ->
+            engine.restore(bytes) == RestoreResult.Restored
+        }
+    } catch (_: RuntimeException) {
+        false
+    } catch (_: LinkageError) {
+        false
+    }
+
+private tailrec fun Context.findActivity(): Activity? =
+    when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
+    }
+
+private const val BACKUP_FILE_NAME = "MasterofChessStrategy-backup.mocs"
 
 @Composable
 private fun ChineseChessGameSoundEffect(

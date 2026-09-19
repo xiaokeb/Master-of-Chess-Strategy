@@ -15,4 +15,7 @@ internal interface TutorialProgressDao {
 
     @Query("DELETE FROM tutorial_progress WHERE gameTypeCode = :gameTypeCode")
     suspend fun delete(gameTypeCode: Int)
+
+    @Query("DELETE FROM tutorial_progress")
+    suspend fun deleteAll()
 }

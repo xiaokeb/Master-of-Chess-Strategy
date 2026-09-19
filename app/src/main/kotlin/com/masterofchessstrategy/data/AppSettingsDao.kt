@@ -15,4 +15,7 @@ internal interface AppSettingsDao {
 
     @Query("DELETE FROM app_settings WHERE id = 0")
     suspend fun delete()
+
+    @Query("DELETE FROM app_settings")
+    suspend fun deleteAll()
 }

@@ -18,4 +18,7 @@ internal interface LastSelectionDao {
 
     @Query("DELETE FROM last_game_selections WHERE gameTypeCode = :gameTypeCode")
     suspend fun delete(gameTypeCode: Int)
+
+    @Query("DELETE FROM last_game_selections")
+    suspend fun deleteAll()
 }

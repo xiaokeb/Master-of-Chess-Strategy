@@ -98,5 +98,9 @@ class RoomGameRecordRepositoryTest {
             entities[recordId] = current.copy(isFavorite = favorite)
             return 1
         }
+
+        override suspend fun deleteAll() {
+            entities.clear()
+        }
     }
 }

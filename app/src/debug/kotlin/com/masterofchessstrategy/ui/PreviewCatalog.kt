@@ -26,6 +26,7 @@ import com.masterofchessstrategy.records.ChineseChessReplayFrame
 import com.masterofchessstrategy.records.ChineseChessReplayUiState
 import com.masterofchessstrategy.records.GameRecordsUiState
 import com.masterofchessstrategy.settings.AppSettingsUiState
+import com.masterofchessstrategy.settings.LocalDataBackupUiState
 import com.masterofchessstrategy.ui.theme.MocsTheme
 
 /**
@@ -147,6 +148,9 @@ private fun SettingsScreenPreview() {
             onSoundEnabled = {},
             onTimeLimitEnabled = {},
             onAdjustDuration = {},
+            backupState = LocalDataBackupUiState(),
+            onExportData = {},
+            onRestoreData = {},
             onOpenSourceLicenses = {},
         )
     }

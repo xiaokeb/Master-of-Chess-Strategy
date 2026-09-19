@@ -15,4 +15,7 @@ internal interface ActiveGameDao {
 
     @Query("DELETE FROM active_games WHERE gameTypeCode = :gameTypeCode")
     suspend fun delete(gameTypeCode: Int)
+
+    @Query("DELETE FROM active_games")
+    suspend fun deleteAll()
 }

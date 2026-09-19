@@ -18,4 +18,7 @@ internal interface GameRecordDao {
 
     @Query("UPDATE game_records SET isFavorite = :favorite WHERE recordId = :recordId")
     suspend fun setFavorite(recordId: String, favorite: Boolean): Int
+
+    @Query("DELETE FROM game_records")
+    suspend fun deleteAll()
 }

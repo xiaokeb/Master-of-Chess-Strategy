@@ -71,6 +71,10 @@ class RoomEndgameProgressRepositoryTest {
             entities[levelId] = current.copy(bestPlayerMoves = moves)
             return 1
         }
+
+        override suspend fun deleteAll() {
+            entities.clear()
+        }
     }
 
     private companion object {

@@ -89,5 +89,15 @@ class RoomMatchStatisticsRepositoryTest {
 
         override suspend fun listAll(): List<MatchOutcomeEntity> =
             entities.values.toList()
+
+        override suspend fun insertAll(entities: List<MatchOutcomeEntity>) {
+            entities.forEach { entity ->
+                check(this.entities.putIfAbsent(entity.matchId, entity) == null)
+            }
+        }
+
+        override suspend fun deleteAll() {
+            entities.clear()
+        }
     }
 }

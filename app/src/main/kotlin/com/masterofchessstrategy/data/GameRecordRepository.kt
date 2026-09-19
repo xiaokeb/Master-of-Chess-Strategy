@@ -60,10 +60,12 @@ internal class RoomGameRecordRepository(
     private val dao: GameRecordDao,
 ) : GameRecordRepository {
     override suspend fun saveCompleted(record: GameRecord): Boolean =
-        dao.insert(record.toEntity()) != INSERT_IGNORED
+        dao.insert(record.toGameRecordEntity()) != INSERT_IGNORED
 
     override suspend fun list(category: GameRecordCategory): LoadGameRecordsResult {
-        val decoded = dao.listAll().map { it.toRecord() ?: return LoadGameRecordsResult.Incompatible }
+        val decoded = dao.listAll().map {
+            it.toGameRecord() ?: return LoadGameRecordsResult.Incompatible
+        }
         val filtered = when (category) {
             GameRecordCategory.ALL -> decoded
             GameRecordCategory.FAVORITES -> decoded.filter(GameRecord::isFavorite)
@@ -73,82 +75,71 @@ internal class RoomGameRecordRepository(
     }
 
     override suspend fun load(recordId: String): GameRecord? =
-        dao.find(recordId)?.toRecord()?.defensiveCopy()
+        dao.find(recordId)?.toGameRecord()?.defensiveCopy()
 
     override suspend fun setFavorite(recordId: String, favorite: Boolean): Boolean {
         require(recordId.isNotBlank() && recordId.length <= GameRecord.MAX_RECORD_ID_LENGTH)
         return dao.setFavorite(recordId, favorite) == 1
     }
 
-    private fun GameRecord.toEntity() =
-        GameRecordEntity(
+    private companion object {
+        const val INSERT_IGNORED = -1L
+    }
+}
+
+internal fun GameRecord.toGameRecordEntity() = GameRecordEntity(
+    recordId = recordId,
+    gameTypeCode = gameType.code,
+    modeCode = mode.code,
+    difficultyCode = difficulty?.code,
+    resultCode = when (result) {
+        GameResult.FIRST_PLAYER_WIN -> 1
+        GameResult.SECOND_PLAYER_WIN -> 2
+        GameResult.DRAW -> 3
+        GameResult.ONGOING -> error("Ongoing games cannot be recorded")
+    },
+    engineFormatVersion = 2,
+    engineState = engineState.copyOf(),
+    moveCount = moveCount,
+    isFavorite = isFavorite,
+    isEndgame = isEndgame,
+    completedAtEpochMillis = completedAtEpochMillis,
+)
+
+internal fun GameRecordEntity.toGameRecord(): GameRecord? {
+    if (
+        engineFormatVersion != 2 ||
+        engineState.size !in 1..GameRecord.MAX_ENGINE_STATE_BYTES ||
+        moveCount !in 0..GameRecord.MAX_MOVE_COUNT ||
+        completedAtEpochMillis < 0L
+    ) {
+        return null
+    }
+    val gameType = GameType.entries.firstOrNull { it.code == gameTypeCode } ?: return null
+    val mode = StoredGameMode.entries.firstOrNull { it.code == modeCode } ?: return null
+    val difficulty = difficultyCode?.let { code ->
+        Difficulty.entries.firstOrNull { it.code == code } ?: return null
+    }
+    val decodedResult = when (resultCode) {
+        1 -> GameResult.FIRST_PLAYER_WIN
+        2 -> GameResult.SECOND_PLAYER_WIN
+        3 -> GameResult.DRAW
+        else -> return null
+    }
+    return try {
+        GameRecord(
             recordId = recordId,
-            gameTypeCode = gameType.code,
-            modeCode = mode.code,
-            difficultyCode = difficulty?.code,
-            resultCode = result.encode(),
-            engineFormatVersion = CHINESE_CHESS_ENGINE_FORMAT_VERSION,
+            gameType = gameType,
+            mode = mode,
+            difficulty = difficulty,
+            result = decodedResult,
             engineState = engineState.copyOf(),
             moveCount = moveCount,
             isFavorite = isFavorite,
             isEndgame = isEndgame,
             completedAtEpochMillis = completedAtEpochMillis,
         )
-
-    private fun GameRecordEntity.toRecord(): GameRecord? {
-        if (
-            engineFormatVersion != CHINESE_CHESS_ENGINE_FORMAT_VERSION ||
-            engineState.size !in 1..GameRecord.MAX_ENGINE_STATE_BYTES ||
-            moveCount !in 0..GameRecord.MAX_MOVE_COUNT ||
-            completedAtEpochMillis < 0L
-        ) {
-            return null
-        }
-        val gameType = GameType.entries.firstOrNull { it.code == gameTypeCode } ?: return null
-        val mode = StoredGameMode.entries.firstOrNull { it.code == modeCode } ?: return null
-        val difficulty = difficultyCode?.let { code ->
-            Difficulty.entries.firstOrNull { it.code == code } ?: return null
-        }
-        val result = resultCode.decode() ?: return null
-        return try {
-            GameRecord(
-                recordId = recordId,
-                gameType = gameType,
-                mode = mode,
-                difficulty = difficulty,
-                result = result,
-                engineState = engineState.copyOf(),
-                moveCount = moveCount,
-                isFavorite = isFavorite,
-                isEndgame = isEndgame,
-                completedAtEpochMillis = completedAtEpochMillis,
-            )
-        } catch (_: IllegalArgumentException) {
-            null
-        }
-    }
-
-    private fun GameResult.encode(): Int =
-        when (this) {
-            GameResult.FIRST_PLAYER_WIN -> RESULT_FIRST_PLAYER_WIN
-            GameResult.SECOND_PLAYER_WIN -> RESULT_SECOND_PLAYER_WIN
-            GameResult.DRAW -> RESULT_DRAW
-            GameResult.ONGOING -> error("Ongoing games cannot be recorded")
-        }
-
-    private fun Int.decode(): GameResult? =
-        when (this) {
-            RESULT_FIRST_PLAYER_WIN -> GameResult.FIRST_PLAYER_WIN
-            RESULT_SECOND_PLAYER_WIN -> GameResult.SECOND_PLAYER_WIN
-            RESULT_DRAW -> GameResult.DRAW
-            else -> null
-        }
-
-    private companion object {
-        const val INSERT_IGNORED = -1L
-        const val CHINESE_CHESS_ENGINE_FORMAT_VERSION = 2
-        const val RESULT_FIRST_PLAYER_WIN = 1
-        const val RESULT_SECOND_PLAYER_WIN = 2
-        const val RESULT_DRAW = 3
+    } catch (_: IllegalArgumentException) {
+        null
     }
 }

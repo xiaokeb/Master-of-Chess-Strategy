@@ -26,11 +26,15 @@ import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.settings.AppSettingsUiState
 import com.masterofchessstrategy.settings.AppSettingsViewModel
+import com.masterofchessstrategy.settings.BackupFeedback
+import com.masterofchessstrategy.settings.LocalDataBackupUiState
 import com.masterofchessstrategy.settings.SettingsFeedback
 
 internal const val SETTINGS_SCREEN_TAG = "settings_screen"
 internal const val SETTINGS_SOUND_TAG = "settings_sound"
 internal const val SETTINGS_LICENSES_TAG = "settings_licenses"
+internal const val SETTINGS_EXPORT_DATA_TAG = "settings_export_data"
+internal const val SETTINGS_RESTORE_DATA_TAG = "settings_restore_data"
 
 @Composable
 internal fun SettingsScreen(
@@ -42,6 +46,9 @@ internal fun SettingsScreen(
     onSoundEnabled: (Boolean) -> Unit,
     onTimeLimitEnabled: (Boolean) -> Unit,
     onAdjustDuration: (Int) -> Unit,
+    backupState: LocalDataBackupUiState,
+    onExportData: () -> Unit,
+    onRestoreData: () -> Unit,
     onOpenSourceLicenses: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -82,6 +89,12 @@ internal fun SettingsScreen(
                 switchTag = SETTINGS_SOUND_TAG,
             )
             DurationSetting(state, onTimeLimitEnabled, onAdjustDuration)
+            DataBackupSetting(
+                state = backupState,
+                settingsEnabled = state.isInteractionEnabled,
+                onExport = onExportData,
+                onRestore = onRestoreData,
+            )
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(18.dp),
@@ -110,6 +123,72 @@ internal fun SettingsScreen(
         }
     }
 }
+
+@Composable
+private fun DataBackupSetting(
+    state: LocalDataBackupUiState,
+    settingsEnabled: Boolean,
+    onExport: () -> Unit,
+    onRestore: () -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.data_backup_title),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Text(
+                text = stringResource(R.string.data_backup_summary),
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(
+                    onClick = onExport,
+                    enabled = settingsEnabled && !state.isWorking,
+                    modifier = Modifier.testTag(SETTINGS_EXPORT_DATA_TAG),
+                ) {
+                    Text(stringResource(R.string.data_backup_export))
+                }
+                OutlinedButton(
+                    onClick = onRestore,
+                    enabled = settingsEnabled && !state.isWorking,
+                    modifier = Modifier.testTag(SETTINGS_RESTORE_DATA_TAG),
+                ) {
+                    Text(stringResource(R.string.data_backup_restore))
+                }
+            }
+            Text(
+                text = backupStatusText(state),
+                style = MaterialTheme.typography.bodySmall,
+                color = if (
+                    state.feedback == BackupFeedback.EXPORT_FAILED ||
+                    state.feedback == BackupFeedback.RESTORE_FAILED
+                ) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun backupStatusText(state: LocalDataBackupUiState): String =
+    when (state.feedback) {
+        BackupFeedback.EXPORTED -> stringResource(R.string.data_backup_exported)
+        BackupFeedback.RESTORED -> stringResource(R.string.data_backup_restored)
+        BackupFeedback.EXPORT_FAILED -> stringResource(R.string.data_backup_export_failed)
+        BackupFeedback.RESTORE_FAILED -> stringResource(R.string.data_backup_restore_failed)
+        null -> if (state.isWorking) {
+            stringResource(R.string.data_backup_working)
+        } else {
+            stringResource(R.string.data_backup_boundary)
+        }
+    }
 
 @Composable
 private fun AutoContinueLimitSetting(

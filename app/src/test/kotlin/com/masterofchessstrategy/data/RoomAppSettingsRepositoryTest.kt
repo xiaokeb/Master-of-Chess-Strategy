@@ -64,5 +64,9 @@ class RoomAppSettingsRepositoryTest {
         override suspend fun delete() {
             entity = null
         }
+
+        override suspend fun deleteAll() {
+            entity = null
+        }
     }
 }

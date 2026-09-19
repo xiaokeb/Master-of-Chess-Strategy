@@ -26,6 +26,9 @@ internal data class MatchOutcome(
         require(result != GameResult.ONGOING) {
             "An ongoing match cannot be settled"
         }
+        require(settledAtEpochMillis >= 0L) {
+            "Settlement time cannot be negative"
+        }
     }
 
     val isWin: Boolean
@@ -85,7 +88,7 @@ internal class RoomMatchStatisticsRepository(
             ?: LoadMatchStatisticsResult.Incompatible
 
     override suspend fun record(outcome: MatchOutcome): RecordMatchOutcomeResult {
-        val inserted = dao.insert(outcome.toEntity()) != INSERT_IGNORED
+        val inserted = dao.insert(outcome.toMatchOutcomeEntity()) != INSERT_IGNORED
         val statistics = checkNotNull(decodeStatistics(dao.listAll())) {
             "Match outcome ledger contains incompatible data"
         }
@@ -98,36 +101,7 @@ internal class RoomMatchStatisticsRepository(
     private fun decodeStatistics(
         entities: List<MatchOutcomeEntity>,
     ): PlayerStatistics? {
-        val outcomes = entities.map { entity ->
-            val gameType = GameType.entries.firstOrNull {
-                it.code == entity.gameTypeCode
-            } ?: return null
-            val mode = StoredGameMode.entries.firstOrNull {
-                it.code == entity.modeCode
-            } ?: return null
-            val difficulty = Difficulty.entries.firstOrNull {
-                it.code == entity.difficultyCode
-            } ?: return null
-            val result = when (entity.resultCode) {
-                RESULT_FIRST_PLAYER_WIN -> GameResult.FIRST_PLAYER_WIN
-                RESULT_SECOND_PLAYER_WIN -> GameResult.SECOND_PLAYER_WIN
-                RESULT_DRAW -> GameResult.DRAW
-                else -> return null
-            }
-            try {
-                MatchOutcome(
-                    matchId = entity.matchId,
-                    gameType = gameType,
-                    mode = mode,
-                    difficulty = difficulty,
-                    playerIndex = entity.playerIndex,
-                    result = result,
-                    settledAtEpochMillis = entity.settledAtEpochMillis,
-                )
-            } catch (_: IllegalArgumentException) {
-                return null
-            }
-        }
+        val outcomes = entities.map { it.toMatchOutcome() ?: return null }
 
         val wins = outcomes.count(MatchOutcome::isWin)
         val losses = outcomes.count(MatchOutcome::isLoss)
@@ -161,36 +135,56 @@ internal class RoomMatchStatisticsRepository(
         )
     }
 
-    private fun MatchOutcome.toEntity() =
-        MatchOutcomeEntity(
-            matchId = matchId,
-            gameTypeCode = gameType.code,
-            modeCode = mode.code,
-            difficultyCode = difficulty.code,
-            playerIndex = playerIndex,
-            resultCode = when (result) {
-                GameResult.FIRST_PLAYER_WIN -> RESULT_FIRST_PLAYER_WIN
-                GameResult.SECOND_PLAYER_WIN -> RESULT_SECOND_PLAYER_WIN
-                GameResult.DRAW -> RESULT_DRAW
-                GameResult.ONGOING -> error("Ongoing matches cannot be persisted")
-            },
-            settledAtEpochMillis = settledAtEpochMillis,
-        )
-
     private companion object {
         const val INSERT_IGNORED = -1L
         const val BASE_SCORE = 10
         const val LOSS_MULTIPLIER = 2
         const val STARS_PER_RANK = 5
-        const val RESULT_FIRST_PLAYER_WIN = 1
-        const val RESULT_SECOND_PLAYER_WIN = 2
-        const val RESULT_DRAW = 3
-
         val DIFFICULTY_COEFFICIENTS = mapOf(
             Difficulty.EASY to 1,
             Difficulty.MEDIUM to 2,
             Difficulty.HARD to 4,
             Difficulty.MASTER to 8,
         )
+    }
+}
+
+internal fun MatchOutcome.toMatchOutcomeEntity() = MatchOutcomeEntity(
+    matchId = matchId,
+    gameTypeCode = gameType.code,
+    modeCode = mode.code,
+    difficultyCode = difficulty.code,
+    playerIndex = playerIndex,
+    resultCode = when (result) {
+        GameResult.FIRST_PLAYER_WIN -> 1
+        GameResult.SECOND_PLAYER_WIN -> 2
+        GameResult.DRAW -> 3
+        GameResult.ONGOING -> error("Ongoing matches cannot be persisted")
+    },
+    settledAtEpochMillis = settledAtEpochMillis,
+)
+
+internal fun MatchOutcomeEntity.toMatchOutcome(): MatchOutcome? {
+    val gameType = GameType.entries.firstOrNull { it.code == gameTypeCode } ?: return null
+    val mode = StoredGameMode.entries.firstOrNull { it.code == modeCode } ?: return null
+    val difficulty = Difficulty.entries.firstOrNull { it.code == difficultyCode } ?: return null
+    val result = when (resultCode) {
+        1 -> GameResult.FIRST_PLAYER_WIN
+        2 -> GameResult.SECOND_PLAYER_WIN
+        3 -> GameResult.DRAW
+        else -> return null
+    }
+    return try {
+        MatchOutcome(
+            matchId = matchId,
+            gameType = gameType,
+            mode = mode,
+            difficulty = difficulty,
+            playerIndex = playerIndex,
+            result = result,
+            settledAtEpochMillis = settledAtEpochMillis,
+        )
+    } catch (_: IllegalArgumentException) {
+        null
     }
 }
