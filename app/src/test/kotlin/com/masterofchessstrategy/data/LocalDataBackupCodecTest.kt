@@ -48,6 +48,19 @@ class LocalDataBackupCodecTest {
     }
 
     @Test
+    fun selectedAppearanceRoundTripsWithSettings() {
+        val source = completeSnapshot().copy(
+            settings = requireNotNull(completeSnapshot().settings).copy(
+                selectedAppearanceCode = 4,
+            ),
+        )
+
+        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+
+        assertEquals(4, restored.settings?.selectedAppearanceCode)
+    }
+
+    @Test
     fun anyPayloadChangeFailsBeforeDecode() {
         val encoded = LocalDataBackupCodec.encode(completeSnapshot())
         val changed = encoded.copyOf()
@@ -316,6 +329,7 @@ class LocalDataBackupCodecTest {
             autoContinueGameLimit = 12,
             soundEnabled = false,
             gameDurationMinutes = null,
+            selectedAppearanceCode = 3,
             updatedAtEpochMillis = 120L,
         ),
         tutorialProgress = listOf(

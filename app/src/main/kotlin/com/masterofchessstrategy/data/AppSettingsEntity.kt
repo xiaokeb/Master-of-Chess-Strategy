@@ -14,5 +14,7 @@ internal data class AppSettingsEntity(
     val autoContinueGameLimit: Int = 10,
     val soundEnabled: Boolean,
     val gameDurationMinutes: Int?,
+    @androidx.room.ColumnInfo(defaultValue = "0")
+    val selectedAppearanceCode: Int = 0,
     val updatedAtEpochMillis: Long,
 )

@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         GameRecordEntity::class,
         EndgameProgressEntity::class,
     ],
-    version = 9,
+    version = 10,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -224,6 +224,15 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE app_settings " +
+                        "ADD COLUMN selectedAppearanceCode INTEGER NOT NULL DEFAULT 0",
+                )
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -243,6 +252,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_6_7,
                         MIGRATION_7_8,
                         MIGRATION_8_9,
+                        MIGRATION_9_10,
                     )
                     .build()
                     .also { instance = it }

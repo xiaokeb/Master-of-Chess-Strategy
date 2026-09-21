@@ -24,6 +24,7 @@ class RoomAppSettingsRepositoryTest {
             autoContinueGameLimit = 25,
             soundEnabled = false,
             gameDurationMinutes = 45,
+            selectedAppearanceCode = 4,
             updatedAtEpochMillis = 99L,
         )
 
@@ -42,6 +43,26 @@ class RoomAppSettingsRepositoryTest {
                 autoContinueGameLimit = 101,
                 soundEnabled = true,
                 gameDurationMinutes = 30,
+                updatedAtEpochMillis = 0L,
+            ),
+        )
+
+        assertSame(
+            LoadAppSettingsResult.Incompatible,
+            RoomAppSettingsRepository(dao).load(),
+        )
+    }
+
+    @Test
+    fun invalidAppearanceCodeIsIncompatible() = runBlocking {
+        val dao = FakeAppSettingsDao(
+            AppSettingsEntity(
+                id = 0,
+                defaultDifficultyCode = Difficulty.EASY.code,
+                autoContinueEnabled = false,
+                soundEnabled = true,
+                gameDurationMinutes = null,
+                selectedAppearanceCode = 6,
                 updatedAtEpochMillis = 0L,
             ),
         )

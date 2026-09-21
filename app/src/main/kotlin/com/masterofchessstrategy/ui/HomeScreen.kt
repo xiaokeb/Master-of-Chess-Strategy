@@ -25,6 +25,7 @@ import com.masterofchessstrategy.navigation.HomeGameEntry
 internal const val HOME_CHINESE_CHESS_TAG = "home_chinese_chess"
 internal const val HOME_SETTINGS_TAG = "home_settings"
 internal const val HOME_RECORDS_TAG = "home_records"
+internal const val HOME_PROFILE_TAG = "home_profile"
 
 internal data class LocalPlayerSummary(
     val rank: String,
@@ -48,6 +49,7 @@ internal fun HomeScreen(
     onSettings: () -> Unit,
     onRecords: () -> Unit,
     modifier: Modifier = Modifier,
+    onProfile: () -> Unit = {},
     playerSummary: LocalPlayerSummary = InitialPlayerSummary,
 ) {
     Surface(modifier = modifier.fillMaxSize()) {
@@ -66,6 +68,7 @@ internal fun HomeScreen(
                         summary = playerSummary,
                         onSettings = onSettings,
                         onRecords = onRecords,
+                        onProfile = onProfile,
                         modifier = Modifier.weight(0.4f),
                     )
                     GameCatalog(
@@ -84,6 +87,7 @@ internal fun HomeScreen(
                         summary = playerSummary,
                         onSettings = onSettings,
                         onRecords = onRecords,
+                        onProfile = onProfile,
                         modifier = Modifier.fillMaxWidth(),
                     )
                     GameCatalog(
@@ -103,6 +107,7 @@ private fun PlayerSummaryCard(
     summary: LocalPlayerSummary,
     onSettings: () -> Unit,
     onRecords: () -> Unit,
+    onProfile: () -> Unit,
     modifier: Modifier,
 ) {
     Card(modifier = modifier) {
@@ -123,6 +128,12 @@ private fun PlayerSummaryCard(
             Text(stringResource(R.string.profile_wins, summary.wins))
             Text(stringResource(R.string.profile_stars, summary.stars))
             Text(stringResource(R.string.profile_score, summary.score))
+            OutlinedButton(
+                onClick = onProfile,
+                modifier = Modifier.testTag(HOME_PROFILE_TAG),
+            ) {
+                Text(stringResource(R.string.profile_title))
+            }
             OutlinedButton(
                 onClick = onRecords,
                 modifier = Modifier.testTag(HOME_RECORDS_TAG),

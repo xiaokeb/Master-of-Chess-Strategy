@@ -97,6 +97,21 @@ class AppSettingsViewModelTest {
     }
 
     @Test
+    fun appearanceSelectionIsValidatedAndSaved() = runTest(dispatcher) {
+        val repository = FakeSettingsRepository(LoadAppSettingsResult.NotFound)
+        val viewModel = AppSettingsViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.setSelectedAppearance(3)
+        advanceUntilIdle()
+        viewModel.setSelectedAppearance(8)
+        advanceUntilIdle()
+
+        assertEquals(3, viewModel.uiState.settings.selectedAppearanceCode)
+        assertEquals(3, repository.saved?.selectedAppearanceCode)
+    }
+
+    @Test
     fun failedSaveRestoresPreviousSettings() = runTest(dispatcher) {
         val repository = FakeSettingsRepository(
             loadResult = LoadAppSettingsResult.NotFound,

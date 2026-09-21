@@ -51,8 +51,10 @@ internal data class PlayerStatistics(
     val totalWins: Int = 0,
     val totalLosses: Int = 0,
     val totalDraws: Int = 0,
+    val netStars: Int = 0,
     val stars: Int = 0,
     val score: Int = 0,
+    val byGame: Map<GameType, GameStatistics> = emptyMap(),
     val winsByGameAndDifficulty: Map<GameType, Map<Difficulty, Int>> = emptyMap(),
 ) {
     fun winsAt(gameType: GameType, difficulty: Difficulty): Int =
@@ -62,6 +64,13 @@ internal data class PlayerStatistics(
         val EMPTY = PlayerStatistics()
     }
 }
+
+internal data class GameStatistics(
+    val completedMatches: Int = 0,
+    val wins: Int = 0,
+    val losses: Int = 0,
+    val draws: Int = 0,
+)
 
 internal sealed interface LoadMatchStatisticsResult {
     data class Loaded(val statistics: PlayerStatistics) : LoadMatchStatisticsResult
@@ -115,6 +124,17 @@ internal class RoomMatchStatisticsRepository(
                 }
             }
         }
+        val byGame = GameType.entries.associateWith { gameType ->
+            val gameOutcomes = outcomes.filter { it.gameType == gameType }
+            val gameWins = gameOutcomes.count(MatchOutcome::isWin)
+            val gameLosses = gameOutcomes.count(MatchOutcome::isLoss)
+            GameStatistics(
+                completedMatches = gameOutcomes.size,
+                wins = gameWins,
+                losses = gameLosses,
+                draws = gameOutcomes.size - gameWins - gameLosses,
+            )
+        }
         val score = outcomes.sumOf { outcome ->
             val base = DIFFICULTY_COEFFICIENTS.getValue(outcome.difficulty) *
                 BASE_SCORE
@@ -124,13 +144,16 @@ internal class RoomMatchStatisticsRepository(
                 else -> 0
             }
         }
+        val netStars = (wins - losses).coerceAtLeast(0)
         return PlayerStatistics(
             completedMatches = outcomes.size,
             totalWins = wins,
             totalLosses = losses,
             totalDraws = draws,
-            stars = (wins - losses).coerceAtLeast(0) % STARS_PER_RANK,
+            netStars = netStars,
+            stars = netStars % STARS_PER_RANK,
             score = score,
+            byGame = byGame,
             winsByGameAndDifficulty = winsByGameAndDifficulty,
         )
     }

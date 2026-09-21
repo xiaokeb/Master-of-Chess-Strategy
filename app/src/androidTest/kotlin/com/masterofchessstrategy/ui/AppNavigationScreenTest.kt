@@ -194,6 +194,16 @@ class AppNavigationScreenTest {
     }
 
     @Test
+    fun homeCanOpenProfile() {
+        composeRule.setContent {
+            MasterOfChessStrategyApp()
+        }
+
+        composeRule.onNodeWithTag(HOME_PROFILE_TAG).performClick()
+        composeRule.onNodeWithTag(PROFILE_SCREEN_TAG).assertExists()
+    }
+
+    @Test
     fun settingsSoundSwitchEmitsRequestedValue() {
         var requestedSound = true
         composeRule.setContent {

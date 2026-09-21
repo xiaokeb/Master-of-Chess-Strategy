@@ -11,6 +11,7 @@ import com.masterofchessstrategy.custom.CustomPositionStateCodec
 
 internal object AppDestination {
     const val HOME = "home"
+    const val PROFILE = "profile"
     const val CHINESE_CHESS_MODES = "chinese-chess/modes"
     const val CHINESE_CHESS_DIFFICULTY = "chinese-chess/difficulty"
     const val CHINESE_CHESS_AUTO_PLAY_DIFFICULTY =

@@ -66,6 +66,11 @@ internal class AppSettingsViewModel(
         update { copy(soundEnabled = enabled) }
     }
 
+    fun setSelectedAppearance(code: Int) {
+        if (code !in AppSettings.APPEARANCE_CODE_RANGE) return
+        update { copy(selectedAppearanceCode = code) }
+    }
+
     fun setTimeLimitEnabled(enabled: Boolean) {
         update {
             copy(gameDurationMinutes = if (enabled) DEFAULT_DURATION_MINUTES else null)

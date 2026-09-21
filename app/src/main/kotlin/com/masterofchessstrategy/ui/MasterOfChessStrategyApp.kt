@@ -96,6 +96,7 @@ import com.masterofchessstrategy.navigation.HomeGameEntry
 import com.masterofchessstrategy.navigation.QuickStartDestination
 import com.masterofchessstrategy.navigation.chineseChessDifficulties
 import com.masterofchessstrategy.progress.PlayerStatisticsViewModel
+import com.masterofchessstrategy.progress.PlayerGrowthSummary
 import com.masterofchessstrategy.records.ChineseChessReplayViewModel
 import com.masterofchessstrategy.records.GameRecordsViewModel
 import com.masterofchessstrategy.opening.ChineseChessOpeningViewModel
@@ -224,6 +225,10 @@ fun MasterOfChessStrategyApp() {
             tutorialCompleted = tutorialViewModel.uiState.progress.isCompleted,
             winsByDifficulty = chineseChessWins,
         )
+        val growthSummary = PlayerGrowthSummary.create(
+            statistics = statisticsViewModel.uiState.statistics,
+            endgameProgress = endgameViewModel.uiState.progress,
+        )
         NavHost(
             navController = navController,
             startDestination = AppDestination.HOME,
@@ -329,13 +334,16 @@ fun MasterOfChessStrategyApp() {
                             launchSingleTop = true
                         }
                     },
+                    onProfile = {
+                        navController.navigate(AppDestination.PROFILE) {
+                            launchSingleTop = true
+                        }
+                    },
                     playerSummary = LocalPlayerSummary(
-                        rank = "未定级",
+                        rank = growthSummary.rank.title,
                         wins = statisticsViewModel.uiState.statistics.totalWins,
-                        stars = statisticsViewModel.uiState.statistics.stars +
-                            endgameViewModel.uiState.progress.totalStars,
-                        score = statisticsViewModel.uiState.statistics.score +
-                            endgameViewModel.uiState.progress.totalScore,
+                        stars = growthSummary.currentRankStars,
+                        score = growthSummary.totalScore,
                     ),
                 )
             }
@@ -1339,6 +1347,19 @@ fun MasterOfChessStrategyApp() {
                     onOpenRecord = { recordId ->
                         navController.navigate(AppDestination.chineseChessRecord(recordId))
                     },
+                )
+            }
+            composable(AppDestination.PROFILE) {
+                ProfileScreen(
+                    summary = growthSummary,
+                    selectedAppearanceCode =
+                        settingsViewModel.uiState.settings.selectedAppearanceCode,
+                    onSelectAppearance = { appearance ->
+                        if (appearance in growthSummary.unlockedAppearances) {
+                            settingsViewModel.setSelectedAppearance(appearance.code)
+                        }
+                    },
+                    onBack = navController::popBackStack,
                 )
             }
             composable(

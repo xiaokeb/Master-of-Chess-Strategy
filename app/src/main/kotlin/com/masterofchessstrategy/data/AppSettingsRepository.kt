@@ -8,6 +8,7 @@ internal data class AppSettings(
     val autoContinueGameLimit: Int = 10,
     val soundEnabled: Boolean,
     val gameDurationMinutes: Int?,
+    val selectedAppearanceCode: Int = 0,
     val updatedAtEpochMillis: Long,
 ) {
     init {
@@ -17,11 +18,15 @@ internal data class AppSettings(
         require(autoContinueGameLimit in AUTO_CONTINUE_LIMIT_RANGE) {
             "Auto-continue limit must be between 1 and 100 games"
         }
+        require(selectedAppearanceCode in APPEARANCE_CODE_RANGE) {
+            "Selected appearance code must identify one of the six appearances"
+        }
     }
 
     companion object {
         val DURATION_RANGE = 5..180
         val AUTO_CONTINUE_LIMIT_RANGE = 1..100
+        val APPEARANCE_CODE_RANGE = 0..5
 
         val DEFAULT = AppSettings(
             defaultDifficulty = Difficulty.EASY,
@@ -29,6 +34,7 @@ internal data class AppSettings(
             autoContinueGameLimit = 10,
             soundEnabled = true,
             gameDurationMinutes = null,
+            selectedAppearanceCode = 0,
             updatedAtEpochMillis = 0L,
         )
     }
@@ -66,6 +72,9 @@ internal class RoomAppSettingsRepository(
         if (entity.autoContinueGameLimit !in AppSettings.AUTO_CONTINUE_LIMIT_RANGE) {
             return LoadAppSettingsResult.Incompatible
         }
+        if (entity.selectedAppearanceCode !in AppSettings.APPEARANCE_CODE_RANGE) {
+            return LoadAppSettingsResult.Incompatible
+        }
         return LoadAppSettingsResult.Loaded(
             AppSettings(
                 defaultDifficulty = difficulty,
@@ -73,6 +82,7 @@ internal class RoomAppSettingsRepository(
                 autoContinueGameLimit = entity.autoContinueGameLimit,
                 soundEnabled = entity.soundEnabled,
                 gameDurationMinutes = duration,
+                selectedAppearanceCode = entity.selectedAppearanceCode,
                 updatedAtEpochMillis = entity.updatedAtEpochMillis,
             ),
         )
@@ -87,6 +97,7 @@ internal class RoomAppSettingsRepository(
                 autoContinueGameLimit = settings.autoContinueGameLimit,
                 soundEnabled = settings.soundEnabled,
                 gameDurationMinutes = settings.gameDurationMinutes,
+                selectedAppearanceCode = settings.selectedAppearanceCode,
                 updatedAtEpochMillis = settings.updatedAtEpochMillis,
             ),
         )

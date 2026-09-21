@@ -7,6 +7,8 @@ import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.GameRecordCategory
 import com.masterofchessstrategy.data.CompletedEndgameLevel
 import com.masterofchessstrategy.data.EndgameProgress
+import com.masterofchessstrategy.data.GameStatistics
+import com.masterofchessstrategy.data.PlayerStatistics
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.challenge.ChineseChessTimedChallengeUiState
 import com.masterofchessstrategy.challenge.ChineseChessStreakUiState
@@ -29,6 +31,7 @@ import com.masterofchessstrategy.engine.ChineseChessPieceType
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
+import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.PositionedChineseChessPiece
 import com.masterofchessstrategy.endgame.ChineseChessEndgameLevel
 import com.masterofchessstrategy.endgame.ChineseChessEndgameUiState
@@ -38,6 +41,7 @@ import com.masterofchessstrategy.navigation.HomeGameEntry
 import com.masterofchessstrategy.records.ChineseChessReplayFrame
 import com.masterofchessstrategy.records.ChineseChessReplayUiState
 import com.masterofchessstrategy.records.GameRecordsUiState
+import com.masterofchessstrategy.progress.PlayerGrowthSummary
 import com.masterofchessstrategy.settings.AppSettingsUiState
 import com.masterofchessstrategy.settings.LocalDataBackupUiState
 import com.masterofchessstrategy.ui.theme.MocsTheme
@@ -70,6 +74,43 @@ private fun HomeScreenPreview() {
                 stars = 12,
                 score = 1_680,
             ),
+        )
+    }
+}
+
+@Preview(
+    name = "17 个人中心",
+    group = "已完成界面",
+    widthDp = 960,
+    heightDp = 540,
+    showBackground = true,
+)
+@Composable
+private fun ProfileScreenPreview() {
+    val statistics = PlayerStatistics(
+        completedMatches = 39,
+        totalWins = 27,
+        totalLosses = 8,
+        totalDraws = 4,
+        netStars = 19,
+        score = 680,
+        byGame = mapOf(
+            GameType.CHINESE_CHESS to GameStatistics(39, 27, 8, 4),
+        ),
+        winsByGameAndDifficulty = mapOf(
+            GameType.CHINESE_CHESS to mapOf(
+                Difficulty.EASY to 10,
+                Difficulty.MEDIUM to 12,
+                Difficulty.HARD to 5,
+            ),
+        ),
+    )
+    MocsTheme {
+        ProfileScreen(
+            summary = PlayerGrowthSummary.create(statistics, EndgameProgress()),
+            selectedAppearanceCode = 2,
+            onSelectAppearance = {},
+            onBack = {},
         )
     }
 }

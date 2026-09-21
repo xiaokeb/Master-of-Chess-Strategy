@@ -284,6 +284,38 @@ class MocsDatabaseMigrationTest {
         migrated.close()
     }
 
+    @Test
+    fun migrateNineToTenAddsDefaultAppearanceWithoutChangingSettings() {
+        helper.createDatabase(PROFILE_DATABASE_NAME, 9).apply {
+            execSQL(
+                """
+                INSERT INTO app_settings (
+                    id,
+                    defaultDifficultyCode,
+                    autoContinueEnabled,
+                    autoContinueGameLimit,
+                    soundEnabled,
+                    gameDurationMinutes,
+                    updatedAtEpochMillis
+                ) VALUES (0, 2, 1, 15, 0, 45, 107)
+                """.trimIndent(),
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            PROFILE_DATABASE_NAME,
+            10,
+            true,
+            MocsDatabase.MIGRATION_9_10,
+        )
+
+        assertEquals(0, migrated.singleInt("SELECT selectedAppearanceCode FROM app_settings"))
+        assertEquals(2, migrated.singleInt("SELECT defaultDifficultyCode FROM app_settings"))
+        assertEquals(15, migrated.singleInt("SELECT autoContinueGameLimit FROM app_settings"))
+        migrated.close()
+    }
+
     private fun SupportSQLiteDatabase.singleInt(query: String): Int =
         this.query(query).use { cursor ->
             check(cursor.moveToFirst())
@@ -311,5 +343,6 @@ class MocsDatabaseMigrationTest {
         const val AUTOMATION_DATABASE_NAME = "migration-6-7-test"
         const val RECORD_DATABASE_NAME = "migration-7-8-test"
         const val ENDGAME_DATABASE_NAME = "migration-8-9-test"
+        const val PROFILE_DATABASE_NAME = "migration-9-10-test"
     }
 }

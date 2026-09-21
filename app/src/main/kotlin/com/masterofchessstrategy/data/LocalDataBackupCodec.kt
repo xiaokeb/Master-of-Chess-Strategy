@@ -72,6 +72,7 @@ internal object LocalDataBackupCodec {
                         value.autoContinueGameLimit,
                         value.soundEnabled.encodeBoolean(),
                         value.gameDurationMinutes.encodeNullable(),
+                        value.selectedAppearanceCode,
                         value.updatedAtEpochMillis,
                     ).joinToString("|"),
                 )
@@ -269,7 +270,8 @@ internal object LocalDataBackupCodec {
     }
 
     private fun List<String>.decodeSettings(): AppSettings {
-        require(size == 7)
+        require(size == 7 || size == 8)
+        val hasAppearance = size == 8
         return AppSettings(
             defaultDifficulty = this[1].decodeDifficulty(),
             autoContinueEnabled = this[2].decodeBoolean(),
@@ -279,7 +281,15 @@ internal object LocalDataBackupCodec {
             ),
             soundEnabled = this[4].decodeBoolean(),
             gameDurationMinutes = this[5].decodeNullableInt(),
-            updatedAtEpochMillis = this[6].nonNegativeLong(),
+            selectedAppearanceCode = if (hasAppearance) {
+                this[6].boundedInt(
+                    AppSettings.APPEARANCE_CODE_RANGE.first,
+                    AppSettings.APPEARANCE_CODE_RANGE.last,
+                )
+            } else {
+                0
+            },
+            updatedAtEpochMillis = this[if (hasAppearance) 7 else 6].nonNegativeLong(),
         )
     }
 
