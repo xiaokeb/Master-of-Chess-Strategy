@@ -15,6 +15,9 @@ import com.masterofchessstrategy.challenge.PreparedStreakChallenge
 import com.masterofchessstrategy.challenge.StreakChallengeState
 import com.masterofchessstrategy.challenge.ChineseChessBlindUiState
 import com.masterofchessstrategy.challenge.PreparedBlindChallenge
+import com.masterofchessstrategy.challenge.ChineseChessAssessmentUiState
+import com.masterofchessstrategy.challenge.PreparedAssessmentChallenge
+import com.masterofchessstrategy.challenge.AssessmentChallengeState
 import com.masterofchessstrategy.custom.ChineseChessSetupUiState
 import com.masterofchessstrategy.engine.ChineseChessBoard
 import com.masterofchessstrategy.engine.BoardMove
@@ -418,6 +421,70 @@ private fun ChineseChessBlindGameScreenPreview() {
             isAiGame = true,
             difficulty = Difficulty.MEDIUM,
             isBlindChess = true,
+            timeControlMinutes = 30,
+            redRemainingMillis = 1_620_000L,
+            blackRemainingMillis = 1_574_000L,
+        ),
+        onSquareTap = {},
+        onUndo = {},
+        onHint = {},
+        onResign = {},
+        onDraw = {},
+        onRestart = {},
+        onBack = {},
+        onSettings = {},
+    )
+}
+
+@Preview(
+    name = "14 中国象棋棋力评测设置",
+    group = "已完成界面",
+    widthDp = 960,
+    heightDp = 540,
+    showBackground = true,
+)
+@Composable
+private fun ChineseChessAssessmentChallengeScreenPreview() {
+    MocsTheme {
+        ChineseChessAssessmentChallengeScreen(
+            state = ChineseChessAssessmentUiState(
+                isLoadingSavedGame = false,
+                savedChallenge = PreparedAssessmentChallenge(
+                    difficulty = Difficulty.HARD,
+                    state = AssessmentChallengeState(
+                        completedGames = 2,
+                        rating = 1_500,
+                        wins = 1,
+                        draws = 1,
+                    ),
+                ),
+            ),
+            onBack = {},
+            onStart = {},
+            onContinueSaved = {},
+        )
+    }
+}
+
+@Preview(
+    name = "15 中国象棋棋力评测对局",
+    group = "已完成界面",
+    widthDp = 960,
+    heightDp = 540,
+    showBackground = true,
+)
+@Composable
+private fun ChineseChessAssessmentGameScreenPreview() {
+    ChineseChessGameScreen(
+        state = ChineseChessGameUiState(
+            board = standardChineseChessBoard(),
+            isAiGame = true,
+            difficulty = Difficulty.HARD,
+            isAssessmentChallenge = true,
+            assessmentCompletedGames = 2,
+            assessmentRating = 1_500,
+            assessmentWins = 1,
+            assessmentDraws = 1,
             timeControlMinutes = 30,
             redRemainingMillis = 1_620_000L,
             blackRemainingMillis = 1_574_000L,

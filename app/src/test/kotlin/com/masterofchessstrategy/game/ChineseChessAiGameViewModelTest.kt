@@ -3,6 +3,8 @@ package com.masterofchessstrategy.game
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.challenge.StreakChallengeState
 import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
+import com.masterofchessstrategy.challenge.AssessmentChallengeState
+import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.data.GameSessionRepository
 import com.masterofchessstrategy.data.GameSessionSnapshot
@@ -664,6 +666,76 @@ class ChineseChessAiGameViewModelTest {
             assertEquals(StoredGameMode.BLIND_CHALLENGE, repository.saved.last().mode)
             assertEquals(StoredGameMode.BLIND_CHALLENGE, records.single().mode)
             assertTrue(outcomes.isEmpty())
+        }
+
+    @Test
+    fun assessmentAdaptsPersistsAndRestoresAcrossRouteRecreation() =
+        runTest(dispatcher) {
+            val engine = FakeAiEngine(humanMoveResult = GameResult.FIRST_PLAYER_WIN)
+            val initialState = AssessmentChallengeState()
+            val initialSnapshot = GameSessionSnapshot(
+                gameType = GameType.CHINESE_CHESS,
+                mode = StoredGameMode.ASSESSMENT_CHALLENGE,
+                difficulty = Difficulty.MEDIUM,
+                engineState = byteArrayOf(0),
+                updatedAtEpochMillis = 1L,
+                sessionId = "assessment-match",
+                sessionVariantId = AssessmentChallengeStateCodec.encode(initialState),
+            )
+            val repository = RecordingSessionRepository(
+                LoadGameSessionResult.Loaded(initialSnapshot),
+            )
+            val outcomes = mutableListOf<com.masterofchessstrategy.data.MatchOutcome>()
+            val records = mutableListOf<GameRecord>()
+            val viewModel = ChineseChessGameViewModel(
+                sessionRepository = repository,
+                mode = StoredGameMode.ASSESSMENT_CHALLENGE,
+                difficulty = Difficulty.MEDIUM,
+                aiDispatcher = dispatcher,
+                initialAssessmentState = initialState,
+                sessionVariantId = AssessmentChallengeStateCodec.encode(initialState),
+                onMatchFinished = outcomes::add,
+                onGameRecorded = records::add,
+                engineFactory = { engine },
+            )
+            advanceUntilIdle()
+
+            viewModel.onSquareTap(engine.redFrom)
+            viewModel.onSquareTap(engine.redTo)
+            advanceUntilIdle()
+
+            assertEquals(1, viewModel.uiState.assessmentCompletedGames)
+            assertEquals(1_400, viewModel.uiState.assessmentRating)
+            assertEquals(Difficulty.HARD, viewModel.uiState.assessmentNextDifficulty)
+            assertEquals(Difficulty.MEDIUM, records.single().difficulty)
+            assertTrue(outcomes.isEmpty())
+
+            viewModel.continueAssessmentChallenge()
+            advanceUntilIdle()
+
+            assertEquals(GameResult.ONGOING, viewModel.uiState.result)
+            assertEquals(Difficulty.HARD, viewModel.uiState.difficulty)
+            assertEquals(null, viewModel.uiState.assessmentNextDifficulty)
+            val continuedSnapshot = repository.saved.last()
+
+            val recreated = ChineseChessGameViewModel(
+                sessionRepository = RecordingSessionRepository(
+                    LoadGameSessionResult.Loaded(continuedSnapshot),
+                ),
+                mode = StoredGameMode.ASSESSMENT_CHALLENGE,
+                difficulty = Difficulty.MEDIUM,
+                aiDispatcher = dispatcher,
+                initialAssessmentState = AssessmentChallengeState(),
+                sessionVariantId = AssessmentChallengeStateCodec.encode(
+                    AssessmentChallengeState(),
+                ),
+                engineFactory = { FakeAiEngine() },
+            )
+            advanceUntilIdle()
+
+            assertEquals(Difficulty.HARD, recreated.uiState.difficulty)
+            assertEquals(1, recreated.uiState.assessmentCompletedGames)
+            assertEquals(1_400, recreated.uiState.assessmentRating)
         }
 
     @Test

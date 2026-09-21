@@ -32,6 +32,7 @@ internal enum class QuickStartDestination {
     TIMED_SETUP,
     STREAK_SETUP,
     BLIND_SETUP,
+    ASSESSMENT_SETUP,
     GAME,
 }
 
@@ -55,6 +56,7 @@ internal fun LastGameSelection.quickStartDestination(): QuickStartDestination =
         StoredGameMode.TIMED_CHALLENGE -> QuickStartDestination.TIMED_SETUP
         StoredGameMode.STREAK_CHALLENGE -> QuickStartDestination.STREAK_SETUP
         StoredGameMode.BLIND_CHALLENGE -> QuickStartDestination.BLIND_SETUP
+        StoredGameMode.ASSESSMENT_CHALLENGE -> QuickStartDestination.ASSESSMENT_SETUP
     }
 
 /**

@@ -31,6 +31,7 @@ import com.masterofchessstrategy.R
 import com.masterofchessstrategy.challenge.ChineseChessTimedChallengeUiState
 import com.masterofchessstrategy.challenge.ChineseChessStreakUiState
 import com.masterofchessstrategy.challenge.ChineseChessBlindUiState
+import com.masterofchessstrategy.challenge.ChineseChessAssessmentUiState
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.custom.ChineseChessSetupFeedback
 import com.masterofchessstrategy.custom.ChineseChessSetupUiState
@@ -50,6 +51,9 @@ internal const val STREAK_CHALLENGE_START_TAG = "streak_challenge_start"
 internal const val BLIND_CHALLENGE_ENTRY_TAG = "blind_challenge_entry"
 internal const val BLIND_CHALLENGE_SETUP_TAG = "blind_challenge_setup"
 internal const val BLIND_CHALLENGE_START_TAG = "blind_challenge_start"
+internal const val ASSESSMENT_CHALLENGE_ENTRY_TAG = "assessment_challenge_entry"
+internal const val ASSESSMENT_CHALLENGE_SETUP_TAG = "assessment_challenge_setup"
+internal const val ASSESSMENT_CHALLENGE_START_TAG = "assessment_challenge_start"
 internal const val CUSTOM_SETUP_ENTRY_TAG = "custom_setup_entry"
 internal const val CUSTOM_SETUP_SCREEN_TAG = "custom_setup_screen"
 internal const val CUSTOM_SETUP_START_TAG = "custom_setup_start"
@@ -59,7 +63,7 @@ private enum class ExtensionEntry(val available: Boolean) {
     STREAK(true),
     BLIND(true),
     CUSTOM_POSITION(true),
-    ASSESSMENT(false),
+    ASSESSMENT(true),
     OPENING(false),
 }
 
@@ -69,6 +73,7 @@ internal fun ChineseChessExtensionsScreen(
     onTimedChallenge: () -> Unit,
     onStreakChallenge: () -> Unit,
     onBlindChallenge: () -> Unit,
+    onAssessmentChallenge: () -> Unit,
     onCustomPosition: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -105,6 +110,8 @@ internal fun ChineseChessExtensionsScreen(
                                             Modifier.testTag(STREAK_CHALLENGE_ENTRY_TAG)
                                         ExtensionEntry.BLIND ->
                                             Modifier.testTag(BLIND_CHALLENGE_ENTRY_TAG)
+                                        ExtensionEntry.ASSESSMENT ->
+                                            Modifier.testTag(ASSESSMENT_CHALLENGE_ENTRY_TAG)
                                         ExtensionEntry.CUSTOM_POSITION ->
                                             Modifier.testTag(CUSTOM_SETUP_ENTRY_TAG)
                                         else -> Modifier
@@ -117,6 +124,7 @@ internal fun ChineseChessExtensionsScreen(
                                             ExtensionEntry.TIMED -> onTimedChallenge()
                                             ExtensionEntry.STREAK -> onStreakChallenge()
                                             ExtensionEntry.BLIND -> onBlindChallenge()
+                                            ExtensionEntry.ASSESSMENT -> onAssessmentChallenge()
                                             ExtensionEntry.CUSTOM_POSITION -> onCustomPosition()
                                             else -> Unit
                                         }
@@ -146,6 +154,68 @@ internal fun ChineseChessExtensionsScreen(
                                     color = MaterialTheme.colorScheme.primary,
                                 )
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun ChineseChessAssessmentChallengeScreen(
+    state: ChineseChessAssessmentUiState,
+    onBack: () -> Unit,
+    onStart: () -> Unit,
+    onContinueSaved: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxSize()
+            .testTag(ASSESSMENT_CHALLENGE_SETUP_TAG),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            PageHeader(
+                title = stringResource(R.string.assessment_challenge_title),
+                subtitle = stringResource(R.string.assessment_challenge_subtitle),
+                onBack = onBack,
+            )
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        stringResource(R.string.assessment_challenge_rules),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Button(
+                        onClick = onStart,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(ASSESSMENT_CHALLENGE_START_TAG),
+                    ) {
+                        Text(stringResource(R.string.assessment_challenge_start))
+                    }
+                    state.savedChallenge?.let { saved ->
+                        OutlinedButton(
+                            onClick = onContinueSaved,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                stringResource(
+                                    R.string.assessment_challenge_continue,
+                                    saved.state.completedGames,
+                                    saved.state.rating,
+                                ),
+                            )
                         }
                     }
                 }

@@ -18,6 +18,8 @@ import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.challenge.StreakChallengeState
 import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
+import com.masterofchessstrategy.challenge.AssessmentChallengeState
+import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.BoardMove
@@ -69,12 +71,14 @@ class ChineseChessGameViewModel internal constructor(
     initialPositionState: ByteArray? = null,
     private var sessionVariantId: String = "",
     initialStreakState: StreakChallengeState? = null,
+    initialAssessmentState: AssessmentChallengeState? = null,
     private val endgameTitle: String? = null,
     private val endgameMaxPlayerMoves: Int? = null,
     private val engineFactory: () -> ChineseChessRuleEngine,
 ) : ViewModel() {
     private val initialPositionState = initialPositionState?.copyOf()
     private var streakState = initialStreakState
+    private var assessmentState = initialAssessmentState
     private var engine: ChineseChessRuleEngine? = null
     private var acceptedMoveCount = 0
     private var undoUseCount = 0
@@ -115,7 +119,8 @@ class ChineseChessGameViewModel internal constructor(
             mode == StoredGameMode.CUSTOM_POSITION ||
             mode == StoredGameMode.TIMED_CHALLENGE ||
             mode == StoredGameMode.STREAK_CHALLENGE ||
-            mode == StoredGameMode.BLIND_CHALLENGE
+            mode == StoredGameMode.BLIND_CHALLENGE ||
+            mode == StoredGameMode.ASSESSMENT_CHALLENGE
     private val isAiGame =
         isHumanControlledAiGame || mode == StoredGameMode.AI_AUTO_PLAY
     private val isAutoPlay = mode == StoredGameMode.AI_AUTO_PLAY
@@ -136,6 +141,14 @@ class ChineseChessGameViewModel internal constructor(
             bestStreak = initialStreakState?.bestStreak ?: 0,
             streakNextDifficulty = initialStreakState?.nextDifficulty,
             isBlindChess = mode == StoredGameMode.BLIND_CHALLENGE,
+            isAssessmentChallenge = mode == StoredGameMode.ASSESSMENT_CHALLENGE,
+            assessmentCompletedGames = initialAssessmentState?.completedGames ?: 0,
+            assessmentRating = initialAssessmentState?.rating ?: 0,
+            assessmentWins = initialAssessmentState?.wins ?: 0,
+            assessmentDraws = initialAssessmentState?.draws ?: 0,
+            assessmentLosses = initialAssessmentState?.losses ?: 0,
+            assessmentNextDifficulty = initialAssessmentState?.nextDifficulty,
+            assessmentFinished = initialAssessmentState?.isFinished ?: false,
             endgameTitle = endgameTitle,
             endgameMaxPlayerMoves = endgameMaxPlayerMoves,
         ),
@@ -220,6 +233,17 @@ class ChineseChessGameViewModel internal constructor(
                     initialStreakState == null
                 },
             ) { "Streak challenge requires a canonical series state" }
+            require(
+                if (mode == StoredGameMode.ASSESSMENT_CHALLENGE) {
+                    difficulty != null &&
+                        initialAssessmentState != null &&
+                        sessionVariantId == AssessmentChallengeStateCodec.encode(
+                            initialAssessmentState,
+                        )
+                } else {
+                    initialAssessmentState == null
+                },
+            ) { "Assessment challenge requires a canonical series state" }
             engine = engineFactory().also { created ->
                 require(!isAiGame || created is ChineseChessAiEngine) {
                     "AI modes require an AI-capable engine"
@@ -302,7 +326,10 @@ class ChineseChessGameViewModel internal constructor(
     }
 
     fun restart() {
-        if (mode == StoredGameMode.STREAK_CHALLENGE) return
+        if (
+            mode == StoredGameMode.STREAK_CHALLENGE ||
+            mode == StoredGameMode.ASSESSMENT_CHALLENGE
+        ) return
         val activeEngine = engine ?: return
         if (!canRunControl()) return
         runEngineOperation {
@@ -486,6 +513,27 @@ class ChineseChessGameViewModel internal constructor(
         }
     }
 
+    fun continueAssessmentChallenge() {
+        if (
+            mode != StoredGameMode.ASSESSMENT_CHALLENGE ||
+            uiState.result == GameResult.ONGOING ||
+            !canRunControl()
+        ) return
+        val activeEngine = engine ?: return
+        val activeAssessment = assessmentState ?: return
+        if (activeAssessment.isFinished || activeAssessment.nextDifficulty == null) return
+        runEngineOperation {
+            val (nextDifficulty, nextState) = activeAssessment.startNextGame()
+            difficulty = nextDifficulty
+            assessmentState = nextState
+            sessionVariantId = AssessmentChallengeStateCodec.encode(nextState)
+            resetPosition(activeEngine)
+            resetSessionState(resetAutoGameCount = true)
+            refresh(ChineseChessFeedback.ASSESSMENT_NEXT_GAME)
+            persistCurrentSession()
+        }
+    }
+
     override fun onCleared() {
         clockJob?.cancel()
         automationJob?.cancel()
@@ -511,6 +559,9 @@ class ChineseChessGameViewModel internal constructor(
                     if (resetStreakSeriesState()) {
                         refresh()
                     }
+                    if (resetAssessmentSeriesState()) {
+                        refresh()
+                    }
                     turnStartedAtEpochMillis = timeControlMinutes?.let {
                         nowEpochMillis()
                     }
@@ -525,6 +576,7 @@ class ChineseChessGameViewModel internal constructor(
                         result.snapshot.mode != mode ||
                         (
                             mode != StoredGameMode.STREAK_CHALLENGE &&
+                                mode != StoredGameMode.ASSESSMENT_CHALLENGE &&
                                 (
                                     result.snapshot.difficulty != difficulty ||
                                         result.snapshot.sessionVariantId != sessionVariantId
@@ -555,6 +607,17 @@ class ChineseChessGameViewModel internal constructor(
         } else {
             null
         }
+        val restoredAssessmentState =
+            if (mode == StoredGameMode.ASSESSMENT_CHALLENGE) {
+                try {
+                    AssessmentChallengeStateCodec.decode(snapshot.sessionVariantId)
+                } catch (_: IllegalArgumentException) {
+                    rejectStoredSession(repository)
+                    return
+                }
+            } else {
+                null
+            }
         try {
             when (activeEngine.restore(snapshot.engineState)) {
                 RestoreResult.Restored -> {
@@ -568,9 +631,30 @@ class ChineseChessGameViewModel internal constructor(
                         rejectStoredSession(repository)
                         return
                     }
+                    if (
+                        mode == StoredGameMode.ASSESSMENT_CHALLENGE &&
+                        (
+                            restoredResult == GameResult.ONGOING &&
+                                (
+                                    restoredAssessmentState?.nextDifficulty != null ||
+                                        restoredAssessmentState?.isFinished == true
+                                    ) ||
+                                restoredResult != GameResult.ONGOING &&
+                                restoredAssessmentState?.nextDifficulty == null &&
+                                restoredAssessmentState?.isFinished == false
+                            )
+                    ) {
+                        rejectStoredSession(repository)
+                        return
+                    }
                     if (mode == StoredGameMode.STREAK_CHALLENGE) {
                         difficulty = requireNotNull(snapshot.difficulty)
                         streakState = requireNotNull(restoredStreakState)
+                        sessionVariantId = snapshot.sessionVariantId
+                    }
+                    if (mode == StoredGameMode.ASSESSMENT_CHALLENGE) {
+                        difficulty = requireNotNull(snapshot.difficulty)
+                        assessmentState = requireNotNull(restoredAssessmentState)
                         sessionVariantId = snapshot.sessionVariantId
                     }
                     matchId = snapshot.sessionId
@@ -618,6 +702,7 @@ class ChineseChessGameViewModel internal constructor(
         val activeEngine = engine ?: return
         runEngineOperation {
             resetStreakSeriesState()
+            resetAssessmentSeriesState()
             resetPosition(activeEngine)
             resetSessionState(resetAutoGameCount = true)
             refresh(ChineseChessFeedback.RESTORE_REJECTED)
@@ -762,6 +847,7 @@ class ChineseChessGameViewModel internal constructor(
             requestSettlement(result)
             requestCompletedRecord(result, activeEngine)
             handleStreakTerminal(result)
+            handleAssessmentTerminal(result)
             val undoRemaining = assistancePolicy.undoRemaining(undoUseCount)
             val hintRemaining = assistancePolicy.hintRemaining(hintUseCount)
             uiState = ChineseChessGameUiState(
@@ -796,6 +882,14 @@ class ChineseChessGameViewModel internal constructor(
                 bestStreak = streakState?.bestStreak ?: 0,
                 streakNextDifficulty = streakState?.nextDifficulty,
                 isBlindChess = mode == StoredGameMode.BLIND_CHALLENGE,
+                isAssessmentChallenge = mode == StoredGameMode.ASSESSMENT_CHALLENGE,
+                assessmentCompletedGames = assessmentState?.completedGames ?: 0,
+                assessmentRating = assessmentState?.rating ?: 0,
+                assessmentWins = assessmentState?.wins ?: 0,
+                assessmentDraws = assessmentState?.draws ?: 0,
+                assessmentLosses = assessmentState?.losses ?: 0,
+                assessmentNextDifficulty = assessmentState?.nextDifficulty,
+                assessmentFinished = assessmentState?.isFinished ?: false,
                 endgameTitle = endgameTitle,
                 endgamePlayerMovesUsed = endgamePlayerMoveCount(),
                 endgameMaxPlayerMoves = endgameMaxPlayerMoves,
@@ -1246,6 +1340,28 @@ class ChineseChessGameViewModel internal constructor(
         return true
     }
 
+    private fun handleAssessmentTerminal(result: GameResult) {
+        if (
+            mode != StoredGameMode.ASSESSMENT_CHALLENGE ||
+            result == GameResult.ONGOING
+        ) return
+        val active = assessmentState ?: return
+        if (active.nextDifficulty != null || active.isFinished) return
+        val completed = active.complete(result, requireNotNull(difficulty))
+        assessmentState = completed
+        sessionVariantId = AssessmentChallengeStateCodec.encode(completed)
+    }
+
+    private fun resetAssessmentSeriesState(): Boolean {
+        if (mode != StoredGameMode.ASSESSMENT_CHALLENGE) return false
+        val initial = AssessmentChallengeState()
+        if (assessmentState == initial) return false
+        assessmentState = initial
+        difficulty = Difficulty.MEDIUM
+        sessionVariantId = AssessmentChallengeStateCodec.encode(initial)
+        return true
+    }
+
     private fun scheduleAutoContinue(activeEngine: ChineseChessRuleEngine) {
         if (
             !isAutoPlay ||
@@ -1492,6 +1608,7 @@ class ChineseChessGameViewModel internal constructor(
             initialPositionState: ByteArray? = null,
             sessionVariantId: String = "",
             streakState: StreakChallengeState? = null,
+            assessmentState: AssessmentChallengeState? = null,
             endgameTitle: String? = null,
             endgameMaxPlayerMoves: Int? = null,
             engineFactory: () -> ChineseChessRuleEngine = {
@@ -1513,6 +1630,7 @@ class ChineseChessGameViewModel internal constructor(
                         initialPositionState = initialPositionState,
                         sessionVariantId = sessionVariantId,
                         initialStreakState = streakState,
+                        initialAssessmentState = assessmentState,
                         endgameTitle = endgameTitle,
                         endgameMaxPlayerMoves = endgameMaxPlayerMoves,
                         engineFactory = engineFactory,

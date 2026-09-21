@@ -3,6 +3,8 @@ package com.masterofchessstrategy.data
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.challenge.StreakChallengeState
 import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
+import com.masterofchessstrategy.challenge.AssessmentChallengeState
+import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
@@ -210,6 +212,48 @@ class LocalDataBackupCodecTest {
         assertEquals(StoredGameMode.BLIND_CHALLENGE, restored.activeSessions.single().mode)
         assertEquals(Difficulty.MEDIUM, restored.lastSelections.single().difficulty)
         assertEquals("", restored.activeSessions.single().sessionVariantId)
+    }
+
+    @Test
+    fun assessmentSessionAndSelectionRoundTripTogether() {
+        val state = AssessmentChallengeState(
+            completedGames = 2,
+            rating = 1_500,
+            wins = 1,
+            draws = 1,
+        )
+        val source = LocalDataSnapshot(
+            createdAtEpochMillis = 1L,
+            activeSessions = listOf(
+                GameSessionSnapshot(
+                    gameType = GameType.CHINESE_CHESS,
+                    mode = StoredGameMode.ASSESSMENT_CHALLENGE,
+                    difficulty = Difficulty.HARD,
+                    engineState = byteArrayOf(7, 8),
+                    updatedAtEpochMillis = 2L,
+                    sessionId = "assessment-1",
+                    sessionVariantId = AssessmentChallengeStateCodec.encode(state),
+                ),
+            ),
+            lastSelections = listOf(
+                LastGameSelection(
+                    gameType = GameType.CHINESE_CHESS,
+                    mode = StoredGameMode.ASSESSMENT_CHALLENGE,
+                    difficulty = Difficulty.HARD,
+                    updatedAtEpochMillis = 3L,
+                ),
+            ),
+        )
+
+        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+
+        assertEquals(StoredGameMode.ASSESSMENT_CHALLENGE, restored.activeSessions.single().mode)
+        assertEquals(
+            state,
+            AssessmentChallengeStateCodec.decode(
+                restored.activeSessions.single().sessionVariantId,
+            ),
+        )
     }
 
     private fun completeSnapshot(): LocalDataSnapshot = LocalDataSnapshot(

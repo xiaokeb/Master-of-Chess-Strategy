@@ -24,7 +24,10 @@ internal data class ChineseChessAssistancePolicy(
             mode: StoredGameMode,
             difficulty: Difficulty?,
         ): ChineseChessAssistancePolicy =
-            if (mode == StoredGameMode.BLIND_CHALLENGE) {
+            if (
+                mode == StoredGameMode.BLIND_CHALLENGE ||
+                mode == StoredGameMode.ASSESSMENT_CHALLENGE
+            ) {
                 ChineseChessAssistancePolicy(
                     undoLimit = 0,
                     hintLimit = 0,

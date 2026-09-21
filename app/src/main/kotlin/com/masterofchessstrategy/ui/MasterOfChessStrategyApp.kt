@@ -53,9 +53,12 @@ import com.masterofchessstrategy.R
 import com.masterofchessstrategy.challenge.ChineseChessTimedChallengeViewModel
 import com.masterofchessstrategy.challenge.ChineseChessStreakViewModel
 import com.masterofchessstrategy.challenge.ChineseChessBlindViewModel
+import com.masterofchessstrategy.challenge.ChineseChessAssessmentViewModel
 import com.masterofchessstrategy.challenge.PreparedTimedChallenge
 import com.masterofchessstrategy.challenge.PreparedStreakChallenge
 import com.masterofchessstrategy.challenge.PreparedBlindChallenge
+import com.masterofchessstrategy.challenge.PreparedAssessmentChallenge
+import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.data.MocsDatabase
@@ -103,6 +106,7 @@ import com.masterofchessstrategy.ui.theme.MocsTheme
 internal const val UNDO_BUTTON_TAG = "undo_button"
 internal const val RESTART_BUTTON_TAG = "restart_button"
 internal const val STREAK_NEXT_GAME_TAG = "streak_next_game"
+internal const val ASSESSMENT_NEXT_GAME_TAG = "assessment_next_game"
 internal const val HINT_BUTTON_TAG = "hint_button"
 internal const val RESIGN_BUTTON_TAG = "resign_button"
 internal const val DRAW_BUTTON_TAG = "draw_button"
@@ -296,6 +300,10 @@ fun MasterOfChessStrategyApp() {
                                     AppDestination.CHINESE_CHESS_BLIND_SETUP
                                 }
 
+                                QuickStartDestination.ASSESSMENT_SETUP -> {
+                                    AppDestination.CHINESE_CHESS_ASSESSMENT_SETUP
+                                }
+
                                 QuickStartDestination.MODE_SELECTION -> {
                                     AppDestination.CHINESE_CHESS_MODES
                                 }
@@ -377,8 +385,106 @@ fun MasterOfChessStrategyApp() {
                     onBlindChallenge = {
                         navController.navigate(AppDestination.CHINESE_CHESS_BLIND_SETUP)
                     },
+                    onAssessmentChallenge = {
+                        navController.navigate(AppDestination.CHINESE_CHESS_ASSESSMENT_SETUP)
+                    },
                     onCustomPosition = {
                         navController.navigate(AppDestination.CHINESE_CHESS_CUSTOM_SETUP)
+                    },
+                )
+            }
+            composable(AppDestination.CHINESE_CHESS_ASSESSMENT_SETUP) {
+                val factory = remember(gameSessionRepository) {
+                    ChineseChessAssessmentViewModel.factory(gameSessionRepository)
+                }
+                val assessmentViewModel: ChineseChessAssessmentViewModel =
+                    viewModel(factory = factory)
+                val openChallenge: (PreparedAssessmentChallenge) -> Unit = { prepared ->
+                    navigationViewModel.recordChineseChessSelection(
+                        StoredGameMode.ASSESSMENT_CHALLENGE,
+                        prepared.difficulty,
+                    )
+                    navController.navigate(
+                        AppDestination.chineseChessAssessmentGame(
+                            prepared.difficulty,
+                            prepared.state,
+                        ),
+                    )
+                }
+                ChineseChessAssessmentChallengeScreen(
+                    state = assessmentViewModel.uiState,
+                    onBack = navController::popBackStack,
+                    onStart = { openChallenge(assessmentViewModel.prepareNewChallenge()) },
+                    onContinueSaved = {
+                        assessmentViewModel.continueSavedChallenge()?.let(openChallenge)
+                    },
+                )
+            }
+            composable(
+                route = AppDestination.CHINESE_CHESS_ASSESSMENT_GAME,
+                arguments = listOf(
+                    navArgument(AppDestination.ASSESSMENT_DIFFICULTY_ARGUMENT) {
+                        type = NavType.IntType
+                    },
+                    navArgument(AppDestination.ASSESSMENT_STATE_ARGUMENT) {
+                        type = NavType.StringType
+                    },
+                ),
+            ) { backStackEntry ->
+                val difficultyCode = backStackEntry.arguments
+                    ?.getInt(AppDestination.ASSESSMENT_DIFFICULTY_ARGUMENT)
+                val difficulty = checkNotNull(
+                    Difficulty.entries.firstOrNull { it.code == difficultyCode },
+                ) { "Unsupported assessment difficulty" }
+                val encodedState = checkNotNull(
+                    backStackEntry.arguments?.getString(
+                        AppDestination.ASSESSMENT_STATE_ARGUMENT,
+                    ),
+                )
+                val assessmentState = AssessmentChallengeStateCodec.decode(encodedState)
+                val factory = remember(
+                    gameSessionRepository,
+                    gameRecordsViewModel,
+                    difficulty,
+                    encodedState,
+                    settingsViewModel.uiState.settings.gameDurationMinutes,
+                    pikafishNetworkProvider,
+                ) {
+                    ChineseChessGameViewModel.factory(
+                        repository = gameSessionRepository,
+                        mode = StoredGameMode.ASSESSMENT_CHALLENGE,
+                        difficulty = difficulty,
+                        onGameRecorded = gameRecordsViewModel::record,
+                        timeControlMinutes =
+                            settingsViewModel.uiState.settings.gameDurationMinutes,
+                        sessionVariantId = encodedState,
+                        assessmentState = assessmentState,
+                        engineFactory = {
+                            NativeChineseChessEngine(
+                                pikafishNetworkProvider::requireNetworkPath,
+                            )
+                        },
+                    )
+                }
+                val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
+                ChineseChessGameSoundEffect(
+                    gameViewModel,
+                    settingsViewModel.uiState.settings.soundEnabled,
+                )
+                ChineseChessGameScreen(
+                    state = gameViewModel.uiState,
+                    onSquareTap = gameViewModel::onSquareTap,
+                    onUndo = gameViewModel::undo,
+                    onHint = gameViewModel::requestHint,
+                    onResign = gameViewModel::resign,
+                    onDraw = gameViewModel::offerOrAcceptDraw,
+                    onRestart = gameViewModel::restart,
+                    onContinueAssessment = gameViewModel::continueAssessmentChallenge,
+                    onBack = navController::popBackStack,
+                    onSettings = {
+                        navController.navigate(AppDestination.SETTINGS) {
+                            launchSingleTop = true
+                        }
                     },
                 )
             }
@@ -1271,6 +1377,7 @@ internal fun ChineseChessGameScreen(
     onAutoPlaySpeedChangeFinished: () -> Unit = {},
     onSettings: () -> Unit = {},
     onContinueStreak: () -> Unit = {},
+    onContinueAssessment: () -> Unit = {},
 ) {
     BackHandler(
         enabled =
@@ -1316,6 +1423,7 @@ internal fun ChineseChessGameScreen(
                                     onAutoPlaySpeedChangeFinished,
                                 onRestart = onRestart,
                                 onContinueStreak = onContinueStreak,
+                                onContinueAssessment = onContinueAssessment,
                                 modifier = Modifier
                                     .widthIn(min = 240.dp, max = 320.dp)
                                     .fillMaxHeight(),
@@ -1345,6 +1453,7 @@ internal fun ChineseChessGameScreen(
                                     onAutoPlaySpeedChangeFinished,
                                 onRestart = onRestart,
                                 onContinueStreak = onContinueStreak,
+                                onContinueAssessment = onContinueAssessment,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         }
@@ -1485,6 +1594,7 @@ private fun GameControls(
     onAutoPlaySpeedChangeFinished: () -> Unit,
     onRestart: () -> Unit,
     onContinueStreak: () -> Unit,
+    onContinueAssessment: () -> Unit,
     modifier: Modifier,
 ) {
     val controlAvailable =
@@ -1563,6 +1673,36 @@ private fun GameControls(
                     )
                 }
             }
+            if (state.isAssessmentChallenge) {
+                Text(
+                    text = stringResource(
+                        R.string.assessment_challenge_progress,
+                        state.assessmentCompletedGames +
+                            if (state.result == GameResult.ONGOING) 1 else 0,
+                        state.assessmentRating,
+                    ),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = stringResource(
+                        R.string.assessment_challenge_record,
+                        state.assessmentWins,
+                        state.assessmentDraws,
+                        state.assessmentLosses,
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                state.assessmentNextDifficulty?.let { next ->
+                    Text(
+                        text = stringResource(
+                            R.string.assessment_challenge_next_difficulty,
+                            difficultyTitle(next),
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
 
             state.feedback?.let { feedback ->
                 Surface(
@@ -1607,6 +1747,30 @@ private fun GameControls(
                                     R.string.streak_challenge_in_progress
                                 } else {
                                     R.string.streak_challenge_next_game
+                                },
+                            ),
+                        )
+                    }
+                } else if (state.isAssessmentChallenge) {
+                    Button(
+                        onClick = onContinueAssessment,
+                        enabled =
+                            controlAvailable &&
+                                state.result != GameResult.ONGOING &&
+                                state.assessmentNextDifficulty != null &&
+                                !state.assessmentFinished,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(ASSESSMENT_NEXT_GAME_TAG),
+                    ) {
+                        Text(
+                            stringResource(
+                                when {
+                                    state.assessmentFinished ->
+                                        R.string.assessment_challenge_finished
+                                    state.result == GameResult.ONGOING ->
+                                        R.string.assessment_challenge_in_progress
+                                    else -> R.string.assessment_challenge_next_game
                                 },
                             ),
                         )
@@ -1749,6 +1913,12 @@ private fun gameStatusText(state: ChineseChessGameUiState): String =
 
 @Composable
 private fun gameModeTitle(state: ChineseChessGameUiState): String {
+    if (state.isAssessmentChallenge) {
+        return stringResource(
+            R.string.assessment_challenge_ai_game,
+            difficultyTitle(requireNotNull(state.difficulty)),
+        )
+    }
     if (state.isBlindChess) {
         return stringResource(
             R.string.blind_challenge_ai_game,
@@ -1870,6 +2040,8 @@ private fun feedbackText(feedback: ChineseChessFeedback): String =
             ChineseChessFeedback.AUTO_PLAY_PAUSED -> R.string.feedback_auto_play_paused
             ChineseChessFeedback.AUTO_PLAY_RESUMED -> R.string.feedback_auto_play_resumed
             ChineseChessFeedback.STREAK_NEXT_GAME -> R.string.feedback_streak_next_game
+            ChineseChessFeedback.ASSESSMENT_NEXT_GAME ->
+                R.string.feedback_assessment_next_game
         },
     )
 

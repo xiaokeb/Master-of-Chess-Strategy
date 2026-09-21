@@ -36,6 +36,7 @@ enum class ChineseChessFeedback {
     AUTO_PLAY_PAUSED,
     AUTO_PLAY_RESUMED,
     STREAK_NEXT_GAME,
+    ASSESSMENT_NEXT_GAME,
 }
 
 /** Short, non-replaying audio cues emitted by live game actions. */
@@ -86,6 +87,14 @@ data class ChineseChessGameUiState(
     val bestStreak: Int = 0,
     val streakNextDifficulty: Difficulty? = null,
     val isBlindChess: Boolean = false,
+    val isAssessmentChallenge: Boolean = false,
+    val assessmentCompletedGames: Int = 0,
+    val assessmentRating: Int = 0,
+    val assessmentWins: Int = 0,
+    val assessmentDraws: Int = 0,
+    val assessmentLosses: Int = 0,
+    val assessmentNextDifficulty: Difficulty? = null,
+    val assessmentFinished: Boolean = false,
     val endgameTitle: String? = null,
     val endgamePlayerMovesUsed: Int = 0,
     val endgameMaxPlayerMoves: Int? = null,
@@ -137,6 +146,18 @@ data class ChineseChessGameUiState(
         ) {
             "Streak metadata belongs only to streak challenge mode"
         }
+        require(
+            isAssessmentChallenge ||
+                (
+                    assessmentCompletedGames == 0 &&
+                        assessmentRating == 0 &&
+                        assessmentWins == 0 &&
+                        assessmentDraws == 0 &&
+                        assessmentLosses == 0 &&
+                        assessmentNextDifficulty == null &&
+                        !assessmentFinished
+                    ),
+        ) { "Assessment metadata belongs only to assessment mode" }
     }
 
     fun pieceAt(position: BoardPosition): ChineseChessPiece? {

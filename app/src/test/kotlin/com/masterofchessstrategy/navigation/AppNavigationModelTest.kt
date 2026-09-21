@@ -5,6 +5,8 @@ import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.challenge.StreakChallengeState
 import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
+import com.masterofchessstrategy.challenge.AssessmentChallengeState
+import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameType
@@ -282,6 +284,37 @@ class AppNavigationModelTest {
 
         assertEquals(
             QuickStartDestination.BLIND_SETUP,
+            selection.quickStartDestination(),
+        )
+    }
+
+    @Test
+    fun assessmentRouteCarriesCanonicalSeriesState() {
+        val state = AssessmentChallengeState(
+            completedGames = 1,
+            rating = 1_400,
+            wins = 1,
+        )
+        val route = AppDestination.chineseChessAssessmentGame(Difficulty.HARD, state)
+
+        assertEquals(
+            "chinese-chess/extensions/assessment/2/assessment:1:1400:1:0:0:n",
+            route,
+        )
+        assertEquals(state, AssessmentChallengeStateCodec.decode(route.substringAfterLast('/')))
+    }
+
+    @Test
+    fun assessmentHistoryReturnsToItsSetupScreen() {
+        val selection = LastGameSelection(
+            gameType = GameType.CHINESE_CHESS,
+            mode = StoredGameMode.ASSESSMENT_CHALLENGE,
+            difficulty = Difficulty.MEDIUM,
+            updatedAtEpochMillis = 1L,
+        )
+
+        assertEquals(
+            QuickStartDestination.ASSESSMENT_SETUP,
             selection.quickStartDestination(),
         )
     }

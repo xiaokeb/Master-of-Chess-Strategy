@@ -6,6 +6,7 @@ import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
+import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 
 internal enum class StoredGameMode(val code: Int) {
@@ -18,6 +19,7 @@ internal enum class StoredGameMode(val code: Int) {
     TIMED_CHALLENGE(6),
     STREAK_CHALLENGE(7),
     BLIND_CHALLENGE(8),
+    ASSESSMENT_CHALLENGE(9),
 }
 
 internal data class GameSessionSnapshot(
@@ -256,6 +258,12 @@ internal fun StoredGameMode.acceptsSessionVariant(variantId: String): Boolean =
         } catch (_: IllegalArgumentException) {
             false
         }
+        StoredGameMode.ASSESSMENT_CHALLENGE -> try {
+            AssessmentChallengeStateCodec.decode(variantId)
+            true
+        } catch (_: IllegalArgumentException) {
+            false
+        }
         else -> variantId.isEmpty()
     }
 
@@ -269,6 +277,7 @@ internal fun StoredGameMode.acceptsSessionDifficulty(difficulty: Difficulty?): B
         StoredGameMode.TIMED_CHALLENGE,
         StoredGameMode.STREAK_CHALLENGE,
         StoredGameMode.BLIND_CHALLENGE,
+        StoredGameMode.ASSESSMENT_CHALLENGE,
         -> difficulty != null
         StoredGameMode.TUTORIAL -> false
     }

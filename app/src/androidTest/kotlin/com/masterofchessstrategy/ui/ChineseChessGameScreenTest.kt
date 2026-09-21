@@ -136,4 +136,32 @@ class ChineseChessGameScreenTest {
         composeRule.onNodeWithTag(UNDO_BUTTON_TAG).assertIsNotEnabled()
         composeRule.onNodeWithTag(HINT_BUTTON_TAG).assertIsNotEnabled()
     }
+
+    @Test
+    fun completedAssessmentGameOffersNextAdaptiveOpponent() {
+        composeRule.setContent {
+            ChineseChessGameScreen(
+                state = ChineseChessGameUiState(
+                    result = GameResult.FIRST_PLAYER_WIN,
+                    isAiGame = true,
+                    difficulty = Difficulty.MEDIUM,
+                    isAssessmentChallenge = true,
+                    assessmentCompletedGames = 1,
+                    assessmentRating = 1_400,
+                    assessmentWins = 1,
+                    assessmentNextDifficulty = Difficulty.HARD,
+                ),
+                onSquareTap = {},
+                onUndo = {},
+                onHint = {},
+                onResign = {},
+                onRestart = {},
+                onContinueAssessment = {},
+                onBack = {},
+            )
+        }
+
+        composeRule.onNodeWithTag(ASSESSMENT_NEXT_GAME_TAG).assertIsEnabled()
+        composeRule.onNodeWithTag(RESTART_BUTTON_TAG).assertDoesNotExist()
+    }
 }

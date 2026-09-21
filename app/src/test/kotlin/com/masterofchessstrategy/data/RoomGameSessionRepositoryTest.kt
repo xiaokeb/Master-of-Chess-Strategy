@@ -3,6 +3,8 @@ package com.masterofchessstrategy.data
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.challenge.StreakChallengeState
 import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
+import com.masterofchessstrategy.challenge.AssessmentChallengeState
+import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.GameResult
@@ -308,6 +310,48 @@ class RoomGameSessionRepositoryTest {
         dao.entity = requireNotNull(dao.entity).copy(
             difficultyCode = null,
             sessionVariantId = "",
+        )
+        assertSame(LoadGameSessionResult.Incompatible, repository.load(GameType.CHINESE_CHESS))
+    }
+
+    @Test
+    fun assessmentRequiresDifficultyAndCanonicalSeriesState() = runBlocking {
+        val state = AssessmentChallengeState(
+            completedGames = 1,
+            rating = 1_400,
+            wins = 1,
+        )
+        val dao = FakeActiveGameDao(
+            ActiveGameEntity(
+                gameTypeCode = GameType.CHINESE_CHESS.code,
+                modeCode = StoredGameMode.ASSESSMENT_CHALLENGE.code,
+                difficultyCode = Difficulty.HARD.code,
+                envelopeVersion = 4,
+                engineFormatVersion = 2,
+                engineState = byteArrayOf(9),
+                updatedAtEpochMillis = 1L,
+                sessionId = "assessment-session",
+                sessionVariantId = AssessmentChallengeStateCodec.encode(state),
+            ),
+        )
+        val repository = RoomGameSessionRepository(dao)
+
+        val loaded = repository.load(GameType.CHINESE_CHESS)
+        assertEquals(
+            state,
+            AssessmentChallengeStateCodec.decode(
+                (loaded as LoadGameSessionResult.Loaded).snapshot.sessionVariantId,
+            ),
+        )
+
+        dao.entity = requireNotNull(dao.entity).copy(
+            sessionVariantId = "assessment:01:1400:1:0:0:n",
+        )
+        assertSame(LoadGameSessionResult.Incompatible, repository.load(GameType.CHINESE_CHESS))
+
+        dao.entity = requireNotNull(dao.entity).copy(
+            difficultyCode = null,
+            sessionVariantId = AssessmentChallengeStateCodec.encode(state),
         )
         assertSame(LoadGameSessionResult.Incompatible, repository.load(GameType.CHINESE_CHESS))
     }

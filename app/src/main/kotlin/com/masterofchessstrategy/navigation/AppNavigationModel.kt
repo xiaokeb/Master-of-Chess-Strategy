@@ -5,6 +5,8 @@ import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.challenge.StreakChallengeState
 import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
+import com.masterofchessstrategy.challenge.AssessmentChallengeState
+import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 
 internal object AppDestination {
@@ -32,6 +34,12 @@ internal object AppDestination {
     const val BLIND_DIFFICULTY_ARGUMENT = "blindDifficultyCode"
     const val CHINESE_CHESS_BLIND_GAME =
         "chinese-chess/extensions/blind/{$BLIND_DIFFICULTY_ARGUMENT}"
+    const val CHINESE_CHESS_ASSESSMENT_SETUP = "chinese-chess/extensions/assessment/setup"
+    const val ASSESSMENT_DIFFICULTY_ARGUMENT = "assessmentDifficultyCode"
+    const val ASSESSMENT_STATE_ARGUMENT = "assessmentState"
+    const val CHINESE_CHESS_ASSESSMENT_GAME =
+        "chinese-chess/extensions/assessment/{$ASSESSMENT_DIFFICULTY_ARGUMENT}/" +
+            "{$ASSESSMENT_STATE_ARGUMENT}"
     const val CHINESE_CHESS_CUSTOM_SETUP = "chinese-chess/extensions/custom/setup"
     const val CUSTOM_DIFFICULTY_ARGUMENT = "customDifficultyCode"
     const val CUSTOM_POSITION_ARGUMENT = "customPosition"
@@ -87,6 +95,13 @@ internal object AppDestination {
 
     fun chineseChessBlindGame(difficulty: Difficulty): String =
         "chinese-chess/extensions/blind/${difficulty.code}"
+
+    fun chineseChessAssessmentGame(
+        difficulty: Difficulty,
+        state: AssessmentChallengeState,
+    ): String =
+        "chinese-chess/extensions/assessment/${difficulty.code}/" +
+            AssessmentChallengeStateCodec.encode(state)
 }
 
 /** Five first-level cards required by the product layout. */
