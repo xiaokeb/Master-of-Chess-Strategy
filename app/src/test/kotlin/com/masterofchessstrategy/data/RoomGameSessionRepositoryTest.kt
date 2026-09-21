@@ -356,6 +356,34 @@ class RoomGameSessionRepositoryTest {
         assertSame(LoadGameSessionResult.Incompatible, repository.load(GameType.CHINESE_CHESS))
     }
 
+    @Test
+    fun openingAutoPlayRequiresCanonicalInitialPositionVariant() = runBlocking {
+        val variant = CustomPositionStateCodec.sessionVariant(byteArrayOf(1, 2, 3))
+        val dao = FakeActiveGameDao(
+            ActiveGameEntity(
+                gameTypeCode = GameType.CHINESE_CHESS.code,
+                modeCode = StoredGameMode.OPENING_AUTO_PLAY.code,
+                difficultyCode = Difficulty.MEDIUM.code,
+                envelopeVersion = 4,
+                engineFormatVersion = 2,
+                engineState = byteArrayOf(9),
+                updatedAtEpochMillis = 1L,
+                sessionId = "opening-auto-session",
+                sessionVariantId = variant,
+            ),
+        )
+        val repository = RoomGameSessionRepository(dao)
+
+        val loaded = repository.load(GameType.CHINESE_CHESS)
+        assertEquals(
+            variant,
+            (loaded as LoadGameSessionResult.Loaded).snapshot.sessionVariantId,
+        )
+
+        dao.entity = requireNotNull(dao.entity).copy(sessionVariantId = "custom:01020A")
+        assertSame(LoadGameSessionResult.Incompatible, repository.load(GameType.CHINESE_CHESS))
+    }
+
     private class FakeActiveGameDao(
         var entity: ActiveGameEntity? = null,
     ) : ActiveGameDao {

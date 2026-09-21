@@ -129,7 +129,10 @@ internal class RoomLocalDataBackupRepository(
 
     private fun validateEngineStates(snapshot: LocalDataSnapshot) {
         val customInitialStates = snapshot.activeSessions
-            .filter { it.mode == StoredGameMode.CUSTOM_POSITION }
+            .filter {
+                it.mode == StoredGameMode.CUSTOM_POSITION ||
+                    it.mode == StoredGameMode.OPENING_AUTO_PLAY
+            }
             .map { CustomPositionStateCodec.decodeSessionVariant(it.sessionVariantId) }
         (snapshot.activeSessions.map(GameSessionSnapshot::engineState) +
             snapshot.gameRecords.map(GameRecord::engineState) +

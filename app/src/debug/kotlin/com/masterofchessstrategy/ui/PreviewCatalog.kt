@@ -18,6 +18,8 @@ import com.masterofchessstrategy.challenge.PreparedBlindChallenge
 import com.masterofchessstrategy.challenge.ChineseChessAssessmentUiState
 import com.masterofchessstrategy.challenge.PreparedAssessmentChallenge
 import com.masterofchessstrategy.challenge.AssessmentChallengeState
+import com.masterofchessstrategy.opening.ChineseChessOpeningFrame
+import com.masterofchessstrategy.opening.ChineseChessOpeningUiState
 import com.masterofchessstrategy.custom.ChineseChessSetupUiState
 import com.masterofchessstrategy.engine.ChineseChessBoard
 import com.masterofchessstrategy.engine.BoardMove
@@ -497,6 +499,41 @@ private fun ChineseChessAssessmentGameScreenPreview() {
         onRestart = {},
         onBack = {},
         onSettings = {},
+    )
+}
+
+@Preview(
+    name = "16 中国象棋定式学习",
+    group = "已完成界面",
+    widthDp = 960,
+    heightDp = 540,
+    showBackground = true,
+)
+@Composable
+private fun ChineseChessOpeningScreenPreview() {
+    ChineseChessOpeningScreen(
+        state = ChineseChessOpeningUiState(
+            frames = listOf(
+                ChineseChessOpeningFrame(
+                    board = standardChineseChessBoard(),
+                    sideToMove = ChineseChessSide.RED,
+                    stepTitle = "炮二平五",
+                    explanation = "红方右炮横移中路，直接形成中炮架势。",
+                ),
+            ),
+            isLoading = false,
+            difficulty = Difficulty.MEDIUM,
+            unlockedDifficulties = Difficulty.entries.toSet(),
+            endpointState = byteArrayOf(1),
+        ),
+        onBack = {},
+        onLineSelected = {},
+        onPrevious = {},
+        onNext = {},
+        onTogglePlayback = {},
+        onSpeedChange = {},
+        onDifficultySelected = {},
+        onStartAutoPlay = {},
     )
 }
 

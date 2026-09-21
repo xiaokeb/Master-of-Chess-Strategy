@@ -95,6 +95,7 @@ data class ChineseChessGameUiState(
     val assessmentLosses: Int = 0,
     val assessmentNextDifficulty: Difficulty? = null,
     val assessmentFinished: Boolean = false,
+    val isOpeningAutoPlay: Boolean = false,
     val endgameTitle: String? = null,
     val endgamePlayerMovesUsed: Int = 0,
     val endgameMaxPlayerMoves: Int? = null,

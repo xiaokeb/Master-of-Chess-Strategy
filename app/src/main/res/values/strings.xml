@@ -139,6 +139,14 @@
     <string name="extension_assessment_summary">通过定级对局计算专项棋力评分。</string>
     <string name="extension_opening">定式学习</string>
     <string name="extension_opening_summary">按步骤学习并演练典型开局。</string>
+    <string name="opening_training_title">中国象棋 · 定式学习</string>
+    <string name="opening_training_subtitle">项目自编种子库 · 规则引擎逐步校验</string>
+    <string name="opening_training_loading">正在验证开局线路…</string>
+    <string name="opening_training_incompatible">该开局线路未通过当前规则引擎校验，已停止展示。</string>
+    <string name="opening_training_step">第 %1$d / %2$d 步</string>
+    <string name="opening_auto_play_difficulty">从末端局面自动演局</string>
+    <string name="opening_auto_play_start">加载此开局并自动演后续变化</string>
+    <string name="opening_auto_play_mode">指定开局自动演局</string>
     <string name="timed_challenge_title">中国象棋 · 限时挑战</string>
     <string name="timed_challenge_subtitle">选择已解锁 AI 与每步独立思考时间</string>
     <string name="timed_challenge_choose_clock">每步时限</string>

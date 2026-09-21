@@ -318,4 +318,33 @@ class AppNavigationModelTest {
             selection.quickStartDestination(),
         )
     }
+
+    @Test
+    fun openingAutoPlayRouteCarriesDifficultyAndCanonicalPosition() {
+        val route = AppDestination.chineseChessOpeningAutoPlay(
+            Difficulty.MEDIUM,
+            byteArrayOf(1, 2, 0x7f),
+        )
+
+        assertEquals("chinese-chess/extensions/openings/auto/1/01027f", route)
+        assertEquals(
+            byteArrayOf(1, 2, 0x7f).toList(),
+            CustomPositionStateCodec.decode(route.substringAfterLast('/')).toList(),
+        )
+    }
+
+    @Test
+    fun openingAutoPlayHistoryReturnsToTrainingLibrary() {
+        val selection = LastGameSelection(
+            gameType = GameType.CHINESE_CHESS,
+            mode = StoredGameMode.OPENING_AUTO_PLAY,
+            difficulty = Difficulty.MEDIUM,
+            updatedAtEpochMillis = 1L,
+        )
+
+        assertEquals(
+            QuickStartDestination.OPENING_TRAINING,
+            selection.quickStartDestination(),
+        )
+    }
 }

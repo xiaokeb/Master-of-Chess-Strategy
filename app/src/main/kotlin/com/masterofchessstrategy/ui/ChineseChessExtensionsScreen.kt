@@ -54,6 +54,7 @@ internal const val BLIND_CHALLENGE_START_TAG = "blind_challenge_start"
 internal const val ASSESSMENT_CHALLENGE_ENTRY_TAG = "assessment_challenge_entry"
 internal const val ASSESSMENT_CHALLENGE_SETUP_TAG = "assessment_challenge_setup"
 internal const val ASSESSMENT_CHALLENGE_START_TAG = "assessment_challenge_start"
+internal const val OPENING_TRAINING_ENTRY_TAG = "opening_training_entry"
 internal const val CUSTOM_SETUP_ENTRY_TAG = "custom_setup_entry"
 internal const val CUSTOM_SETUP_SCREEN_TAG = "custom_setup_screen"
 internal const val CUSTOM_SETUP_START_TAG = "custom_setup_start"
@@ -64,7 +65,7 @@ private enum class ExtensionEntry(val available: Boolean) {
     BLIND(true),
     CUSTOM_POSITION(true),
     ASSESSMENT(true),
-    OPENING(false),
+    OPENING(true),
 }
 
 @Composable
@@ -74,6 +75,7 @@ internal fun ChineseChessExtensionsScreen(
     onStreakChallenge: () -> Unit,
     onBlindChallenge: () -> Unit,
     onAssessmentChallenge: () -> Unit,
+    onOpeningTraining: () -> Unit,
     onCustomPosition: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -112,9 +114,10 @@ internal fun ChineseChessExtensionsScreen(
                                             Modifier.testTag(BLIND_CHALLENGE_ENTRY_TAG)
                                         ExtensionEntry.ASSESSMENT ->
                                             Modifier.testTag(ASSESSMENT_CHALLENGE_ENTRY_TAG)
+                                        ExtensionEntry.OPENING ->
+                                            Modifier.testTag(OPENING_TRAINING_ENTRY_TAG)
                                         ExtensionEntry.CUSTOM_POSITION ->
                                             Modifier.testTag(CUSTOM_SETUP_ENTRY_TAG)
-                                        else -> Modifier
                                     },
                                 )
                                 .clickable(
@@ -125,8 +128,8 @@ internal fun ChineseChessExtensionsScreen(
                                             ExtensionEntry.STREAK -> onStreakChallenge()
                                             ExtensionEntry.BLIND -> onBlindChallenge()
                                             ExtensionEntry.ASSESSMENT -> onAssessmentChallenge()
+                                            ExtensionEntry.OPENING -> onOpeningTraining()
                                             ExtensionEntry.CUSTOM_POSITION -> onCustomPosition()
-                                            else -> Unit
                                         }
                                     },
                                 ),

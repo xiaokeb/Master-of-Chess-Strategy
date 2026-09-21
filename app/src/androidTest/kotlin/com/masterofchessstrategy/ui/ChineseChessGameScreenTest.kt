@@ -7,6 +7,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
+import com.masterofchessstrategy.engine.ChineseChessSide
+import com.masterofchessstrategy.opening.ChineseChessOpeningFrame
+import com.masterofchessstrategy.opening.ChineseChessOpeningUiState
 import org.junit.Rule
 import org.junit.Test
 
@@ -163,5 +166,38 @@ class ChineseChessGameScreenTest {
 
         composeRule.onNodeWithTag(ASSESSMENT_NEXT_GAME_TAG).assertIsEnabled()
         composeRule.onNodeWithTag(RESTART_BUTTON_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun openingTrainingExposesValidatedAutoPlayAction() {
+        composeRule.setContent {
+            ChineseChessOpeningScreen(
+                state = ChineseChessOpeningUiState(
+                    frames = listOf(
+                        ChineseChessOpeningFrame(
+                            board = List(90) { null },
+                            sideToMove = ChineseChessSide.RED,
+                            stepTitle = "标准初始局面",
+                            explanation = "观察阵形。",
+                        ),
+                    ),
+                    isLoading = false,
+                    difficulty = Difficulty.EASY,
+                    unlockedDifficulties = setOf(Difficulty.EASY),
+                    endpointState = byteArrayOf(1),
+                ),
+                onBack = {},
+                onLineSelected = {},
+                onPrevious = {},
+                onNext = {},
+                onTogglePlayback = {},
+                onSpeedChange = {},
+                onDifficultySelected = {},
+                onStartAutoPlay = {},
+            )
+        }
+
+        composeRule.onNodeWithTag(OPENING_TRAINING_SCREEN_TAG).assertExists()
+        composeRule.onNodeWithTag(OPENING_AUTO_PLAY_TAG).assertIsEnabled()
     }
 }

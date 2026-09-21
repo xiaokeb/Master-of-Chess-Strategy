@@ -98,6 +98,8 @@ import com.masterofchessstrategy.navigation.chineseChessDifficulties
 import com.masterofchessstrategy.progress.PlayerStatisticsViewModel
 import com.masterofchessstrategy.records.ChineseChessReplayViewModel
 import com.masterofchessstrategy.records.GameRecordsViewModel
+import com.masterofchessstrategy.opening.ChineseChessOpeningViewModel
+import com.masterofchessstrategy.opening.PreparedOpeningAutoPlay
 import com.masterofchessstrategy.settings.AppSettingsViewModel
 import com.masterofchessstrategy.settings.LocalDataBackupViewModel
 import com.masterofchessstrategy.tutorial.ChineseChessTutorialViewModel
@@ -304,6 +306,10 @@ fun MasterOfChessStrategyApp() {
                                     AppDestination.CHINESE_CHESS_ASSESSMENT_SETUP
                                 }
 
+                                QuickStartDestination.OPENING_TRAINING -> {
+                                    AppDestination.CHINESE_CHESS_OPENINGS
+                                }
+
                                 QuickStartDestination.MODE_SELECTION -> {
                                     AppDestination.CHINESE_CHESS_MODES
                                 }
@@ -388,8 +394,128 @@ fun MasterOfChessStrategyApp() {
                     onAssessmentChallenge = {
                         navController.navigate(AppDestination.CHINESE_CHESS_ASSESSMENT_SETUP)
                     },
+                    onOpeningTraining = {
+                        navController.navigate(AppDestination.CHINESE_CHESS_OPENINGS)
+                    },
                     onCustomPosition = {
                         navController.navigate(AppDestination.CHINESE_CHESS_CUSTOM_SETUP)
+                    },
+                )
+            }
+            composable(AppDestination.CHINESE_CHESS_OPENINGS) {
+                val unlocked = difficultyEntries
+                    .filter { it.isPlayable }
+                    .mapTo(linkedSetOf()) { it.difficulty }
+                val factory = remember(unlocked) {
+                    ChineseChessOpeningViewModel.factory(
+                        unlockedDifficulties = unlocked,
+                        engineFactory = { NativeChineseChessEngine() },
+                    )
+                }
+                val openingViewModel: ChineseChessOpeningViewModel = viewModel(factory = factory)
+                val openAutoPlay: (PreparedOpeningAutoPlay) -> Unit = { prepared ->
+                    navigationViewModel.recordChineseChessSelection(
+                        StoredGameMode.OPENING_AUTO_PLAY,
+                        prepared.difficulty,
+                    )
+                    navController.navigate(
+                        AppDestination.chineseChessOpeningAutoPlay(
+                            prepared.difficulty,
+                            prepared.initialState,
+                        ),
+                    )
+                }
+                ChineseChessOpeningScreen(
+                    state = openingViewModel.uiState,
+                    onBack = navController::popBackStack,
+                    onLineSelected = openingViewModel::selectLine,
+                    onPrevious = openingViewModel::previous,
+                    onNext = openingViewModel::next,
+                    onTogglePlayback = openingViewModel::togglePlayback,
+                    onSpeedChange = openingViewModel::setSpeed,
+                    onDifficultySelected = openingViewModel::selectDifficulty,
+                    onStartAutoPlay = {
+                        openingViewModel.prepareAutoPlay()?.let(openAutoPlay)
+                    },
+                )
+            }
+            composable(
+                route = AppDestination.CHINESE_CHESS_OPENING_AUTO_PLAY,
+                arguments = listOf(
+                    navArgument(AppDestination.OPENING_DIFFICULTY_ARGUMENT) {
+                        type = NavType.IntType
+                    },
+                    navArgument(AppDestination.OPENING_POSITION_ARGUMENT) {
+                        type = NavType.StringType
+                    },
+                ),
+            ) { backStackEntry ->
+                val difficultyCode = backStackEntry.arguments
+                    ?.getInt(AppDestination.OPENING_DIFFICULTY_ARGUMENT)
+                val difficulty = checkNotNull(
+                    Difficulty.entries.firstOrNull { it.code == difficultyCode },
+                ) { "Unsupported opening auto-play difficulty" }
+                check(
+                    difficultyEntries.any {
+                        it.difficulty == difficulty && it.isPlayable
+                    },
+                ) { "Opening auto-play difficulty is locked" }
+                val encodedPosition = checkNotNull(
+                    backStackEntry.arguments?.getString(
+                        AppDestination.OPENING_POSITION_ARGUMENT,
+                    ),
+                )
+                val initialPosition = CustomPositionStateCodec.decode(encodedPosition)
+                val sessionVariant = CustomPositionStateCodec.sessionVariant(initialPosition)
+                val factory = remember(
+                    gameSessionRepository,
+                    gameRecordsViewModel,
+                    difficulty,
+                    encodedPosition,
+                    settingsViewModel.uiState.settings,
+                    pikafishNetworkProvider,
+                ) {
+                    ChineseChessGameViewModel.factory(
+                        repository = gameSessionRepository,
+                        mode = StoredGameMode.OPENING_AUTO_PLAY,
+                        difficulty = difficulty,
+                        onGameRecorded = gameRecordsViewModel::record,
+                        timeControlMinutes =
+                            settingsViewModel.uiState.settings.gameDurationMinutes,
+                        autoContinueEnabled =
+                            settingsViewModel.uiState.settings.autoContinueEnabled,
+                        autoContinueGameLimit =
+                            settingsViewModel.uiState.settings.autoContinueGameLimit,
+                        initialPositionState = initialPosition,
+                        sessionVariantId = sessionVariant,
+                        engineFactory = {
+                            NativeChineseChessEngine(
+                                pikafishNetworkProvider::requireNetworkPath,
+                            )
+                        },
+                    )
+                }
+                val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
+                ChineseChessGameSoundEffect(
+                    gameViewModel,
+                    settingsViewModel.uiState.settings.soundEnabled,
+                )
+                ChineseChessGameScreen(
+                    state = gameViewModel.uiState,
+                    onSquareTap = gameViewModel::onSquareTap,
+                    onUndo = gameViewModel::undo,
+                    onHint = gameViewModel::requestHint,
+                    onResign = gameViewModel::resign,
+                    onDraw = gameViewModel::offerOrAcceptDraw,
+                    onToggleAutoPlay = gameViewModel::toggleAutoPlayPaused,
+                    onAutoPlaySpeedChange = gameViewModel::setAutoPlaySpeed,
+                    onAutoPlaySpeedChangeFinished = gameViewModel::persistAutoPlaySpeed,
+                    onRestart = gameViewModel::restart,
+                    onBack = navController::popBackStack,
+                    onSettings = {
+                        navController.navigate(AppDestination.SETTINGS) {
+                            launchSingleTop = true
+                        }
                     },
                 )
             }
@@ -1913,6 +2039,11 @@ private fun gameStatusText(state: ChineseChessGameUiState): String =
 
 @Composable
 private fun gameModeTitle(state: ChineseChessGameUiState): String {
+    if (state.isOpeningAutoPlay) {
+        return stringResource(
+            R.string.opening_auto_play_mode,
+        ) + " · " + difficultyTitle(requireNotNull(state.difficulty))
+    }
     if (state.isAssessmentChallenge) {
         return stringResource(
             R.string.assessment_challenge_ai_game,

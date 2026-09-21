@@ -124,6 +124,18 @@ class AppNavigationScreenTest {
     }
 
     @Test
+    fun chineseChessExtensionsCanOpenOpeningTraining() {
+        composeRule.setContent {
+            MasterOfChessStrategyApp()
+        }
+
+        composeRule.onNodeWithTag(HOME_CHINESE_CHESS_TAG).performClick()
+        composeRule.onNodeWithTag(MODE_EXTENSIONS_TAG).performClick()
+        composeRule.onNodeWithTag(OPENING_TRAINING_ENTRY_TAG).performClick()
+        composeRule.onNodeWithTag(OPENING_TRAINING_SCREEN_TAG).assertExists()
+    }
+
+    @Test
     fun homeExposesQuickStartOnlyWhenHistoryExists() {
         var quickStarts = 0
         composeRule.setContent {

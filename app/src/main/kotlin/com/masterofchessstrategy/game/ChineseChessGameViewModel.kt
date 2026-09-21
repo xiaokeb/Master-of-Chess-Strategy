@@ -122,8 +122,12 @@ class ChineseChessGameViewModel internal constructor(
             mode == StoredGameMode.BLIND_CHALLENGE ||
             mode == StoredGameMode.ASSESSMENT_CHALLENGE
     private val isAiGame =
-        isHumanControlledAiGame || mode == StoredGameMode.AI_AUTO_PLAY
-    private val isAutoPlay = mode == StoredGameMode.AI_AUTO_PLAY
+        isHumanControlledAiGame ||
+            mode == StoredGameMode.AI_AUTO_PLAY ||
+            mode == StoredGameMode.OPENING_AUTO_PLAY
+    private val isAutoPlay =
+        mode == StoredGameMode.AI_AUTO_PLAY ||
+            mode == StoredGameMode.OPENING_AUTO_PLAY
     private val assistancePolicy: ChineseChessAssistancePolicy
         get() = ChineseChessAssistancePolicy.resolve(mode, difficulty)
 
@@ -149,6 +153,7 @@ class ChineseChessGameViewModel internal constructor(
             assessmentLosses = initialAssessmentState?.losses ?: 0,
             assessmentNextDifficulty = initialAssessmentState?.nextDifficulty,
             assessmentFinished = initialAssessmentState?.isFinished ?: false,
+            isOpeningAutoPlay = mode == StoredGameMode.OPENING_AUTO_PLAY,
             endgameTitle = endgameTitle,
             endgameMaxPlayerMoves = endgameMaxPlayerMoves,
         ),
@@ -210,6 +215,16 @@ class ChineseChessGameViewModel internal constructor(
                             )
                         )
             ) { "Custom-position mode requires a versioned initial position" }
+            require(
+                mode != StoredGameMode.OPENING_AUTO_PLAY ||
+                    (
+                        this.initialPositionState != null &&
+                            sessionVariantId ==
+                            CustomPositionStateCodec.sessionVariant(
+                                this.initialPositionState,
+                            )
+                        )
+            ) { "Opening auto-play requires a versioned initial position" }
             require(
                 if (mode == StoredGameMode.TIMED_CHALLENGE) {
                     initialTimeControlMinutes == null &&
@@ -417,7 +432,7 @@ class ChineseChessGameViewModel internal constructor(
         if (!isAutoPlay || !uiState.isEngineAvailable) return
         if (autoPlayPaused && uiState.result != GameResult.ONGOING) {
             runEngineOperation {
-                activeEngine.reset()
+                resetPosition(activeEngine)
                 autoPlayPaused = false
                 resetSessionState(resetAutoGameCount = false)
                 refresh(ChineseChessFeedback.AUTO_PLAY_RESUMED)
@@ -890,6 +905,7 @@ class ChineseChessGameViewModel internal constructor(
                 assessmentLosses = assessmentState?.losses ?: 0,
                 assessmentNextDifficulty = assessmentState?.nextDifficulty,
                 assessmentFinished = assessmentState?.isFinished ?: false,
+                isOpeningAutoPlay = mode == StoredGameMode.OPENING_AUTO_PLAY,
                 endgameTitle = endgameTitle,
                 endgamePlayerMovesUsed = endgamePlayerMoveCount(),
                 endgameMaxPlayerMoves = endgameMaxPlayerMoves,
@@ -1382,7 +1398,7 @@ class ChineseChessGameViewModel internal constructor(
                 return@launch
             }
             automationJob = null
-            activeEngine.reset()
+            resetPosition(activeEngine)
             resetSessionState(resetAutoGameCount = false)
             refresh(ChineseChessFeedback.GAME_RESTARTED)
             persistCurrentSession()

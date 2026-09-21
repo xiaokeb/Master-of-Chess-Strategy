@@ -739,6 +739,41 @@ class ChineseChessAiGameViewModelTest {
         }
 
     @Test
+    fun openingAutoPlayRestartsFromItsVersionedInitialPosition() = runTest(dispatcher) {
+        val engine = FakeAiEngine(humanMoveResult = GameResult.FIRST_PLAYER_WIN)
+        val repository = RecordingSessionRepository()
+        val records = mutableListOf<GameRecord>()
+        val initial = byteArrayOf(9)
+        val variant = CustomPositionStateCodec.sessionVariant(initial)
+        val viewModel = ChineseChessGameViewModel(
+            sessionRepository = repository,
+            mode = StoredGameMode.OPENING_AUTO_PLAY,
+            difficulty = Difficulty.MEDIUM,
+            aiDispatcher = dispatcher,
+            initialPositionState = initial,
+            sessionVariantId = variant,
+            onGameRecorded = records::add,
+            engineFactory = { engine },
+        )
+
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.isOpeningAutoPlay)
+        assertTrue(viewModel.uiState.isAutoPlay)
+        assertEquals(GameResult.FIRST_PLAYER_WIN, viewModel.uiState.result)
+        assertEquals(StoredGameMode.OPENING_AUTO_PLAY, records.single().mode)
+        assertEquals(variant, repository.saved.last().sessionVariantId)
+        assertEquals(1, engine.restoreCalls)
+        assertEquals(0, engine.resetCalls)
+
+        viewModel.toggleAutoPlayPaused()
+        advanceUntilIdle()
+
+        assertTrue(engine.restoreCalls >= 2)
+        assertEquals(0, engine.resetCalls)
+    }
+
+    @Test
     fun endgameCheckmateRecordsPlayerVictoryWithoutAiReply() = runTest(dispatcher) {
         val engine = FakeAiEngine(humanMoveResult = GameResult.FIRST_PLAYER_WIN)
         val records = mutableListOf<GameRecord>()
@@ -813,6 +848,8 @@ class ChineseChessAiGameViewModelTest {
             private set
         var resetCalls = 0
             private set
+        var restoreCalls = 0
+            private set
 
         override val currentPlayer: PlayerId
             get() = player
@@ -875,7 +912,21 @@ class ChineseChessAiGameViewModelTest {
 
         override fun serialize(): ByteArray = byteArrayOf(history.size.toByte())
 
-        override fun restore(data: ByteArray): RestoreResult = RestoreResult.Restored
+        override fun restore(data: ByteArray): RestoreResult {
+            restoreCalls++
+            history.clear()
+            pieces.clear()
+            pieces[redFrom] = ChineseChessPiece(
+                ChineseChessPieceType.CHARIOT,
+                ChineseChessSide.RED,
+            )
+            pieces[blackFrom] = ChineseChessPiece(
+                ChineseChessPieceType.CHARIOT,
+                ChineseChessSide.BLACK,
+            )
+            player = PlayerId(ChineseChessSide.RED.code)
+            return RestoreResult.Restored
+        }
 
         override fun pieceAt(position: BoardPosition): ChineseChessPiece? = pieces[position]
 

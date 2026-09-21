@@ -20,6 +20,7 @@ internal enum class StoredGameMode(val code: Int) {
     STREAK_CHALLENGE(7),
     BLIND_CHALLENGE(8),
     ASSESSMENT_CHALLENGE(9),
+    OPENING_AUTO_PLAY(10),
 }
 
 internal data class GameSessionSnapshot(
@@ -240,7 +241,9 @@ internal class RoomGameSessionRepository(
 internal fun StoredGameMode.acceptsSessionVariant(variantId: String): Boolean =
     when (this) {
         StoredGameMode.ENDGAME -> variantId.isNotBlank()
-        StoredGameMode.CUSTOM_POSITION -> try {
+        StoredGameMode.CUSTOM_POSITION,
+        StoredGameMode.OPENING_AUTO_PLAY,
+        -> try {
             CustomPositionStateCodec.decodeSessionVariant(variantId)
             true
         } catch (_: IllegalArgumentException) {
@@ -278,6 +281,7 @@ internal fun StoredGameMode.acceptsSessionDifficulty(difficulty: Difficulty?): B
         StoredGameMode.STREAK_CHALLENGE,
         StoredGameMode.BLIND_CHALLENGE,
         StoredGameMode.ASSESSMENT_CHALLENGE,
+        StoredGameMode.OPENING_AUTO_PLAY,
         -> difficulty != null
         StoredGameMode.TUTORIAL -> false
     }

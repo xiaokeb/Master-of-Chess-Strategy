@@ -85,6 +85,7 @@ internal class RoomLastSelectionRepository(
             StoredGameMode.STREAK_CHALLENGE,
             StoredGameMode.BLIND_CHALLENGE,
             StoredGameMode.ASSESSMENT_CHALLENGE,
+            StoredGameMode.OPENING_AUTO_PLAY,
             -> true
 
             StoredGameMode.CUSTOM_POSITION -> difficulty != null

@@ -256,6 +256,35 @@ class LocalDataBackupCodecTest {
         )
     }
 
+    @Test
+    fun openingAutoPlayRoundTripsItsCanonicalInitialPosition() {
+        val initial = byteArrayOf(1, 2, 3)
+        val source = LocalDataSnapshot(
+            createdAtEpochMillis = 1L,
+            activeSessions = listOf(
+                GameSessionSnapshot(
+                    gameType = GameType.CHINESE_CHESS,
+                    mode = StoredGameMode.OPENING_AUTO_PLAY,
+                    difficulty = Difficulty.MEDIUM,
+                    engineState = byteArrayOf(7),
+                    updatedAtEpochMillis = 2L,
+                    sessionId = "opening-auto-1",
+                    sessionVariantId = CustomPositionStateCodec.sessionVariant(initial),
+                ),
+            ),
+        )
+
+        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+
+        assertEquals(StoredGameMode.OPENING_AUTO_PLAY, restored.activeSessions.single().mode)
+        assertEquals(
+            initial.toList(),
+            CustomPositionStateCodec.decodeSessionVariant(
+                restored.activeSessions.single().sessionVariantId,
+            ).toList(),
+        )
+    }
+
     private fun completeSnapshot(): LocalDataSnapshot = LocalDataSnapshot(
         createdAtEpochMillis = 900L,
         activeSessions = listOf(

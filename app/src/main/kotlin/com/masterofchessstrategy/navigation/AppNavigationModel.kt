@@ -40,6 +40,12 @@ internal object AppDestination {
     const val CHINESE_CHESS_ASSESSMENT_GAME =
         "chinese-chess/extensions/assessment/{$ASSESSMENT_DIFFICULTY_ARGUMENT}/" +
             "{$ASSESSMENT_STATE_ARGUMENT}"
+    const val CHINESE_CHESS_OPENINGS = "chinese-chess/extensions/openings"
+    const val OPENING_DIFFICULTY_ARGUMENT = "openingDifficultyCode"
+    const val OPENING_POSITION_ARGUMENT = "openingPosition"
+    const val CHINESE_CHESS_OPENING_AUTO_PLAY =
+        "chinese-chess/extensions/openings/auto/{$OPENING_DIFFICULTY_ARGUMENT}/" +
+            "{$OPENING_POSITION_ARGUMENT}"
     const val CHINESE_CHESS_CUSTOM_SETUP = "chinese-chess/extensions/custom/setup"
     const val CUSTOM_DIFFICULTY_ARGUMENT = "customDifficultyCode"
     const val CUSTOM_POSITION_ARGUMENT = "customPosition"
@@ -102,6 +108,13 @@ internal object AppDestination {
     ): String =
         "chinese-chess/extensions/assessment/${difficulty.code}/" +
             AssessmentChallengeStateCodec.encode(state)
+
+    fun chineseChessOpeningAutoPlay(
+        difficulty: Difficulty,
+        position: ByteArray,
+    ): String =
+        "chinese-chess/extensions/openings/auto/${difficulty.code}/" +
+            CustomPositionStateCodec.encode(position)
 }
 
 /** Five first-level cards required by the product layout. */
