@@ -15,6 +15,8 @@
 2. 根目录 LICENSE、NOTICE.md、Pikafish Copying.txt、AUTHORS 和 UPSTREAM.md 保持完整。
 3. 应用设置中的“开源许可与法律边界”可打开，并能查看版权、无担保、GPL 全文、源码地址和 NNUE 条款。
 4. Gradle 的 verifyBundledLegalDocuments 与 verifyPikafishNetwork 均通过。
+   verifyReleasedGameContent 也必须通过；新增残局和定式内容需在机器清单中
+   登记哈希、许可证及来源证据，外部素材不能标为项目原创。
 5. 修改 Pikafish 时更新 third_party/pikafish/UPSTREAM.md，写明修改内容和日期，并按 GPL 同步提供源码。
 6. 不得把当前 NNUE 权重用于收费应用、广告变现、订阅、商业服务或其他商业场景，除非已取得权利人的书面许可并保存可审计凭证。
 7. 若无法取得 NNUE 商业许可，必须在商业发布前移除该权重，或替换为许可证和网络结构均兼容的权重，并重新完成棋力与哈希测试。

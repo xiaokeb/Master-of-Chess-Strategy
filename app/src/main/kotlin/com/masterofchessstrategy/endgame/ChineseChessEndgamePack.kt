@@ -79,9 +79,10 @@ internal object ChineseChessEndgamePackParser {
             .map(String::trim)
             .filter { it.isNotEmpty() && !it.startsWith('#') }
             .toList()
-        require(lines.firstOrNull() == "MOCS-XQ-ENDGAMES|${ChineseChessEndgamePack.CURRENT_VERSION}")
-        val license = lines.singleField("LICENSE")
-        val author = lines.singleField("AUTHOR")
+        require(lines.size >= 4)
+        require(lines[0] == "MOCS-XQ-ENDGAMES|${ChineseChessEndgamePack.CURRENT_VERSION}")
+        val license = lines[1].headerField("LICENSE")
+        val author = lines[2].headerField("AUTHOR")
         val levels = mutableListOf<ChineseChessEndgameLevel>()
         var builder: LevelBuilder? = null
         lines.drop(3).forEach { line ->
@@ -107,6 +108,7 @@ internal object ChineseChessEndgamePackParser {
                 "PIECE" -> {
                     require(fields.size == 5)
                     val active = requireNotNull(builder)
+                    require(active.moves.isEmpty()) { "Pieces must precede moves" }
                     active.pieces += PositionedChineseChessPiece(
                         position = BoardPosition(
                             fields[1].boundedInt(0, 8),
@@ -130,7 +132,8 @@ internal object ChineseChessEndgamePackParser {
                     builder = null
                 }
 
-                "MOCS-XQ-ENDGAMES", "LICENSE", "AUTHOR" -> Unit
+                "MOCS-XQ-ENDGAMES", "LICENSE", "AUTHOR" ->
+                    error("Pack headers must appear exactly once at the start")
                 else -> error("Unknown endgame pack record")
             }
         }
@@ -143,11 +146,8 @@ internal object ChineseChessEndgamePackParser {
         )
     }
 
-    private fun List<String>.singleField(name: String): String {
-        val matches = filter { it.startsWith("$name|") }
-        require(matches.size == 1)
-        return matches.single().substringAfter('|').boundedText()
-    }
+    private fun String.headerField(name: String): String =
+        split('|').also { require(it.size == 2 && it[0] == name) }[1].boundedText()
 
     private fun String.boundedText(): String =
         trim().also { require(it.isNotBlank() && it.length <= MAX_TEXT_LENGTH && '|' !in it) }

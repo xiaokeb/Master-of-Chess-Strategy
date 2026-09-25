@@ -54,6 +54,23 @@ class ChineseChessEndgamePackTest {
     }
 
     @Test
+    fun headerOrderAndPieceBeforeMoveOrderAreRequired() {
+        val swappedHeader = VALID_PACK.replace(
+            "LICENSE|GPL-3.0-or-later\nAUTHOR|Test Author",
+            "AUTHOR|Test Author\nLICENSE|GPL-3.0-or-later",
+        )
+        val repeatedHeader = VALID_PACK + "MOCS-XQ-ENDGAMES|4\n"
+        val latePiece = VALID_PACK.replace(
+            "PIECE|3|1|RED|CHARIOT\nMOVE|3|1|4|1",
+            "MOVE|3|1|4|1\nPIECE|3|1|RED|CHARIOT",
+        )
+
+        listOf(swappedHeader, repeatedHeader, latePiece).forEach {
+            assertTrue(runCatching { ChineseChessEndgamePackParser.parse(it) }.isFailure)
+        }
+    }
+
+    @Test
     fun bundledPackParsesEveryDifficultyAndUsesProjectLicense() {
         val content = File("src/main/assets/endgames/chinese_chess/endgames-v4.txt")
             .readText(Charsets.UTF_8)

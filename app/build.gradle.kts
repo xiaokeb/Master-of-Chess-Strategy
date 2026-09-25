@@ -114,10 +114,68 @@ val verifyBundledLegalDocuments = tasks.register("verifyBundledLegalDocuments") 
     }
 }
 
+val verifyReleasedGameContent = tasks.register("verifyReleasedGameContent") {
+    val releaseContentManifest = rootProject.file("content/manifests/release-content-v1.tsv")
+    val releaseContentRoot = rootProject.projectDir
+    val endgameAssets = layout.projectDirectory.dir("src/main/assets/endgames").asFile
+    val openingSource = layout.projectDirectory.file(
+        "src/main/kotlin/com/masterofchessstrategy/opening/ChineseChessOpeningLibrary.kt",
+    ).asFile
+    inputs.file(releaseContentManifest)
+    inputs.dir(endgameAssets)
+    inputs.file(openingSource)
+    doLast {
+        val openingPath = openingSource.relativeTo(releaseContentRoot).invariantSeparatorsPath
+        val expectedPaths = endgameAssets.walkTopDown()
+            .filter { it.isFile }
+            .map { it.relativeTo(releaseContentRoot).invariantSeparatorsPath }
+            .toSet() + openingPath
+        val listedPaths = mutableSetOf<String>()
+        releaseContentManifest.readLines(Charsets.UTF_8).forEachIndexed { index, raw ->
+            val line = raw.trim()
+            if (line.isEmpty() || line.startsWith('#')) return@forEachIndexed
+            val fields = line.split('|')
+            check(fields.size == 5) { "Invalid content manifest row ${index + 1}" }
+            val (path, hash, license, origin, evidence) = fields
+            check(path == openingPath || path.startsWith("app/src/main/assets/endgames/")) {
+                "Content manifest path is outside the published game content scope"
+            }
+            check(path !in listedPaths && ".." !in path && '\\' !in path) {
+                "Duplicate or unsafe content manifest path: $path"
+            }
+            check(hash.matches(Regex("[0-9a-f]{64}"))) {
+                "Invalid SHA-256 for released game content: $path"
+            }
+            check(license == "GPL-3.0-or-later" && origin == "project-authored") {
+                "External game content requires a separate reviewed license and release gate"
+            }
+            check(evidence.startsWith("content/manifests/") && ".." !in evidence) {
+                "Missing provenance evidence for released game content: $path"
+            }
+            val sourceFile = releaseContentRoot.resolve(path)
+            val evidenceFile = releaseContentRoot.resolve(evidence)
+            check(sourceFile.isFile && evidenceFile.isFile) {
+                "Released game content or its provenance evidence is missing: $path"
+            }
+            val actualHash = MessageDigest.getInstance("SHA-256")
+                .digest(sourceFile.readBytes())
+                .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+            check(actualHash == hash) {
+                "Released game content differs from its reviewed manifest: $path"
+            }
+            listedPaths += path
+        }
+        check(listedPaths == expectedPaths) {
+            "Published endgame or opening content is missing from the release manifest"
+        }
+    }
+}
+
 tasks.named("preBuild").configure {
     dependsOn(verifyPikafishNetwork)
     dependsOn(verifyGameSounds)
     dependsOn(verifyBundledLegalDocuments)
+    dependsOn(verifyReleasedGameContent)
 }
 
 android {
