@@ -180,6 +180,9 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    // Room 2.8.5 migration serializers require GeneratedSerializer's JVM
+    // default method, which is absent from the older transitive 1.7.3 core.
+    implementation(libs.kotlinx.serialization.core)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
@@ -190,6 +193,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     ksp(libs.androidx.room.compiler)
     androidTestImplementation(libs.androidx.room.testing)
+    androidTestImplementation(libs.kotlinx.serialization.json)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

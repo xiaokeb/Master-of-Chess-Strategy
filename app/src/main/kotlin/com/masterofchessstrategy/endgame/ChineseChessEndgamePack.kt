@@ -33,6 +33,8 @@ internal data class ChineseChessEndgamePack(
     val author: String,
     val levels: List<ChineseChessEndgameLevel>,
 ) {
+    fun sessionVariantId(levelId: String): String = "$levelId@v$version"
+
     init {
         require(version == CURRENT_VERSION)
         require(license == REQUIRED_LICENSE)
@@ -50,7 +52,7 @@ internal data class ChineseChessEndgamePack(
     }
 
     companion object {
-        const val CURRENT_VERSION = 1
+        const val CURRENT_VERSION = 2
         const val REQUIRED_LICENSE = "GPL-3.0-or-later"
     }
 }
@@ -67,7 +69,7 @@ internal object ChineseChessEndgamePackParser {
             .map(String::trim)
             .filter { it.isNotEmpty() && !it.startsWith('#') }
             .toList()
-        require(lines.firstOrNull() == "MOCS-XQ-ENDGAMES|1")
+        require(lines.firstOrNull() == "MOCS-XQ-ENDGAMES|2")
         val license = lines.singleField("LICENSE")
         val author = lines.singleField("AUTHOR")
         val levels = mutableListOf<ChineseChessEndgameLevel>()
@@ -197,7 +199,7 @@ internal object ChineseChessEndgamePackParser {
         }
     }
 
-    private const val ASSET_PATH = "endgames/chinese_chess/endgames-v1.txt"
+    private const val ASSET_PATH = "endgames/chinese_chess/endgames-v2.txt"
     private const val MAX_PACK_BYTES = 2 * 1024 * 1024
     private const val MAX_LEVELS_PER_CHAPTER = 3_000
     private const val MAX_PLAYER_MOVES = 100

@@ -1052,6 +1052,8 @@ ChineseChessEngine::chase_targets(
                         continue;
                     }
 
+                    // A mutual same-kind capture is an invitation to
+                    // exchange, not a chase when taking it loses no material.
                     if (
                         moving->type == target->type &&
                         is_legal_capture(
@@ -1438,15 +1440,16 @@ std::optional<GameResult> ChineseChessEngine::adjudicate_2020_cycle(
         bool all_check{true};
         bool all_attack{true};
         bool only_chase{true};
-        bool saw_chase{false};
-        std::bitset<board_size> common_chase{};
-        std::bitset<board_size> common_direct{};
-        std::bitset<board_size> common_joint{};
+        bool all_chase_direct{true};
+        bool all_chase_joint{true};
+        std::bitset<board_size> direct_chased{};
+        std::bitset<board_size> joint_chased{};
 
         [[nodiscard]] bool prohibited() const noexcept {
-            return found &&
-                all_attack &&
-                (!saw_chase || common_chase.any());
+            // Rule 24.11 explicitly allows a long chase to alternate among
+            // several pieces. Exact position repetition already bounds the
+            // target set, so every attacking move need not share one ID.
+            return found && all_attack;
         }
     };
 
@@ -1540,28 +1543,34 @@ std::optional<GameResult> ChineseChessEngine::adjudicate_2020_cycle(
         profile.found = true;
         if (analysis.check) {
             profile.only_chase = false;
+            profile.all_chase_direct = false;
+            profile.all_chase_joint = false;
             continue;
         }
         profile.all_check = false;
         if (analysis.kill) {
             profile.only_chase = false;
+            profile.all_chase_direct = false;
+            profile.all_chase_joint = false;
             continue;
         }
         if (chase_targets_for_move.none()) {
             profile.all_attack = false;
             profile.only_chase = false;
+            profile.all_chase_direct = false;
+            profile.all_chase_joint = false;
             continue;
         }
-        if (!profile.saw_chase) {
-            profile.common_chase = chase_targets_for_move;
-            profile.common_direct = direct_targets;
-            profile.common_joint = joint_targets;
-            profile.saw_chase = true;
-        } else {
-            profile.common_chase &= chase_targets_for_move;
-            profile.common_direct &= direct_targets;
-            profile.common_joint &= joint_targets;
-        }
+        profile.all_chase_direct =
+            profile.all_chase_direct &&
+            direct_targets.any() &&
+            joint_targets.none();
+        profile.all_chase_joint =
+            profile.all_chase_joint &&
+            joint_targets.any() &&
+            direct_targets.none();
+        profile.direct_chased |= direct_targets;
+        profile.joint_chased |= joint_targets;
     }
 
     const auto& red = profiles[static_cast<std::size_t>(Side::red)];
@@ -1613,27 +1622,29 @@ std::optional<GameResult> ChineseChessEngine::adjudicate_2020_cycle(
         return false;
     };
     const auto red_direct_over_joint =
-        red.only_chase && black.only_chase &&
+        red.only_chase && red.all_chase_direct &&
+        black.only_chase && black.all_chase_joint &&
         (
             (
-                has_type(red.common_direct, PieceType::chariot) &&
-                has_type(black.common_joint, PieceType::chariot)
+                has_type(red.direct_chased, PieceType::chariot) &&
+                has_type(black.joint_chased, PieceType::chariot)
             ) ||
             (
-                has_non_chariot(red.common_direct) &&
-                has_non_chariot(black.common_joint)
+                has_non_chariot(red.direct_chased) &&
+                has_non_chariot(black.joint_chased)
             )
         );
     const auto black_direct_over_joint =
-        red.only_chase && black.only_chase &&
+        black.only_chase && black.all_chase_direct &&
+        red.only_chase && red.all_chase_joint &&
         (
             (
-                has_type(black.common_direct, PieceType::chariot) &&
-                has_type(red.common_joint, PieceType::chariot)
+                has_type(black.direct_chased, PieceType::chariot) &&
+                has_type(red.joint_chased, PieceType::chariot)
             ) ||
             (
-                has_non_chariot(black.common_direct) &&
-                has_non_chariot(red.common_joint)
+                has_non_chariot(black.direct_chased) &&
+                has_non_chariot(red.joint_chased)
             )
         );
     if (red_direct_over_joint != black_direct_over_joint) {

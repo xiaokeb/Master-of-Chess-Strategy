@@ -1138,7 +1138,7 @@ fun MasterOfChessStrategyApp() {
                         mode = StoredGameMode.ENDGAME,
                         difficulty = level.difficulty,
                         initialPositionState = level.initialEngineState,
-                        sessionVariantId = level.id,
+                        sessionVariantId = endgamePack.sessionVariantId(level.id),
                         endgameTitle = level.title,
                         endgameMaxPlayerMoves = level.maxPlayerMoves,
                         onGameRecorded = { record ->

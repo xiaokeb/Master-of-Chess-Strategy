@@ -26,4 +26,4 @@
 
 - 演示数据位于 Debug 源集，只用于设计验收，不写入数据库，也不进入 Release APK。
 - Preview 复用正式 Composable，不复制页面实现。
-- 当前 SDK 没有系统镜像，且 ADB 无连接设备，因此这里只能预览界面；真实点击、JNI 和性能测试需连接设备或先在 SDK Manager 安装一个 x86_64 系统镜像并创建 AVD。
+- SDK 已安装 API 37.1 x86_64 镜像和 Pixel_7_Pro AVD。Preview 用于静态设计验收；真实点击、JNI 与性能测试可在该 AVD 运行，音效最终仍需实体设备试听。

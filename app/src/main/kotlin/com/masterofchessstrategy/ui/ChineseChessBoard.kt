@@ -108,6 +108,8 @@ internal fun ChineseChessBoard(
                 }
             },
     ) {
+        // During navigation Compose can draw a zero-sized transitional canvas.
+        if (size.width <= 0f || size.height <= 0f) return@Canvas
         val geometry = calculateBoardGeometry(size.width, size.height)
         val cell = geometry.cellSize
         val origin = geometry.origin

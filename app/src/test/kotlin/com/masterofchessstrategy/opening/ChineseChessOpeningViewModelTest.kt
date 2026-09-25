@@ -47,7 +47,7 @@ class ChineseChessOpeningViewModelTest {
         assertEquals(3, lines.size)
         assertEquals(lines.size, lines.map { it.id }.distinct().size)
         assertTrue(lines.all { it.steps.size == 4 })
-        assertEquals(1, ChineseChessOpeningLibrary.CONTENT_VERSION)
+        assertEquals(2, ChineseChessOpeningLibrary.CONTENT_VERSION)
     }
 
     @Test

@@ -13,7 +13,8 @@ class ChineseChessEndgamePackTest {
     fun validPackParsesMetadataLevelsPiecesAndMoves() {
         val pack = ChineseChessEndgamePackParser.parse(VALID_PACK)
 
-        assertEquals(1, pack.version)
+        assertEquals(2, pack.version)
+        assertEquals("xq-easy-001@v2", pack.sessionVariantId("xq-easy-001"))
         assertEquals("GPL-3.0-or-later", pack.license)
         assertEquals(1, pack.levels.size)
         val level = pack.levels.single()
@@ -45,7 +46,7 @@ class ChineseChessEndgamePackTest {
 
     @Test
     fun bundledPackParsesEveryDifficultyAndUsesProjectLicense() {
-        val content = File("src/main/assets/endgames/chinese_chess/endgames-v1.txt")
+        val content = File("src/main/assets/endgames/chinese_chess/endgames-v2.txt")
             .readText(Charsets.UTF_8)
 
         val pack = ChineseChessEndgamePackParser.parse(content)
@@ -64,7 +65,7 @@ PIECE|3|1|RED|CHARIOT
 MOVE|3|1|4|1
 END
 """
-        const val VALID_PACK = """MOCS-XQ-ENDGAMES|1
+        const val VALID_PACK = """MOCS-XQ-ENDGAMES|2
 LICENSE|GPL-3.0-or-later
 AUTHOR|Test Author
 $VALID_LEVEL"""

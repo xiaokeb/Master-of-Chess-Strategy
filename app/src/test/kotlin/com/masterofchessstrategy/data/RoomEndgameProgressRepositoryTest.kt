@@ -54,6 +54,31 @@ class RoomEndgameProgressRepositoryTest {
         assertSame(LoadEndgameProgressResult.Incompatible, repository.load())
     }
 
+    @Test
+    fun versionOneCompletionRemainsValidWithVersionTwoPack() = runBlocking {
+        val dao = FakeEndgameProgressDao().apply {
+            entities["xq-easy-001"] = EndgameProgressEntity(
+                levelId = "xq-easy-001",
+                contentVersion = 1,
+                difficultyCode = 0,
+                bestPlayerMoves = 1,
+                starsAwarded = 2,
+                scoreAwarded = 25,
+                completedAtEpochMillis = 42L,
+            )
+        }
+        val repository = RoomEndgameProgressRepository(
+            dao,
+            ChineseChessEndgamePackParser.parse(PACK),
+        )
+
+        val loaded = repository.load() as LoadEndgameProgressResult.Loaded
+
+        assertEquals(1, loaded.progress.completedById.size)
+        assertEquals(2, loaded.progress.totalStars)
+        assertEquals(25, loaded.progress.totalScore)
+    }
+
     private class FakeEndgameProgressDao : EndgameProgressDao {
         val entities = linkedMapOf<String, EndgameProgressEntity>()
 
@@ -78,7 +103,7 @@ class RoomEndgameProgressRepositoryTest {
     }
 
     private companion object {
-        const val PACK = """MOCS-XQ-ENDGAMES|1
+        const val PACK = """MOCS-XQ-ENDGAMES|2
 LICENSE|GPL-3.0-or-later
 AUTHOR|Test Author
 LEVEL|xq-easy-001|0|1|训练|一步杀|RED|2|2|25|3

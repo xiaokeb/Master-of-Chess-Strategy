@@ -18,7 +18,7 @@
 | Room / KSP | 2.8.5 / 2.3.12 |
 | Coroutines Test | 1.11.0 |
 
-本机尚未发现 Android 设备或 AVD。设备集成测试先保证可编译，获得设备后再执行，不得将未执行的测试标记为通过。
+2026-09-25 已确认 API 37.1 x86_64 系统镜像和 Pixel_7_Pro AVD。可启动模拟器执行仪器测试；实体设备音频和性能结果仍需另行验收。
 
 本机未安装 cmdline-tools/latest/bin/apkanalyzer。当前使用 E:\Backend_Env\SDK\build-tools\36.0.0\aapt.exe 检查 APK 权限；该工具已确认 Debug APK 不包含 android.permission.INTERNET。
 
@@ -31,7 +31,7 @@ x86_64。该上游版本固定使用 128 位整数棋盘，不能为 Android 32 
 目标生成完整功能库；历史节点记录的四 ABI 结果仍代表接入前的规则
 引擎状态。
 
-已验证 aarch64-linux-android24-clang++ 能生成 Android ARM64 目标。NDK 的通用 clang++ 不提供 Windows 宿主链接环境，因此在设备或 AVD 可用前，原生测试只验证 Android 目标的编译与链接，运行状态必须标记为“因设备条件未执行”。
+已验证 aarch64-linux-android24-clang++ 能生成 Android ARM64 目标。NDK 的通用 clang++ 不提供 Windows 宿主链接环境；x86_64 原生测试目标可由 NDK 编译后在 AVD 执行，ARM64 目标继续仅验证编译和链接。
 
 当前 PATH 未解析到 clang++、cmake、ninja 或 g++，不存在隐式工具链覆盖。Gradle 通过 local.properties 定位 Android SDK，通过 ndkVersion 锁定 NDK；手工原生验证使用上述 SDK 内 CMake、Ninja 和 NDK toolchain 的绝对路径。local.properties 与机器绝对路径不提交到构建源码。
 
@@ -45,10 +45,10 @@ Node.js 24.14.0 已安装。当前工程底座没有 Node 运行时或构建依�
 
 ## 验证原则
 
-开发中运行受影响模块的测试。每个大节点结束后统一运行 C++ Android 目标编译、Android 单元测试、Lint 和 Debug 构建；设备可用后再执行原生运行测试，避免重复执行相同的全量检查。
+开发中运行受影响模块的测试。每个大节点结束后统一运行 C++ Android 目标编译、Android 单元测试、Lint、Debug 构建与 AVD 集成测试；避免重复执行相同的全量检查。
 
 常用门禁：
 
 1. 原生目标：使用 SDK CMake 配置 .build/native-android，指定 NDK android.toolchain.cmake、arm64-v8a、android-24 和 MOCS_BUILD_TESTS=ON，再执行 cmake --build。
 2. Android：运行 gradlew :engine-api:testDebugUnitTest :engine-native:testDebugUnitTest :app:testDebugUnitTest lintDebug assembleDebug。
-3. 设备测试：设备或 AVD 可用后运行 gradlew :engine-native:connectedDebugAndroidTest。
+3. 设备测试：启动 Pixel_7_Pro AVD 后运行 gradlew :app:connectedDebugAndroidTest :engine-native:connectedDebugAndroidTest。

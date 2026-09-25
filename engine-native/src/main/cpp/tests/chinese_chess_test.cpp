@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <vector>
 
 namespace {
@@ -226,13 +227,18 @@ void corrupted_positions_are_rejected() {
 }
 
 void bundled_seed_endgames_are_checkmate_in_one() {
-    const auto verify = [](
+    std::size_t seed_index = 0;
+    const auto verify = [&seed_index](
         const std::vector<PositionedPiece>& pieces
     ) {
+        ++seed_index;
         ChineseChessEngine engine;
         assert(engine.restore(custom_position(Side::red, pieces)).restored);
         assert(engine.game_result() == GameResult::ongoing);
         assert(engine.apply(make_board_move(3, 1, 4, 1)).accepted);
+        if (engine.game_result() != GameResult::first_player_win) {
+            std::fprintf(stderr, "Endgame seed %zu is not mate in one\n", seed_index);
+        }
         assert(engine.game_result() == GameResult::first_player_win);
     };
 
@@ -242,7 +248,8 @@ void bundled_seed_endgames_are_checkmate_in_one() {
         {4, 5, {PieceType::soldier, Side::red}},
         {3, 1, {PieceType::chariot, Side::red}},
         {0, 1, {PieceType::chariot, Side::red}},
-        {4, 2, {PieceType::horse, Side::red}},
+        {2, 2, {PieceType::horse, Side::red}},
+        {6, 2, {PieceType::horse, Side::red}},
     });
     verify({
         {4, 9, {PieceType::general, Side::red}},
@@ -250,7 +257,8 @@ void bundled_seed_endgames_are_checkmate_in_one() {
         {4, 5, {PieceType::soldier, Side::red}},
         {3, 1, {PieceType::chariot, Side::red}},
         {0, 1, {PieceType::chariot, Side::red}},
-        {4, 2, {PieceType::horse, Side::red}},
+        {2, 2, {PieceType::horse, Side::red}},
+        {6, 2, {PieceType::horse, Side::red}},
         {0, 3, {PieceType::soldier, Side::black}},
         {2, 3, {PieceType::soldier, Side::black}},
         {6, 3, {PieceType::soldier, Side::black}},
@@ -284,7 +292,8 @@ void bundled_seed_endgames_are_checkmate_in_one() {
         {4, 5, {PieceType::soldier, Side::red}},
         {3, 1, {PieceType::chariot, Side::red}},
         {0, 1, {PieceType::chariot, Side::red}},
-        {4, 2, {PieceType::horse, Side::red}},
+        {2, 2, {PieceType::horse, Side::red}},
+        {6, 2, {PieceType::horse, Side::red}},
         {2, 0, {PieceType::elephant, Side::black}},
         {6, 0, {PieceType::elephant, Side::black}},
         {1, 2, {PieceType::cannon, Side::black}},
@@ -378,12 +387,11 @@ void repeated_joint_chase_loses_against_idle_defense() {
                 {
                     {4, 9, {PieceType::general, Side::red}},
                     {4, 0, {PieceType::general, Side::black}},
+                    {4, 8, {PieceType::advisor, Side::red}},
+                    {0, 5, {PieceType::chariot, Side::red}},
                     {3, 5, {PieceType::cannon, Side::red}},
-                    {4, 7, {PieceType::horse, Side::red}},
                     {4, 3, {PieceType::horse, Side::black}},
-                    {5, 1, {PieceType::cannon, Side::black}},
-                    {3, 3, {PieceType::soldier, Side::black}},
-                    {5, 3, {PieceType::soldier, Side::black}},
+                    {5, 1, {PieceType::chariot, Side::black}},
                 }
             )
         ).restored
@@ -397,6 +405,66 @@ void repeated_joint_chase_loses_against_idle_defense() {
     }
 
     assert(engine.game_result() == GameResult::first_player_win);
+}
+
+void repeated_alternating_multi_target_chase_loses() {
+    ChineseChessEngine engine;
+    assert(
+        engine.restore(
+            custom_position(
+                Side::red,
+                {
+                    {4, 9, {PieceType::general, Side::red}},
+                    {4, 0, {PieceType::general, Side::black}},
+                    {4, 5, {PieceType::soldier, Side::red}},
+                    {0, 2, {PieceType::chariot, Side::red}},
+                    {8, 5, {PieceType::chariot, Side::red}},
+                    {3, 1, {PieceType::cannon, Side::black}},
+                    {5, 4, {PieceType::cannon, Side::black}},
+                }
+            )
+        ).restored
+    );
+
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        assert(engine.apply(make_board_move(0, 2, 0, 1)).accepted);
+        assert(engine.apply(make_board_move(3, 1, 3, 2)).accepted);
+        assert(engine.apply(make_board_move(8, 5, 8, 4)).accepted);
+        assert(engine.apply(make_board_move(5, 4, 5, 5)).accepted);
+        assert(engine.apply(make_board_move(0, 1, 0, 2)).accepted);
+        assert(engine.apply(make_board_move(3, 2, 3, 1)).accepted);
+        assert(engine.apply(make_board_move(8, 4, 8, 5)).accepted);
+        assert(engine.apply(make_board_move(5, 5, 5, 4)).accepted);
+    }
+
+    assert(engine.game_result() == GameResult::second_player_win);
+}
+
+void repeated_equal_exchange_is_drawn() {
+    ChineseChessEngine engine;
+    assert(
+        engine.restore(
+            custom_position(
+                Side::red,
+                {
+                    {4, 9, {PieceType::general, Side::red}},
+                    {4, 0, {PieceType::general, Side::black}},
+                    {4, 5, {PieceType::soldier, Side::red}},
+                    {0, 2, {PieceType::chariot, Side::red}},
+                    {3, 1, {PieceType::chariot, Side::black}},
+                }
+            )
+        ).restored
+    );
+
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        assert(engine.apply(make_board_move(0, 2, 0, 1)).accepted);
+        assert(engine.apply(make_board_move(3, 1, 3, 2)).accepted);
+        assert(engine.apply(make_board_move(0, 1, 0, 2)).accepted);
+        assert(engine.apply(make_board_move(3, 2, 3, 1)).accepted);
+    }
+
+    assert(engine.game_result() == GameResult::draw);
 }
 
 void repeated_idle_moves_are_drawn_instead_of_treated_as_long_block() {
@@ -534,6 +602,8 @@ int main() {
     repeated_long_check_loses_for_the_checking_side();
     repeated_unrooted_chase_loses_for_the_chasing_side();
     repeated_joint_chase_loses_against_idle_defense();
+    repeated_alternating_multi_target_chase_loses();
+    repeated_equal_exchange_is_drawn();
     repeated_idle_moves_are_drawn_instead_of_treated_as_long_block();
     sixty_rounds_without_capture_reaches_the_natural_limit();
     capture_resets_the_natural_limit_counter();

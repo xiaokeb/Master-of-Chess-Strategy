@@ -4,6 +4,7 @@
 
 #include "attacks.h"
 #include "engine.h"
+#include "misc.h"
 #include "position.h"
 #include "search.h"
 #include "uci.h"
@@ -51,6 +52,9 @@ public:
         }
 
         Stockfish::Search::LimitsType limits;
+        // Direct Engine::go callers must set the clock origin themselves;
+        // UCI normally does this, but LimitsType leaves startTime unset.
+        limits.startTime = Stockfish::now();
         limits.movetime = pikafish_move_time_millis;
         engine_->go(limits);
         engine_->wait_for_search_finished();

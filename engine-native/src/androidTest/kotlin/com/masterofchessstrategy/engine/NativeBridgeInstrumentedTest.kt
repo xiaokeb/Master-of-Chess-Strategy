@@ -74,12 +74,11 @@ class NativeBridgeInstrumentedTest {
                     pieces = listOf(
                         PositionedPiece(4, 9, ChineseChessPieceType.GENERAL, ChineseChessSide.RED),
                         PositionedPiece(4, 0, ChineseChessPieceType.GENERAL, ChineseChessSide.BLACK),
+                        PositionedPiece(4, 8, ChineseChessPieceType.ADVISOR, ChineseChessSide.RED),
+                        PositionedPiece(0, 5, ChineseChessPieceType.CHARIOT, ChineseChessSide.RED),
                         PositionedPiece(3, 5, ChineseChessPieceType.CANNON, ChineseChessSide.RED),
-                        PositionedPiece(4, 7, ChineseChessPieceType.HORSE, ChineseChessSide.RED),
                         PositionedPiece(4, 3, ChineseChessPieceType.HORSE, ChineseChessSide.BLACK),
-                        PositionedPiece(5, 1, ChineseChessPieceType.CANNON, ChineseChessSide.BLACK),
-                        PositionedPiece(3, 3, ChineseChessPieceType.SOLDIER, ChineseChessSide.BLACK),
-                        PositionedPiece(5, 3, ChineseChessPieceType.SOLDIER, ChineseChessSide.BLACK),
+                        PositionedPiece(5, 1, ChineseChessPieceType.CHARIOT, ChineseChessSide.BLACK),
                     ),
                 ),
             )

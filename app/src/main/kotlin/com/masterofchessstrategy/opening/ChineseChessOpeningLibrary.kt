@@ -29,7 +29,7 @@ internal data class ChineseChessOpeningLine(
 
 /** Project-authored seed library; every line is revalidated by the live rule engine. */
 internal object ChineseChessOpeningLibrary {
-    const val CONTENT_VERSION = 1
+    const val CONTENT_VERSION = 2
 
     val lines: List<ChineseChessOpeningLine> = listOf(
         ChineseChessOpeningLine(
@@ -39,7 +39,7 @@ internal object ChineseChessOpeningLibrary {
             steps = listOf(
                 step(7, 7, 4, 7, "炮二平五", "红方右炮横移中路，直接形成中炮架势。"),
                 step(7, 0, 6, 2, "马8进7", "黑方右马发展到河口方向，保护中卒并控制要点。"),
-                step(8, 9, 7, 7, "马二进三", "炮已离位，红方右马顺势发展并协同中炮。"),
+                step(7, 9, 6, 7, "马二进三", "炮已离位，红方右马顺势发展并协同中炮。"),
                 step(8, 0, 7, 0, "车9平8", "黑车沿底线占据开放肋道，为后续出车做准备。"),
             ),
         ),
