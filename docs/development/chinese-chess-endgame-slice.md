@@ -20,8 +20,8 @@
 内置 v4 为项目自编的 10 关功能种子包，覆盖四档难度并用于验证完整业务链，
 不冒充最终 9000+ 内容库。种子包声明 GPL-3.0-or-later，未复制外部棋谱注释
 或来源不明的残局数据。未来扩充必须按
-`config/schemas/chinese-chess-endgame-pack-v4.md` 保存内容格式；
-`content/manifests/chinese-chess-endgames-v4.md` 保存逐批许可证据。
+`config/schemas/chinese-chess-endgame-pack-v5.md` 保存当前内容格式；
+`content/manifests/chinese-chess-endgames-v5.md` 保存逐批许可证据。
 
 残局对局仍通过同一个中国象棋规则引擎验证合法着；大师难度继续调用已固定
 版本的 Pikafish 和 NNUE。Pikafish 程序、对应源码、GPL 文本、修改记录及

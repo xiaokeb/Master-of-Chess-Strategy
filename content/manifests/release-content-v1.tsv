@@ -1,3 +1,3 @@
 # path|sha256|license|origin|evidence
-app/src/main/assets/endgames/chinese_chess/endgames-v4.txt|4daf52e6b0bd4721f3a888535de42dd482fbe9e410c51c663ad920aa684cb803|GPL-3.0-or-later|project-authored|content/manifests/chinese-chess-endgames-v4.md
+app/src/main/assets/endgames/chinese_chess/endgames-v5.txt|c651394d69d0bf55db4c2df709f67e2335a9af16dcf1e56dd10ad6eb33a2d20b|GPL-3.0-or-later|project-authored|content/manifests/chinese-chess-endgames-v5.md
 app/src/main/kotlin/com/masterofchessstrategy/opening/ChineseChessOpeningLibrary.kt|02fbcba7ecbe185f02a6524efd396e701fae2228beca19dcc468788cfcd1114d|GPL-3.0-or-later|project-authored|content/manifests/chinese-chess-opening-v3.md

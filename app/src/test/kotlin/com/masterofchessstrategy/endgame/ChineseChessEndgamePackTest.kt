@@ -13,8 +13,8 @@ class ChineseChessEndgamePackTest {
     fun validPackParsesMetadataLevelsPiecesAndMoves() {
         val pack = ChineseChessEndgamePackParser.parse(VALID_PACK)
 
-        assertEquals(4, pack.version)
-        assertEquals("xq-easy-001@v4", pack.sessionVariantId("xq-easy-001"))
+        assertEquals(5, pack.version)
+        assertEquals("xq-easy-001@v5", pack.sessionVariantId("xq-easy-001"))
         assertEquals("GPL-3.0-or-later", pack.license)
         assertEquals(1, pack.levels.size)
         val level = pack.levels.single()
@@ -59,7 +59,7 @@ class ChineseChessEndgamePackTest {
             "LICENSE|GPL-3.0-or-later\nAUTHOR|Test Author",
             "AUTHOR|Test Author\nLICENSE|GPL-3.0-or-later",
         )
-        val repeatedHeader = VALID_PACK + "MOCS-XQ-ENDGAMES|4\n"
+        val repeatedHeader = VALID_PACK + "MOCS-XQ-ENDGAMES|5\n"
         val latePiece = VALID_PACK.replace(
             "PIECE|3|1|RED|CHARIOT\nMOVE|3|1|4|1",
             "MOVE|3|1|4|1\nPIECE|3|1|RED|CHARIOT",
@@ -72,18 +72,18 @@ class ChineseChessEndgamePackTest {
 
     @Test
     fun bundledPackParsesEveryDifficultyAndUsesProjectLicense() {
-        val content = File("src/main/assets/endgames/chinese_chess/endgames-v4.txt")
+        val content = File("src/main/assets/endgames/chinese_chess/endgames-v5.txt")
             .readText(Charsets.UTF_8)
 
         val pack = ChineseChessEndgamePackParser.parse(content)
 
         assertEquals("GPL-3.0-or-later", pack.license)
         assertEquals(Difficulty.entries.toSet(), pack.levels.map { it.difficulty }.toSet())
-        assertEquals(10, pack.levels.size)
-        assertEquals(5, pack.levels.count { it.theme == "唯一一步杀" })
+        assertEquals(14, pack.levels.size)
+        assertEquals(9, pack.levels.count { it.theme == "唯一一步杀" })
         assertEquals(5, pack.levels.count { it.theme == "多解胜局" })
         assertEquals(5, pack.levels.count { it.track == ChineseChessEndgameTrack.MAIN })
-        assertEquals(5, pack.levels.count { it.track == ChineseChessEndgameTrack.BONUS })
+        assertEquals(9, pack.levels.count { it.track == ChineseChessEndgameTrack.BONUS })
         assertTrue(pack.levels.all { it.principalVariation.isNotEmpty() })
     }
 
@@ -151,7 +151,7 @@ PIECE|3|1|RED|CHARIOT
 MOVE|3|1|4|1
 END
 """
-        const val VALID_PACK = """MOCS-XQ-ENDGAMES|4
+        const val VALID_PACK = """MOCS-XQ-ENDGAMES|5
 LICENSE|GPL-3.0-or-later
 AUTHOR|Test Author
 $VALID_LEVEL"""

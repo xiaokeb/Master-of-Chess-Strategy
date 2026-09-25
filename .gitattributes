@@ -9,6 +9,7 @@
 *.properties text eol=lf
 *.toml text eol=lf
 *.xml text eol=lf
+app/src/main/assets/endgames/chinese_chess/*.txt text eol=lf
 CMakeLists.txt text eol=lf
 gradlew text eol=lf
 

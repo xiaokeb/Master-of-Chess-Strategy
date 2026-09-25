@@ -15,7 +15,7 @@ from pathlib import Path
 import re
 
 
-PACK_HEADER = "MOCS-XQ-ENDGAMES|4"
+PACK_HEADER = "MOCS-XQ-ENDGAMES|5"
 REQUIRED_LICENSE = "GPL-3.0-or-later"
 DIFFICULTIES = ("easy", "medium", "hard", "master")
 PIECE_TYPES = {"GENERAL", "ADVISOR", "ELEPHANT", "HORSE", "CHARIOT", "CANNON", "SOLDIER"}
@@ -77,7 +77,7 @@ def parse_pack(content: str) -> tuple[str, list[Level]]:
         if line.strip() and not line.lstrip().startswith("#")
     ]
     if len(lines) < 4 or lines[0][1] != PACK_HEADER:
-        raise AuditError("expected v4 pack header")
+        raise AuditError("expected v5 pack header")
     if lines[1][1] != f"LICENSE|{REQUIRED_LICENSE}":
         raise AuditError("pack license is missing or incompatible")
     if not lines[2][1].startswith("AUTHOR|") or len(lines[2][1].split("|")) != 2:
@@ -265,7 +265,7 @@ def audit(content: str) -> dict[str, object]:
 
 def main() -> int:
     repository = Path(__file__).resolve().parents[2]
-    default_pack = repository / "app/src/main/assets/endgames/chinese_chess/endgames-v4.txt"
+    default_pack = repository / "app/src/main/assets/endgames/chinese_chess/endgames-v5.txt"
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pack", type=Path, default=default_pack)
     args = parser.parse_args()

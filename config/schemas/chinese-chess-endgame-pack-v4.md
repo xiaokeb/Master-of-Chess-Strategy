@@ -1,6 +1,6 @@
 # 中国象棋残局包格式 v4
 
-状态：当前发布格式。发布资源为 `app/src/main/assets/endgames/chinese_chess/endgames-v4.txt`，UTF-8，最大 2 MiB。
+状态：历史格式。发布资源曾为 `app/src/main/assets/endgames/chinese_chess/endgames-v4.txt`，UTF-8，最大 2 MiB。
 
 ## 记录与解锁
 

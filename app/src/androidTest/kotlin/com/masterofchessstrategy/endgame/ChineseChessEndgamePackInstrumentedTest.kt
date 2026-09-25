@@ -46,7 +46,7 @@ class ChineseChessEndgamePackInstrumentedTest {
         val pack = ChineseChessEndgamePackParser.loadBundled(assets)
 
         val uniqueLevels = pack.levels.filter { it.theme == "唯一一步杀" }
-        assertEquals(5, uniqueLevels.size)
+        assertEquals(9, uniqueLevels.size)
         uniqueLevels.forEach { level ->
             NativeChineseChessEngine().use { engine ->
                 assertTrue(

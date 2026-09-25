@@ -62,7 +62,7 @@ internal data class ChineseChessEndgamePack(
     }
 
     companion object {
-        const val CURRENT_VERSION = 4
+        const val CURRENT_VERSION = 5
         const val REQUIRED_LICENSE = "GPL-3.0-or-later"
     }
 }
@@ -287,7 +287,7 @@ internal object ChineseChessEndgamePackParser {
         }
     }
 
-    private const val ASSET_PATH = "endgames/chinese_chess/endgames-v4.txt"
+    private const val ASSET_PATH = "endgames/chinese_chess/endgames-v5.txt"
     private const val MAX_PACK_BYTES = 2 * 1024 * 1024
     private const val MAX_LEVELS_PER_CHAPTER = 3_000
     private const val MAX_PLAYER_MOVES = 100

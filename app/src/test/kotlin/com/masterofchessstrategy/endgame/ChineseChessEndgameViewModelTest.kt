@@ -151,7 +151,7 @@ class ChineseChessEndgameViewModelTest {
 }
 
 private fun testPack(): ChineseChessEndgamePack = ChineseChessEndgamePack(
-    version = 4,
+    version = 5,
     license = "GPL-3.0-or-later",
     author = "Test",
     levels = listOf(

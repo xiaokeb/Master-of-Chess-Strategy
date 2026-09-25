@@ -15,7 +15,7 @@ PIECE|3|1|RED|CHARIOT
 MOVE|3|1|4|1
 END
 """
-PACK = """MOCS-XQ-ENDGAMES|4
+PACK = """MOCS-XQ-ENDGAMES|5
 LICENSE|GPL-3.0-or-later
 AUTHOR|Project contributors
 """ + LEVEL
@@ -24,13 +24,13 @@ AUTHOR|Project contributors
 class ChineseChessEndgameAuditTest(unittest.TestCase):
     def test_bundled_content_has_unique_boards_and_stable_index(self) -> None:
         repository = Path(__file__).resolve().parents[2]
-        pack = repository / "app/src/main/assets/endgames/chinese_chess/endgames-v4.txt"
+        pack = repository / "app/src/main/assets/endgames/chinese_chess/endgames-v5.txt"
         source = pack.read_bytes()
         report = audit(source.decode("utf-8"))
 
-        self.assertEqual(10, report["level_count"])
-        self.assertEqual({"BONUS": 5, "MAIN": 5}, report["by_track"])
-        self.assertEqual(10, len(report["index"]))
+        self.assertEqual(14, report["level_count"])
+        self.assertEqual({"BONUS": 9, "MAIN": 5}, report["by_track"])
+        self.assertEqual(14, len(report["index"]))
         self.assertEqual("xq-easy-001", report["index"][0]["id"])
         self.assertEqual(hashlib.sha256(source).hexdigest(), report["source_sha256"])
         self.assertEqual(report, audit(source.decode("utf-8")))
@@ -101,7 +101,7 @@ class ChineseChessEndgameAuditTest(unittest.TestCase):
     def test_missing_license_and_wrong_version_are_rejected(self) -> None:
         for malformed in (
             PACK.replace("GPL-3.0-or-later", "UNKNOWN"),
-            PACK.replace("MOCS-XQ-ENDGAMES|4", "MOCS-XQ-ENDGAMES|3"),
+            PACK.replace("MOCS-XQ-ENDGAMES|5", "MOCS-XQ-ENDGAMES|3"),
         ):
             with self.subTest(malformed=malformed.splitlines()[0]):
                 with self.assertRaises(AuditError):

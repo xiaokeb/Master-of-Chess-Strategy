@@ -55,8 +55,8 @@ class RoomEndgameProgressRepositoryTest {
     }
 
     @Test
-    fun oldCompletionsRemainValidWithVersionFourPack() = runBlocking {
-        for (contentVersion in 1..3) {
+    fun oldCompletionsRemainValidWithVersionFivePack() = runBlocking {
+        for (contentVersion in 1..4) {
             val dao = FakeEndgameProgressDao().apply {
                 entities["xq-easy-001"] = EndgameProgressEntity(
                     levelId = "xq-easy-001",
@@ -105,7 +105,7 @@ class RoomEndgameProgressRepositoryTest {
     }
 
     private companion object {
-        const val PACK = """MOCS-XQ-ENDGAMES|4
+        const val PACK = """MOCS-XQ-ENDGAMES|5
 LICENSE|GPL-3.0-or-later
 AUTHOR|Test Author
 LEVEL|xq-easy-001|0|1|训练|一步杀|RED|2|2|25|4|MAIN
