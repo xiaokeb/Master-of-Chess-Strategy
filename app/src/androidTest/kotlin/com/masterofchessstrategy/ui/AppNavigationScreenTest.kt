@@ -1,5 +1,8 @@
 package com.masterofchessstrategy.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -11,6 +14,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.unit.dp
 import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.data.HighlightCondition
 import com.masterofchessstrategy.navigation.HomeGameEntry
@@ -25,6 +29,25 @@ import org.junit.Test
 class AppNavigationScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    fun narrowHomeCanScrollToSettingsWithoutNestedScrollConflict() {
+        var settingsOpened = false
+        composeRule.setContent {
+            Box(androidx.compose.ui.Modifier.width(600.dp).height(400.dp)) {
+                HomeScreen(
+                    onGameSelected = {},
+                    quickStartEntries = emptySet(),
+                    onQuickStart = {},
+                    onSettings = { settingsOpened = true },
+                    onRecords = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(HOME_SETTINGS_TAG).performScrollTo().performClick()
+        composeRule.runOnIdle { assertEquals(true, settingsOpened) }
+    }
 
     @Test
     fun homeCanOpenModesAndDifficultyRulesWithoutCreatingGame() {
@@ -203,7 +226,7 @@ class AppNavigationScreenTest {
             MasterOfChessStrategyApp()
         }
 
-        composeRule.onNodeWithTag(HOME_SETTINGS_TAG).performClick()
+        composeRule.onNodeWithTag(HOME_SETTINGS_TAG).performScrollTo().performClick()
         composeRule.onNodeWithTag(SETTINGS_SCREEN_TAG).assertExists()
     }
 
@@ -328,7 +351,7 @@ class AppNavigationScreenTest {
             MasterOfChessStrategyApp()
         }
 
-        composeRule.onNodeWithTag(HOME_SETTINGS_TAG).performClick()
+        composeRule.onNodeWithTag(HOME_SETTINGS_TAG).performScrollTo().performClick()
         composeRule.onNodeWithTag(SETTINGS_LICENSES_TAG).performScrollTo().performClick()
         composeRule.onNodeWithTag(OPEN_SOURCE_LICENSES_SCREEN_TAG).assertExists()
         composeRule.onNodeWithText("本软件不提供任何担保", substring = true).assertExists()

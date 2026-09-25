@@ -48,7 +48,7 @@
 - JVM 单元测试：202 个通过，0 失败、0 错误、0 跳过。
 - NDK：Clang 21，C++17，Android ARM64 目标编译链接通过；x86_64 C++ 象棋规则目标在 AVD 运行通过，包含自然限着与将死同时发生时的胜负优先回归。
 - Gradle NDK：arm64-v8a、x86_64 两个正式 64 位 ABI 构建通过。
-- Android：Pixel_7_Pro AVD 上 App 49/49、engine-native JNI 4/4；App Lint 0 错误、3 条依赖升级提醒；Debug APK 构建通过。Conda 内容审核 9/9。
+- Android：Pixel_7_Pro AVD 上 App 50/50、engine-native JNI 4/4；App Lint 0 错误、3 条依赖升级提醒；Debug APK 构建通过。Conda 内容审核 9/9。
 - 离线边界：Debug APK 不包含 android.permission.INTERNET。
 - 大师资产：NNUE 大小和 SHA-256 构建校验通过，APK 同时包含权重、许可文本和两套完整原生引擎库。
 

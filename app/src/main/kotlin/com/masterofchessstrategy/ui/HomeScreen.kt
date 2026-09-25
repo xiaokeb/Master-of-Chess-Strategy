@@ -1,11 +1,14 @@
 package com.masterofchessstrategy.ui
 
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
@@ -69,7 +72,8 @@ internal fun HomeScreen(
                         onSettings = onSettings,
                         onRecords = onRecords,
                         onProfile = onProfile,
-                        modifier = Modifier.weight(0.4f),
+                        scrollContent = true,
+                        modifier = Modifier.weight(0.4f).fillMaxHeight(),
                     )
                     GameCatalog(
                         onGameSelected = onGameSelected,
@@ -80,7 +84,7 @@ internal fun HomeScreen(
                 }
             } else {
                 Column(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     PlayerSummaryCard(
@@ -88,6 +92,7 @@ internal fun HomeScreen(
                         onSettings = onSettings,
                         onRecords = onRecords,
                         onProfile = onProfile,
+                        scrollContent = false,
                         modifier = Modifier.fillMaxWidth(),
                     )
                     GameCatalog(
@@ -108,11 +113,17 @@ private fun PlayerSummaryCard(
     onSettings: () -> Unit,
     onRecords: () -> Unit,
     onProfile: () -> Unit,
+    scrollContent: Boolean,
     modifier: Modifier,
 ) {
+    val contentModifier = if (scrollContent) {
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp)
+    } else {
+        Modifier.padding(24.dp)
+    }
     Card(modifier = modifier) {
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = contentModifier,
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(
