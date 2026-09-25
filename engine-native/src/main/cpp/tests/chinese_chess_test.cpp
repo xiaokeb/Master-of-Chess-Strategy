@@ -241,6 +241,25 @@ void impossible_saved_history_is_rejected_even_with_valid_checksum() {
     assert(wrong_clock_result.error == EngineError::corrupted_data);
 }
 
+void saved_adjudication_is_derived_from_history() {
+    ChineseChessEngine engine;
+    for (int moves = 0; moves < 2; ++moves) {
+        if (moves == 1) {
+            assert(engine.apply(make_board_move(0, 6, 0, 5)).accepted);
+        }
+        auto data = engine.serialize();
+        data[9] = static_cast<std::uint8_t>(GameResult::draw);
+        data.resize(data.size() - 4);
+        append_u32(data, crc32(data, data.size()));
+
+        ChineseChessEngine restored;
+        assert(restored.restore(data).restored);
+        assert(restored.game_result() == GameResult::ongoing);
+        assert(restored.serialize()[9] ==
+            static_cast<std::uint8_t>(GameResult::ongoing));
+    }
+}
+
 void corrupted_positions_are_rejected() {
     ChineseChessEngine engine;
     auto data = engine.serialize();
@@ -693,6 +712,7 @@ int main() {
     moving_the_only_screen_between_generals_is_illegal();
     undo_and_serialization_restore_state();
     impossible_saved_history_is_rejected_even_with_valid_checksum();
+    saved_adjudication_is_derived_from_history();
     corrupted_positions_are_rejected();
     legacy_seed_endgames_have_a_winning_first_move();
     unique_seed_mates_are_checked_and_unambiguous();

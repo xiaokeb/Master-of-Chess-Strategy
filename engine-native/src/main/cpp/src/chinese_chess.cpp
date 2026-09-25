@@ -673,7 +673,10 @@ RestoreResult ChineseChessEngine::restore(
     history_ = std::move(restored_history);
     position_history_ = std::move(restored_positions);
     no_capture_plies_ = restored_no_capture_plies;
-    adjudicated_result_ = static_cast<GameResult>(data[9]);
+    // The saved outcome is not authoritative: replayed history and the
+    // current rules must decide it, including after a ruleset correction.
+    adjudicated_result_ = GameResult::ongoing;
+    adjudicate_history();
     return RestoreResult{true, EngineError::none};
 }
 
