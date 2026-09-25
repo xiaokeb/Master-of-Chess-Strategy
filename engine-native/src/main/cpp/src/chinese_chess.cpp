@@ -623,6 +623,51 @@ RestoreResult ChineseChessEngine::restore(
             PositionState{working_board, working_side};
     }
 
+    // A checksum detects accidental damage, not a self-consistent but
+    // impossible move list. Replay the reconstructed positions through the
+    // same legality gate used by live play before trusting imported history.
+    auto expected_no_capture_plies = history_size > 0
+        ? restored_history.front().previous_no_capture_plies
+        : restored_no_capture_plies;
+    for (std::size_t i = 0; i < history_size; ++i) {
+        const auto& move = restored_history[i];
+        const auto& before = restored_positions[i];
+        const auto& after = restored_positions[i + 1];
+        if (
+            before.side != move.previous_side ||
+            !has_general_on_board(before.board, Side::red) ||
+            !has_general_on_board(before.board, Side::black) ||
+            !before.board[index(move.from_x, move.from_y)] ||
+            !(*before.board[index(move.from_x, move.from_y)] == move.moved) ||
+            !(before.board[index(move.to_x, move.to_y)] == move.captured) ||
+            move.previous_no_capture_plies != expected_no_capture_plies ||
+            move.previous_adjudicated_result != GameResult::ongoing ||
+            !is_legal_move_on_board(
+                before.board,
+                move.previous_side,
+                move.from_x,
+                move.from_y,
+                move.to_x,
+                move.to_y
+            )
+        ) {
+            return RestoreResult{false, EngineError::corrupted_data};
+        }
+        expected_no_capture_plies = move.captured
+            ? 0
+            : static_cast<std::uint16_t>(expected_no_capture_plies + 1U);
+        if (
+            expected_no_capture_plies > natural_limit_plies ||
+            (expected_no_capture_plies == natural_limit_plies && i + 1 < history_size) ||
+            after.side != opposite(move.previous_side)
+        ) {
+            return RestoreResult{false, EngineError::corrupted_data};
+        }
+    }
+    if (expected_no_capture_plies != restored_no_capture_plies) {
+        return RestoreResult{false, EngineError::corrupted_data};
+    }
+
     board_ = restored;
     current_side_ = static_cast<Side>(data[6]);
     history_ = std::move(restored_history);

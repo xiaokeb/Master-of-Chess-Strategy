@@ -216,6 +216,31 @@ void undo_and_serialization_restore_state() {
     assert(engine.serialize() == initial);
 }
 
+void impossible_saved_history_is_rejected_even_with_valid_checksum() {
+    ChineseChessEngine engine;
+    assert(engine.apply(make_board_move(0, 6, 0, 5)).accepted);
+    auto data = engine.serialize();
+    constexpr std::size_t first_move_offset = 12 + 90;
+    // Reverse reconstruction remains structurally possible, but a soldier
+    // cannot move diagonally from (1, 6) to (0, 5).
+    data[first_move_offset] = 1;
+    data.resize(data.size() - 4);
+    append_u32(data, crc32(data, data.size()));
+
+    ChineseChessEngine restored;
+    const auto result = restored.restore(data);
+    assert(!result.restored);
+    assert(result.error == EngineError::corrupted_data);
+
+    auto wrong_clock = engine.serialize();
+    wrong_clock[7] = 2;  // One non-capture move cannot advance the clock twice.
+    wrong_clock.resize(wrong_clock.size() - 4);
+    append_u32(wrong_clock, crc32(wrong_clock, wrong_clock.size()));
+    const auto wrong_clock_result = restored.restore(wrong_clock);
+    assert(!wrong_clock_result.restored);
+    assert(wrong_clock_result.error == EngineError::corrupted_data);
+}
+
 void corrupted_positions_are_rejected() {
     ChineseChessEngine engine;
     auto data = engine.serialize();
@@ -667,6 +692,7 @@ int main() {
     horse_leg_and_cannon_screen_are_enforced();
     moving_the_only_screen_between_generals_is_illegal();
     undo_and_serialization_restore_state();
+    impossible_saved_history_is_rejected_even_with_valid_checksum();
     corrupted_positions_are_rejected();
     legacy_seed_endgames_have_a_winning_first_move();
     unique_seed_mates_are_checked_and_unambiguous();
