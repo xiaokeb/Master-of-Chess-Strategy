@@ -62,7 +62,7 @@ internal data class ChineseChessEndgamePack(
     }
 
     companion object {
-        const val CURRENT_VERSION = 3
+        const val CURRENT_VERSION = 4
         const val REQUIRED_LICENSE = "GPL-3.0-or-later"
     }
 }
@@ -199,6 +199,7 @@ internal object ChineseChessEndgamePackParser {
             require(moves.isNotEmpty() && moves.size <= maxPlayerMoves * 2 - 1)
             // Also validates duplicate squares, coordinates, and both generals.
             ChineseChessPositionCodec.encode(sideToMove, pieces)
+            validateReachablePlacement()
             return ChineseChessEndgameLevel(
                 id = id,
                 difficulty = difficulty,
@@ -214,9 +215,57 @@ internal object ChineseChessEndgamePackParser {
                 track = track,
             )
         }
+
+        private fun validateReachablePlacement() {
+            val red = ChineseChessSide.RED
+            val black = ChineseChessSide.BLACK
+            val limits = mapOf(
+                ChineseChessPieceType.GENERAL to 1,
+                ChineseChessPieceType.ADVISOR to 2,
+                ChineseChessPieceType.ELEPHANT to 2,
+                ChineseChessPieceType.HORSE to 2,
+                ChineseChessPieceType.CHARIOT to 2,
+                ChineseChessPieceType.CANNON to 2,
+                ChineseChessPieceType.SOLDIER to 5,
+            )
+            ChineseChessSide.entries.forEach { side ->
+                pieces.filter { it.piece.side == side }
+                    .groupingBy { it.piece.type }
+                    .eachCount()
+                    .forEach { (type, count) -> require(count <= requireNotNull(limits[type])) }
+            }
+            pieces.forEach { positioned ->
+                val (x, y) = positioned.position
+                val side = positioned.piece.side
+                val inPalace = x in 3..5 && y in if (side == red) 7..9 else 0..2
+                when (positioned.piece.type) {
+                    ChineseChessPieceType.GENERAL, ChineseChessPieceType.ADVISOR ->
+                        require(inPalace) { "General or advisor outside palace" }
+                    ChineseChessPieceType.ELEPHANT ->
+                        require(if (side == red) y >= 5 else y <= 4) {
+                            "Elephant crossed the river"
+                        }
+                    ChineseChessPieceType.SOLDIER ->
+                        require(if (side == red) y <= 6 else y >= 3) {
+                            "Soldier behind starting row"
+                        }
+                    else -> Unit
+                }
+            }
+            val redGeneral = pieces.single {
+                it.piece.side == red && it.piece.type == ChineseChessPieceType.GENERAL
+            }.position
+            val blackGeneral = pieces.single {
+                it.piece.side == black && it.piece.type == ChineseChessPieceType.GENERAL
+            }.position
+            require(redGeneral.x != blackGeneral.x || pieces.any {
+                it.position.x == redGeneral.x &&
+                    it.position.y in (blackGeneral.y + 1) until redGeneral.y
+            }) { "Generals face each other" }
+        }
     }
 
-    private const val ASSET_PATH = "endgames/chinese_chess/endgames-v3.txt"
+    private const val ASSET_PATH = "endgames/chinese_chess/endgames-v4.txt"
     private const val MAX_PACK_BYTES = 2 * 1024 * 1024
     private const val MAX_LEVELS_PER_CHAPTER = 3_000
     private const val MAX_PLAYER_MOVES = 100

@@ -658,7 +658,7 @@ void unique_seed_mates_are_checked_and_unambiguous() {
     for (int variant = 0; variant < 5; ++variant) {
         const auto rook_x = variant == 1 || variant == 3 ? 8 : 0;
         const auto rook_y = variant <= 1 ? 2 : variant <= 3 ? 3 : 4;
-        const auto soldier_y = variant <= 1 ? 5 : variant <= 3 ? 6 : 7;
+        const auto soldier_y = variant <= 1 ? 5 : 6;
         std::vector<PositionedPiece> pieces{
             {4, 9, {PieceType::general, Side::red}},
             {4, 0, {PieceType::general, Side::black}},
