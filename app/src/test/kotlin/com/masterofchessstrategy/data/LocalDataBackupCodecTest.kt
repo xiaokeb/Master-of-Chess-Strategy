@@ -42,7 +42,7 @@ class LocalDataBackupCodecTest {
             restored.gameRecords.single().engineState,
         )
         val text = encoded.toString(Charsets.UTF_8)
-        assertTrue(text.startsWith("MOCS-BACKUP|1\nCREATED|900\n"))
+        assertTrue(text.startsWith("MOCS-BACKUP|2\nCREATED|900\n"))
         assertTrue(text.substringAfterLast("SHA256|").trim().matches(Regex("[0-9a-f]{64}")))
         assertFalse('\r' in text)
     }
@@ -58,6 +58,28 @@ class LocalDataBackupCodecTest {
         val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
 
         assertEquals(4, restored.settings?.selectedAppearanceCode)
+    }
+
+    @Test
+    fun highlightConditionsRoundTripAndLegacyBackupDefaultsToOff() {
+        val settings = AppSettings.DEFAULT.copy(
+            highlightConditionsMask = HighlightCondition.COMEBACK.bit or
+                HighlightCondition.LONG_GAME.bit,
+            updatedAtEpochMillis = 2L,
+        )
+        val source = LocalDataSnapshot(createdAtEpochMillis = 1L, settings = settings)
+
+        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+        assertEquals(settings.highlightConditionsMask, restored.settings?.highlightConditionsMask)
+
+        val legacyBody = "MOCS-BACKUP|1\nCREATED|1\nSETTINGS|0|0|10|1|-|0|2\n"
+        val checksum = java.security.MessageDigest.getInstance("SHA-256")
+            .digest(legacyBody.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+        val legacy = (legacyBody + "SHA256|$checksum\n").toByteArray(Charsets.UTF_8)
+        val imported = LocalDataBackupCodec.decode(legacy)
+        assertEquals(0, imported.settings?.highlightConditionsMask)
+        assertEquals(2L, imported.settings?.updatedAtEpochMillis)
     }
 
     @Test

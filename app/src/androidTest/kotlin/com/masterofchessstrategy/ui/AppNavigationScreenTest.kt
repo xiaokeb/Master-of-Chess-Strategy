@@ -8,9 +8,11 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import com.masterofchessstrategy.data.AppSettings
+import com.masterofchessstrategy.data.HighlightCondition
 import com.masterofchessstrategy.navigation.HomeGameEntry
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.settings.AppSettingsUiState
@@ -239,6 +241,7 @@ class AppNavigationScreenTest {
                 onAutoContinue = {},
                 onAdjustAutoContinueLimit = {},
                 onSoundEnabled = { requestedSound = it },
+                onHighlightCondition = { _, _ -> },
                 onTimeLimitEnabled = {},
                 onAdjustDuration = {},
                 backupState = LocalDataBackupUiState(),
@@ -252,6 +255,36 @@ class AppNavigationScreenTest {
 
         composeRule.runOnIdle {
             assertFalse(requestedSound)
+        }
+    }
+
+    @Test
+    fun highlightConditionSwitchEmitsRequestedValue() {
+        var requested: Pair<HighlightCondition, Boolean>? = null
+        composeRule.setContent {
+            SettingsScreen(
+                state = AppSettingsUiState(settings = AppSettings.DEFAULT, isLoading = false),
+                onBack = {},
+                onDefaultDifficulty = {},
+                onAutoContinue = {},
+                onAdjustAutoContinueLimit = {},
+                onSoundEnabled = {},
+                onHighlightCondition = { condition, enabled ->
+                    requested = condition to enabled
+                },
+                onTimeLimitEnabled = {},
+                onAdjustDuration = {},
+                backupState = LocalDataBackupUiState(),
+                onExportData = {},
+                onRestoreData = {},
+                onOpenSourceLicenses = {},
+            )
+        }
+
+        composeRule.onNodeWithTag(SETTINGS_HIGHLIGHT_MASTER_TAG).performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(HighlightCondition.MASTER to true, requested)
         }
     }
 
@@ -270,6 +303,7 @@ class AppNavigationScreenTest {
                 onAutoContinue = {},
                 onAdjustAutoContinueLimit = {},
                 onSoundEnabled = {},
+                onHighlightCondition = { _, _ -> },
                 onTimeLimitEnabled = {},
                 onAdjustDuration = {},
                 backupState = LocalDataBackupUiState(),
@@ -279,8 +313,8 @@ class AppNavigationScreenTest {
             )
         }
 
-        composeRule.onNodeWithTag(SETTINGS_EXPORT_DATA_TAG).performClick()
-        composeRule.onNodeWithTag(SETTINGS_RESTORE_DATA_TAG).performClick()
+        composeRule.onNodeWithTag(SETTINGS_EXPORT_DATA_TAG).performScrollTo().performClick()
+        composeRule.onNodeWithTag(SETTINGS_RESTORE_DATA_TAG).performScrollTo().performClick()
 
         composeRule.runOnIdle {
             assertEquals(1, exportRequests)
@@ -295,7 +329,7 @@ class AppNavigationScreenTest {
         }
 
         composeRule.onNodeWithTag(HOME_SETTINGS_TAG).performClick()
-        composeRule.onNodeWithTag(SETTINGS_LICENSES_TAG).performClick()
+        composeRule.onNodeWithTag(SETTINGS_LICENSES_TAG).performScrollTo().performClick()
         composeRule.onNodeWithTag(OPEN_SOURCE_LICENSES_SCREEN_TAG).assertExists()
         composeRule.onNodeWithText("本软件不提供任何担保", substring = true).assertExists()
     }

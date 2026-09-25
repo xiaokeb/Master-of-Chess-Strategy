@@ -2,6 +2,12 @@ package com.masterofchessstrategy.data
 
 import com.masterofchessstrategy.engine.Difficulty
 
+internal enum class HighlightCondition(val bit: Int) {
+    COMEBACK(1),
+    MASTER(2),
+    LONG_GAME(4),
+}
+
 internal data class AppSettings(
     val defaultDifficulty: Difficulty,
     val autoContinueEnabled: Boolean,
@@ -9,6 +15,7 @@ internal data class AppSettings(
     val soundEnabled: Boolean,
     val gameDurationMinutes: Int?,
     val selectedAppearanceCode: Int = 0,
+    val highlightConditionsMask: Int = 0,
     val updatedAtEpochMillis: Long,
 ) {
     init {
@@ -21,12 +28,19 @@ internal data class AppSettings(
         require(selectedAppearanceCode in APPEARANCE_CODE_RANGE) {
             "Selected appearance code must identify one of the six appearances"
         }
+        require(highlightConditionsMask in 0..ALL_HIGHLIGHT_CONDITIONS) {
+            "Highlight conditions contain unsupported bits"
+        }
     }
+
+    fun highlights(condition: HighlightCondition): Boolean =
+        highlightConditionsMask and condition.bit != 0
 
     companion object {
         val DURATION_RANGE = 5..180
         val AUTO_CONTINUE_LIMIT_RANGE = 1..100
         val APPEARANCE_CODE_RANGE = 0..5
+        const val ALL_HIGHLIGHT_CONDITIONS = 7
 
         val DEFAULT = AppSettings(
             defaultDifficulty = Difficulty.EASY,
@@ -75,6 +89,9 @@ internal class RoomAppSettingsRepository(
         if (entity.selectedAppearanceCode !in AppSettings.APPEARANCE_CODE_RANGE) {
             return LoadAppSettingsResult.Incompatible
         }
+        if (entity.highlightConditionsMask !in 0..AppSettings.ALL_HIGHLIGHT_CONDITIONS) {
+            return LoadAppSettingsResult.Incompatible
+        }
         return LoadAppSettingsResult.Loaded(
             AppSettings(
                 defaultDifficulty = difficulty,
@@ -83,6 +100,7 @@ internal class RoomAppSettingsRepository(
                 soundEnabled = entity.soundEnabled,
                 gameDurationMinutes = duration,
                 selectedAppearanceCode = entity.selectedAppearanceCode,
+                highlightConditionsMask = entity.highlightConditionsMask,
                 updatedAtEpochMillis = entity.updatedAtEpochMillis,
             ),
         )
@@ -98,6 +116,7 @@ internal class RoomAppSettingsRepository(
                 soundEnabled = settings.soundEnabled,
                 gameDurationMinutes = settings.gameDurationMinutes,
                 selectedAppearanceCode = settings.selectedAppearanceCode,
+                highlightConditionsMask = settings.highlightConditionsMask,
                 updatedAtEpochMillis = settings.updatedAtEpochMillis,
             ),
         )

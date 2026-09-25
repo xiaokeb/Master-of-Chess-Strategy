@@ -199,8 +199,10 @@ fun MasterOfChessStrategyApp() {
         val statisticsViewModel: PlayerStatisticsViewModel = viewModel(
             factory = statisticsFactory,
         )
-        val gameRecordsFactory = remember(gameRecordRepository) {
-            GameRecordsViewModel.factory(gameRecordRepository)
+        val gameRecordsFactory = remember(gameRecordRepository, settingsViewModel) {
+            GameRecordsViewModel.factory(gameRecordRepository) {
+                settingsViewModel.uiState.settings.highlightConditionsMask
+            }
         }
         val gameRecordsViewModel: GameRecordsViewModel = viewModel(
             factory = gameRecordsFactory,
@@ -1403,6 +1405,7 @@ fun MasterOfChessStrategyApp() {
                     onAdjustAutoContinueLimit =
                         settingsViewModel::adjustAutoContinueLimit,
                     onSoundEnabled = settingsViewModel::setSoundEnabled,
+                    onHighlightCondition = settingsViewModel::setHighlightCondition,
                     onTimeLimitEnabled = settingsViewModel::setTimeLimitEnabled,
                     onAdjustDuration = settingsViewModel::adjustDuration,
                     backupState = backupViewModel.uiState,

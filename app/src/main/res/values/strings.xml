@@ -288,6 +288,14 @@
     <string name="auto_continue_limit_increase">增加 1 局</string>
     <string name="sound_title">音效</string>
     <string name="sound_summary">控制落子、吃子与胜负和音效。</string>
+    <string name="highlight_conditions_title">精彩局自动收藏</string>
+    <string name="highlight_conditions_summary">仅用于象棋 AI 自动演局；条件可单独开启，默认全关。命中任一条件时收藏已保存的棋谱。</string>
+    <string name="highlight_comeback_title">逆转局</string>
+    <string name="highlight_comeback_summary">获胜方曾因被吃子落后至少一车的子力分，再最终获胜；不使用引擎胜率评估。</string>
+    <string name="highlight_master_title">大师局</string>
+    <string name="highlight_master_summary">大师难度的自动演局结束后收藏。</string>
+    <string name="highlight_long_title">长局</string>
+    <string name="highlight_long_summary">自动演局达到 160 个有效半回合后收藏。</string>
     <string name="game_duration_title">对局时长</string>
     <string name="unlimited_duration">不限时</string>
     <string name="duration_minutes">%1$d 分钟</string>

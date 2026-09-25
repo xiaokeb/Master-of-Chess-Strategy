@@ -201,6 +201,7 @@ private fun SettingsScreenPreview() {
             onAutoContinue = {},
             onAdjustAutoContinueLimit = {},
             onSoundEnabled = {},
+            onHighlightCondition = { _, _ -> },
             onTimeLimitEnabled = {},
             onAdjustDuration = {},
             backupState = LocalDataBackupUiState(),

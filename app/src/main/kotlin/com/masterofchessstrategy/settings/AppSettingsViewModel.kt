@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.data.AppSettingsRepository
+import com.masterofchessstrategy.data.HighlightCondition
 import com.masterofchessstrategy.data.LoadAppSettingsResult
 import com.masterofchessstrategy.engine.Difficulty
 import kotlinx.coroutines.launch
@@ -64,6 +65,18 @@ internal class AppSettingsViewModel(
 
     fun setSoundEnabled(enabled: Boolean) {
         update { copy(soundEnabled = enabled) }
+    }
+
+    fun setHighlightCondition(condition: HighlightCondition, enabled: Boolean) {
+        update {
+            copy(
+                highlightConditionsMask = if (enabled) {
+                    highlightConditionsMask or condition.bit
+                } else {
+                    highlightConditionsMask and condition.bit.inv()
+                },
+            )
+        }
     }
 
     fun setSelectedAppearance(code: Int) {

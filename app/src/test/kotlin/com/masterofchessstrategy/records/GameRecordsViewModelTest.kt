@@ -3,6 +3,7 @@ package com.masterofchessstrategy.records
 import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.GameRecordCategory
 import com.masterofchessstrategy.data.GameRecordRepository
+import com.masterofchessstrategy.data.HighlightCondition
 import com.masterofchessstrategy.data.LoadGameRecordsResult
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.engine.Difficulty
@@ -65,6 +66,29 @@ class GameRecordsViewModelTest {
 
         assertEquals(1, viewModel.uiState.records.size)
         assertFalse(viewModel.uiState.isLoading)
+    }
+
+    @Test
+    fun configuredAutoPlayHighlightIsSavedAsFavoriteOnce() = runTest(dispatcher) {
+        val repository = FakeRepository()
+        val viewModel = GameRecordsViewModel(
+            repository,
+            highlightMaskProvider = { HighlightCondition.MASTER.bit },
+        )
+        testScheduler.advanceUntilIdle()
+        val master = record("master").copy(
+            mode = StoredGameMode.AI_AUTO_PLAY,
+            difficulty = Difficulty.MASTER,
+        )
+
+        viewModel.record(master)
+        viewModel.record(master)
+        testScheduler.advanceUntilIdle()
+        viewModel.selectCategory(GameRecordCategory.FAVORITES)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(listOf("master"), viewModel.uiState.records.map(GameRecord::recordId))
+        assertTrue(repository.load("master")!!.isFavorite)
     }
 
     private fun record(id: String, endgame: Boolean = false) =

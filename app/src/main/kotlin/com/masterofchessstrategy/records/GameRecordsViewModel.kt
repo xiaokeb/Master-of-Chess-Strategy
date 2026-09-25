@@ -29,6 +29,7 @@ internal data class GameRecordsUiState(
 
 internal class GameRecordsViewModel(
     private val repository: GameRecordRepository,
+    private val highlightMaskProvider: () -> Int = { 0 },
 ) : ViewModel() {
     var uiState by mutableStateOf(GameRecordsUiState())
         private set
@@ -40,7 +41,11 @@ internal class GameRecordsViewModel(
     fun record(record: GameRecord) {
         viewModelScope.launch {
             try {
-                repository.saveCompleted(record)
+                val autoFavorite = ChineseChessHighlightPolicy.matches(
+                    record,
+                    highlightMaskProvider(),
+                )
+                repository.saveCompleted(record.copy(isFavorite = record.isFavorite || autoFavorite))
                 load(uiState.category)
             } catch (_: RuntimeException) {
                 uiState = uiState.copy(feedback = GameRecordsFeedback.SAVE_FAILED)
@@ -99,9 +104,12 @@ internal class GameRecordsViewModel(
     }
 
     companion object {
-        fun factory(repository: GameRecordRepository): ViewModelProvider.Factory =
+        fun factory(
+            repository: GameRecordRepository,
+            highlightMaskProvider: () -> Int = { 0 },
+        ): ViewModelProvider.Factory =
             viewModelFactory {
-                initializer { GameRecordsViewModel(repository) }
+                initializer { GameRecordsViewModel(repository, highlightMaskProvider) }
             }
     }
 }

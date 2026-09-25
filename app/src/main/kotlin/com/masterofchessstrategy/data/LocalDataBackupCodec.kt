@@ -73,6 +73,7 @@ internal object LocalDataBackupCodec {
                         value.soundEnabled.encodeBoolean(),
                         value.gameDurationMinutes.encodeNullable(),
                         value.selectedAppearanceCode,
+                        value.highlightConditionsMask,
                         value.updatedAtEpochMillis,
                     ).joinToString("|"),
                 )
@@ -163,7 +164,11 @@ internal object LocalDataBackupCodec {
         }
         val lines = body.lineSequence().filter(String::isNotEmpty).toList()
         require(lines.size in 2..MAX_LINE_COUNT)
-        require(lines.first() == HEADER)
+        val backupVersion = when (lines.first()) {
+            HEADER -> 2
+            LEGACY_HEADER -> 1
+            else -> error("Unsupported backup format")
+        }
         val created = lines[1].split('|').also {
             require(it.size == 2 && it[0] == "CREATED")
         }[1].nonNegativeLong()
@@ -181,7 +186,7 @@ internal object LocalDataBackupCodec {
                 "SELECTION" -> selections += fields.decodeSelection()
                 "SETTINGS" -> {
                     require(settings == null)
-                    settings = fields.decodeSettings()
+                    settings = fields.decodeSettings(backupVersion)
                 }
                 "TUTORIAL" -> tutorials += fields.decodeTutorial()
                 "OUTCOME" -> outcomes += fields.decodeOutcome()
@@ -269,9 +274,9 @@ internal object LocalDataBackupCodec {
         )
     }
 
-    private fun List<String>.decodeSettings(): AppSettings {
-        require(size == 7 || size == 8)
-        val hasAppearance = size == 8
+    private fun List<String>.decodeSettings(version: Int): AppSettings {
+        require(if (version == 2) size == 9 else size == 7 || size == 8)
+        val hasAppearance = size >= 8
         return AppSettings(
             defaultDifficulty = this[1].decodeDifficulty(),
             autoContinueEnabled = this[2].decodeBoolean(),
@@ -289,7 +294,12 @@ internal object LocalDataBackupCodec {
             } else {
                 0
             },
-            updatedAtEpochMillis = this[if (hasAppearance) 7 else 6].nonNegativeLong(),
+            highlightConditionsMask = if (version == 2) {
+                this[7].boundedInt(0, AppSettings.ALL_HIGHLIGHT_CONDITIONS)
+            } else {
+                0
+            },
+            updatedAtEpochMillis = last().nonNegativeLong(),
         )
     }
 
@@ -484,7 +494,8 @@ internal object LocalDataBackupCodec {
     private fun sha256(bytes: ByteArray): String =
         MessageDigest.getInstance("SHA-256").digest(bytes).toHex()
 
-    private const val HEADER = "MOCS-BACKUP|1"
+    private const val HEADER = "MOCS-BACKUP|2"
+    private const val LEGACY_HEADER = "MOCS-BACKUP|1"
     private const val NULL = "-"
     private const val MAX_LINE_COUNT = 200_000
     private const val MAX_LEDGER_ROWS = 100_000

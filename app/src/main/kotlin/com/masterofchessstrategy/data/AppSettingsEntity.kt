@@ -16,5 +16,7 @@ internal data class AppSettingsEntity(
     val gameDurationMinutes: Int?,
     @androidx.room.ColumnInfo(defaultValue = "0")
     val selectedAppearanceCode: Int = 0,
+    @androidx.room.ColumnInfo(defaultValue = "0")
+    val highlightConditionsMask: Int = 0,
     val updatedAtEpochMillis: Long,
 )

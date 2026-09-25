@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.masterofchessstrategy.R
 import com.masterofchessstrategy.data.AppSettings
+import com.masterofchessstrategy.data.HighlightCondition
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.settings.AppSettingsUiState
 import com.masterofchessstrategy.settings.AppSettingsViewModel
@@ -32,6 +33,7 @@ import com.masterofchessstrategy.settings.SettingsFeedback
 
 internal const val SETTINGS_SCREEN_TAG = "settings_screen"
 internal const val SETTINGS_SOUND_TAG = "settings_sound"
+internal const val SETTINGS_HIGHLIGHT_MASTER_TAG = "settings_highlight_master"
 internal const val SETTINGS_LICENSES_TAG = "settings_licenses"
 internal const val SETTINGS_EXPORT_DATA_TAG = "settings_export_data"
 internal const val SETTINGS_RESTORE_DATA_TAG = "settings_restore_data"
@@ -44,6 +46,7 @@ internal fun SettingsScreen(
     onAutoContinue: (Boolean) -> Unit,
     onAdjustAutoContinueLimit: (Int) -> Unit,
     onSoundEnabled: (Boolean) -> Unit,
+    onHighlightCondition: (HighlightCondition, Boolean) -> Unit,
     onTimeLimitEnabled: (Boolean) -> Unit,
     onAdjustDuration: (Int) -> Unit,
     backupState: LocalDataBackupUiState,
@@ -87,6 +90,36 @@ internal fun SettingsScreen(
                 enabled = state.isInteractionEnabled,
                 onCheckedChange = onSoundEnabled,
                 switchTag = SETTINGS_SOUND_TAG,
+            )
+            Text(
+                text = stringResource(R.string.highlight_conditions_title),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Text(
+                text = stringResource(R.string.highlight_conditions_summary),
+                style = MaterialTheme.typography.bodySmall,
+            )
+            BooleanSettingCard(
+                title = stringResource(R.string.highlight_comeback_title),
+                summary = stringResource(R.string.highlight_comeback_summary),
+                checked = state.settings.highlights(HighlightCondition.COMEBACK),
+                enabled = state.isInteractionEnabled,
+                onCheckedChange = { onHighlightCondition(HighlightCondition.COMEBACK, it) },
+            )
+            BooleanSettingCard(
+                title = stringResource(R.string.highlight_master_title),
+                summary = stringResource(R.string.highlight_master_summary),
+                checked = state.settings.highlights(HighlightCondition.MASTER),
+                enabled = state.isInteractionEnabled,
+                onCheckedChange = { onHighlightCondition(HighlightCondition.MASTER, it) },
+                switchTag = SETTINGS_HIGHLIGHT_MASTER_TAG,
+            )
+            BooleanSettingCard(
+                title = stringResource(R.string.highlight_long_title),
+                summary = stringResource(R.string.highlight_long_summary),
+                checked = state.settings.highlights(HighlightCondition.LONG_GAME),
+                enabled = state.isInteractionEnabled,
+                onCheckedChange = { onHighlightCondition(HighlightCondition.LONG_GAME, it) },
             )
             DurationSetting(state, onTimeLimitEnabled, onAdjustDuration)
             DataBackupSetting(

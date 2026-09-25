@@ -316,6 +316,34 @@ class MocsDatabaseMigrationTest {
         migrated.close()
     }
 
+    @Test
+    fun migrateTenToElevenKeepsSettingsAndLeavesAutoHighlightsDisabled() {
+        helper.createDatabase(HIGHLIGHT_DATABASE_NAME, 10).apply {
+            execSQL(
+                """
+                INSERT INTO app_settings (
+                    id, defaultDifficultyCode, autoContinueEnabled,
+                    autoContinueGameLimit, soundEnabled, gameDurationMinutes,
+                    selectedAppearanceCode, updatedAtEpochMillis
+                ) VALUES (0, 2, 1, 15, 0, 45, 3, 107)
+                """.trimIndent(),
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            HIGHLIGHT_DATABASE_NAME,
+            11,
+            true,
+            MocsDatabase.MIGRATION_10_11,
+        )
+
+        assertEquals(0, migrated.singleInt("SELECT highlightConditionsMask FROM app_settings"))
+        assertEquals(3, migrated.singleInt("SELECT selectedAppearanceCode FROM app_settings"))
+        assertEquals(15, migrated.singleInt("SELECT autoContinueGameLimit FROM app_settings"))
+        migrated.close()
+    }
+
     private fun SupportSQLiteDatabase.singleInt(query: String): Int =
         this.query(query).use { cursor ->
             check(cursor.moveToFirst())
@@ -335,6 +363,7 @@ class MocsDatabaseMigrationTest {
         }
 
     private companion object {
+        const val HIGHLIGHT_DATABASE_NAME = "migration-10-11-test"
         const val DATABASE_NAME = "migration-1-2-test"
         const val SETTINGS_DATABASE_NAME = "migration-2-3-test"
         const val TUTORIAL_DATABASE_NAME = "migration-3-4-test"

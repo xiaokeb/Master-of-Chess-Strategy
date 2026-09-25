@@ -2,6 +2,7 @@ package com.masterofchessstrategy.settings
 
 import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.data.AppSettingsRepository
+import com.masterofchessstrategy.data.HighlightCondition
 import com.masterofchessstrategy.data.LoadAppSettingsResult
 import com.masterofchessstrategy.engine.Difficulty
 import kotlinx.coroutines.Dispatchers
@@ -109,6 +110,24 @@ class AppSettingsViewModelTest {
 
         assertEquals(3, viewModel.uiState.settings.selectedAppearanceCode)
         assertEquals(3, repository.saved?.selectedAppearanceCode)
+    }
+
+    @Test
+    fun highlightConditionsAreIndependentlyEnabledDisabledAndSaved() = runTest(dispatcher) {
+        val repository = FakeSettingsRepository(LoadAppSettingsResult.NotFound)
+        val viewModel = AppSettingsViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.setHighlightCondition(HighlightCondition.COMEBACK, true)
+        advanceUntilIdle()
+        viewModel.setHighlightCondition(HighlightCondition.MASTER, true)
+        advanceUntilIdle()
+        viewModel.setHighlightCondition(HighlightCondition.COMEBACK, false)
+        advanceUntilIdle()
+
+        assertEquals(HighlightCondition.MASTER.bit, repository.saved?.highlightConditionsMask)
+        assertTrue(viewModel.uiState.settings.highlights(HighlightCondition.MASTER))
+        assertFalse(viewModel.uiState.settings.highlights(HighlightCondition.COMEBACK))
     }
 
     @Test
