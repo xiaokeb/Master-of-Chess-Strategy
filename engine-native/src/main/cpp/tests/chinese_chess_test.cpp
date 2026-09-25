@@ -583,6 +583,33 @@ void sixty_rounds_without_capture_reaches_the_natural_limit() {
     assert(engine.game_result() == GameResult::draw);
 }
 
+void checkmate_on_the_natural_limit_move_still_wins() {
+    ChineseChessEngine engine;
+    assert(
+        engine.restore(
+            custom_position(
+                Side::red,
+                {
+                    {4, 9, {PieceType::general, Side::red}},
+                    {4, 0, {PieceType::general, Side::black}},
+                    {4, 5, {PieceType::soldier, Side::red}},
+                    {1, 1, {PieceType::horse, Side::red}},
+                    {7, 1, {PieceType::horse, Side::red}},
+                    {0, 2, {PieceType::chariot, Side::red}},
+                },
+                119
+            )
+        ).restored
+    );
+    assert(engine.game_result() == GameResult::ongoing);
+    assert(engine.apply(make_board_move(0, 2, 4, 2)).accepted);
+    assert(engine.game_result() == GameResult::first_player_win);
+
+    ChineseChessEngine restored;
+    assert(restored.restore(engine.serialize()).restored);
+    assert(restored.game_result() == GameResult::first_player_win);
+}
+
 void capture_resets_the_natural_limit_counter() {
     ChineseChessEngine engine;
     assert(
@@ -725,6 +752,7 @@ int main() {
     repeated_equal_exchange_is_drawn();
     repeated_idle_moves_are_drawn_instead_of_treated_as_long_block();
     sixty_rounds_without_capture_reaches_the_natural_limit();
+    checkmate_on_the_natural_limit_move_still_wins();
     capture_resets_the_natural_limit_counter();
     easy_ai_returns_legal_move_without_mutating_position();
 }

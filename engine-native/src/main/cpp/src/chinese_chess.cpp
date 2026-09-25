@@ -1716,7 +1716,11 @@ std::optional<GameResult> ChineseChessEngine::adjudicate_2020_cycle(
 
 void ChineseChessEngine::adjudicate_history() noexcept {
     if (no_capture_plies_ >= natural_limit_plies) {
-        adjudicated_result_ = GameResult::draw;
+        // A mating or stalemating move ends the game before the natural-limit
+        // draw can override it. The normal game_result() path awards the win.
+        if (has_legal_action()) {
+            adjudicated_result_ = GameResult::draw;
+        }
         return;
     }
     if (position_history_.size() < 3) {
