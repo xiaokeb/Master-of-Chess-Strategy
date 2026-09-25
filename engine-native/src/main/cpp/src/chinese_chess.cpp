@@ -6,6 +6,7 @@
 #include <bitset>
 #include <cmath>
 #include <limits>
+#include <unordered_map>
 #include <utility>
 
 namespace mocs::engine {
@@ -629,8 +630,35 @@ RestoreResult ChineseChessEngine::restore(
     auto expected_no_capture_plies = history_size > 0
         ? restored_history.front().previous_no_capture_plies
         : restored_no_capture_plies;
+    if (history_size > 0 && expected_no_capture_plies == natural_limit_plies) {
+        return RestoreResult{false, EngineError::corrupted_data};
+    }
+
+    // Rebuild the trusted prefix as live play would. A valid next move must
+    // not follow a repetition result, even if its saved "previous result"
+    // field has been forged back to ongoing with a fresh CRC.
+    ChineseChessEngine prefix;
+    prefix.board_ = restored_positions.front().board;
+    prefix.current_side_ = restored_positions.front().side;
+    prefix.no_capture_plies_ = expected_no_capture_plies;
+    prefix.history_.clear();
+    prefix.position_history_.clear();
+    prefix.position_history_.push_back(restored_positions.front());
+    prefix.history_.reserve(history_size);
+    prefix.position_history_.reserve(static_cast<std::size_t>(history_size) + 1U);
+    const auto position_key = [](const PositionState& position) {
+        std::string key;
+        key.reserve(board_size + 1U);
+        key.push_back(static_cast<char>(position.side));
+        for (const auto& piece : position.board) {
+            key.push_back(static_cast<char>(encode_piece(piece)));
+        }
+        return key;
+    };
+    std::unordered_map<std::string, std::size_t> occurrences;
+    occurrences.emplace(position_key(restored_positions.front()), 1U);
     for (std::size_t i = 0; i < history_size; ++i) {
-        const auto& move = restored_history[i];
+        auto& move = restored_history[i];
         const auto& before = restored_positions[i];
         const auto& after = restored_positions[i + 1];
         if (
@@ -662,6 +690,24 @@ RestoreResult ChineseChessEngine::restore(
             after.side != opposite(move.previous_side)
         ) {
             return RestoreResult{false, EngineError::corrupted_data};
+        }
+        // Move nature is derived from the board, not trusted from a saved
+        // byte; this also reapplies corrected rules to older valid saves.
+        move.nature = classify_move(
+            before.board, after.board, move.previous_side, move.moved.type
+        );
+        prefix.history_.push_back(move);
+        prefix.position_history_.push_back(after);
+        prefix.board_ = after.board;
+        prefix.current_side_ = after.side;
+        prefix.no_capture_plies_ = expected_no_capture_plies;
+        const auto repetition_count = ++occurrences[position_key(after)];
+        if (repetition_count >= 3U && i + 1 < history_size) {
+            prefix.adjudicated_result_ = GameResult::ongoing;
+            prefix.adjudicate_history();
+            if (prefix.game_result() != GameResult::ongoing) {
+                return RestoreResult{false, EngineError::corrupted_data};
+            }
         }
     }
     if (expected_no_capture_plies != restored_no_capture_plies) {

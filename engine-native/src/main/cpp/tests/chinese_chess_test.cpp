@@ -258,6 +258,17 @@ void saved_adjudication_is_derived_from_history() {
         assert(restored.serialize()[9] ==
             static_cast<std::uint8_t>(GameResult::ongoing));
     }
+
+    ChineseChessEngine one_move;
+    assert(one_move.apply(make_board_move(0, 6, 0, 5)).accepted);
+    auto stale_nature = one_move.serialize();
+    constexpr std::size_t first_move_nature_offset = 12 + 90 + 10;
+    stale_nature[first_move_nature_offset] = 1; // Forge an idle pawn push as check.
+    stale_nature.resize(stale_nature.size() - 4);
+    append_u32(stale_nature, crc32(stale_nature, stale_nature.size()));
+    ChineseChessEngine restored;
+    assert(restored.restore(stale_nature).restored);
+    assert(restored.serialize()[first_move_nature_offset] == 0);
 }
 
 void corrupted_positions_are_rejected() {
@@ -562,6 +573,77 @@ void repeated_idle_moves_are_drawn_instead_of_treated_as_long_block() {
     assert(engine.game_result() == GameResult::draw);
 }
 
+void saved_history_cannot_continue_after_repetition_draw() {
+    ChineseChessEngine engine;
+    assert(engine.restore(custom_position(
+        Side::red,
+        {
+            {5, 9, {PieceType::general, Side::red}},
+            {5, 0, {PieceType::general, Side::black}},
+            {5, 5, {PieceType::soldier, Side::red}},
+            {3, 9, {PieceType::advisor, Side::red}},
+            {3, 0, {PieceType::advisor, Side::black}},
+        }
+    )).restored);
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        assert(engine.apply(make_board_move(3, 9, 4, 8)).accepted);
+        assert(engine.apply(make_board_move(3, 0, 4, 1)).accepted);
+        assert(engine.apply(make_board_move(4, 8, 3, 9)).accepted);
+        assert(engine.apply(make_board_move(4, 1, 3, 0)).accepted);
+    }
+    assert(engine.game_result() == GameResult::draw);
+
+    // Add a legal-looking ninth move to an already finished game, then
+    // recompute CRC so only per-prefix terminal validation can reject it.
+    auto data = engine.serialize();
+    data.resize(data.size() - 4);
+    data[6] = 1; // Black to move after the forged red move.
+    data[7] = 9;
+    data[9] = static_cast<std::uint8_t>(GameResult::ongoing);
+    data[10] = 9;
+    data[12 + 9 * 9 + 3] = 0;
+    data[12 + 8 * 9 + 4] = 2; // Red advisor.
+    data.insert(data.end(), {3, 9, 4, 8, 2, 0, 0, 8, 0, 0, 0});
+    append_u32(data, crc32(data, data.size()));
+
+    ChineseChessEngine restored;
+    const auto result = restored.restore(data);
+    assert(!result.restored);
+    assert(result.error == EngineError::corrupted_data);
+}
+
+void saved_history_cannot_capture_after_natural_limit_draw() {
+    const auto initial = custom_position(
+        Side::red,
+        {
+            {5, 9, {PieceType::general, Side::red}},
+            {5, 0, {PieceType::general, Side::black}},
+            {5, 5, {PieceType::soldier, Side::red}},
+            {0, 5, {PieceType::chariot, Side::red}},
+            {0, 4, {PieceType::horse, Side::black}},
+        },
+        120
+    );
+    ChineseChessEngine finished;
+    assert(finished.restore(initial).restored);
+    assert(finished.game_result() == GameResult::draw);
+
+    auto data = initial;
+    data.resize(data.size() - 4);
+    data[6] = 1;
+    data[7] = 0;
+    data[10] = 1;
+    data[12 + 5 * 9] = 0;
+    data[12 + 4 * 9] = 5;
+    data.insert(data.end(), {0, 5, 0, 4, 5, 0x84, 0, 120, 0, 0, 0});
+    append_u32(data, crc32(data, data.size()));
+
+    ChineseChessEngine restored;
+    const auto result = restored.restore(data);
+    assert(!result.restored);
+    assert(result.error == EngineError::corrupted_data);
+}
+
 void sixty_rounds_without_capture_reaches_the_natural_limit() {
     ChineseChessEngine engine;
     assert(
@@ -751,6 +833,8 @@ int main() {
     repeated_alternating_multi_target_chase_loses();
     repeated_equal_exchange_is_drawn();
     repeated_idle_moves_are_drawn_instead_of_treated_as_long_block();
+    saved_history_cannot_continue_after_repetition_draw();
+    saved_history_cannot_capture_after_natural_limit_draw();
     sixty_rounds_without_capture_reaches_the_natural_limit();
     checkmate_on_the_natural_limit_move_still_wins();
     capture_resets_the_natural_limit_counter();
