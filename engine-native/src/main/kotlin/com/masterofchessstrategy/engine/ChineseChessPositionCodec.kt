@@ -18,7 +18,9 @@ object ChineseChessPositionCodec {
     fun encode(
         sideToMove: ChineseChessSide,
         pieces: List<PositionedChineseChessPiece>,
+        noCapturePlies: Int = 0,
     ): ByteArray {
+        require(noCapturePlies in 0..120) { "No-capture counter must be within 60 rounds" }
         require(pieces.size in 2..32) { "A position must contain 2 to 32 pieces" }
         require(pieces.map { it.position }.distinct().size == pieces.size) {
             "A position cannot place two pieces on one intersection"
@@ -40,7 +42,9 @@ object ChineseChessPositionCodec {
         data[4] = FORMAT_VERSION
         data[5] = GameType.CHINESE_CHESS.code.toByte()
         data[6] = sideToMove.code.toByte()
-        // no-capture plies, adjudicated result, and history size remain zero.
+        // MOCX uses a little-endian no-capture counter; history remains empty.
+        data[7] = noCapturePlies.toByte()
+        data[8] = (noCapturePlies ushr 8).toByte()
         pieces.forEach { positioned ->
             val square = positioned.position.y * ChineseChessBoard.WIDTH +
                 positioned.position.x

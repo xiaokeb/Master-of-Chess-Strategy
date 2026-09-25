@@ -95,6 +95,25 @@ class NativeBridgeInstrumentedTest {
         }
     }
 
+    @Test
+    fun fenImportPreservesNoCaptureClockInNativeRulesAndRestore() {
+        val fen = "4k4/1N5N1/R8/9/9/4P4/9/9/9/4K4 w - - 119 38"
+        val state = ChineseChessFenCodec.parse(fen).toEngineState()
+
+        NativeChineseChessEngine().use { engine ->
+            assertEquals(RestoreResult.Restored, engine.restore(state))
+            assertEquals(GameResult.ONGOING, engine.gameResult())
+            assertAccepted(engine, 0, 2, 4, 2)
+            assertEquals(GameResult.FIRST_PLAYER_WIN, engine.gameResult())
+            val finished = engine.serialize()
+
+            NativeChineseChessEngine().use { restored ->
+                assertEquals(RestoreResult.Restored, restored.restore(finished))
+                assertEquals(GameResult.FIRST_PLAYER_WIN, restored.gameResult())
+            }
+        }
+    }
+
     private fun assertAccepted(
         engine: NativeChineseChessEngine,
         fromX: Int,

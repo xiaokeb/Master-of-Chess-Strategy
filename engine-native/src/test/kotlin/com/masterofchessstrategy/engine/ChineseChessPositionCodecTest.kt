@@ -53,6 +53,22 @@ class ChineseChessPositionCodecTest {
         assertTrue(failure.isFailure)
     }
 
+    @Test
+    fun noCaptureCounterIsEncodedAndBounded() {
+        val pieces = listOf(
+            piece(4, 9, ChineseChessPieceType.GENERAL, ChineseChessSide.RED),
+            piece(4, 0, ChineseChessPieceType.GENERAL, ChineseChessSide.BLACK),
+            piece(4, 5, ChineseChessPieceType.SOLDIER, ChineseChessSide.RED),
+        )
+        val encoded = ChineseChessPositionCodec.encode(ChineseChessSide.RED, pieces, 119)
+
+        assertEquals(119, encoded[7].toInt() and 0xff)
+        assertEquals(0, encoded[8].toInt() and 0xff)
+        assertThrows(IllegalArgumentException::class.java) {
+            ChineseChessPositionCodec.encode(ChineseChessSide.RED, pieces, 121)
+        }
+    }
+
     private fun piece(
         x: Int,
         y: Int,

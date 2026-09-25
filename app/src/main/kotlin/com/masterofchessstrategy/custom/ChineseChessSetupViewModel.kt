@@ -14,6 +14,8 @@ import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessAiEngine
 import com.masterofchessstrategy.engine.ChineseChessBoard
+import com.masterofchessstrategy.engine.ChineseChessFenCodec
+import com.masterofchessstrategy.engine.ChineseChessFenPosition
 import com.masterofchessstrategy.engine.ChineseChessPiece
 import com.masterofchessstrategy.engine.ChineseChessPieceType
 import com.masterofchessstrategy.engine.ChineseChessPositionCodec
@@ -27,6 +29,7 @@ import com.masterofchessstrategy.engine.RestoreResult
 import kotlinx.coroutines.launch
 
 internal enum class ChineseChessSetupFeedback {
+    INVALID_FEN,
     INVALID_PIECE_COUNT,
     INVALID_PLACEMENT,
     MISSING_GENERALS,
@@ -46,6 +49,8 @@ internal data class ChineseChessSetupUiState(
     val selectedSide: ChineseChessSide = ChineseChessSide.RED,
     val selectedPieceType: ChineseChessPieceType? = ChineseChessPieceType.SOLDIER,
     val sideToMove: ChineseChessSide = ChineseChessSide.RED,
+    val noCapturePlies: Int = 0,
+    val fullMoveNumber: Int = 1,
     val difficulty: Difficulty = Difficulty.EASY,
     val unlockedDifficulties: Set<Difficulty> = emptySet(),
     val isLoadingSavedGame: Boolean = true,
@@ -88,7 +93,12 @@ internal class ChineseChessSetupViewModel(
     }
 
     fun selectSideToMove(side: ChineseChessSide) {
-        uiState = uiState.copy(sideToMove = side, feedback = null)
+        uiState = uiState.copy(
+            sideToMove = side,
+            noCapturePlies = 0,
+            fullMoveNumber = 1,
+            feedback = null,
+        )
     }
 
     fun selectDifficulty(difficulty: Difficulty) {
@@ -103,7 +113,12 @@ internal class ChineseChessSetupViewModel(
         val selectedType = uiState.selectedPieceType
         if (selectedType == null) {
             board[index] = null
-            uiState = uiState.copy(board = board, feedback = null)
+            uiState = uiState.copy(
+                board = board,
+                noCapturePlies = 0,
+                fullMoveNumber = 1,
+                feedback = null,
+            )
             return
         }
         val piece = ChineseChessPiece(selectedType, uiState.selectedSide)
@@ -126,12 +141,19 @@ internal class ChineseChessSetupViewModel(
             uiState = uiState.copy(feedback = ChineseChessSetupFeedback.INVALID_PIECE_COUNT)
             return
         }
-        uiState = uiState.copy(board = board, feedback = null)
+        uiState = uiState.copy(
+            board = board,
+            noCapturePlies = 0,
+            fullMoveNumber = 1,
+            feedback = null,
+        )
     }
 
     fun clearBoard() {
         uiState = uiState.copy(
             board = List(BOARD_SIZE) { null },
+            noCapturePlies = 0,
+            fullMoveNumber = 1,
             feedback = null,
         )
     }
@@ -140,7 +162,66 @@ internal class ChineseChessSetupViewModel(
         uiState = uiState.copy(
             board = standardBoard(),
             sideToMove = ChineseChessSide.RED,
+            noCapturePlies = 0,
+            fullMoveNumber = 1,
             feedback = null,
+        )
+    }
+
+    /** Invalid imports leave the user's current setup untouched. */
+    fun importFen(fen: String) {
+        val parsed = try {
+            ChineseChessFenCodec.parse(fen)
+        } catch (_: RuntimeException) {
+            uiState = uiState.copy(feedback = ChineseChessSetupFeedback.INVALID_FEN)
+            return
+        }
+        val board = MutableList<ChineseChessPiece?>(BOARD_SIZE) { null }
+        parsed.pieces.forEach { (position, piece) ->
+            board[position.index()] = piece
+        }
+        if (!withinPieceLimits(board) ||
+            parsed.pieces.any { !isAllowedSquare(it.position, it.piece) } ||
+            generalsFace(board)
+        ) {
+            uiState = uiState.copy(feedback = ChineseChessSetupFeedback.INVALID_PLACEMENT)
+            return
+        }
+        uiState = uiState.copy(feedback = null)
+        if (!isPlayable(parsed.toEngineState(), reportEngineFailure = true)) {
+            if (uiState.feedback == null) {
+                uiState = uiState.copy(feedback = ChineseChessSetupFeedback.POSITION_NOT_PLAYABLE)
+            }
+            return
+        }
+        uiState = uiState.copy(
+            board = board,
+            sideToMove = parsed.sideToMove,
+            noCapturePlies = parsed.noCapturePlies,
+            fullMoveNumber = parsed.fullMoveNumber,
+            feedback = null,
+        )
+    }
+
+    fun exportFen(): String? {
+        if (validateAndEncode(uiState.board, uiState.sideToMove, uiState.difficulty) == null) {
+            return null
+        }
+        val pieces = uiState.board.mapIndexedNotNull { index, piece ->
+            piece?.let {
+                PositionedChineseChessPiece(
+                    BoardPosition(index % ChineseChessBoard.WIDTH, index / ChineseChessBoard.WIDTH),
+                    it,
+                )
+            }
+        }
+        return ChineseChessFenCodec.format(
+            ChineseChessFenPosition(
+                uiState.sideToMove,
+                pieces,
+                uiState.noCapturePlies,
+                uiState.fullMoveNumber,
+            ),
         )
     }
 
@@ -188,8 +269,12 @@ internal class ChineseChessSetupViewModel(
                 PositionedChineseChessPiece(position, piece)
             }
         }
+        if (generalsFace(board)) {
+            uiState = uiState.copy(feedback = ChineseChessSetupFeedback.INVALID_PLACEMENT)
+            return null
+        }
         val encoded = try {
-            ChineseChessPositionCodec.encode(sideToMove, pieces)
+            ChineseChessPositionCodec.encode(sideToMove, pieces, uiState.noCapturePlies)
         } catch (_: IllegalArgumentException) {
             uiState = uiState.copy(feedback = ChineseChessSetupFeedback.POSITION_NOT_PLAYABLE)
             return null
@@ -317,23 +402,60 @@ internal class ChineseChessSetupViewModel(
             piece: ChineseChessPiece,
         ): Boolean =
             when (piece.type) {
-                ChineseChessPieceType.GENERAL,
-                ChineseChessPieceType.ADVISOR,
-                -> position.x in 3..5 && if (piece.side == ChineseChessSide.RED) {
+                ChineseChessPieceType.GENERAL ->
+                    position.x in 3..5 && if (piece.side == ChineseChessSide.RED) {
                     position.y in 7..9
                 } else {
                     position.y in 0..2
                 }
 
-                ChineseChessPieceType.ELEPHANT ->
-                    if (piece.side == ChineseChessSide.RED) {
-                        position.y in 5..9
-                    } else {
-                        position.y in 0..4
-                    }
+                ChineseChessPieceType.ADVISOR -> {
+                    val home = if (piece.side == ChineseChessSide.RED) 9 else 0
+                    val far = if (piece.side == ChineseChessSide.RED) 7 else 2
+                    val center = if (piece.side == ChineseChessSide.RED) 8 else 1
+                    ((position.y == home || position.y == far) && position.x in listOf(3, 5)) ||
+                        (position.y == center && position.x == 4)
+                }
+
+                ChineseChessPieceType.ELEPHANT -> {
+                    val home = if (piece.side == ChineseChessSide.RED) 9 else 0
+                    val center = if (piece.side == ChineseChessSide.RED) 7 else 2
+                    val far = if (piece.side == ChineseChessSide.RED) 5 else 4
+                    (position.y == home && position.x in listOf(2, 6)) ||
+                        (position.y == center && position.x in listOf(0, 4, 8)) ||
+                        (position.y == far && position.x in listOf(2, 6))
+                }
+
+                ChineseChessPieceType.SOLDIER -> {
+                    val red = piece.side == ChineseChessSide.RED
+                    val pastStart = if (red) position.y <= 6 else position.y >= 3
+                    val uncrossed = if (red) position.y >= 5 else position.y <= 4
+                    pastStart && (!uncrossed || position.x % 2 == 0)
+                }
 
                 else -> true
             }
+
+        private fun generalsFace(board: List<ChineseChessPiece?>): Boolean {
+            val red = board.indexOfFirst {
+                it?.side == ChineseChessSide.RED && it.type == ChineseChessPieceType.GENERAL
+            }
+            val black = board.indexOfFirst {
+                it?.side == ChineseChessSide.BLACK && it.type == ChineseChessPieceType.GENERAL
+            }
+            if (
+                red < 0 || black < 0 ||
+                red % ChineseChessBoard.WIDTH != black % ChineseChessBoard.WIDTH
+            ) {
+                return false
+            }
+            val file = red % ChineseChessBoard.WIDTH
+            val top = minOf(red, black) / ChineseChessBoard.WIDTH
+            val bottom = maxOf(red, black) / ChineseChessBoard.WIDTH
+            return ((top + 1) until bottom).none { y ->
+                board[y * ChineseChessBoard.WIDTH + file] != null
+            }
+        }
 
         private fun BoardPosition.index(): Int = y * ChineseChessBoard.WIDTH + x
     }

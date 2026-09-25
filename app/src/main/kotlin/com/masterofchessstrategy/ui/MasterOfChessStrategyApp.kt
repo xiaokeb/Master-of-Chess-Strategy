@@ -960,6 +960,8 @@ fun MasterOfChessStrategyApp() {
                     onContinueSaved = {
                         setupViewModel.continueSavedGame()?.let(openPreparedPosition)
                     },
+                    onImportFen = setupViewModel::importFen,
+                    onExportFen = setupViewModel::exportFen,
                 )
             }
             composable(

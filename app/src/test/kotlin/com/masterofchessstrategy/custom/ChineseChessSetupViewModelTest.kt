@@ -62,6 +62,49 @@ class ChineseChessSetupViewModelTest {
     }
 
     @Test
+    fun standardPositionExportsCanonicalFen() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        assertEquals(
+            "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/" +
+                "P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1",
+            viewModel.exportFen(),
+        )
+    }
+
+    @Test
+    fun importedFenPreservesBoardTurnAndNoCaptureClockForNewGame() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.importFen("4k4/9/9/9/9/4P4/9/9/9/4K4 b - - 119 38")
+
+        assertEquals(null, viewModel.uiState.feedback)
+        assertEquals(ChineseChessSide.BLACK, viewModel.uiState.sideToMove)
+        assertEquals(ChineseChessPieceType.SOLDIER, viewModel.uiState.board[5 * 9 + 4]?.type)
+        assertEquals(119, viewModel.uiState.noCapturePlies)
+        assertEquals(38, viewModel.uiState.fullMoveNumber)
+        assertEquals(119, viewModel.prepareNewGame()!!.engineState[7].toInt() and 0xff)
+        assertEquals("4k4/9/9/9/9/4P4/9/9/9/4K4 b - - 119 38", viewModel.exportFen())
+    }
+
+    @Test
+    fun malformedOrUnplayableFenDoesNotReplaceTheEditedBoard() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        advanceUntilIdle()
+        val original = viewModel.uiState.board
+
+        viewModel.importFen("not a fen")
+        assertEquals(original, viewModel.uiState.board)
+        assertEquals(ChineseChessSetupFeedback.INVALID_FEN, viewModel.uiState.feedback)
+
+        viewModel.importFen("4k4/9/9/9/9/9/9/9/9/4K4 w - - 0 1")
+        assertEquals(original, viewModel.uiState.board)
+        assertEquals(ChineseChessSetupFeedback.INVALID_PLACEMENT, viewModel.uiState.feedback)
+    }
+
+    @Test
     fun palacePieceCannotBePlacedOutsideItsOwnPalace() = runTest(dispatcher) {
         val viewModel = viewModel()
         advanceUntilIdle()
@@ -76,6 +119,24 @@ class ChineseChessSetupViewModelTest {
             ChineseChessSetupFeedback.INVALID_PLACEMENT,
             viewModel.uiState.feedback,
         )
+    }
+
+    @Test
+    fun customSetupRejectsUnreachableFixedSquaresBeforeGameStart() = runTest(dispatcher) {
+        val viewModel = viewModel()
+        advanceUntilIdle()
+        val original = viewModel.uiState.board
+        val invalidPieces = listOf(
+            ChineseChessPieceType.SOLDIER to BoardPosition(5, 6),
+            ChineseChessPieceType.ADVISOR to BoardPosition(4, 7),
+            ChineseChessPieceType.ELEPHANT to BoardPosition(5, 5),
+        )
+        invalidPieces.forEach { (type, position) ->
+            viewModel.selectPieceType(type)
+            viewModel.onSquareTap(position)
+            assertEquals(original, viewModel.uiState.board)
+            assertEquals(ChineseChessSetupFeedback.INVALID_PLACEMENT, viewModel.uiState.feedback)
+        }
     }
 
     @Test

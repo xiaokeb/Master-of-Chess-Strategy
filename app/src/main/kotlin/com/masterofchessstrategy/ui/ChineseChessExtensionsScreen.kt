@@ -1,5 +1,8 @@
 package com.masterofchessstrategy.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,11 +22,17 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -58,6 +67,9 @@ internal const val OPENING_TRAINING_ENTRY_TAG = "opening_training_entry"
 internal const val CUSTOM_SETUP_ENTRY_TAG = "custom_setup_entry"
 internal const val CUSTOM_SETUP_SCREEN_TAG = "custom_setup_screen"
 internal const val CUSTOM_SETUP_START_TAG = "custom_setup_start"
+internal const val CUSTOM_SETUP_FEN_INPUT_TAG = "custom_setup_fen_input"
+internal const val CUSTOM_SETUP_FEN_IMPORT_TAG = "custom_setup_fen_import"
+internal const val CUSTOM_SETUP_FEN_EXPORT_TAG = "custom_setup_fen_export"
 
 private enum class ExtensionEntry(val available: Boolean) {
     TIMED(true),
@@ -477,8 +489,12 @@ internal fun ChineseChessSetupScreen(
     onResetStandard: () -> Unit,
     onStart: () -> Unit,
     onContinueSaved: () -> Unit,
+    onImportFen: (String) -> Unit,
+    onExportFen: () -> String?,
     modifier: Modifier = Modifier,
 ) {
+    var fenText by rememberSaveable { mutableStateOf("") }
+    val context = LocalContext.current
     Surface(
         modifier = modifier
             .fillMaxSize()
@@ -574,6 +590,42 @@ internal fun ChineseChessSetupScreen(
                         label = { it.difficultyName() },
                         onSelected = onDifficultySelected,
                     )
+                    OutlinedTextField(
+                        value = fenText,
+                        onValueChange = { fenText = it },
+                        label = { Text(stringResource(R.string.custom_position_fen_label)) },
+                        supportingText = { Text(stringResource(R.string.custom_position_fen_hint)) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(CUSTOM_SETUP_FEN_INPUT_TAG),
+                        maxLines = 3,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            onClick = { onImportFen(fenText) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag(CUSTOM_SETUP_FEN_IMPORT_TAG),
+                        ) {
+                            Text(stringResource(R.string.custom_position_fen_import))
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                onExportFen()?.let { fen ->
+                                    fenText = fen
+                                    val clipboard = context.getSystemService(
+                                        Context.CLIPBOARD_SERVICE,
+                                    ) as ClipboardManager
+                                    clipboard.setPrimaryClip(ClipData.newPlainText("Xiangqi FEN", fen))
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag(CUSTOM_SETUP_FEN_EXPORT_TAG),
+                        ) {
+                            Text(stringResource(R.string.custom_position_fen_export))
+                        }
+                    }
                     state.feedback?.let { feedback ->
                         Text(
                             text = stringResource(feedback.messageResource()),
@@ -689,6 +741,7 @@ private fun Difficulty.difficultyName(): String = stringResource(
 )
 
 private fun ChineseChessSetupFeedback.messageResource(): Int = when (this) {
+    ChineseChessSetupFeedback.INVALID_FEN -> R.string.custom_position_invalid_fen
     ChineseChessSetupFeedback.INVALID_PIECE_COUNT -> R.string.custom_position_invalid_count
     ChineseChessSetupFeedback.INVALID_PLACEMENT -> R.string.custom_position_invalid_placement
     ChineseChessSetupFeedback.MISSING_GENERALS -> R.string.custom_position_missing_generals

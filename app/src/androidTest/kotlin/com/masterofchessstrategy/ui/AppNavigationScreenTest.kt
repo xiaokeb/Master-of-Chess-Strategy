@@ -3,11 +3,13 @@ package com.masterofchessstrategy.ui
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTextInput
 import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.navigation.HomeGameEntry
 import com.masterofchessstrategy.engine.Difficulty
@@ -69,6 +71,26 @@ class AppNavigationScreenTest {
         composeRule.onNodeWithTag(CUSTOM_SETUP_SCREEN_TAG).assertExists()
         composeRule.onNodeWithTag(CHINESE_CHESS_BOARD_TAG).assertExists()
         composeRule.onNodeWithTag(CUSTOM_SETUP_START_TAG).assertExists()
+        composeRule.onNodeWithTag(CUSTOM_SETUP_FEN_INPUT_TAG).assertExists()
+        composeRule.onNodeWithTag(CUSTOM_SETUP_FEN_IMPORT_TAG).assertExists()
+        composeRule.onNodeWithTag(CUSTOM_SETUP_FEN_EXPORT_TAG).assertExists()
+        composeRule.onNodeWithTag(CUSTOM_SETUP_FEN_EXPORT_TAG).performClick()
+        composeRule.onNodeWithTag(CUSTOM_SETUP_FEN_INPUT_TAG)
+            .assertTextContains("rnbakabnr", substring = true)
+    }
+
+    @Test
+    fun customPositionFenImportAndExportRoundTripOnDevice() {
+        composeRule.setContent { MasterOfChessStrategyApp() }
+        composeRule.onNodeWithTag(HOME_CHINESE_CHESS_TAG).performClick()
+        composeRule.onNodeWithTag(MODE_EXTENSIONS_TAG).performClick()
+        composeRule.onNodeWithTag(CUSTOM_SETUP_ENTRY_TAG).performClick()
+
+        val fen = "4k4/9/9/9/9/4P4/9/9/9/4K4 w - - 0 1"
+        composeRule.onNodeWithTag(CUSTOM_SETUP_FEN_INPUT_TAG).performTextInput(fen)
+        composeRule.onNodeWithTag(CUSTOM_SETUP_FEN_IMPORT_TAG).performClick()
+        composeRule.onNodeWithTag(CUSTOM_SETUP_FEN_EXPORT_TAG).performClick()
+        composeRule.onNodeWithTag(CUSTOM_SETUP_FEN_INPUT_TAG).assertTextContains(fen)
     }
 
     @Test

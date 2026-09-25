@@ -358,6 +358,8 @@ private fun ChineseChessSetupScreenPreview() {
             onResetStandard = {},
             onStart = {},
             onContinueSaved = {},
+            onImportFen = {},
+            onExportFen = { null },
         )
     }
 }

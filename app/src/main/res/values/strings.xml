@@ -186,7 +186,7 @@
     <string name="streak_challenge_in_progress">连胜进行中</string>
     <string name="feedback_streak_next_game">已进入下一局，难度与连胜进度已保存。</string>
     <string name="custom_position_title">中国象棋 · 自由摆局</string>
-    <string name="custom_position_subtitle">摆放合法棋子，选择行棋方与已解锁 AI</string>
+    <string name="custom_position_subtitle">摆放棋子或导入 FEN，选择行棋方与已解锁 AI</string>
     <string name="custom_position_piece_side">棋子阵营</string>
     <string name="custom_position_piece_type">棋子类型</string>
     <string name="custom_position_side_to_move">先行方</string>
@@ -195,9 +195,14 @@
     <string name="custom_position_standard">标准局面</string>
     <string name="custom_position_start">开始 AI 陪练</string>
     <string name="custom_position_continue">继续上次摆局对战</string>
-    <string name="custom_position_boundary">双方必须各有一枚位于九宫内的将帅；士不出九宫、象不过河，棋子数量不得超过标准上限。黑方先行时 AI 先走。</string>
+    <string name="custom_position_fen_label">FEN 局面</string>
+    <string name="custom_position_fen_hint">粘贴六字段象棋 FEN；导入会校验并替换当前棋盘。</string>
+    <string name="custom_position_fen_import">导入 FEN</string>
+    <string name="custom_position_fen_export">复制当前 FEN</string>
+    <string name="custom_position_invalid_fen">FEN 格式或棋子数量无效，原棋盘已保留。</string>
+    <string name="custom_position_boundary">双方各需一枚将帅；士、象须在可达落点，未过河兵卒须在出生列，棋子数不得超限。FEN 回合号仅用于文本展示；新对局从此局面起算。黑方先行时 AI 先走。</string>
     <string name="custom_position_invalid_count">棋子数量超过标准上限。</string>
-    <string name="custom_position_invalid_placement">将帅与士必须在本方九宫内，象不能越过本方河界。</string>
+    <string name="custom_position_invalid_placement">棋子落点或将帅照面不符合象棋规则，原棋盘已保留。</string>
     <string name="custom_position_missing_generals">双方必须各保留且仅保留一枚将帅。</string>
     <string name="custom_position_not_playable">当前局面已终局或没有合法着，不能开始陪练。</string>
     <string name="custom_position_engine_unavailable">规则引擎不可用，暂时无法验证局面。</string>
