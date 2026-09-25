@@ -29,7 +29,7 @@ internal data class ChineseChessOpeningLine(
 
 /** Project-authored seed library; every line is revalidated by the live rule engine. */
 internal object ChineseChessOpeningLibrary {
-    const val CONTENT_VERSION = 2
+    const val CONTENT_VERSION = 3
 
     val lines: List<ChineseChessOpeningLine> = listOf(
         ChineseChessOpeningLine(
@@ -63,6 +63,39 @@ internal object ChineseChessOpeningLibrary {
                 step(4, 3, 4, 4, "卒5进1", "黑方以中卒回应，明确中央对抗。"),
                 step(1, 9, 2, 7, "马八进七", "红方发展左马，准备支援中央。"),
                 step(7, 0, 6, 2, "马8进7", "黑方发展右马，形成对中路的持续控制。"),
+            ),
+        ),
+        ChineseChessOpeningLine(
+            id = "advanced-seventh-pawn",
+            title = "仙人指路与侧炮",
+            summary = "先挺七路兵试探，再观察侧炮和双方出马的方向。",
+            steps = listOf(
+                step(2, 6, 2, 5, "兵七进一", "红方先推进七路兵，预留侧翼出子空间。"),
+                step(1, 2, 2, 2, "炮2平3", "黑方将炮转到三路，沿红兵所在纵线观察变化。"),
+                step(1, 9, 2, 7, "马八进七", "红方左马自然发展，支援七路兵。"),
+                step(7, 0, 6, 2, "马8进7", "黑方右马出动，保持两翼子力均衡。"),
+            ),
+        ),
+        ChineseChessOpeningLine(
+            id = "both-central-cannons",
+            title = "双中炮对峙",
+            summary = "双方先后把炮移到中路，再发展同侧马力。",
+            steps = listOf(
+                step(1, 7, 4, 7, "炮八平五", "红方左炮转中，形成中路牵制。"),
+                step(1, 2, 4, 2, "炮2平5", "黑方右炮也占中线，准备对应防守。"),
+                step(1, 9, 2, 7, "马八进七", "红方左马出动，避免只靠中炮施压。"),
+                step(1, 0, 2, 2, "马2进3", "黑方同侧马发展，补足中路支援。"),
+            ),
+        ),
+        ChineseChessOpeningLine(
+            id = "flank-pawn-rook",
+            title = "边兵出车练习",
+            summary = "边兵先行、边车跟进，观察边线空间的利用。",
+            steps = listOf(
+                step(0, 6, 0, 5, "兵九进一", "红方推进边兵，为车的纵向活动腾出空间。"),
+                step(1, 0, 2, 2, "马2进3", "黑方左马自然发展，控制河口方向。"),
+                step(0, 9, 0, 8, "车九进一", "红方边车先出一步，保持后续路线选择。"),
+                step(8, 3, 8, 4, "卒9进1", "黑方挺另一侧边卒，形成两翼空间试探。"),
             ),
         ),
     ).also { entries ->

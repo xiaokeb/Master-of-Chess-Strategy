@@ -44,10 +44,14 @@ class ChineseChessOpeningViewModelTest {
     fun seedLibraryUsesStableUniqueMetadata() {
         val lines = ChineseChessOpeningLibrary.lines
 
-        assertEquals(3, lines.size)
+        assertEquals(6, lines.size)
         assertEquals(lines.size, lines.map { it.id }.distinct().size)
+        assertEquals(
+            lines.size,
+            lines.map { line -> line.steps.map(ChineseChessOpeningStep::move) }.distinct().size,
+        )
         assertTrue(lines.all { it.steps.size == 4 })
-        assertEquals(2, ChineseChessOpeningLibrary.CONTENT_VERSION)
+        assertEquals(3, ChineseChessOpeningLibrary.CONTENT_VERSION)
     }
 
     @Test
