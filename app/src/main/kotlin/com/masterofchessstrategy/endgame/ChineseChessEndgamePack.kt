@@ -237,18 +237,40 @@ internal object ChineseChessEndgamePackParser {
             pieces.forEach { positioned ->
                 val (x, y) = positioned.position
                 val side = positioned.piece.side
+                // These fixed-square checks are necessary, not proof that the full game is reachable.
                 val inPalace = x in 3..5 && y in if (side == red) 7..9 else 0..2
                 when (positioned.piece.type) {
-                    ChineseChessPieceType.GENERAL, ChineseChessPieceType.ADVISOR ->
-                        require(inPalace) { "General or advisor outside palace" }
-                    ChineseChessPieceType.ELEPHANT ->
+                    ChineseChessPieceType.GENERAL ->
+                        require(inPalace) { "General outside palace" }
+                    ChineseChessPieceType.ADVISOR -> {
+                        require(inPalace) { "Advisor outside palace" }
+                        val homeRow = if (side == red) 9 else 0
+                        val farRow = if (side == red) 7 else 2
+                        val centerRow = if (side == red) 8 else 1
+                        require(((y == homeRow || y == farRow) && x in listOf(3, 5)) ||
+                            (y == centerRow && x == 4)) { "Advisor cannot reach square" }
+                    }
+                    ChineseChessPieceType.ELEPHANT -> {
                         require(if (side == red) y >= 5 else y <= 4) {
                             "Elephant crossed the river"
                         }
-                    ChineseChessPieceType.SOLDIER ->
+                        val homeRow = if (side == red) 9 else 0
+                        val centerRow = if (side == red) 7 else 2
+                        val farRow = if (side == red) 5 else 4
+                        require((y == homeRow && x in listOf(2, 6)) ||
+                            (y == centerRow && x in listOf(0, 4, 8)) ||
+                            (y == farRow && x in listOf(2, 6))) {
+                            "Elephant cannot reach square"
+                        }
+                    }
+                    ChineseChessPieceType.SOLDIER -> {
                         require(if (side == red) y <= 6 else y >= 3) {
                             "Soldier behind starting row"
                         }
+                        require(!(if (side == red) y >= 5 else y <= 4) || x % 2 == 0) {
+                            "Uncrossed soldier cannot reach file"
+                        }
+                    }
                     else -> Unit
                 }
             }

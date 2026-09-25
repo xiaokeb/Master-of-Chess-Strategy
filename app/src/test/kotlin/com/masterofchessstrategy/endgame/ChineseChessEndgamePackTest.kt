@@ -89,6 +89,42 @@ class ChineseChessEndgamePackTest {
         }
     }
 
+    @Test
+    fun unreachableUncrossedSoldierAdvisorAndElephantSquaresAreRejected() {
+        listOf(
+            "PIECE|5|6|RED|SOLDIER",
+            "PIECE|5|3|BLACK|SOLDIER",
+            "PIECE|4|9|RED|ADVISOR",
+            "PIECE|4|2|BLACK|ADVISOR",
+            "PIECE|5|5|RED|ELEPHANT",
+            "PIECE|5|4|BLACK|ELEPHANT",
+        ).forEach { piece ->
+            var malformed = VALID_PACK.replace("PIECE|3|1|RED|CHARIOT", piece)
+            if (piece == "PIECE|4|9|RED|ADVISOR") {
+                malformed = malformed.replace(
+                    "PIECE|4|9|RED|GENERAL",
+                    "PIECE|3|9|RED|GENERAL",
+                )
+            }
+            assertTrue(piece, runCatching { ChineseChessEndgamePackParser.parse(malformed) }.isFailure)
+        }
+    }
+
+    @Test
+    fun reachableSoldierAdvisorAndElephantSquaresRemainAccepted() {
+        listOf(
+            "PIECE|2|6|RED|SOLDIER",
+            "PIECE|2|4|BLACK|SOLDIER",
+            "PIECE|3|9|RED|ADVISOR",
+            "PIECE|3|0|BLACK|ADVISOR",
+            "PIECE|2|5|RED|ELEPHANT",
+            "PIECE|2|4|BLACK|ELEPHANT",
+        ).forEach { piece ->
+            val variation = VALID_PACK.replace("PIECE|3|1|RED|CHARIOT", piece)
+            assertTrue(piece, runCatching { ChineseChessEndgamePackParser.parse(variation) }.isSuccess)
+        }
+    }
+
     private companion object {
         const val VALID_LEVEL = """LEVEL|xq-easy-001|0|1|训练|一步杀|RED|1|1|10|4|MAIN
 PIECE|4|9|RED|GENERAL

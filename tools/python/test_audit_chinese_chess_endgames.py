@@ -67,6 +67,37 @@ class ChineseChessEndgameAuditTest(unittest.TestCase):
         with self.assertRaisesRegex(AuditError, "soldier behind its starting row"):
             parse_pack(malformed)
 
+    def test_uncrossed_soldier_and_palace_piece_unreachable_squares_are_rejected(self) -> None:
+        replacements = (
+            ("PIECE|5|6|RED|SOLDIER", "soldier cannot reach"),
+            ("PIECE|5|3|BLACK|SOLDIER", "soldier cannot reach"),
+            ("PIECE|4|9|RED|ADVISOR", "advisor cannot reach"),
+            ("PIECE|4|2|BLACK|ADVISOR", "advisor cannot reach"),
+            ("PIECE|5|5|RED|ELEPHANT", "elephant cannot reach"),
+            ("PIECE|5|4|BLACK|ELEPHANT", "elephant cannot reach"),
+        )
+        for piece, message in replacements:
+            with self.subTest(piece=piece):
+                malformed = PACK.replace("PIECE|3|1|RED|CHARIOT", piece)
+                if piece == "PIECE|4|9|RED|ADVISOR":
+                    malformed = malformed.replace(
+                        "PIECE|4|9|RED|GENERAL", "PIECE|3|9|RED|GENERAL"
+                    )
+                with self.assertRaisesRegex(AuditError, message):
+                    parse_pack(malformed)
+
+    def test_reachable_soldier_advisor_and_elephant_squares_remain_accepted(self) -> None:
+        for piece in (
+            "PIECE|2|6|RED|SOLDIER",
+            "PIECE|2|4|BLACK|SOLDIER",
+            "PIECE|3|9|RED|ADVISOR",
+            "PIECE|3|0|BLACK|ADVISOR",
+            "PIECE|2|5|RED|ELEPHANT",
+            "PIECE|2|4|BLACK|ELEPHANT",
+        ):
+            with self.subTest(piece=piece):
+                parse_pack(PACK.replace("PIECE|3|1|RED|CHARIOT", piece))
+
     def test_missing_license_and_wrong_version_are_rejected(self) -> None:
         for malformed in (
             PACK.replace("GPL-3.0-or-later", "UNKNOWN"),

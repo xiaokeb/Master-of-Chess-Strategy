@@ -166,15 +166,34 @@ def _validate_level(level: Level) -> None:
         for kind, count in counts.items():
             if count > PIECE_QUOTAS[kind]:
                 raise AuditError(f"{level.id}: too many {side} {kind} pieces")
+    # Reject impossible fixed-square placements; full-position reachability needs native rules.
     for x, y, side, kind in level.pieces:
         own_half = y >= 5 if side == "RED" else y <= 4
         if kind == "ELEPHANT" and not own_half:
             raise AuditError(f"{level.id}: {side} elephant crossed the river")
+        if kind == "ELEPHANT":
+            home = 9 if side == "RED" else 0
+            reachable = (
+                (y == home and x in (2, 6))
+                or (y == (7 if side == "RED" else 2) and x in (0, 4, 8))
+                or (y == (5 if side == "RED" else 4) and x in (2, 6))
+            )
+            if not reachable:
+                raise AuditError(f"{level.id}: {side} elephant cannot reach square")
         if kind == "ADVISOR" and (x not in range(3, 6) or
                                   y not in (range(7, 10) if side == "RED" else range(0, 3))):
             raise AuditError(f"{level.id}: {side} advisor outside palace")
+        if kind == "ADVISOR":
+            home = 9 if side == "RED" else 0
+            reachable = (
+                (y == home or y == (7 if side == "RED" else 2)) and x in (3, 5)
+            ) or (y == (8 if side == "RED" else 1) and x == 4)
+            if not reachable:
+                raise AuditError(f"{level.id}: {side} advisor cannot reach square")
         if kind == "SOLDIER" and (y > 6 if side == "RED" else y < 3):
             raise AuditError(f"{level.id}: {side} soldier behind its starting row")
+        if kind == "SOLDIER" and own_half and x % 2 != 0:
+            raise AuditError(f"{level.id}: {side} uncrossed soldier cannot reach file")
     generals = {
         side: next((x, y) for x, y, piece_side, kind in level.pieces
                    if piece_side == side and kind == "GENERAL")
