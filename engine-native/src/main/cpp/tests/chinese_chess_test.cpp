@@ -431,6 +431,91 @@ void general_escape_unmasking_a_chase_is_idle() {
     assert(engine.serialize()[first_move_nature_offset] == 0);
 }
 
+void soldier_move_unmasking_a_rook_chase_is_chase() {
+    ChineseChessEngine engine;
+    assert(
+        engine.restore(
+            custom_position(
+                Side::red,
+                {
+                    {4, 9, {PieceType::general, Side::red}},
+                    {5, 0, {PieceType::general, Side::black}},
+                    {3, 5, {PieceType::chariot, Side::red}},
+                    {3, 4, {PieceType::soldier, Side::red}},
+                    {3, 2, {PieceType::horse, Side::black}},
+                }
+            )
+        ).restored
+    );
+
+    // Rule 26.1.1: the moving soldier's own chase is allowed, but a new
+    // rook threat revealed by that move is still a chase.
+    assert(engine.apply(make_board_move(3, 4, 4, 4)).accepted);
+    constexpr std::size_t first_move_nature_offset = 12 + 90 + 10;
+    assert(engine.serialize()[first_move_nature_offset] == 2);
+}
+
+void soldier_own_chase_remains_idle() {
+    ChineseChessEngine engine;
+    assert(
+        engine.restore(
+            custom_position(
+                Side::red,
+                {
+                    {4, 9, {PieceType::general, Side::red}},
+                    {5, 0, {PieceType::general, Side::black}},
+                    {4, 4, {PieceType::soldier, Side::red}},
+                    {3, 3, {PieceType::chariot, Side::black}},
+                }
+            )
+        ).restored
+    );
+
+    assert(engine.apply(make_board_move(4, 4, 3, 4)).accepted);
+    constexpr std::size_t first_move_nature_offset = 12 + 90 + 10;
+    assert(engine.serialize()[first_move_nature_offset] == 0);
+}
+
+void pinned_advisor_is_a_false_root_for_rook_chase() {
+    for (const bool advisor_pinned : {false, true}) {
+        std::vector<PositionedPiece> pieces{
+            {5, 9, {PieceType::general, Side::red}},
+            {4, 0, {PieceType::general, Side::black}},
+            {3, 5, {PieceType::chariot, Side::red}},
+            {3, 4, {PieceType::soldier, Side::red}},
+            {3, 2, {PieceType::horse, Side::black}},
+            {4, 1, {PieceType::advisor, Side::black}},
+        };
+        if (advisor_pinned) {
+            pieces.push_back({4, 6, {PieceType::chariot, Side::red}});
+        }
+        ChineseChessEngine engine;
+        assert(engine.restore(custom_position(Side::red, pieces)).restored);
+        assert(engine.apply(make_board_move(3, 4, 2, 4)).accepted);
+        constexpr std::size_t first_move_nature_offset = 12 + 90 + 10;
+        // Without the pin, the advisor can recapture the rook for a loss;
+        // with the pin, leaving the king exposed makes that root false.
+        assert(engine.serialize()[first_move_nature_offset] ==
+            (advisor_pinned ? 2 : 0));
+    }
+
+    ChineseChessEngine king_root;
+    assert(king_root.restore(custom_position(Side::red, {
+        {5, 9, {PieceType::general, Side::red}},
+        {4, 0, {PieceType::general, Side::black}},
+        {3, 5, {PieceType::chariot, Side::red}},
+        {4, 6, {PieceType::chariot, Side::red}},
+        {3, 4, {PieceType::soldier, Side::red}},
+        {3, 0, {PieceType::horse, Side::black}},
+        {4, 1, {PieceType::advisor, Side::black}},
+    })).restored);
+    assert(king_root.apply(make_board_move(3, 4, 2, 4)).accepted);
+    // The advisor is pinned here too, but the black general can recapture
+    // on (3, 0), so the horse is still adequately protected.
+    constexpr std::size_t first_move_nature_offset = 12 + 90 + 10;
+    assert(king_root.serialize()[first_move_nature_offset] == 0);
+}
+
 void repeated_unrooted_chase_loses_for_the_chasing_side() {
     ChineseChessEngine engine;
     assert(
@@ -828,6 +913,9 @@ int main() {
     wrong_game_type_is_rejected_after_checksum_validation();
     repeated_long_check_loses_for_the_checking_side();
     general_escape_unmasking_a_chase_is_idle();
+    soldier_move_unmasking_a_rook_chase_is_chase();
+    soldier_own_chase_remains_idle();
+    pinned_advisor_is_a_false_root_for_rook_chase();
     repeated_unrooted_chase_loses_for_the_chasing_side();
     repeated_joint_chase_loses_against_idle_defense();
     repeated_alternating_multi_target_chase_loses();
