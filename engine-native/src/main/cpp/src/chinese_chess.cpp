@@ -237,7 +237,7 @@ ActionResult ChineseChessEngine::apply(const EngineAction& action) {
     auto next = board_;
     next[to] = moving;
     next[from].reset();
-    const auto nature = classify_move(board_, next, current_side_);
+    const auto nature = classify_move(board_, next, current_side_, moving.type);
     history_.push_back(MoveRecord{
         from_x,
         from_y,
@@ -1142,11 +1142,17 @@ ChineseChessEngine::TacticalAnalysis
 ChineseChessEngine::analyze_tactical_move(
     const Board& before,
     const Board& after,
-    const Side mover
+    const Side mover,
+    const PieceType moving_type
 ) noexcept {
     TacticalAnalysis result{};
     result.check = is_in_check(after, opposite(mover));
     if (result.check) {
+        return result;
+    }
+    // Rule 26.1.2: a general escaping check does not gain a chase or kill
+    // merely because its move uncovers another piece's threat.
+    if (moving_type == PieceType::general && is_in_check(before, mover)) {
         return result;
     }
     result.kill =
@@ -1232,10 +1238,14 @@ ChineseChessEngine::unrooted_targets(
 ChineseChessEngine::MoveNature ChineseChessEngine::classify_move(
     const Board& before,
     const Board& after,
-    const Side mover
+    const Side mover,
+    const PieceType moving_type
 ) noexcept {
     if (is_in_check(after, opposite(mover))) {
         return MoveNature::check;
+    }
+    if (moving_type == PieceType::general && is_in_check(before, mover)) {
+        return MoveNature::idle;
     }
     const auto previous_targets = unrooted_targets(before, mover);
     const auto next_targets = unrooted_targets(after, mover);
@@ -1501,7 +1511,8 @@ std::optional<GameResult> ChineseChessEngine::adjudicate_2020_cycle(
         const auto analysis = analyze_tactical_move(
             position_history_[ply].board,
             position_history_[ply + 1].board,
-            move.previous_side
+            move.previous_side,
+            move.moved.type
         );
         std::bitset<board_size> direct_targets;
         std::bitset<board_size> joint_targets;

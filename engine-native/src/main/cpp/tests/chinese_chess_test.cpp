@@ -352,6 +352,30 @@ void repeated_long_check_loses_for_the_checking_side() {
     assert(engine.game_result() == GameResult::ongoing);
 }
 
+void general_escape_unmasking_a_chase_is_idle() {
+    ChineseChessEngine engine;
+    assert(
+        engine.restore(
+            custom_position(
+                Side::red,
+                {
+                    {4, 8, {PieceType::general, Side::red}},
+                    {3, 0, {PieceType::general, Side::black}},
+                    {4, 9, {PieceType::chariot, Side::red}},
+                    {4, 1, {PieceType::advisor, Side::black}},
+                    {5, 6, {PieceType::horse, Side::black}},
+                }
+            )
+        ).restored
+    );
+
+    // The black horse checks the red general. Moving the general away also
+    // uncovers a rook attack on the advisor, but rule 26.1.2 calls this idle.
+    assert(engine.apply(make_board_move(4, 8, 5, 8)).accepted);
+    constexpr std::size_t first_move_nature_offset = 12 + 90 + 10;
+    assert(engine.serialize()[first_move_nature_offset] == 0);
+}
+
 void repeated_unrooted_chase_loses_for_the_chasing_side() {
     ChineseChessEngine engine;
     assert(
@@ -648,6 +672,7 @@ int main() {
     unique_seed_mates_are_checked_and_unambiguous();
     wrong_game_type_is_rejected_after_checksum_validation();
     repeated_long_check_loses_for_the_checking_side();
+    general_escape_unmasking_a_chase_is_idle();
     repeated_unrooted_chase_loses_for_the_chasing_side();
     repeated_joint_chase_loses_against_idle_defense();
     repeated_alternating_multi_target_chase_loses();

@@ -205,7 +205,8 @@ private:
     [[nodiscard]] static TacticalAnalysis analyze_tactical_move(
         const Board& before,
         const Board& after,
-        Side mover
+        Side mover,
+        PieceType moving_type
     ) noexcept;
     [[nodiscard]] static std::array<bool, board_size> unrooted_targets(
         const Board& board,
@@ -214,7 +215,8 @@ private:
     [[nodiscard]] static MoveNature classify_move(
         const Board& before,
         const Board& after,
-        Side mover
+        Side mover,
+        PieceType moving_type
     ) noexcept;
     [[nodiscard]] bool is_legal_move(
         std::int32_t from_x,
