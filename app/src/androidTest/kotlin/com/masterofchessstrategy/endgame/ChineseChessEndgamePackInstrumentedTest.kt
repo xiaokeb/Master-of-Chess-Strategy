@@ -39,4 +39,33 @@ class ChineseChessEndgamePackInstrumentedTest {
             }
         }
     }
+
+    @Test
+    fun everyUniqueMateSeedHasOneWinningFirstMove() {
+        val assets = InstrumentationRegistry.getInstrumentation().targetContext.assets
+        val pack = ChineseChessEndgamePackParser.loadBundled(assets)
+
+        val uniqueLevels = pack.levels.filter { it.theme == "唯一一步杀" }
+        assertEquals(5, uniqueLevels.size)
+        uniqueLevels.forEach { level ->
+            NativeChineseChessEngine().use { engine ->
+                assertTrue(
+                    level.id,
+                    engine.restore(level.initialEngineState) is RestoreResult.Restored,
+                )
+                val winningMoves = engine.legalActions().filter { move ->
+                    val accepted = engine.apply(move) is ActionResult.Accepted
+                    val wins = accepted && engine.gameResult() == GameResult.FIRST_PLAYER_WIN
+                    if (accepted) assertTrue(level.id, engine.undo())
+                    wins
+                }
+                assertEquals(
+                    "${level.id}: ${winningMoves.joinToString()}",
+                    1,
+                    winningMoves.size,
+                )
+                assertEquals(level.id, level.principalVariation.single(), winningMoves.single())
+            }
+        }
+    }
 }

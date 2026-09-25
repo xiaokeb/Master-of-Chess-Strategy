@@ -170,18 +170,27 @@ internal class ChineseChessEndgameViewModel(
         val entries = pack.levels.map { level ->
             val earlierDifficulties = Difficulty.entries.take(level.difficulty.ordinal)
             val chapterUnlocked = earlierDifficulties.all { earlier ->
-                pack.levels.filter { it.difficulty == earlier }
+                pack.levels.filter {
+                    it.difficulty == earlier &&
+                        it.track == ChineseChessEndgameTrack.MAIN
+                }
                     .all { it.id in completed }
             }
-            val previousCompleted = level.chapterOrder == 1 || pack.levels.any {
+            val mainCompleted = pack.levels.filter {
                 it.difficulty == level.difficulty &&
-                    it.chapterOrder == level.chapterOrder - 1 &&
-                    it.id in completed
-            }
+                    it.track == ChineseChessEndgameTrack.MAIN
+            }.all { it.id in completed }
+            val earlierInTrackCompleted = pack.levels.filter {
+                it.difficulty == level.difficulty &&
+                    it.track == level.track &&
+                    it.chapterOrder < level.chapterOrder
+            }.all { it.id in completed }
+            val trackUnlocked = earlierInTrackCompleted &&
+                (level.track == ChineseChessEndgameTrack.MAIN || mainCompleted)
             EndgameLevelEntry(
                 level = level,
                 isChapterUnlocked = chapterUnlocked,
-                isUnlocked = chapterUnlocked && previousCompleted,
+                isUnlocked = chapterUnlocked && trackUnlocked,
                 completion = completed[level.id],
             )
         }

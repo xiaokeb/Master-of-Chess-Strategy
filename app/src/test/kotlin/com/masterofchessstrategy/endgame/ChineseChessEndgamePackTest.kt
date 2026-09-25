@@ -13,8 +13,8 @@ class ChineseChessEndgamePackTest {
     fun validPackParsesMetadataLevelsPiecesAndMoves() {
         val pack = ChineseChessEndgamePackParser.parse(VALID_PACK)
 
-        assertEquals(2, pack.version)
-        assertEquals("xq-easy-001@v2", pack.sessionVariantId("xq-easy-001"))
+        assertEquals(3, pack.version)
+        assertEquals("xq-easy-001@v3", pack.sessionVariantId("xq-easy-001"))
         assertEquals("GPL-3.0-or-later", pack.license)
         assertEquals(1, pack.levels.size)
         val level = pack.levels.single()
@@ -45,27 +45,40 @@ class ChineseChessEndgamePackTest {
     }
 
     @Test
+    fun unknownTrackAndBonusWithoutMainAreRejected() {
+        val unknownTrack = VALID_PACK.replace("|3|MAIN", "|3|UNKNOWN")
+        val bonusWithoutMain = VALID_PACK.replace("|3|MAIN", "|3|BONUS")
+
+        assertTrue(runCatching { ChineseChessEndgamePackParser.parse(unknownTrack) }.isFailure)
+        assertTrue(runCatching { ChineseChessEndgamePackParser.parse(bonusWithoutMain) }.isFailure)
+    }
+
+    @Test
     fun bundledPackParsesEveryDifficultyAndUsesProjectLicense() {
-        val content = File("src/main/assets/endgames/chinese_chess/endgames-v2.txt")
+        val content = File("src/main/assets/endgames/chinese_chess/endgames-v3.txt")
             .readText(Charsets.UTF_8)
 
         val pack = ChineseChessEndgamePackParser.parse(content)
 
         assertEquals("GPL-3.0-or-later", pack.license)
         assertEquals(Difficulty.entries.toSet(), pack.levels.map { it.difficulty }.toSet())
-        assertEquals(5, pack.levels.size)
+        assertEquals(10, pack.levels.size)
+        assertEquals(5, pack.levels.count { it.theme == "唯一一步杀" })
+        assertEquals(5, pack.levels.count { it.theme == "多解胜局" })
+        assertEquals(5, pack.levels.count { it.track == ChineseChessEndgameTrack.MAIN })
+        assertEquals(5, pack.levels.count { it.track == ChineseChessEndgameTrack.BONUS })
         assertTrue(pack.levels.all { it.principalVariation.isNotEmpty() })
     }
 
     private companion object {
-        const val VALID_LEVEL = """LEVEL|xq-easy-001|0|1|训练|一步杀|RED|1|1|10|3
+        const val VALID_LEVEL = """LEVEL|xq-easy-001|0|1|训练|一步杀|RED|1|1|10|3|MAIN
 PIECE|4|9|RED|GENERAL
 PIECE|4|0|BLACK|GENERAL
 PIECE|3|1|RED|CHARIOT
 MOVE|3|1|4|1
 END
 """
-        const val VALID_PACK = """MOCS-XQ-ENDGAMES|2
+        const val VALID_PACK = """MOCS-XQ-ENDGAMES|3
 LICENSE|GPL-3.0-or-later
 AUTHOR|Test Author
 $VALID_LEVEL"""

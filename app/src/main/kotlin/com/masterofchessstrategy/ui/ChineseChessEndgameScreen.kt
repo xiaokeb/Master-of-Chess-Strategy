@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.masterofchessstrategy.R
 import com.masterofchessstrategy.endgame.ChineseChessEndgameUiState
+import com.masterofchessstrategy.endgame.ChineseChessEndgameTrack
 import com.masterofchessstrategy.endgame.EndgameCatalogFeedback
 import com.masterofchessstrategy.endgame.EndgameCatalogMode
 import com.masterofchessstrategy.endgame.EndgameLevelEntry
@@ -165,6 +166,16 @@ private fun EndgameLevelCard(
         ) {
             Text(
                 text = stringResource(
+                    if (entry.level.track == ChineseChessEndgameTrack.MAIN) {
+                        R.string.endgame_track_main
+                    } else {
+                        R.string.endgame_track_bonus
+                    },
+                ),
+                style = MaterialTheme.typography.labelMedium,
+            )
+            Text(
+                text = stringResource(
                     R.string.endgame_level_number,
                     entry.level.chapterOrder,
                     entry.level.title,
@@ -189,6 +200,8 @@ private fun EndgameLevelCard(
                     )
                     entry.isUnlocked -> stringResource(R.string.endgame_playable)
                     !entry.isChapterUnlocked -> stringResource(R.string.endgame_chapter_locked)
+                    entry.level.track == ChineseChessEndgameTrack.BONUS ->
+                        stringResource(R.string.endgame_bonus_locked)
                     else -> stringResource(R.string.endgame_level_locked)
                 },
                 color = MaterialTheme.colorScheme.primary,

@@ -95,7 +95,9 @@
     <string name="endgame_mode">残局闯关</string>
     <string name="endgame_catalog_title">中国象棋残局</string>
     <string name="endgame_catalog_subtitle">线性解锁 · 首通奖励 · 全部内容离线</string>
-    <string name="endgame_main">主线</string>
+    <string name="endgame_main">关卡</string>
+    <string name="endgame_track_main">主线</string>
+    <string name="endgame_track_bonus">奖励支线</string>
     <string name="endgame_theme">主题</string>
     <string name="endgame_daily">每日</string>
     <string name="endgame_random">随机</string>
@@ -107,6 +109,7 @@
     <string name="endgame_playable">可挑战</string>
     <string name="endgame_chapter_locked">完成上一难度后解锁</string>
     <string name="endgame_level_locked">通关前一关后解锁</string>
+    <string name="endgame_bonus_locked">完成本档主线和上一奖励关后解锁</string>
     <string name="endgame_progress_summary">总进度 %1$d / %2$d · 残局奖励 %3$d 星 / %4$d 分</string>
     <string name="endgame_load_incompatible">残局进度不兼容，已停止加载旧数据。</string>
     <string name="endgame_save_failed">残局进度保存失败，本局棋谱仍会保留。</string>

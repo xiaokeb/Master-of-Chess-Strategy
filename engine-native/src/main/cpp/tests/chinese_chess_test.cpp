@@ -226,7 +226,7 @@ void corrupted_positions_are_rejected() {
     assert(result.error == EngineError::corrupted_data);
 }
 
-void bundled_seed_endgames_are_checkmate_in_one() {
+void legacy_seed_endgames_have_a_winning_first_move() {
     std::size_t seed_index = 0;
     const auto verify = [&seed_index](
         const std::vector<PositionedPiece>& pieces
@@ -237,7 +237,7 @@ void bundled_seed_endgames_are_checkmate_in_one() {
         assert(engine.game_result() == GameResult::ongoing);
         assert(engine.apply(make_board_move(3, 1, 4, 1)).accepted);
         if (engine.game_result() != GameResult::first_player_win) {
-            std::fprintf(stderr, "Endgame seed %zu is not mate in one\n", seed_index);
+            std::fprintf(stderr, "Legacy endgame seed %zu has no winning line\n", seed_index);
         }
         assert(engine.game_result() == GameResult::first_player_win);
     };
@@ -586,6 +586,53 @@ void easy_ai_returns_legal_move_without_mutating_position() {
     assert(!engine.best_move(Difficulty::master));
 }
 
+void unique_seed_mates_are_checked_and_unambiguous() {
+    for (int variant = 0; variant < 5; ++variant) {
+        const auto rook_x = variant == 1 || variant == 3 ? 8 : 0;
+        const auto rook_y = variant <= 1 ? 2 : variant <= 3 ? 3 : 4;
+        const auto soldier_y = variant <= 1 ? 5 : variant <= 3 ? 6 : 7;
+        std::vector<PositionedPiece> pieces{
+            {4, 9, {PieceType::general, Side::red}},
+            {4, 0, {PieceType::general, Side::black}},
+            {4, soldier_y, {PieceType::soldier, Side::red}},
+            {1, 1, {PieceType::horse, Side::red}},
+            {7, 1, {PieceType::horse, Side::red}},
+            {rook_x, rook_y, {PieceType::chariot, Side::red}},
+        };
+        if (variant >= 2) {
+            pieces.push_back({0, 6, {PieceType::soldier, Side::black}});
+            pieces.push_back({8, 6, {PieceType::soldier, Side::black}});
+        }
+        if (variant >= 3) {
+            pieces.push_back({2, 6, {PieceType::soldier, Side::black}});
+            pieces.push_back({6, 6, {PieceType::soldier, Side::black}});
+        }
+        if (variant >= 4) {
+            pieces.push_back({1, 7, {PieceType::cannon, Side::black}});
+            pieces.push_back({7, 7, {PieceType::cannon, Side::black}});
+        }
+        ChineseChessEngine candidate;
+        const auto restored = candidate.restore(custom_position(Side::red, pieces));
+        assert(restored.restored);
+        assert(candidate.game_result() == GameResult::ongoing);
+        assert(!candidate.is_in_check(Side::black));
+        int winning_moves = 0;
+        for (const auto& action : candidate.legal_actions()) {
+            auto next = candidate;
+            if (next.apply(action).accepted &&
+                next.game_result() == GameResult::first_player_win) {
+                ++winning_moves;
+                assert(action.arguments[0] == rook_x);
+                assert(action.arguments[1] == rook_y);
+                assert(action.arguments[2] == 4);
+                assert(action.arguments[3] == rook_y);
+                assert(next.is_in_check(Side::black));
+            }
+        }
+        assert(winning_moves == 1);
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -597,7 +644,8 @@ int main() {
     moving_the_only_screen_between_generals_is_illegal();
     undo_and_serialization_restore_state();
     corrupted_positions_are_rejected();
-    bundled_seed_endgames_are_checkmate_in_one();
+    legacy_seed_endgames_have_a_winning_first_move();
+    unique_seed_mates_are_checked_and_unambiguous();
     wrong_game_type_is_rejected_after_checksum_validation();
     repeated_long_check_loses_for_the_checking_side();
     repeated_unrooted_chase_loses_for_the_chasing_side();

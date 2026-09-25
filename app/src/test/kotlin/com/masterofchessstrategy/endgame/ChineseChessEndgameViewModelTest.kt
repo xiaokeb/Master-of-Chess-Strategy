@@ -59,8 +59,21 @@ class ChineseChessEndgameViewModelTest {
         viewModel.complete("xq-easy-002", 1)
         advanceUntilIdle()
         assertTrue(viewModel.uiState.entries.entry("xq-medium-001").isUnlocked)
+        assertTrue(viewModel.uiState.entries.entry("xq-easy-003").isUnlocked)
+        assertFalse(viewModel.uiState.entries.entry("xq-easy-004").isUnlocked)
+        assertFalse(viewModel.uiState.entries.entry("xq-medium-002").isUnlocked)
         assertEquals(2, viewModel.uiState.progress.totalStars)
         assertEquals(20, viewModel.uiState.progress.totalScore)
+
+        viewModel.complete("xq-medium-001", 1)
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.entries.entry("xq-hard-001").isUnlocked)
+        assertTrue(viewModel.uiState.entries.entry("xq-medium-002").isUnlocked)
+
+        viewModel.complete("xq-easy-003", 1)
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.entries.entry("xq-easy-004").isUnlocked)
+        assertTrue(viewModel.uiState.entries.entry("xq-hard-001").isUnlocked)
     }
 
     @Test
@@ -138,13 +151,16 @@ class ChineseChessEndgameViewModelTest {
 }
 
 private fun testPack(): ChineseChessEndgamePack = ChineseChessEndgamePack(
-    version = 2,
+    version = 3,
     license = "GPL-3.0-or-later",
     author = "Test",
     levels = listOf(
         testLevel("xq-easy-001", Difficulty.EASY, 1),
         testLevel("xq-easy-002", Difficulty.EASY, 2),
+        testLevel("xq-easy-003", Difficulty.EASY, 3, ChineseChessEndgameTrack.BONUS),
+        testLevel("xq-easy-004", Difficulty.EASY, 4, ChineseChessEndgameTrack.BONUS),
         testLevel("xq-medium-001", Difficulty.MEDIUM, 1),
+        testLevel("xq-medium-002", Difficulty.MEDIUM, 2, ChineseChessEndgameTrack.BONUS),
         testLevel("xq-hard-001", Difficulty.HARD, 1),
         testLevel("xq-master-001", Difficulty.MASTER, 1),
     ),
@@ -154,6 +170,7 @@ private fun testLevel(
     id: String,
     difficulty: Difficulty,
     order: Int,
+    track: ChineseChessEndgameTrack = ChineseChessEndgameTrack.MAIN,
 ): ChineseChessEndgameLevel = ChineseChessEndgameLevel(
     id = id,
     difficulty = difficulty,
@@ -175,4 +192,5 @@ private fun testLevel(
         ),
     ),
     principalVariation = listOf(BoardMove(BoardPosition(4, 9), BoardPosition(4, 8))),
+    track = track,
 )

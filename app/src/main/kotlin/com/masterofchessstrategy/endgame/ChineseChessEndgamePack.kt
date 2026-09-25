@@ -10,6 +10,8 @@ import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.PositionedChineseChessPiece
 
+internal enum class ChineseChessEndgameTrack { MAIN, BONUS }
+
 internal data class ChineseChessEndgameLevel(
     val id: String,
     val difficulty: Difficulty,
@@ -22,6 +24,7 @@ internal data class ChineseChessEndgameLevel(
     val scoreReward: Int,
     val pieces: List<PositionedChineseChessPiece>,
     val principalVariation: List<BoardMove>,
+    val track: ChineseChessEndgameTrack = ChineseChessEndgameTrack.MAIN,
 ) {
     val initialEngineState: ByteArray
         get() = ChineseChessPositionCodec.encode(sideToMove, pieces)
@@ -42,17 +45,24 @@ internal data class ChineseChessEndgamePack(
         require(levels.isNotEmpty())
         require(levels.map(ChineseChessEndgameLevel::id).distinct().size == levels.size)
         Difficulty.entries.forEach { difficulty ->
-            val orders = levels.filter { it.difficulty == difficulty }
-                .map(ChineseChessEndgameLevel::chapterOrder)
-                .sorted()
+            val chapter = levels.filter { it.difficulty == difficulty }
+                .sortedBy(ChineseChessEndgameLevel::chapterOrder)
+            val orders = chapter.map(ChineseChessEndgameLevel::chapterOrder)
             require(orders == (1..orders.size).toList()) {
                 "Level order must be contiguous within each difficulty"
             }
+            require(chapter.firstOrNull()?.track != ChineseChessEndgameTrack.BONUS) {
+                "Bonus levels require a main progression"
+            }
+            require(
+                chapter.dropWhile { it.track == ChineseChessEndgameTrack.MAIN }
+                    .all { it.track == ChineseChessEndgameTrack.BONUS },
+            ) { "Bonus levels must follow the main progression" }
         }
     }
 
     companion object {
-        const val CURRENT_VERSION = 2
+        const val CURRENT_VERSION = 3
         const val REQUIRED_LICENSE = "GPL-3.0-or-later"
     }
 }
@@ -69,7 +79,7 @@ internal object ChineseChessEndgamePackParser {
             .map(String::trim)
             .filter { it.isNotEmpty() && !it.startsWith('#') }
             .toList()
-        require(lines.firstOrNull() == "MOCS-XQ-ENDGAMES|2")
+        require(lines.firstOrNull() == "MOCS-XQ-ENDGAMES|${ChineseChessEndgamePack.CURRENT_VERSION}")
         val license = lines.singleField("LICENSE")
         val author = lines.singleField("AUTHOR")
         val levels = mutableListOf<ChineseChessEndgameLevel>()
@@ -78,7 +88,7 @@ internal object ChineseChessEndgamePackParser {
             val fields = line.split('|')
             when (fields.firstOrNull()) {
                 "LEVEL" -> {
-                    require(builder == null && fields.size == 11)
+                    require(builder == null && fields.size == 12)
                     builder = LevelBuilder(
                         id = fields[1],
                         difficulty = fields[2].toDifficulty(),
@@ -90,6 +100,7 @@ internal object ChineseChessEndgamePackParser {
                         starReward = fields[8].boundedInt(1, MAX_REWARD),
                         scoreReward = fields[9].boundedInt(1, MAX_SCORE_REWARD),
                         declaredPieceCount = fields[10].boundedInt(2, 32),
+                        track = fields[11].toTrack(),
                     )
                 }
 
@@ -156,6 +167,10 @@ internal object ChineseChessEndgamePackParser {
         ChineseChessPieceType.entries.firstOrNull { it.name == this }
             ?: error("Unsupported piece type")
 
+    private fun String.toTrack(): ChineseChessEndgameTrack =
+        ChineseChessEndgameTrack.entries.firstOrNull { it.name == this }
+            ?: error("Unsupported level track")
+
     private data class LevelBuilder(
         val id: String,
         val difficulty: Difficulty,
@@ -167,6 +182,7 @@ internal object ChineseChessEndgamePackParser {
         val starReward: Int,
         val scoreReward: Int,
         val declaredPieceCount: Int,
+        val track: ChineseChessEndgameTrack,
         val pieces: MutableList<PositionedChineseChessPiece> = mutableListOf(),
         val moves: MutableList<BoardMove> = mutableListOf(),
     ) {
@@ -177,7 +193,7 @@ internal object ChineseChessEndgamePackParser {
                 "Level id suffix must equal its chapter order"
             }
             require(sideToMove == ChineseChessSide.RED) {
-                "Endgame pack v1 supports red-to-move puzzles"
+                "Endgame pack supports red-to-move puzzles"
             }
             require(pieces.size == declaredPieceCount)
             require(moves.isNotEmpty() && moves.size <= maxPlayerMoves * 2 - 1)
@@ -195,11 +211,12 @@ internal object ChineseChessEndgamePackParser {
                 scoreReward = scoreReward,
                 pieces = pieces.toList(),
                 principalVariation = moves.toList(),
+                track = track,
             )
         }
     }
 
-    private const val ASSET_PATH = "endgames/chinese_chess/endgames-v2.txt"
+    private const val ASSET_PATH = "endgames/chinese_chess/endgames-v3.txt"
     private const val MAX_PACK_BYTES = 2 * 1024 * 1024
     private const val MAX_LEVELS_PER_CHAPTER = 3_000
     private const val MAX_PLAYER_MOVES = 100
