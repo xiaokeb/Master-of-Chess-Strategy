@@ -12,6 +12,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -80,6 +82,17 @@ class TutorialEndgameNavigationTest {
         composeRule.waitUntil(10000) {
             runBlocking { database.activeGameDao().find(GameType.CHINESE_CHESS.code) != null }
         }
+        val board = composeRule.onNodeWithTag(CHINESE_CHESS_BOARD_TAG)
+        board.performTouchInput {
+            val anchor = Offset(width / 2f, height * 0.25f)
+            down(0, anchor - Offset(50f, 0f)); down(1, anchor + Offset(50f, 0f))
+            moveTo(0, anchor - Offset(75f, 0f)); moveTo(1, anchor + Offset(75f, 0f))
+            up(0); up(1)
+        }
+        assertTrue(board.fetchSemanticsNode().config[BoardViewportKey].scale > 1.4f)
+        ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand(
+            "screencap -p /data/local/tmp/mocs-board-zoom.png",
+        )).use { it.readBytes() }
         tapSquare(3, 1)
         tapSquare(4, 1)
         composeRule.onNodeWithText("红方胜").assertExists()
@@ -102,9 +115,12 @@ class TutorialEndgameNavigationTest {
     }
 
     private fun tapSquare(x: Int, y: Int) {
-        composeRule.onNodeWithTag(CHINESE_CHESS_BOARD_TAG).performTouchInput {
-            val geometry = calculateBoardGeometry(width.toFloat(), height.toFloat())
-            click(geometry.center(BoardPosition(x, y)))
-        }
+        val board = composeRule.onNodeWithTag(CHINESE_CHESS_BOARD_TAG)
+        val node = board.fetchSemanticsNode()
+        val size = Size(node.boundsInRoot.width, node.boundsInRoot.height)
+        val geometry = calculateBoardGeometry(size.width, size.height)
+        val target = node.config[BoardViewportKey].screenPoint(geometry.center(BoardPosition(x, y)), size)
+        assertTrue(target.x in 0f..size.width && target.y in 0f..size.height)
+        board.performTouchInput { click(target) }
     }
 }

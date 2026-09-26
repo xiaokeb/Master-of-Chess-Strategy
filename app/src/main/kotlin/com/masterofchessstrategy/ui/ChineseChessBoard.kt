@@ -2,17 +2,37 @@ package com.masterofchessstrategy.ui
 
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.SemanticsPropertyKey
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.masterofchessstrategy.engine.BoardPosition
@@ -21,11 +41,17 @@ import com.masterofchessstrategy.engine.ChineseChessPiece
 import com.masterofchessstrategy.engine.ChineseChessPieceType
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.game.ChineseChessGameUiState
+import com.masterofchessstrategy.game.ChineseChessFeedback
+import com.masterofchessstrategy.R
 import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.roundToInt
 
 internal const val CHINESE_CHESS_BOARD_TAG = "chinese_chess_board"
+internal const val BOARD_RESET_VIEW_TAG = "board_reset_view"
+internal val BoardViewportKey = SemanticsPropertyKey<ChineseChessBoardViewport>("BoardViewport")
+internal val BoardMovePulseKey = SemanticsPropertyKey<Boolean>("BoardMovePulse")
+internal val BoardMovePulseProgressKey = SemanticsPropertyKey<Float>("BoardMovePulseProgress")
 
 internal data class ChineseChessBoardGeometry(
     val origin: Offset,
@@ -83,6 +109,92 @@ internal fun ChineseChessBoard(
     onSquareTap: (BoardPosition) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var viewport by remember { mutableStateOf(ChineseChessBoardViewport()) }
+    var boardSize by remember { mutableStateOf(Size.Zero) }
+    val currentState by rememberUpdatedState(state)
+    val currentTap by rememberUpdatedState(onSquareTap)
+    val zoomIn = stringResource(R.string.board_zoom_in)
+    val zoomOut = stringResource(R.string.board_zoom_out)
+    val resetView = stringResource(R.string.board_reset_view)
+    val description = stringResource(R.string.board_zoom_description, (viewport.scale * 100).roundToInt())
+    fun accessibleZoom(factor: Float): Boolean {
+        viewport = viewport.transform(
+            boardSize, Offset(boardSize.width / 2, boardSize.height / 2), Offset.Zero, factor,
+        )
+        return true
+    }
+    Box(
+        modifier = modifier.fillMaxSize().clipToBounds()
+            .testTag(CHINESE_CHESS_BOARD_TAG)
+            .onSizeChanged {
+                val resized = Size(it.width.toFloat(), it.height.toFloat())
+                if (resized != boardSize) {
+                    boardSize = resized
+                    viewport = ChineseChessBoardViewport()
+                }
+            }
+            .semantics {
+                contentDescription = "中国象棋棋盘，" + state.currentSide.displayName() +
+                    "方行棋" + (state.checkedSide?.let { "，${it.displayName()}方被将军" } ?: "")
+                stateDescription = description
+                this[BoardViewportKey] = viewport
+                customActions = listOf(
+                    CustomAccessibilityAction(zoomIn) { accessibleZoom(1.25f) },
+                    CustomAccessibilityAction(zoomOut) { accessibleZoom(0.8f) },
+                    CustomAccessibilityAction(resetView) {
+                        viewport = ChineseChessBoardViewport()
+                        true
+                    },
+                )
+            }
+            .pointerInput(Unit) {
+                detectBoardGestures(
+                    canTap = { currentState.isInteractionEnabled },
+                    onTransform = { centroid, pan, zoom ->
+                        viewport = viewport.transform(boardSize, centroid, pan, zoom)
+                    },
+                    onTap = { tap ->
+                        if (currentState.isInteractionEnabled) {
+                            viewport.positionAt(tap, boardSize)?.let(currentTap)
+                        }
+                    },
+                )
+            },
+    ) {
+        ChineseChessBoardCanvas(
+            state,
+            Modifier.matchParentSize().graphicsLayer {
+                scaleX = viewport.scale
+                scaleY = viewport.scale
+                translationX = viewport.translation.x
+                translationY = viewport.translation.y
+            },
+        )
+        if (viewport.scale > 1f) {
+            TextButton(
+                onClick = { viewport = ChineseChessBoardViewport() },
+                modifier = Modifier.align(Alignment.TopEnd).testTag(BOARD_RESET_VIEW_TAG),
+            ) { Text(resetView) }
+        }
+    }
+}
+
+@Composable
+private fun ChineseChessBoardCanvas(state: ChineseChessGameUiState, modifier: Modifier) {
+    var previousBoard by remember { mutableStateOf(state.board) }
+    var feedback by remember { mutableStateOf<ChineseChessMoveFeedback?>(null) }
+    val pulse = remember { Animatable(1f) }
+    LaunchedEffect(state.board) {
+        feedback = boardMoveFeedback(previousBoard, state.board).takeUnless {
+            state.isRestoring || state.isBlindChess || state.feedback == ChineseChessFeedback.GAME_RESTORED
+        }
+        previousBoard = state.board
+        if (feedback != null) {
+            pulse.snapTo(0f)
+            pulse.animateTo(1f, tween(180))
+            feedback = null
+        }
+    }
     val boardColor = Color(0xFFD9B878)
     val lineColor = Color(0xFF55351F)
     val redColor = Color(0xFF9F2D20)
@@ -94,21 +206,10 @@ internal fun ChineseChessBoard(
     val checkColor = Color(0xFFE6482E)
 
     Canvas(
-        modifier = modifier
-            .fillMaxSize()
-            .testTag(CHINESE_CHESS_BOARD_TAG)
-            .semantics {
-                contentDescription = "中国象棋棋盘，" + state.currentSide.displayName() +
-                    "方行棋" + (state.checkedSide?.let { "，${it.displayName()}方被将军" } ?: "")
-            }
-            .pointerInput(state.isInteractionEnabled, state.result) {
-                if (state.isInteractionEnabled) {
-                    detectTapGestures { tap ->
-                        boardPositionAt(tap, size.width.toFloat(), size.height.toFloat())
-                            ?.let(onSquareTap)
-                    }
-                }
-            },
+        modifier = modifier.semantics {
+            this[BoardMovePulseKey] = feedback != null
+            this[BoardMovePulseProgressKey] = pulse.value
+        },
     ) {
         // During navigation Compose can draw a zero-sized transitional canvas.
         if (size.width <= 0f || size.height <= 0f) return@Canvas
@@ -218,6 +319,15 @@ internal fun ChineseChessBoard(
                 radius = cell * 0.43f,
                 center = geometry.center(selected),
                 style = Stroke(width = cell * 0.09f),
+            )
+        }
+
+        feedback?.takeUnless { state.isBlindChess }?.let { move ->
+            drawCircle(
+                color = (if (move.isCapture) redColor else legalColor).copy(alpha = 1f - pulse.value),
+                radius = cell * (0.44f + pulse.value * 0.25f),
+                center = geometry.center(move.destination),
+                style = Stroke(width = cell * 0.055f),
             )
         }
 

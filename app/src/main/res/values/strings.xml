@@ -270,6 +270,10 @@
     <string name="tutorial_endgame_summary">接着练习将死：在一步内找出红方胜着，体会棋子配合。这是多解入门题，不必局限于一种走法；练习后返回此页，通关与奖励按正式残局规则保存。</string>
     <string name="tutorial_endgame_open">练习残局：%1$s</string>
     <string name="tutorial_endgame_unavailable">练习关卡尚未准备好</string>
+    <string name="board_zoom_description">棋盘缩放 %1$d%%，双指缩放或平移，单指点选</string>
+    <string name="board_zoom_in">放大棋盘</string>
+    <string name="board_zoom_out">缩小棋盘</string>
+    <string name="board_reset_view">重置视图</string>
     <string name="tutorial_load_recovered">旧教程进度无效，已从第一步安全开始。</string>
     <string name="tutorial_save_failed">进度保存失败，请重试当前步骤。</string>
     <string name="restoring_game">正在恢复棋局…</string>
