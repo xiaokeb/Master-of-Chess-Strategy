@@ -12,7 +12,7 @@ class NativeChineseChessEngineTest {
     @Test
     fun bridgeValuesMapToTypedGameState() {
         val bridge = FakeChineseChessBridge()
-        NativeChineseChessEngine(bridge).use { engine ->
+        NativeChineseChessEngine(bridge) { "private/pikafish.nnue" }.use { engine ->
             assertEquals(GameType.CHINESE_CHESS, engine.gameType)
             assertEquals(PlayerId(0), engine.currentPlayer)
             assertEquals(
@@ -104,35 +104,41 @@ class NativeChineseChessEngineTest {
     }
 
     @Test
-    fun malformedAiMoveAndMissingMasterNetworkAreRejected() {
+    fun malformedAiMoveAndMissingNetworkAreRejected() {
         val bridge = FakeChineseChessBridge().apply {
             aiMove = intArrayOf(0, 3, 0)
         }
-        NativeChineseChessEngine(bridge).use { engine ->
+        NativeChineseChessEngine(bridge) { "private/pikafish.nnue" }.use { engine ->
             assertThrows(IllegalStateException::class.java) {
                 engine.chooseMove(Difficulty.EASY)
             }
-            assertThrows(IllegalStateException::class.java) {
-                engine.chooseMove(Difficulty.MASTER)
+        }
+        NativeChineseChessEngine(bridge).use { engine ->
+            Difficulty.entries.forEach { difficulty ->
+                val error = assertThrows(IllegalStateException::class.java) {
+                    engine.chooseMove(difficulty)
+                }
+                assertEquals("Chinese chess AI requires the bundled network", error.message)
             }
         }
     }
 
     @Test
-    fun masterMoveUsesTheProvidedNetworkPath() {
+    fun everyDifficultyUsesTheProvidedNetworkPath() {
         val bridge = FakeChineseChessBridge()
         NativeChineseChessEngine(
             bridge = bridge,
-            masterNetworkPathProvider = { "private/pikafish.nnue" },
+            networkPathProvider = { "private/pikafish.nnue" },
         ).use { engine ->
-            assertEquals(
-                BoardMove(BoardPosition(0, 3), BoardPosition(0, 4)),
-                engine.chooseMove(Difficulty.MASTER),
-            )
+            Difficulty.entries.forEach { difficulty ->
+                assertEquals(
+                    BoardMove(BoardPosition(0, 3), BoardPosition(0, 4)),
+                    engine.chooseMove(difficulty),
+                )
+                assertEquals(difficulty.code, bridge.lastDifficultyCode)
+                assertEquals("private/pikafish.nnue", bridge.lastNetworkPath)
+            }
         }
-
-        assertEquals(Difficulty.MASTER.code, bridge.lastDifficultyCode)
-        assertEquals("private/pikafish.nnue", bridge.lastNetworkPath)
     }
 
     @Test

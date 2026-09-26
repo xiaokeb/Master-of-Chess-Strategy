@@ -246,13 +246,12 @@ Java_com_masterofchessstrategy_engine_internal_NativeBindings_chineseChessBestMo
         const auto engine = require_chinese_chess_engine(handle);
         const auto difficulty =
             static_cast<mocs::engine::Difficulty>(difficulty_code);
-        const auto action = difficulty == mocs::engine::Difficulty::master
-            ? mocs::engine::choose_pikafish_move(
-                engine->fen(),
-                engine->legal_actions(),
-                require_utf8(env, network_path)
-            )
-            : engine->best_move(difficulty);
+        const auto action = mocs::engine::choose_pikafish_move(
+            engine->fen(),
+            engine->legal_actions(),
+            require_utf8(env, network_path),
+            difficulty
+        );
         const auto result = env->NewIntArray(action ? 4 : 0);
         if (result != nullptr && action) {
             std::array<jint, 4> flattened{};

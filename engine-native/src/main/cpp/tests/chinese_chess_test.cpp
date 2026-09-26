@@ -1,5 +1,6 @@
 #include "mocs/engine/chinese_chess.hpp"
 #include "mocs/engine/pikafish_adapter.hpp"
+#include "mocs/engine/pikafish_difficulty.hpp"
 
 #include <cassert>
 #include <algorithm>
@@ -40,6 +41,31 @@ void initial_position_is_stable() {
         "rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/"
         "P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1"
     );
+}
+
+void pikafish_profiles_bound_search_and_random_deviation() {
+    using mocs::engine::pikafish_profile;
+    using mocs::engine::pikafish_candidate_index;
+    const auto easy = pikafish_profile(Difficulty::easy);
+    const auto medium = pikafish_profile(Difficulty::medium);
+    const auto hard = pikafish_profile(Difficulty::hard);
+    const auto master = pikafish_profile(Difficulty::master);
+    assert(easy.depth < medium.depth && medium.depth < hard.depth);
+    assert(easy.nodes < medium.nodes && medium.nodes < hard.nodes);
+    assert(master.depth == 0 && master.nodes == 0 && master.multi_pv == 1);
+    assert(master.move_time_millis == mocs::engine::pikafish_move_time_millis);
+    unsigned easy_deviations = 0, medium_deviations = 0;
+    for (std::uint64_t seed = 0; seed < 100; ++seed) {
+        easy_deviations += pikafish_candidate_index({100, 80, 70}, easy, seed) != 0;
+        medium_deviations += pikafish_candidate_index({100, 80, 70}, medium, seed) != 0;
+        assert(pikafish_candidate_index({100, 80, 70}, hard, seed) == 0);
+        assert(pikafish_candidate_index({100, 80, 70}, master, seed) == 0);
+        assert(pikafish_candidate_index({999'995, 999'990, 100}, easy, seed) == 0);
+        assert(pikafish_candidate_index({100, -151, -999'990}, easy, seed) == 0);
+    }
+    assert(easy_deviations == 75 && medium_deviations == 20);
+    assert(pikafish_candidate_index({100}, easy, 0) == 0);
+    assert(pikafish_candidate_index({100, 80, 70}, easy, 100) == 2);
 }
 
 void pikafish_coordinates_are_converted_and_validated() {
@@ -951,6 +977,7 @@ int main() {
     corrupted_positions_are_rejected();
     legacy_seed_endgames_have_a_winning_first_move();
     unique_seed_mates_are_checked_and_unambiguous();
+    pikafish_profiles_bound_search_and_random_deviation();
     hard_ai_recognizes_forced_stalemate_at_search_horizon();
     wrong_game_type_is_rejected_after_checksum_validation();
     repeated_long_check_loses_for_the_checking_side();

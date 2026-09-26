@@ -7,6 +7,8 @@
 #include <array>
 #include <chrono>
 #include <iostream>
+#include <random>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -25,6 +27,43 @@ const std::array<std::array<Move, 4>, 6> openings{{
     {{{1,7,4,7}, {1,2,4,2}, {1,9,2,7}, {1,0,2,2}}},
     {{{0,6,0,5}, {1,0,2,2}, {0,9,0,8}, {8,3,8,4}}},
 }};
+
+// Project-authored holdout suite 2. Freeze before tuning; do not select or
+// discard these openings based on the eventual match outcomes.
+const std::array<std::array<Move, 4>, 12> holdout_openings{{
+    {{{1,9,2,7}, {7,0,6,2}, {2,6,2,5}, {6,3,6,4}}},
+    {{{1,7,4,7}, {1,0,2,2}, {7,9,6,7}, {7,2,5,2}}},
+    {{{7,9,6,7}, {1,2,4,2}, {6,6,6,5}, {7,0,6,2}}},
+    {{{2,9,4,7}, {2,3,2,4}, {1,7,3,7}, {1,0,2,2}}},
+    {{{6,9,8,7}, {6,0,4,2}, {7,7,5,7}, {1,2,3,2}}},
+    {{{7,7,4,7}, {7,2,4,2}, {1,9,2,7}, {1,0,2,2}}},
+    {{{0,6,0,5}, {2,0,4,2}, {7,9,6,7}, {4,3,4,4}}},
+    {{{8,6,8,5}, {6,3,6,4}, {1,9,2,7}, {2,0,0,2}}},
+    {{{2,6,2,5}, {1,0,0,2}, {2,9,0,7}, {7,2,5,2}}},
+    {{{6,6,6,5}, {1,0,2,2}, {7,7,3,7}, {2,3,2,4}}},
+    {{{4,6,4,5}, {7,2,5,2}, {1,7,3,7}, {1,0,2,2}}},
+    {{{1,9,0,7}, {1,2,2,2}, {7,7,5,7}, {4,3,4,4}}},
+}};
+
+void validate_openings() {
+    std::set<std::string> positions;
+    for (int suite : {1, 2}) {
+        const auto count = suite == 1 ? openings.size() : holdout_openings.size();
+        for (std::size_t index = 0; index < count; ++index) {
+            ChineseChessEngine engine;
+            const auto& line = suite == 1 ? openings[index] : holdout_openings[index];
+            for (const auto& move : line) {
+                if (!engine.apply(make_board_move(move[0], move[1], move[2], move[3])).accepted)
+                    throw std::runtime_error("invalid opening move");
+            }
+            if (engine.game_result() != GameResult::ongoing || engine.current_player() != 0 ||
+                !positions.insert(engine.fen()).second)
+                throw std::runtime_error("terminal, duplicate or unpaired opening");
+            std::cout << "{\"suite\":" << suite << ",\"opening\":" << index + 1
+                      << ",\"fen\":\"" << engine.fen() << "\"}\n";
+        }
+    }
+}
 
 int bounded_number(const char* value, const int low, const int high) {
     const std::string text(value);
@@ -57,7 +96,11 @@ void latency(const char* name, std::vector<double> samples) {
 
 int main(const int argc, const char* argv[]) {
     try {
-        if (argc < 2 || argc > 5) throw std::invalid_argument("argument count");
+        if (argc == 2 && std::string(argv[1]) == "validate-openings") {
+            validate_openings();
+            return 0;
+        }
+        if (argc < 2 || argc > 7) throw std::invalid_argument("argument count");
         const std::string pair(argv[1]);
         Difficulty weak;
         Difficulty strong;
@@ -70,21 +113,32 @@ int main(const int argc, const char* argv[]) {
         } else {
             throw std::invalid_argument("unknown difficulty pair");
         }
-        const int count = argc >= 3 ? bounded_number(argv[2], 1, 6) : 6;
+        const int suite = argc >= 7 ? bounded_number(argv[6], 1, 2) : 1;
+        const int maximum_count = suite == 1 ? 6 : 12;
+        const int count = argc >= 3 ? bounded_number(argv[2], 1, maximum_count) : maximum_count;
         const int limit = argc >= 4 ? bounded_number(argv[3], 16, 600) : 240;
         const std::string network = argc >= 5 ? argv[4] : "";
-        if (strong == Difficulty::master && network.empty()) {
-            throw std::invalid_argument("master requires a verified NNUE path");
+        const std::string backend = argc >= 6 ? argv[5] : "pikafish";
+        if (backend != "pikafish" && backend != "legacy") {
+            throw std::invalid_argument("unknown AI backend");
+        }
+        if ((backend == "pikafish" || strong == Difficulty::master) && network.empty()) {
+            throw std::invalid_argument("Pikafish requires a verified NNUE path");
         }
         int wins = 0, losses = 0, draws = 0, unfinished = 0;
         std::vector<double> strong_times, weak_times;
-        std::cout << "{\"type\":\"config\",\"suite\":1,\"pair\":\"" << pair
+        std::cout << "{\"type\":\"config\",\"suite\":" << suite << ",\"pair\":\"" << pair
+                  << "\",\"backend\":\"" << backend
                   << "\",\"openings\":" << count << ",\"max_search_plies\":" << limit
-                  << ",\"master_move_ms\":" << pikafish_move_time_millis << "}\n";
+                  << ",\"master_move_ms\":" << pikafish_move_time_millis
+                  << ",\"profile_version\":1,\"selection_seed\":20260926}\n";
         for (int opening = 0; opening < count; ++opening) {
             for (int strong_side = 0; strong_side < 2; ++strong_side) {
                 ChineseChessEngine engine;
-                for (const auto& move : openings[opening]) {
+                reset_pikafish_search();
+                std::mt19937_64 selection_rng(20260926 + opening * 2 + strong_side);
+                const auto& line = suite == 1 ? openings[opening] : holdout_openings[opening];
+                for (const auto& move : line) {
                     if (!engine.apply(make_board_move(move[0], move[1], move[2], move[3])).accepted) {
                         throw std::runtime_error("invalid frozen opening");
                     }
@@ -96,8 +150,9 @@ int main(const int argc, const char* argv[]) {
                     const bool stronger_turn = engine.current_player() == strong_side;
                     const auto difficulty = stronger_turn ? strong : weak;
                     const auto start = Clock::now();
-                    const auto move = difficulty == Difficulty::master
-                        ? choose_pikafish_move(engine.fen(), engine.legal_actions(), network)
+                    const auto move = backend == "pikafish" || difficulty == Difficulty::master
+                        ? choose_pikafish_move(engine.fen(), engine.legal_actions(), network,
+                                              difficulty, selection_rng())
                         : engine.best_move(difficulty);
                     const auto elapsed = std::chrono::duration<double, std::milli>(
                         Clock::now() - start).count();
@@ -147,7 +202,8 @@ int main(const int argc, const char* argv[]) {
     } catch (const std::exception& error) {
         std::cerr << "calibration failed: " << error.what()
                   << "\nusage: mocs_benchmark_xiangqi_ai <easy-medium|medium-hard|hard-master>"
-                  << " [openings 1..6] [max-search-plies 16..600] [verified NNUE path]\n";
+                  << " [openings 1..6, or 1..12 for suite 2] [max-search-plies 16..600]"
+                  << " [verified NNUE path] [pikafish|legacy] [suite 1|2]\n";
         return 2;
     }
 }

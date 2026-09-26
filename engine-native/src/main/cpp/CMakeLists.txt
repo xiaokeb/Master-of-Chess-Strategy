@@ -81,6 +81,7 @@ add_library(
     src/health_check.cpp
     src/native_engine_registry.cpp
     src/pikafish_adapter.cpp
+    src/pikafish_difficulty.cpp
 )
 target_include_directories(
     mocs_engine_core

@@ -32,8 +32,13 @@ inline constexpr std::int64_t pikafish_move_time_millis = 1'200;
 [[nodiscard]] std::optional<EngineAction> choose_pikafish_move(
     const std::string& fen,
     const std::vector<EngineAction>& legal_actions,
-    const std::string& network_path
+    const std::string& network_path,
+    Difficulty difficulty = Difficulty::master,
+    std::optional<std::uint64_t> selection_seed = std::nullopt
 );
+
+// Clear search history between calibration games; keep the verified NNUE loaded.
+void reset_pikafish_search();
 
 /**
  * Replays one completed repetition window through Pikafish's rule judge.

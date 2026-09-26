@@ -6,7 +6,7 @@ import com.masterofchessstrategy.engine.internal.JniChineseChessBridge
 /** Thread-safe Kotlin owner for one native Chinese chess session. */
 class NativeChineseChessEngine internal constructor(
     private val bridge: ChineseChessBridge,
-    private val masterNetworkPathProvider: (() -> String)? = null,
+    private val networkPathProvider: (() -> String)? = null,
 ) : ChineseChessAiEngine {
     private val lock = Any()
     private var handle = bridge.create().also {
@@ -15,8 +15,8 @@ class NativeChineseChessEngine internal constructor(
 
     constructor() : this(JniChineseChessBridge)
 
-    constructor(masterNetworkPathProvider: () -> String) :
-        this(JniChineseChessBridge, masterNetworkPathProvider)
+    constructor(networkPathProvider: () -> String) :
+        this(JniChineseChessBridge, networkPathProvider)
 
     override val gameType: GameType = GameType.CHINESE_CHESS
 
@@ -69,13 +69,11 @@ class NativeChineseChessEngine internal constructor(
     }
 
     override fun chooseMove(difficulty: Difficulty): BoardMove? {
-        val networkPath = if (difficulty == Difficulty.MASTER) {
-            checkNotNull(masterNetworkPathProvider) {
-                "Master Chinese chess AI requires the bundled network"
-            }.invoke()
-        } else {
-            null
-        }
+        // Every production difficulty uses Pikafish; never silently substitute
+        // the legacy local search if its licensed network is unavailable.
+        val networkPath = checkNotNull(networkPathProvider) {
+            "Chinese chess AI requires the bundled network"
+        }.invoke()
         val encoded = withHandle {
             bridge.bestMove(it, difficulty.code, networkPath)
         }

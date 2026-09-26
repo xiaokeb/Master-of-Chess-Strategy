@@ -15,12 +15,19 @@ def audit(text: str) -> dict:
     config, *games, summary = records
     if config.get("type") != "config" or summary.get("type") != "summary":
         raise ValueError("missing config or summary")
-    if config.get("suite") != 1 or config.get("pair") not in (
+    if config.get("suite") not in (1, 2) or config.get("pair") not in (
         "easy-medium", "medium-hard", "hard-master"
     ):
         raise ValueError("unsupported suite or pair")
+    if config.get("backend", "legacy") not in ("legacy", "pikafish"):
+        raise ValueError("unsupported AI backend")
+    if config.get("backend") == "pikafish" and (
+        config.get("profile_version") != 1 or config.get("selection_seed") != 20260926
+    ):
+        raise ValueError("unsupported Pikafish profile or seed")
     count, cap = config["openings"], config["max_search_plies"]
-    if type(count) is not int or not 1 <= count <= 6 or type(cap) is not int or not 16 <= cap <= 600:
+    maximum_count = 6 if config["suite"] == 1 else 12
+    if type(count) is not int or not 1 <= count <= maximum_count or type(cap) is not int or not 16 <= cap <= 600:
         raise ValueError("invalid configuration")
     expected_pairs = {(opening, side) for opening in range(1, count + 1) for side in (0, 1)}
     if len(games) != 2 * count or {(g["opening"], g["strong_side"]) for g in games} != expected_pairs:

@@ -21,7 +21,8 @@ class XiangqiAiAuditTest(unittest.TestCase):
 
     def test_saved_baselines_pass(self) -> None:
         for pair in ("easy-medium", "medium-hard", "hard-master",
-                     "easy-medium-horizon", "medium-hard-horizon"):
+                     "easy-medium-horizon", "medium-hard-horizon",
+                     "pikafish-easy-medium", "pikafish-medium-hard"):
             with self.subTest(pair=pair):
                 audit((RESULTS / f"2026-09-26-ai-{pair}-v1.jsonl").read_text(encoding="utf-8"))
 
@@ -29,6 +30,20 @@ class XiangqiAiAuditTest(unittest.TestCase):
         self.records.pop()
         with self.assertRaisesRegex(ValueError, "summary"):
             audit(self.report())
+
+    def test_unknown_backend_is_rejected(self) -> None:
+        self.records[0]["backend"] = "unknown"
+        with self.assertRaisesRegex(ValueError, "backend"):
+            audit(self.report())
+
+    def test_pikafish_requires_versioned_profile_and_seed(self) -> None:
+        self.records[0]["backend"] = "pikafish"
+        with self.assertRaisesRegex(ValueError, "profile or seed"):
+            audit(self.report())
+
+    def test_holdout_configuration_accepts_paired_games(self) -> None:
+        self.records[0]["suite"] = 2
+        audit(self.report())
 
     def test_duplicate_color_is_rejected(self) -> None:
         self.records[2]["strong_side"] = self.records[1]["strong_side"]

@@ -70,6 +70,7 @@ public:
     ) const noexcept;
     [[nodiscard]] bool is_in_check(Side side) const noexcept;
     [[nodiscard]] std::string fen() const;
+    // Legacy diagnostic search; production JNI uses Pikafish for all levels.
     [[nodiscard]] std::optional<EngineAction> best_move(
         Difficulty difficulty
     ) const;

@@ -48,12 +48,6 @@ class NativeBridgeInstrumentedTest {
                     ),
                 ),
             )
-            val aiMove = requireNotNull(engine.chooseMove(Difficulty.EASY))
-            assertTrue(aiMove in engine.legalActions())
-            val mediumMove = requireNotNull(engine.chooseMove(Difficulty.MEDIUM))
-            assertTrue(mediumMove in engine.legalActions())
-            val hardMove = requireNotNull(engine.chooseMove(Difficulty.HARD))
-            assertTrue(hardMove in engine.legalActions())
             assertTrue(engine.undo())
             assertTrue(initial.contentEquals(engine.serialize()))
             assertEquals(RestoreResult.Restored, engine.restore(initial))
@@ -69,30 +63,12 @@ class NativeBridgeInstrumentedTest {
     }
 
     @Test
-    fun hardAiFindsForcedStalemateThroughPackagedJni() {
-        val state = ChineseChessFenCodec.parse(
-            "3k5/9/9/9/9/9/5r3/9/4K4/9 b - - 0 1",
-        ).toEngineState()
+    fun aiNeverFallsBackWhenTheNetworkIsMissing() {
         NativeChineseChessEngine().use { engine ->
-            assertEquals(RestoreResult.Restored, engine.restore(state))
-            val before = engine.serialize()
-            val selected = requireNotNull(engine.chooseMove(Difficulty.HARD))
-            assertTrue(before.contentEquals(engine.serialize()))
-            assertEquals(ActionResult.Accepted, engine.apply(selected))
-            val replies = engine.legalActions()
-            assertTrue(replies.isNotEmpty())
-            // Assert the forced outcome, not a particular equal-scoring first move.
-            replies.forEach { reply ->
-                assertEquals(ActionResult.Accepted, engine.apply(reply))
-                val canStalemate = engine.legalActions().any { finish ->
-                    assertEquals(ActionResult.Accepted, engine.apply(finish))
-                    val won = engine.gameResult() == GameResult.SECOND_PLAYER_WIN &&
-                        !engine.isInCheck(ChineseChessSide.RED) && engine.legalActions().isEmpty()
-                    assertTrue(engine.undo())
-                    won
+            Difficulty.entries.forEach { difficulty ->
+                org.junit.Assert.assertThrows(IllegalStateException::class.java) {
+                    engine.chooseMove(difficulty)
                 }
-                assertTrue(canStalemate)
-                assertTrue(engine.undo())
             }
         }
     }
