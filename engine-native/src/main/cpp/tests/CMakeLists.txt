@@ -38,6 +38,10 @@ target_compile_options(
     -Wpedantic
 )
 
+add_executable(mocs_benchmark_xiangqi_ai benchmark_xiangqi_ai.cpp)
+target_link_libraries(mocs_benchmark_xiangqi_ai PRIVATE mocs_engine_core)
+target_compile_options(mocs_benchmark_xiangqi_ai PRIVATE -Wall -Wextra -Wpedantic)
+
 add_executable(
     mocs_engine_registry_test
     native_engine_registry_test.cpp
