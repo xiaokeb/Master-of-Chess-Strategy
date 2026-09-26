@@ -169,7 +169,8 @@ internal class ChineseChessTutorialViewModel(
         }
     }
 
-    private fun loadProgress() {
+    internal fun loadProgress() {
+        uiState = ChineseChessTutorialUiState(isLoading = true)
         viewModelScope.launch {
             val result = try {
                 repository.load(GameType.CHINESE_CHESS)

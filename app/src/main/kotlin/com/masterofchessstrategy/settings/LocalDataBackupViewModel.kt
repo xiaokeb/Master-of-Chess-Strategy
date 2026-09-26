@@ -1,5 +1,8 @@
 package com.masterofchessstrategy.settings
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -36,7 +39,7 @@ internal class LocalDataBackupViewModel(
     private val nowEpochMillis: () -> Long = { System.currentTimeMillis() },
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
-    var uiState = LocalDataBackupUiState()
+    var uiState by mutableStateOf(LocalDataBackupUiState())
         private set
 
     fun export(openOutputStream: () -> OutputStream?) {
@@ -67,11 +70,18 @@ internal class LocalDataBackupViewModel(
         }
     }
 
-    fun restore(openInputStream: () -> InputStream?, onRestored: () -> Unit) {
+    fun restore(
+        openInputStream: () -> InputStream?,
+        onRestored: () -> Unit,
+        beforeRestore: suspend () -> Unit = {},
+        onFinished: () -> Unit = {},
+    ) {
         if (uiState.isWorking) return
         uiState = LocalDataBackupUiState(isWorking = true)
         viewModelScope.launch {
             val summary = try {
+                // Cancellation alone is insufficient: existing writers must finish before replacement.
+                beforeRestore()
                 withContext(ioDispatcher) {
                     val bytes = checkNotNull(openInputStream()).use { input ->
                         input.readBounded()
@@ -90,6 +100,7 @@ internal class LocalDataBackupViewModel(
                     restoreSummary = summary,
                 )
             }
+            onFinished()
             if (summary != null) onRestored()
         }
     }

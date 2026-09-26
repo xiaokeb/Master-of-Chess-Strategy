@@ -133,7 +133,7 @@ internal class ChineseChessEndgameViewModel(
         }
     }
 
-    private fun reload() {
+    internal fun reload() {
         viewModelScope.launch {
             try {
                 when (val result = repository.load()) {

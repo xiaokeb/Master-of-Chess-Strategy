@@ -135,7 +135,8 @@ internal class AppSettingsViewModel(
         }
     }
 
-    private fun loadSettings() {
+    internal fun loadSettings() {
+        uiState = AppSettingsUiState(isLoading = true)
         viewModelScope.launch {
             val result = try {
                 repository.load()

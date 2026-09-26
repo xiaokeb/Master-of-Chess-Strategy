@@ -3,6 +3,8 @@ package com.masterofchessstrategy.ui
 import android.Manifest
 import android.app.NotificationManager
 import android.os.ParcelFileDescriptor
+import android.os.Build
+import android.os.PowerManager
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -15,6 +17,8 @@ import com.masterofchessstrategy.MainActivity
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.TutorialProgressEntity
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.engine.NativeChineseChessEngine
+import com.masterofchessstrategy.engine.RestoreResult
 import com.masterofchessstrategy.game.ChineseChessBackgroundController
 import com.masterofchessstrategy.game.ChineseChessBackgroundService
 import kotlinx.coroutines.delay
@@ -24,6 +28,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExternalResource
@@ -47,6 +52,7 @@ class ChineseChessBackgroundNavigationTest {
                 context.getSystemService(NotificationManager::class.java).areNotificationsEnabled())
             database = MocsDatabase.getInstance(context)
             runBlocking {
+                database.activeGameDao().deleteAll()
                 database.tutorialProgressDao().upsert(TutorialProgressEntity(
                     gameTypeCode = GameType.CHINESE_CHESS.code, contentVersion = 1,
                     completedStepCount = 4, isCompleted = true, updatedAtEpochMillis = 1L,
@@ -59,6 +65,51 @@ class ChineseChessBackgroundNavigationTest {
         }
     }
     @get:Rule val rules: RuleChain = RuleChain.outerRule(seed).around(composeRule)
+
+    @Test fun forcedDozeReturnsToOneConsistentSession() = runBlocking {
+        // Do not change device idle/battery settings on a user's physical phone.
+        assumeTrue("Forced idle verification is emulator-only", Build.HARDWARE in setOf("ranchu", "goldfish"))
+        composeRule.onNodeWithTag(HOME_CHINESE_CHESS_TAG).performClick()
+        composeRule.onNodeWithTag(MODE_AUTO_PLAY_TAG).performScrollTo().performClick()
+        composeRule.onNodeWithTag(DIFFICULTY_EASY_TAG).assertIsEnabled().performClick()
+        composeRule.waitForIdle()
+        val controller = ChineseChessBackgroundController.get(context)
+        composeRule.waitUntil(30_000L) { controller.isServiceRunning && (saved()?.acceptedMoveCount ?: 0) >= 1 }
+        val originalGame = requireNotNull(controller.game)
+        val before = requireNotNull(saved())
+        val notification = context.getSystemService(NotificationManager::class.java).activeNotifications
+            .single { it.id == ChineseChessBackgroundService.NOTIFICATION_ID }.notification
+        val power = context.getSystemService(PowerManager::class.java)
+        try {
+            shell("dumpsys battery unplug")
+            shell("input keyevent 223")
+            await { !originalGame.isRuntimeForeground }
+            val result = shell("dumpsys deviceidle force-idle")
+            assertTrue("Doze command failed: $result", result.contains("Now forced in to deep idle mode"))
+            await { power.isDeviceIdleMode }
+            delay(3_500L)
+            // Doze may suspend work. Require a consistent checkpoint, not uninterrupted CPU time.
+            val during = requireNotNull(saved())
+            assertEquals(before.sessionId, during.sessionId)
+            assertTrue(during.acceptedMoveCount >= before.acceptedMoveCount)
+            NativeChineseChessEngine().use { assertEquals(RestoreResult.Restored, it.restore(during.engineState)) }
+        } finally {
+            shell("dumpsys deviceidle unforce")
+            shell("dumpsys battery reset")
+            shell("input keyevent 224")
+            shell("wm dismiss-keyguard")
+        }
+        notification.contentIntent.send()
+        composeRule.waitUntil(30_000L) { originalGame.isRuntimeForeground && !power.isDeviceIdleMode }
+        assertSame(originalGame, controller.game)
+        composeRule.waitUntil(30_000L) { (saved()?.acceptedMoveCount ?: 0) > before.acceptedMoveCount }
+        composeRule.onNodeWithTag(AUTO_PLAY_TOGGLE_TAG).performScrollTo().performClick()
+        await { !originalGame.uiState.isAiThinking && !originalGame.uiState.isPersisting }
+        assertEquals(before.sessionId, requireNotNull(saved()).sessionId)
+        NativeChineseChessEngine().use { assertEquals(RestoreResult.Restored, it.restore(requireNotNull(saved()).engineState)) }
+        composeRule.onNodeWithTag(GAME_BACK_BUTTON_TAG).performClick()
+        composeRule.waitUntil(10_000L) { controller.game == null && !controller.isServiceRunning && !controller.isWakeLockHeld }
+    }
 
     @Test fun mainActivityRecreatesAndNotificationReturnsToTheSameGame() = runBlocking {
         composeRule.onNodeWithTag(HOME_CHINESE_CHESS_TAG).performClick()
@@ -106,7 +157,7 @@ class ChineseChessBackgroundNavigationTest {
             throw AssertionError("Background navigation wait failed: $details, savedMoves=${saved()?.acceptedMoveCount}", failure)
         }
     }
-    private fun shell(command: String) {
-        ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand(command)).use { it.readBytes() }
-    }
+    private fun shell(command: String): String =
+        ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand(command))
+            .use { it.readBytes().toString(Charsets.UTF_8) }
 }

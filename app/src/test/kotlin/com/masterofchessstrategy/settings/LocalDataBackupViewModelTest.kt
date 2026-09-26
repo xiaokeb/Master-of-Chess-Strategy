@@ -5,12 +5,15 @@ import com.masterofchessstrategy.data.LocalDataRestoreSummary
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import androidx.compose.runtime.snapshots.Snapshot
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
@@ -32,6 +35,51 @@ class LocalDataBackupViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    @Test
+    fun uiStateParticipatesInComposeSnapshotObservation() {
+        val viewModel = LocalDataBackupViewModel(FakeBackupRepository(), ioDispatcher = dispatcher)
+        var observedReads = 0
+        Snapshot.observe(readObserver = { observedReads++ }) { viewModel.uiState }
+        assertTrue(observedReads > 0)
+    }
+
+    @Test
+    fun restoreWaitsForWritersAndRefreshesDataBeforeSuccessCallback() = runTest(dispatcher) {
+        val barrier = CompletableDeferred<Unit>()
+        val repository = FakeBackupRepository()
+        val viewModel = LocalDataBackupViewModel(repository, ioDispatcher = dispatcher)
+        val events = mutableListOf<String>()
+        viewModel.restore(
+            openInputStream = { ByteArrayInputStream(byteArrayOf(4)) },
+            beforeRestore = { barrier.await() },
+            onFinished = { events += "reload" },
+            onRestored = { events += "success" },
+        )
+        runCurrent()
+        assertTrue(viewModel.uiState.isWorking)
+        assertEquals(null, repository.restored)
+        // Double-clicks cannot start a second operation while the barrier is pending.
+        viewModel.restore({ error("must not open another document") }, { error("duplicate restore") })
+        barrier.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(listOf("reload", "success"), events)
+        assertArrayEquals(byteArrayOf(4), repository.restored)
+    }
+
+    @Test
+    fun failedRestoreReloadsUnchangedDataWithoutSuccessCallback() = runTest(dispatcher) {
+        val viewModel = LocalDataBackupViewModel(FakeBackupRepository(), ioDispatcher = dispatcher)
+        var reloaded = false
+        viewModel.restore(
+            openInputStream = { throw IOException("unavailable") },
+            onRestored = { error("must not report success") },
+            onFinished = { reloaded = true },
+        )
+        advanceUntilIdle()
+        assertTrue(reloaded)
+        assertEquals(BackupFeedback.RESTORE_FAILED, viewModel.uiState.feedback)
     }
 
     @Test

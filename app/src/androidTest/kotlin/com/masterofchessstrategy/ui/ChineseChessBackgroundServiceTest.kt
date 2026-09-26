@@ -9,6 +9,9 @@ import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.Text
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
@@ -17,6 +20,15 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.RoomGameSessionRepository
 import com.masterofchessstrategy.data.StoredGameMode
+import com.masterofchessstrategy.data.AppSettings
+import com.masterofchessstrategy.data.RoomAppSettingsRepository
+import com.masterofchessstrategy.data.RoomLocalDataBackupRepository
+import com.masterofchessstrategy.endgame.ChineseChessEndgamePackParser
+import com.masterofchessstrategy.settings.AppSettingsViewModel
+import com.masterofchessstrategy.settings.LocalDataBackupViewModel
+import com.masterofchessstrategy.settings.BackupFeedback
+import com.masterofchessstrategy.settings.awaitLocalDataWriters
+import java.io.ByteArrayInputStream
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.NativeChineseChessEngine
@@ -148,6 +160,60 @@ class ChineseChessBackgroundServiceTest {
             composeRule.activity.viewModelStore.clear()
         }
         await { controller.game == null && !controller.isServiceRunning && !controller.isWakeLockHeld }
+    }
+
+    @Test fun restoringBackupStopsOldRuntimeAndReloadsRetainedSettings() = runBlocking {
+        allowNotifications()
+        instrumentation.runOnMainSync { controller.enable(); game.stopBackgroundAutomation() }
+        await { game.uiState.isAutoPlayPaused && !game.uiState.isPersisting && !game.uiState.isAiThinking }
+        val checkpoint = requireNotNull(saved())
+        val settingsRepository = RoomAppSettingsRepository(database.appSettingsDao())
+        settingsRepository.save(AppSettings.DEFAULT.copy(soundEnabled = false))
+        val repository = RoomLocalDataBackupRepository(database,
+            ChineseChessEndgamePackParser.loadBundled(context.assets),
+            validateEngineState = { bytes -> NativeChineseChessEngine().use { it.restore(bytes) == RestoreResult.Restored } })
+        val backup = repository.export(System.currentTimeMillis())
+        settingsRepository.save(AppSettings.DEFAULT.copy(soundEnabled = true))
+        lateinit var settings: AppSettingsViewModel
+        lateinit var backupModel: LocalDataBackupViewModel
+        instrumentation.runOnMainSync {
+            settings = ViewModelProvider(composeRule.activity, AppSettingsViewModel.factory(settingsRepository))[AppSettingsViewModel::class.java]
+            backupModel = ViewModelProvider(composeRule.activity, LocalDataBackupViewModel.factory(repository))[LocalDataBackupViewModel::class.java]
+            game.toggleAutoPlayPaused()
+        }
+        await { controller.isServiceRunning && (saved()?.acceptedMoveCount ?: 0) > checkpoint.acceptedMoveCount }
+        val oldGame = game
+        val oldStop = notification().actions.single().actionIntent
+        instrumentation.runOnMainSync {
+            composeRule.activity.setContent {
+                Text("sound=${settings.uiState.settings.soundEnabled}, feedback=${backupModel.uiState.feedback}")
+            }
+        }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("sound=true, feedback=null").assertIsDisplayed()
+        instrumentation.runOnMainSync {
+            backupModel.restore(
+                openInputStream = { ByteArrayInputStream(backup) }, onRestored = {},
+                beforeRestore = {
+                    awaitLocalDataWriters(listOf(oldGame, settings)) { oldGame.retireBackgroundRuntime() }
+                },
+                onFinished = settings::loadSettings,
+            )
+        }
+        composeRule.waitUntil(30_000L) { backupModel.uiState.feedback == BackupFeedback.RESTORED && !settings.uiState.isLoading }
+        composeRule.onNodeWithText("sound=false, feedback=RESTORED").assertIsDisplayed()
+        await { !controller.isServiceRunning && !controller.isWakeLockHeld }
+        assertFalse(oldGame.uiState.isEngineAvailable)
+        assertEquals(checkpoint, saved())
+        oldStop.send()
+        delay(2_500L)
+        assertEquals(checkpoint, saved())
+        instrumentation.runOnMainSync { game = createGame("restored"); game.registerBackgroundRuntime(controller::attach) }
+        await { !game.uiState.isRestoring && !game.uiState.isPersisting }
+        assertTrue(game.uiState.isEngineAvailable)
+        assertTrue(game.uiState.isAutoPlayPaused)
+        assertEquals(checkpoint.sessionId, requireNotNull(saved()).sessionId)
+        assertEquals(checkpoint.acceptedMoveCount, requireNotNull(saved()).acceptedMoveCount)
     }
 
     @Composable private fun GameContent() {

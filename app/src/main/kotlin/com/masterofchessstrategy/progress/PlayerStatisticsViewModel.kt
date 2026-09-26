@@ -58,7 +58,8 @@ internal class PlayerStatisticsViewModel(
         }
     }
 
-    private fun loadStatistics() {
+    internal fun loadStatistics() {
+        uiState = PlayerStatisticsUiState(isLoading = true)
         viewModelScope.launch {
             uiState = try {
                 when (val result = repository.load()) {

@@ -74,7 +74,7 @@ internal class GameRecordsViewModel(
         }
     }
 
-    private fun reload() {
+    internal fun reload() {
         val category = uiState.category
         viewModelScope.launch { load(category) }
     }

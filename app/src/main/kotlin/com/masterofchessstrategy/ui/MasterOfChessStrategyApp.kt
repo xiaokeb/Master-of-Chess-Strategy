@@ -1,8 +1,5 @@
 package com.masterofchessstrategy.ui
 
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -43,6 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.NavType
@@ -91,6 +89,7 @@ import com.masterofchessstrategy.endgame.ChineseChessEndgameViewModel
 import com.masterofchessstrategy.game.ChineseChessFeedback
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 import com.masterofchessstrategy.game.ChineseChessGameViewModel
+import com.masterofchessstrategy.game.ChineseChessBackgroundController
 import com.masterofchessstrategy.game.ChineseChessSoundPlayer
 import com.masterofchessstrategy.game.PikafishNetworkProvider
 import com.masterofchessstrategy.navigation.AppDestination
@@ -106,6 +105,7 @@ import com.masterofchessstrategy.opening.ChineseChessOpeningViewModel
 import com.masterofchessstrategy.opening.PreparedOpeningAutoPlay
 import com.masterofchessstrategy.settings.AppSettingsViewModel
 import com.masterofchessstrategy.settings.LocalDataBackupViewModel
+import com.masterofchessstrategy.settings.awaitLocalDataWriters
 import com.masterofchessstrategy.tutorial.ChineseChessTutorialViewModel
 import com.masterofchessstrategy.tutorial.availableTutorialEndgame
 import com.masterofchessstrategy.ui.theme.MocsTheme
@@ -224,6 +224,15 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
         val endgameViewModel: ChineseChessEndgameViewModel = viewModel(
             factory = endgameFactory,
         )
+        // A modal also blocks back navigation and settings writes while a document is processed.
+        if (backupViewModel.uiState.isWorking) {
+            AlertDialog(
+                onDismissRequest = {},
+                confirmButton = {},
+                text = { Text(stringResource(R.string.data_backup_working)) },
+                properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+            )
+        }
         val quickStartEntries = if (
             navigationViewModel.chineseChessQuickStartDestination() == null
         ) {
@@ -1562,17 +1571,34 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                             TextButton(
                                 onClick = {
                                     pendingRestoreUri = null
-                                    navController.navigate(AppDestination.SETTINGS) {
-                                        popUpTo(AppDestination.HOME)
-                                        launchSingleTop = true
-                                    }
                                     backupViewModel.restore(
                                         openInputStream = {
                                             context.contentResolver.openInputStream(restoreUri)
                                         },
-                                        onRestored = {
-                                            context.findActivity()?.recreate()
+                                        beforeRestore = {
+                                            val activeGame = ChineseChessBackgroundController.get(context).game
+                                            awaitLocalDataWriters(
+                                                listOfNotNull(activeGame, settingsViewModel, navigationViewModel,
+                                                    tutorialViewModel, statisticsViewModel, gameRecordsViewModel,
+                                                    endgameViewModel),
+                                            ) {
+                                                activeGame?.retireBackgroundRuntime()
+                                                navController.navigate(AppDestination.SETTINGS) {
+                                                    popUpTo(AppDestination.HOME)
+                                                    launchSingleTop = true
+                                                }
+                                            }
                                         },
+                                        // Activity.recreate retains these VMs; explicitly reload each data owner.
+                                        onFinished = {
+                                            settingsViewModel.loadSettings()
+                                            navigationViewModel.loadChineseChessSelection()
+                                            tutorialViewModel.loadProgress()
+                                            statisticsViewModel.loadStatistics()
+                                            gameRecordsViewModel.reload()
+                                            endgameViewModel.reload()
+                                        },
+                                        onRestored = {},
                                     )
                                 },
                             ) {
@@ -1607,13 +1633,6 @@ private fun isValidChineseChessState(bytes: ByteArray): Boolean =
         false
     } catch (_: LinkageError) {
         false
-    }
-
-private tailrec fun Context.findActivity(): Activity? =
-    when (this) {
-        is Activity -> this
-        is ContextWrapper -> baseContext.findActivity()
-        else -> null
     }
 
 private const val BACKUP_FILE_NAME = "MasterofChessStrategy-backup.mocs"

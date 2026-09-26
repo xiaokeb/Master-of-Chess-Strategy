@@ -111,7 +111,8 @@ internal class AppNavigationViewModel(
             uiState.lastChineseChessSelection?.quickStartDestination()
         }
 
-    private fun loadChineseChessSelection() {
+    internal fun loadChineseChessSelection() {
+        uiState = AppNavigationUiState(isLoadingSelection = true)
         val loadRevision = selectionRevision
         viewModelScope.launch {
             val result = try {
