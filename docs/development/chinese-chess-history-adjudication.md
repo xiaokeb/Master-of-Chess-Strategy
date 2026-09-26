@@ -33,7 +33,7 @@
 9. 已终局后引擎拒绝继续行棋；悔棋恢复此前计数与裁定。
 10. 帅将从被将军局面应将时，若只是露出其他棋子的杀、捉，历史着法与三次循环分析均记为闲；实际直接将军仍记为将。
 
-待对齐边界：上游 Pikafish 的自然限着实现包含将军次数超过十次的计数例外；本地第 8 项目前仍按原始未吃子着数计算。搜索历史同步已保留上游所需的全部历史，但不应据此宣称两个裁判的自然限着计数已经一致。该边界需要按 2020 规则原文补充专门用例后修正。
+待对齐边界：上游 Pikafish 的自然限着实现包含将军次数超过十次的计数例外；本地第 8 项目前仍按原始未吃子着数计算。搜索历史同步已保留上游所需的全部历史，但不应据此宣称两个裁判的自然限着计数已经一致。2026-09-26 核对第 22.2 条后，确认其“提出方审核”语义不同于上游的双边扣减自动裁定；待用户确认数字化口径后修正，详见 `chinese-chess-natural-limit-decision.md`。
 
 ## 长捉边界
 
@@ -70,3 +70,4 @@ MOCX 2 保存：
 - https://cnchess.net/rules/ChapterSixSection26.html
 - https://cnchess.net/rules/ChaptNine.html
 - https://cnchess.net/rules/ChapterOneSection4.html
+- https://cnchess.net/rules/ChapterFiveSection22.html
