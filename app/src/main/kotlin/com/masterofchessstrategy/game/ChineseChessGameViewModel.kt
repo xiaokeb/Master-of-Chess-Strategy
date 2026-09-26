@@ -42,6 +42,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -118,8 +119,10 @@ class ChineseChessGameViewModel internal constructor(
     private var completedAutoGames = 0
     private var clockJob: Job? = null
     private var automationJob: Job? = null
-    internal var isRuntimeForeground = true
+    internal var isRuntimeForeground by mutableStateOf(true)
         private set
+    private var backgroundRuntimeLease: AutoCloseable? = null
+    private var backgroundStopRequested = false
     private val mutableSoundEvents = MutableSharedFlow<ChineseChessSoundCue>(
         extraBufferCapacity = SOUND_EVENT_BUFFER_CAPACITY,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
@@ -512,6 +515,47 @@ class ChineseChessGameViewModel internal constructor(
     }
 
     /** Visibility changes do not recreate the engine or restart an in-flight AI turn. */
+    internal fun registerBackgroundRuntime(register: (ChineseChessGameViewModel) -> AutoCloseable) {
+        if (backgroundRuntimeLease == null && engine != null) backgroundRuntimeLease = register(this)
+    }
+
+    internal val backgroundCheckpoint: String get() = "$matchId:$acceptedMoveCount"
+
+    internal val backgroundDemand: ChineseChessBackgroundDemand
+        get() {
+            val busy = uiState.isRestoring || uiState.isPersisting || uiState.isAiThinking || uiState.isHintThinking
+            val continuing = isAutoPlay && !autoPlayPaused && autoContinueEnabled &&
+                completedAutoGames < autoContinueGameLimit
+            val running = (uiState.result == GameResult.ONGOING || continuing) &&
+                (!isAutoPlay || !autoPlayPaused)
+            val available = engine != null && uiState.isEngineAvailable
+            return ChineseChessBackgroundDemand(
+                canRun = available && (running || busy),
+                needsCpu = available && (busy || (isAutoPlay && running)),
+                isBusy = available && busy,
+                isForeground = isRuntimeForeground,
+            )
+        }
+
+    /** Notification stop is idempotent and lets an in-flight search reach its safe checkpoint. */
+    internal fun stopBackgroundAutomation() {
+        if (!isAutoPlay) return
+        if (uiState.isRestoring || uiState.isPersisting) {
+            backgroundStopRequested = true
+            return
+        }
+        backgroundStopRequested = false
+        if (!autoPlayPaused) toggleAutoPlayPaused()
+    }
+
+    /** A newer explicit game owns the sole active-save slot; the retired game must never write again. */
+    internal fun retireBackgroundRuntime() {
+        viewModelScope.coroutineContext.cancelChildren()
+        backgroundRuntimeLease?.close()
+        backgroundRuntimeLease = null
+        disableEngine()
+    }
+
     internal fun setRuntimeForeground(isForeground: Boolean) {
         if (engine == null) return
         if (isRuntimeForeground == isForeground) return
@@ -591,6 +635,8 @@ class ChineseChessGameViewModel internal constructor(
     }
 
     override fun onCleared() {
+        backgroundRuntimeLease?.close()
+        backgroundRuntimeLease = null
         clockJob?.cancel()
         automationJob?.cancel()
         closeEngine()
@@ -1219,6 +1265,10 @@ class ChineseChessGameViewModel internal constructor(
             uiState.isPersisting ||
             !uiState.isEngineAvailable
         ) {
+            return
+        }
+        if (backgroundStopRequested) {
+            stopBackgroundAutomation()
             return
         }
         ensureClockTicker()

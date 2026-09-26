@@ -2179,6 +2179,7 @@ private fun GameControls(
                 text = stringResource(R.string.rules_scope_note),
                 style = MaterialTheme.typography.bodySmall,
             )
+            ChineseChessBackgroundControls()
         }
     }
 }

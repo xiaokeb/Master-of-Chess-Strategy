@@ -382,4 +382,16 @@
     <string name="handicap_invalid_position">让子方案不可开局，请保留双方将帅及中路遮挡子，并确认至少让出一子。</string>
     <string name="handicap_engine_unavailable">规则引擎暂不可用，未开始对局。</string>
     <string name="handicap_difficulty_locked">请先完成教程，并选择已解锁难度。</string>
+    <string name="background_channel">象棋后台对局</string>
+    <string name="background_notification_title">象棋对局正在运行</string>
+    <string name="background_notification_body">点按返回；停止挂机不会认输，人机棋钟仍按规则计时。</string>
+    <string name="background_stop">停止挂机</string>
+    <string name="background_enable">开启后台挂机</string>
+    <string name="background_system_settings">系统通知设置</string>
+    <string name="background_running">后台挂机已启用，可切换应用或熄屏。系统限制仍可能中断；返回后恢复存档。</string>
+    <string name="background_stopping">正在完成当前安全存档并停止挂机…</string>
+    <string name="background_ready">后台挂机已启用，当前没有待运行的对局任务。</string>
+    <string name="background_off">后台挂机已停止。自动演局已暂停；其他对局棋钟不因此暂停。</string>
+    <string name="background_notifications_required">请允许对局通知后开启后台挂机；通知中可随时停止，不影响前台下棋。</string>
+    <string name="background_unavailable">系统未允许持续后台运行。存档保留，可回到对局后重新开启。</string>
 </resources>

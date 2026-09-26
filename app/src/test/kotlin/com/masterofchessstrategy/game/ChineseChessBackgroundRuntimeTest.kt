@@ -3,6 +3,9 @@ package com.masterofchessstrategy.game
 import androidx.lifecycle.ViewModelStore
 import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.StoredGameMode
+import com.masterofchessstrategy.data.GameSessionRepository
+import com.masterofchessstrategy.data.GameSessionSnapshot
+import com.masterofchessstrategy.data.LoadGameSessionResult
 import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.BoardMove
 import com.masterofchessstrategy.engine.BoardPosition
@@ -17,6 +20,7 @@ import com.masterofchessstrategy.engine.PlayerId
 import com.masterofchessstrategy.engine.RestoreResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -194,6 +198,108 @@ class ChineseChessBackgroundRuntimeTest {
         assertEquals(1, engine.closeCalls)
         assertTrue(engine.searches.isEmpty())
         assertEquals(0L, testScheduler.currentTime)
+    }
+
+    @Test fun humanWaitKeepsSessionButNeverRequestsCpuAndTerminalEndsDemand() = runTest(dispatcher) {
+        val game = keep(ChineseChessGameViewModel(engineFactory = { Engine() }))
+        assertTrue(game.backgroundDemand.canRun)
+        assertFalse(game.backgroundDemand.needsCpu)
+        game.setRuntimeForeground(false)
+        assertFalse(game.backgroundDemand.isForeground)
+        game.resign()
+        advanceUntilIdle()
+        assertFalse(game.backgroundDemand.canRun)
+        assertFalse(game.backgroundDemand.needsCpu)
+    }
+
+    @Test fun notificationStopIsIdempotentAndDrainsPendingAutoSearchWithoutResigning() = runTest(dispatcher) {
+        val engine = Engine()
+        val game = keep(ChineseChessGameViewModel(
+            mode = StoredGameMode.AI_AUTO_PLAY, difficulty = Difficulty.EASY,
+            aiDispatcher = dispatcher, engineFactory = { engine },
+        ))
+        runCurrent()
+        assertTrue(game.backgroundDemand.needsCpu)
+        repeat(3) { game.stopBackgroundAutomation() }
+        advanceUntilIdle()
+        assertTrue(game.uiState.isAutoPlayPaused)
+        assertEquals(GameResult.ONGOING, game.uiState.result)
+        assertTrue(engine.searches.isEmpty())
+        assertFalse(game.backgroundDemand.canRun)
+        assertFalse(game.backgroundDemand.needsCpu)
+    }
+
+    @Test fun runtimeLeaseAttachesOnceAndReleasesOnceDespiteRepeatedCompositionAndClear() = runTest(dispatcher) {
+        val game = keep(ChineseChessGameViewModel(engineFactory = { Engine() }))
+        var attached = 0
+        var released = 0
+        repeat(3) { game.registerBackgroundRuntime { attached++; AutoCloseable { released++ } } }
+        assertEquals(1, attached)
+        store.clear()
+        game.registerBackgroundRuntime { attached++; AutoCloseable { released++ } }
+        assertEquals(1, released)
+        assertEquals(1, attached)
+    }
+
+    @Test fun replacingActiveRuntimeCancelsOldWorkAndCannotRestartOldEngine() = runTest(dispatcher) {
+        val engine = Engine()
+        val game = keep(ChineseChessGameViewModel(
+            mode = StoredGameMode.AI_AUTO_PLAY, difficulty = Difficulty.EASY,
+            aiDispatcher = dispatcher, engineFactory = { engine },
+        ))
+        var releases = 0
+        game.registerBackgroundRuntime { AutoCloseable { releases++ } }
+        runCurrent()
+        game.retireBackgroundRuntime()
+        game.restart()
+        game.setRuntimeForeground(false)
+        advanceUntilIdle()
+        assertFalse(game.backgroundDemand.canRun)
+        assertFalse(game.uiState.isEngineAvailable)
+        assertEquals(1, releases)
+        assertEquals(1, engine.closeCalls)
+        assertTrue(engine.searches.isEmpty())
+    }
+
+    @Test fun notificationStopDuringRestoreWaitsForCheckpointAndDoesNotStartAi() = runTest(dispatcher) {
+        val saves = mutableListOf<GameSessionSnapshot>()
+        val repository = object : GameSessionRepository {
+            override suspend fun load(gameType: GameType): LoadGameSessionResult {
+                delay(100L)
+                return LoadGameSessionResult.NotFound
+            }
+            override suspend fun save(snapshot: GameSessionSnapshot) { delay(100L); saves += snapshot }
+            override suspend fun clear(gameType: GameType) = Unit
+        }
+        val engine = Engine()
+        val game = keep(ChineseChessGameViewModel(
+            sessionRepository = repository, mode = StoredGameMode.AI_AUTO_PLAY,
+            difficulty = Difficulty.EASY, aiDispatcher = dispatcher, engineFactory = { engine },
+        ))
+        assertTrue(game.uiState.isRestoring)
+        repeat(2) { game.stopBackgroundAutomation() }
+        assertTrue(saves.isEmpty())
+        advanceUntilIdle()
+        assertTrue(game.uiState.isAutoPlayPaused)
+        assertTrue(saves.last().autoPlayPaused)
+        assertTrue(engine.searches.isEmpty())
+        assertFalse(game.backgroundDemand.isBusy)
+    }
+
+    @Test fun wakeLeaseCannotBeExtendedByPollingWithoutGameProgress() {
+        val budget = ChineseChessWakeBudget("game:0", 1_000L)
+        assertEquals(60_000L, budget.remainingMillis("game:0", 1_000L))
+        assertEquals(30_000L, budget.remainingMillis("game:0", 31_000L))
+        assertEquals(0L, budget.remainingMillis("game:0", 61_000L))
+        assertEquals(0L, budget.remainingMillis("game:0", 121_000L))
+    }
+
+    @Test fun realMoveOrNewAutoContinuedGameRefreshesWakeBudget() {
+        val budget = ChineseChessWakeBudget("game:0", 1_000L)
+        assertEquals(60_000L, budget.remainingMillis("game:1", 31_000L))
+        assertEquals(30_000L, budget.remainingMillis("game:1", 61_000L))
+        assertEquals(60_000L, budget.remainingMillis("next-game:0", 70_000L))
+        assertEquals(0L, budget.remainingMillis("next-game:0", 130_000L))
     }
 
     private fun keep(game: ChineseChessGameViewModel) = game.also {
