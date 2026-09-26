@@ -249,6 +249,7 @@ class ChineseChessSetupViewModelTest {
         override fun restore(data: ByteArray): RestoreResult = RestoreResult.Restored
 
         override fun pieceAt(position: BoardPosition): ChineseChessPiece? = null
+        override fun isInCheck(side: ChineseChessSide): Boolean = false
 
         override fun close() = Unit
     }

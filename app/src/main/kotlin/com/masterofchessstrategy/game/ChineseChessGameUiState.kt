@@ -59,6 +59,7 @@ data class ChineseChessGameUiState(
         null
     },
     val currentSide: ChineseChessSide = ChineseChessSide.RED,
+    val checkedSide: ChineseChessSide? = null,
     val selectedPosition: BoardPosition? = null,
     val legalDestinations: Set<BoardPosition> = emptySet(),
     val hintedOrigins: Set<BoardPosition> = emptySet(),

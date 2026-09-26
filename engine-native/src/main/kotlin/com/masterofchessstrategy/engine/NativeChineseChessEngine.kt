@@ -139,6 +139,9 @@ class NativeChineseChessEngine internal constructor(
         return ChineseChessPiece(type, side)
     }
 
+    override fun isInCheck(side: ChineseChessSide): Boolean =
+        withHandle { bridge.isInCheck(it, side.code) }
+
     override fun close() {
         synchronized(lock) {
             if (handle != CLOSED_HANDLE) {

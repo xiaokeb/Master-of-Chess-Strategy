@@ -201,6 +201,7 @@ class ChineseChessGamePersistenceTest {
         }
 
         override fun pieceAt(position: BoardPosition): ChineseChessPiece? = pieces[position]
+        override fun isInCheck(side: ChineseChessSide): Boolean = false
 
         override fun close() = Unit
     }

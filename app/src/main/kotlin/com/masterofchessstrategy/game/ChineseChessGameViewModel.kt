@@ -868,6 +868,7 @@ class ChineseChessGameViewModel internal constructor(
             uiState = ChineseChessGameUiState(
                 board = board,
                 currentSide = currentSide,
+                checkedSide = currentSide.takeIf { activeEngine.isInCheck(it) },
                 result = result,
                 canUndo =
                     !isAutoPlay &&

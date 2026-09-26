@@ -40,6 +40,18 @@ class NativeChineseChessEngineTest {
     }
 
     @Test
+    fun inCheckQueryUsesTheNamedSideAndOwnedHandle() {
+        val bridge = FakeChineseChessBridge().apply {
+            checkedSideCode = ChineseChessSide.BLACK.code
+        }
+        NativeChineseChessEngine(bridge).use { engine ->
+            assertFalse(engine.isInCheck(ChineseChessSide.RED))
+            assertTrue(engine.isInCheck(ChineseChessSide.BLACK))
+        }
+        assertEquals(listOf(42L, 42L), bridge.observedHandles)
+    }
+
+    @Test
     fun moveAndRestoreCodesMapWithoutOrdinalCoupling() {
         val bridge = FakeChineseChessBridge()
         NativeChineseChessEngine(bridge).use { engine ->
@@ -172,6 +184,7 @@ private class FakeChineseChessBridge : ChineseChessBridge {
     var aiMove = intArrayOf(0, 3, 0, 4)
     var currentPlayerCode = 0
     var pieceCode = 0x80 or ChineseChessPieceType.CHARIOT.code
+    var checkedSideCode: Int? = null
     var lastDifficultyCode: Int? = null
     var lastNetworkPath: String? = null
 
@@ -223,6 +236,9 @@ private class FakeChineseChessBridge : ChineseChessBridge {
 
     override fun pieceAt(handle: Long, x: Int, y: Int): Int =
         observe(handle) { pieceCode }
+
+    override fun isInCheck(handle: Long, sideCode: Int): Boolean =
+        observe(handle) { checkedSideCode == sideCode }
 
     private inline fun <T> observe(handle: Long, value: () -> T): T {
         observedHandles += handle

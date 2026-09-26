@@ -37,6 +37,9 @@ object ChineseChessBoard {
 /** Typed game contract used by UI and business layers. */
 interface ChineseChessRuleEngine : RuleEngine<BoardMove> {
     fun pieceAt(position: BoardPosition): ChineseChessPiece?
+
+    /** Whether the named side's general is currently under legal attack. */
+    fun isInCheck(side: ChineseChessSide): Boolean
 }
 
 /**

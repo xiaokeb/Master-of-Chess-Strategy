@@ -133,5 +133,6 @@ class ChineseChessOpeningViewModelTest {
             } else {
                 null
             }
+        override fun isInCheck(side: ChineseChessSide): Boolean = false
     }
 }

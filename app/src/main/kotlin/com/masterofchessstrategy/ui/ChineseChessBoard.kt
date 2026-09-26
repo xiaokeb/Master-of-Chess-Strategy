@@ -91,13 +91,15 @@ internal fun ChineseChessBoard(
     val legalColor = Color(0xFF2D7A55)
     val selectedColor = Color(0xFFFFC857)
     val hintColor = Color(0xFF3567B7)
+    val checkColor = Color(0xFFE6482E)
 
     Canvas(
         modifier = modifier
             .fillMaxSize()
             .testTag(CHINESE_CHESS_BOARD_TAG)
             .semantics {
-                contentDescription = "中国象棋棋盘，" + state.currentSide.displayName() + "方行棋"
+                contentDescription = "中国象棋棋盘，" + state.currentSide.displayName() +
+                    "方行棋" + (state.checkedSide?.let { "，${it.displayName()}方被将军" } ?: "")
             }
             .pointerInput(state.isInteractionEnabled, state.result) {
                 if (state.isInteractionEnabled) {
@@ -217,6 +219,27 @@ internal fun ChineseChessBoard(
                 center = geometry.center(selected),
                 style = Stroke(width = cell * 0.09f),
             )
+        }
+
+        if (!state.isBlindChess) {
+            state.checkedSide?.let { side ->
+                val generalIndex = state.board.indexOfFirst {
+                    it?.side == side && it.type == ChineseChessPieceType.GENERAL
+                }
+                if (generalIndex >= 0) {
+                    drawCircle(
+                        color = checkColor,
+                        radius = cell * 0.47f,
+                        center = geometry.center(
+                            BoardPosition(
+                                generalIndex % ChineseChessBoard.WIDTH,
+                                generalIndex / ChineseChessBoard.WIDTH,
+                            ),
+                        ),
+                        style = Stroke(width = cell * 0.09f),
+                    )
+                }
+            }
         }
 
         val piecePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {

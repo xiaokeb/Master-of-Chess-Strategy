@@ -4,10 +4,13 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.ChineseChessSide
+import com.masterofchessstrategy.engine.ChineseChessPiece
+import com.masterofchessstrategy.engine.ChineseChessPieceType
 import com.masterofchessstrategy.opening.ChineseChessOpeningFrame
 import com.masterofchessstrategy.opening.ChineseChessOpeningUiState
 import org.junit.Rule
@@ -37,6 +40,35 @@ class ChineseChessGameScreenTest {
         composeRule.onNodeWithTag(RESIGN_BUTTON_TAG).assertIsEnabled()
         composeRule.onNodeWithTag(RESTART_BUTTON_TAG).assertIsEnabled()
         composeRule.onNodeWithTag(DRAW_BUTTON_TAG).assertIsNotEnabled()
+    }
+
+    @Test
+    fun checkedGeneralStatusAndBoardAreRendered() {
+        val board = MutableList<ChineseChessPiece?>(90) { null }.apply {
+            this[4 + 9 * 9] = ChineseChessPiece(
+                ChineseChessPieceType.GENERAL, ChineseChessSide.RED,
+            )
+            this[5] = ChineseChessPiece(
+                ChineseChessPieceType.GENERAL, ChineseChessSide.BLACK,
+            )
+            this[4 + 7 * 9] = ChineseChessPiece(
+                ChineseChessPieceType.CHARIOT, ChineseChessSide.BLACK,
+            )
+        }
+        composeRule.setContent {
+            ChineseChessGameScreen(
+                state = ChineseChessGameUiState(
+                    board = board,
+                    currentSide = ChineseChessSide.RED,
+                    checkedSide = ChineseChessSide.RED,
+                ),
+                onSquareTap = {}, onUndo = {}, onHint = {}, onResign = {},
+                onRestart = {}, onBack = {},
+            )
+        }
+
+        composeRule.onNodeWithText("红方被将军").assertExists()
+        composeRule.onNodeWithTag(CHINESE_CHESS_BOARD_TAG).assertExists()
     }
 
     @Test

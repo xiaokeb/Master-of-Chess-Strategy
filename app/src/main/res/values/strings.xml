@@ -5,6 +5,8 @@
     <string name="game_controls">对局操作</string>
     <string name="red_to_move">红方行棋</string>
     <string name="black_to_move">黑方行棋</string>
+    <string name="red_in_check">红方被将军</string>
+    <string name="black_in_check">黑方被将军</string>
     <string name="red_wins">红方胜</string>
     <string name="black_wins">黑方胜</string>
     <string name="draw">和棋</string>

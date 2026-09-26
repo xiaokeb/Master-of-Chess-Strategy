@@ -41,4 +41,6 @@ internal object NativeBindings {
     external fun restoreChineseChess(handle: Long, data: ByteArray): Int
 
     external fun chineseChessPieceAt(handle: Long, x: Int, y: Int): Int
+
+    external fun chineseChessIsInCheck(handle: Long, sideCode: Int): Boolean
 }

@@ -6,6 +6,8 @@ import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.NativeChineseChessEngine
 import com.masterofchessstrategy.engine.RestoreResult
+import com.masterofchessstrategy.engine.ChineseChessPieceType
+import com.masterofchessstrategy.engine.ChineseChessSide
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -54,8 +56,19 @@ class ChineseChessEndgamePackInstrumentedTest {
                     engine.restore(level.initialEngineState) is RestoreResult.Restored,
                 )
                 val winningMoves = engine.legalActions().filter { move ->
+                    assertTrue(
+                        "${level.id}: direct general capture is not a mate puzzle",
+                        engine.pieceAt(move.to)?.type != ChineseChessPieceType.GENERAL,
+                    )
                     val accepted = engine.apply(move) is ActionResult.Accepted
-                    val wins = accepted && engine.gameResult() == GameResult.FIRST_PLAYER_WIN
+                    val wins = accepted &&
+                        engine.gameResult() == GameResult.FIRST_PLAYER_WIN
+                    if (wins) {
+                        assertTrue(
+                            "${level.id}: winning move must give checkmate, not stalemate",
+                            engine.isInCheck(ChineseChessSide.BLACK),
+                        )
+                    }
                     if (accepted) assertTrue(level.id, engine.undo())
                     wins
                 }

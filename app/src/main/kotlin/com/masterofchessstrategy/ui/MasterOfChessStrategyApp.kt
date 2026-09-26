@@ -2059,6 +2059,8 @@ private fun gameStatusText(state: ChineseChessGameUiState): String =
         state.result == GameResult.FIRST_PLAYER_WIN -> stringResource(R.string.red_wins)
         state.result == GameResult.SECOND_PLAYER_WIN -> stringResource(R.string.black_wins)
         state.result == GameResult.DRAW -> stringResource(R.string.draw)
+        state.checkedSide == ChineseChessSide.RED -> stringResource(R.string.red_in_check)
+        state.checkedSide == ChineseChessSide.BLACK -> stringResource(R.string.black_in_check)
         state.currentSide == ChineseChessSide.RED -> stringResource(R.string.red_to_move)
         else -> stringResource(R.string.black_to_move)
     }

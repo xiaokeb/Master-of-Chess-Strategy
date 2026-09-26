@@ -34,6 +34,8 @@ internal interface ChineseChessBridge {
     fun restore(handle: Long, data: ByteArray): Int
 
     fun pieceAt(handle: Long, x: Int, y: Int): Int
+
+    fun isInCheck(handle: Long, sideCode: Int): Boolean
 }
 
 internal object JniChineseChessBridge : ChineseChessBridge {
@@ -91,4 +93,7 @@ internal object JniChineseChessBridge : ChineseChessBridge {
 
     override fun pieceAt(handle: Long, x: Int, y: Int): Int =
         NativeBindings.chineseChessPieceAt(handle, x, y)
+
+    override fun isInCheck(handle: Long, sideCode: Int): Boolean =
+        NativeBindings.chineseChessIsInCheck(handle, sideCode)
 }

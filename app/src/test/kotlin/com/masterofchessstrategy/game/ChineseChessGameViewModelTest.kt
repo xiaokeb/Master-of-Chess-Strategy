@@ -39,6 +39,20 @@ class ChineseChessGameViewModelTest {
     }
 
     @Test
+    fun checkedSideFollowsCurrentPlayerAndClearsAfterEscape() {
+        val engine = FakeChineseChessEngine().apply {
+            checkedSide = ChineseChessSide.RED
+        }
+        val viewModel = ChineseChessGameViewModel { engine }
+        assertEquals(ChineseChessSide.RED, viewModel.uiState.checkedSide)
+
+        engine.checkedSide = null
+        viewModel.onSquareTap(redRook)
+        viewModel.onSquareTap(redRookDestination)
+        assertNull(viewModel.uiState.checkedSide)
+    }
+
+    @Test
     fun selectingOwnPieceShowsOnlyItsLegalDestinations() {
         val viewModel = ChineseChessGameViewModel { FakeChineseChessEngine() }
 
@@ -200,6 +214,7 @@ class ChineseChessGameViewModelTest {
         private var canUndo = false
         var resetCalls = 0
             private set
+        var checkedSide: ChineseChessSide? = null
 
         override val currentPlayer: PlayerId
             get() = player
@@ -255,6 +270,7 @@ class ChineseChessGameViewModelTest {
         override fun restore(data: ByteArray): RestoreResult = RestoreResult.Restored
 
         override fun pieceAt(position: BoardPosition): ChineseChessPiece? = positions[position]
+        override fun isInCheck(side: ChineseChessSide): Boolean = checkedSide == side
 
         override fun close() = Unit
     }

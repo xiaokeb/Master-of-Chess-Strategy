@@ -345,3 +345,23 @@ Java_com_masterofchessstrategy_engine_internal_NativeBindings_chineseChessPieceA
         return piece ? encode_piece(*piece) : 0;
     });
 }
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_masterofchessstrategy_engine_internal_NativeBindings_chineseChessIsInCheck(
+    JNIEnv* env,
+    jobject,
+    const jlong handle,
+    const jint side_code
+) noexcept {
+    return guard_jni<jboolean>(env, JNI_FALSE, [=] {
+        if (side_code != 0 && side_code != 1) {
+            throw std::invalid_argument("Invalid Chinese chess side");
+        }
+        const auto side = side_code == 0
+            ? mocs::engine::Side::red
+            : mocs::engine::Side::black;
+        return require_chinese_chess_engine(handle)->is_in_check(side)
+            ? JNI_TRUE
+            : JNI_FALSE;
+    });
+}

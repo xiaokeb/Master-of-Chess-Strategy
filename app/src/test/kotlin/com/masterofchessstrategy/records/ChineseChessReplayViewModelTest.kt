@@ -151,6 +151,8 @@ class ChineseChessReplayViewModelTest {
                 null
             }
 
+        override fun isInCheck(side: ChineseChessSide): Boolean = false
+
         override fun close() {
             wasClosed = true
         }

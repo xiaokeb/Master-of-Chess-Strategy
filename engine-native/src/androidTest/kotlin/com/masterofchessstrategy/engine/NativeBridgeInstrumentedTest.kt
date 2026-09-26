@@ -2,6 +2,7 @@ package com.masterofchessstrategy.engine
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,6 +25,8 @@ class NativeBridgeInstrumentedTest {
     fun nativeChineseChessSessionSupportsMoveUndoAndRestore() {
         NativeChineseChessEngine().use { engine ->
             assertEquals(PlayerId(0), engine.currentPlayer)
+            assertFalse(engine.isInCheck(ChineseChessSide.RED))
+            assertFalse(engine.isInCheck(ChineseChessSide.BLACK))
             assertEquals(
                 ChineseChessPiece(
                     ChineseChessPieceType.GENERAL,
@@ -62,6 +65,26 @@ class NativeBridgeInstrumentedTest {
                 engine.restore(corrupted),
             )
             assertTrue(initial.contentEquals(engine.serialize()))
+        }
+    }
+
+    @Test
+    fun nativeCheckQueryTracksMoveAndUndo() {
+        NativeChineseChessEngine().use { engine ->
+            assertEquals(RestoreResult.Restored, engine.restore(customPosition(
+                side = ChineseChessSide.RED,
+                pieces = listOf(
+                    PositionedPiece(4, 9, ChineseChessPieceType.GENERAL, ChineseChessSide.RED),
+                    PositionedPiece(5, 0, ChineseChessPieceType.GENERAL, ChineseChessSide.BLACK),
+                    PositionedPiece(4, 7, ChineseChessPieceType.CHARIOT, ChineseChessSide.BLACK),
+                ),
+            )))
+            assertTrue(engine.isInCheck(ChineseChessSide.RED))
+            assertFalse(engine.isInCheck(ChineseChessSide.BLACK))
+            assertAccepted(engine, 4, 9, 3, 9)
+            assertFalse(engine.isInCheck(ChineseChessSide.RED))
+            assertTrue(engine.undo())
+            assertTrue(engine.isInCheck(ChineseChessSide.RED))
         }
     }
 
