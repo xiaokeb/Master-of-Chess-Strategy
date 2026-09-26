@@ -69,6 +69,35 @@ class NativeBridgeInstrumentedTest {
     }
 
     @Test
+    fun hardAiFindsForcedStalemateThroughPackagedJni() {
+        val state = ChineseChessFenCodec.parse(
+            "3k5/9/9/9/9/9/5r3/9/4K4/9 b - - 0 1",
+        ).toEngineState()
+        NativeChineseChessEngine().use { engine ->
+            assertEquals(RestoreResult.Restored, engine.restore(state))
+            val before = engine.serialize()
+            val selected = requireNotNull(engine.chooseMove(Difficulty.HARD))
+            assertTrue(before.contentEquals(engine.serialize()))
+            assertEquals(ActionResult.Accepted, engine.apply(selected))
+            val replies = engine.legalActions()
+            assertTrue(replies.isNotEmpty())
+            // Assert the forced outcome, not a particular equal-scoring first move.
+            replies.forEach { reply ->
+                assertEquals(ActionResult.Accepted, engine.apply(reply))
+                val canStalemate = engine.legalActions().any { finish ->
+                    assertEquals(ActionResult.Accepted, engine.apply(finish))
+                    val won = engine.gameResult() == GameResult.SECOND_PLAYER_WIN &&
+                        !engine.isInCheck(ChineseChessSide.RED) && engine.legalActions().isEmpty()
+                    assertTrue(engine.undo())
+                    won
+                }
+                assertTrue(canStalemate)
+                assertTrue(engine.undo())
+            }
+        }
+    }
+
+    @Test
     fun nativeCheckQueryTracksMoveAndUndo() {
         NativeChineseChessEngine().use { engine ->
             assertEquals(RestoreResult.Restored, engine.restore(customPosition(

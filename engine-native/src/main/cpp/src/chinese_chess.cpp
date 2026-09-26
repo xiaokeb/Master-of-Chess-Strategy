@@ -1472,10 +1472,10 @@ std::int32_t ChineseChessEngine::search_score(
         return evaluate_for(perspective);
     }
     if (depth <= 0) {
-        // Mate at the search horizon must outrank any material gain. Restrict
-        // the extra legal-move scan to checked positions to keep the hard
-        // difficulty within its deterministic node budget.
-        if (is_in_check(current_side_) && !has_legal_action()) {
+        // Xiangqi stalemate is a loss just like checkmate. At the horizon,
+        // stop the scan at the first legal action; never require check before
+        // recognizing an immobilized side's loss.
+        if (!has_legal_action()) {
             return evaluate_for(perspective);
         }
         return material_score(perspective);

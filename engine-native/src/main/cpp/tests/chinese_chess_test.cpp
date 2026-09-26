@@ -848,6 +848,47 @@ void easy_ai_returns_legal_move_without_mutating_position() {
     assert(!engine.best_move(Difficulty::master));
 }
 
+void hard_ai_recognizes_forced_stalemate_at_search_horizon() {
+    // A quiet rook/general move forces either king reply into a one-move
+    // stalemate. A routine check gains material_score's check bonus but loses
+    // that forced win; horizon scoring must prefer the actual terminal result.
+    for (const auto attacker : {Side::black, Side::red}) {
+        const bool mirrored = attacker == Side::red;
+        const auto defender = mirrored ? Side::black : Side::red;
+        const auto x = [mirrored](int value) { return mirrored ? 8 - value : value; };
+        const auto y = [mirrored](int value) { return mirrored ? 9 - value : value; };
+        ChineseChessEngine engine;
+        assert(engine.restore(custom_position(attacker, {
+            {x(3), y(0), {PieceType::general, attacker}},
+            {x(5), y(6), {PieceType::chariot, attacker}},
+            {x(4), y(8), {PieceType::general, defender}},
+        })).restored);
+        const auto before = engine.serialize();
+        const auto selected = engine.best_move(Difficulty::hard);
+        assert(selected);
+        assert(engine.serialize() == before);
+        assert(engine.apply(*selected).accepted);
+        const auto replies = engine.legal_actions();
+        assert(!replies.empty());
+        for (const auto& reply : replies) {
+            auto next = engine;
+            assert(next.apply(reply).accepted);
+            bool can_stalemate = false;
+            for (const auto& finish : next.legal_actions()) {
+                auto terminal = next;
+                assert(terminal.apply(finish).accepted);
+                const auto win = attacker == Side::red
+                    ? GameResult::first_player_win : GameResult::second_player_win;
+                if (terminal.game_result() == win && !terminal.is_in_check(defender)) {
+                    assert(terminal.legal_actions().empty());
+                    can_stalemate = true;
+                }
+            }
+            assert(can_stalemate);
+        }
+    }
+}
+
 void unique_seed_mates_are_checked_and_unambiguous() {
     for (int variant = 0; variant < 5; ++variant) {
         const auto rook_x = variant == 1 || variant == 3 ? 8 : 0;
@@ -910,6 +951,7 @@ int main() {
     corrupted_positions_are_rejected();
     legacy_seed_endgames_have_a_winning_first_move();
     unique_seed_mates_are_checked_and_unambiguous();
+    hard_ai_recognizes_forced_stalemate_at_search_horizon();
     wrong_game_type_is_rejected_after_checksum_validation();
     repeated_long_check_loses_for_the_checking_side();
     general_escape_unmasking_a_chase_is_idle();

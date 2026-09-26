@@ -20,7 +20,8 @@ class XiangqiAiAuditTest(unittest.TestCase):
         return "\n".join(json.dumps(record) for record in self.records)
 
     def test_saved_baselines_pass(self) -> None:
-        for pair in ("easy-medium", "medium-hard"):
+        for pair in ("easy-medium", "medium-hard", "hard-master",
+                     "easy-medium-horizon", "medium-hard-horizon"):
             with self.subTest(pair=pair):
                 audit((RESULTS / f"2026-09-26-ai-{pair}-v1.jsonl").read_text(encoding="utf-8"))
 
