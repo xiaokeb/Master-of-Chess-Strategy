@@ -1623,6 +1623,7 @@ private fun ChineseChessGameSoundEffect(
     viewModel: ChineseChessGameViewModel,
     soundEnabled: Boolean,
 ) {
+    ChineseChessRuntimeEffect(viewModel)
     val context = LocalContext.current.applicationContext
     val player = remember(context) { ChineseChessSoundPlayer(context) }
     val currentSoundEnabled = rememberUpdatedState(soundEnabled)

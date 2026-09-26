@@ -118,6 +118,8 @@ class ChineseChessGameViewModel internal constructor(
     private var completedAutoGames = 0
     private var clockJob: Job? = null
     private var automationJob: Job? = null
+    internal var isRuntimeForeground = true
+        private set
     private val mutableSoundEvents = MutableSharedFlow<ChineseChessSoundCue>(
         extraBufferCapacity = SOUND_EVENT_BUFFER_CAPACITY,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
@@ -472,6 +474,7 @@ class ChineseChessGameViewModel internal constructor(
         if (autoPlayPaused && uiState.result == GameResult.ONGOING) {
             if (!commitActiveClock(now)) return
             turnStartedAtEpochMillis = null
+            stopClockTicker()
         } else if (autoPlayPaused) {
             automationJob?.cancel()
             automationJob = null
@@ -508,8 +511,19 @@ class ChineseChessGameViewModel internal constructor(
         }
     }
 
+    /** Visibility changes do not recreate the engine or restart an in-flight AI turn. */
+    internal fun setRuntimeForeground(isForeground: Boolean) {
+        if (engine == null) return
+        if (isRuntimeForeground == isForeground) return
+        isRuntimeForeground = isForeground
+        stopClockTicker()
+        synchronizeClock()
+        ensureClockTicker()
+    }
+
     internal fun synchronizeClock() {
         if (
+            engine == null ||
             timeControlMinutes == null ||
             uiState.isRestoring ||
             uiState.result != GameResult.ONGOING
@@ -881,6 +895,7 @@ class ChineseChessGameViewModel internal constructor(
             }
             val result = resultOverride ?: activeEngine.gameResult()
             if (result != GameResult.ONGOING) {
+                stopClockTicker()
                 turnStartedAtEpochMillis = null
                 pendingDrawOfferSide = null
             }
@@ -1226,18 +1241,33 @@ class ChineseChessGameViewModel internal constructor(
     private fun ensureClockTicker() {
         val interval = clockTickIntervalMillis ?: return
         if (
+            engine == null ||
+            !uiState.isEngineAvailable ||
+            uiState.isRestoring ||
+            uiState.result != GameResult.ONGOING ||
             timeControlMinutes == null ||
+            turnStartedAtEpochMillis == null ||
             interval <= 0L ||
             clockJob?.isActive == true
         ) {
             return
         }
         clockJob = viewModelScope.launch {
-            while (true) {
-                delay(interval)
+            while (engine != null && uiState.isEngineAvailable && uiState.result == GameResult.ONGOING &&
+                turnStartedAtEpochMillis != null) {
+                // Coarser background refresh must not postpone the actual timeout deadline.
+                val remaining = remainingFor(uiState.currentSide, nowEpochMillis()) ?: break
+                val nextTick = ChineseChessRuntimePolicy.clockInterval(interval, isRuntimeForeground)
+                    .coerceAtMost(remaining.coerceAtLeast(1L))
+                delay(nextTick)
                 synchronizeClock()
             }
         }
+    }
+
+    private fun stopClockTicker() {
+        clockJob?.cancel()
+        clockJob = null
     }
 
     private fun commitActiveClock(now: Long): Boolean {
@@ -1478,8 +1508,11 @@ class ChineseChessGameViewModel internal constructor(
             !uiState.isHintThinking
 
     private fun autoPlayDelayMillis(): Long =
-        (BASE_AUTO_PLAY_DELAY_MILLIS * 1_000L / autoPlaySpeedPermille)
-            .coerceAtLeast(MIN_AUTO_PLAY_DELAY_MILLIS)
+        ChineseChessRuntimePolicy.autoPlayDelay(
+            (BASE_AUTO_PLAY_DELAY_MILLIS * 1_000L / autoPlaySpeedPermille)
+                .coerceAtLeast(MIN_AUTO_PLAY_DELAY_MILLIS),
+            isRuntimeForeground,
+        )
 
     private fun Int.toClockMillis(): Long = this * 60_000L
 
@@ -1625,6 +1658,7 @@ class ChineseChessGameViewModel internal constructor(
     }
 
     private fun closeEngine() {
+        stopClockTicker()
         val activeEngine = engine
         engine = null
         try {
