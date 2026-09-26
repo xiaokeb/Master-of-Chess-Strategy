@@ -2,7 +2,7 @@
 
 当前机器清单：`content/manifests/release-content-v1.tsv`。每行固定为
 `相对路径|SHA-256|许可证|来源类别|来源说明`。当前仅收录经项目自行
-编排的象棋残局 v4 与定式种子 v3，许可证均为 GPL-3.0-or-later。
+编排的象棋残局 v5（16 关）与定式种子 v3，许可证均为 GPL-3.0-or-later。
 
 Android `preBuild` 执行 `verifyReleasedGameContent`：检查清单路径只在已
 定义发布范围内、无重复或路径穿越、SHA-256 与当前文件相符、来源说明存在，

@@ -1,8 +1,10 @@
 // Offline authoring aid only: deterministic candidates still require human
 // curation, release-pack audit, and Android rule tests before publication.
 #include "mocs/engine/chinese_chess.hpp"
+#include "xiangqi_forced_win.hpp"
 
 #include <array>
+#include <charconv>
 #include <cstdint>
 #include <iostream>
 #include <random>
@@ -118,7 +120,23 @@ const char* piece_name(const PieceType type) {
 
 } // namespace
 
-int main() {
+int main(int argc, char** argv) {
+    // Keep the original one-move candidate stream as the default. Two-move
+    // mode proves wins against all defenses, rather than a cooperative PV.
+    int red_moves = 1, requested = 20, attempts = 20000;
+    const auto read = [](const char* value, int& destination, int maximum) {
+        const std::string text(value);
+        const auto result = std::from_chars(text.data(), text.data() + text.size(), destination);
+        return result.ec == std::errc{} && result.ptr == text.data() + text.size() &&
+            destination >= 1 && destination <= maximum;
+    };
+    if (argc > 4 || (argc > 1 && !read(argv[1], red_moves, 2)) ||
+        (argc > 2 && !read(argv[2], requested, 100)) ||
+        (argc > 3 && !read(argv[3], attempts, 1000000))) {
+        std::cerr << "usage: mocs_generate_xiangqi_mates [red-moves:1..2] "
+                     "[candidates:1..100] [attempts:1..1000000]\n";
+        return 2;
+    }
     std::mt19937 rng(20260925U);
     const auto mobile = board_squares();
     const auto red_soldiers = soldier_squares(Side::red);
@@ -137,7 +155,8 @@ int main() {
     };
     std::unordered_set<std::string> seen;
     int found = 0;
-    for (int attempt = 0; attempt < 20000 && found < 20; ++attempt) {
+    int exhausted = 0;
+    for (int attempt = 0; attempt < attempts && found < requested; ++attempt) {
         std::vector<Placement> pieces;
         bool placed = add_piece(pieces, red_palace, {PieceType::general, Side::red}, rng) &&
             add_piece(pieces, black_palace, {PieceType::general, Side::black}, rng) &&
@@ -166,6 +185,33 @@ int main() {
         const auto actions = engine.legal_actions();
         if (actions.size() < 5 || actions.size() > 45) continue;
         const auto initial_fen = engine.fen();
+        if (red_moves == 2) {
+            const auto shallow = mocs::authoring::prove_red_win(engine, 1, 1000);
+            if (shallow.status != mocs::authoring::ProofStatus::complete ||
+                !shallow.winning_lines.empty()) continue;
+            const auto proof = mocs::authoring::prove_red_win(engine, 2, 200000);
+            if (proof.status == mocs::authoring::ProofStatus::budget_exhausted) {
+                ++exhausted;
+                continue; // Unknown is neither a refutation nor proof of uniqueness.
+            }
+            if (proof.status != mocs::authoring::ProofStatus::complete ||
+                proof.winning_lines.size() != 1 || !seen.insert(initial_fen).second) continue;
+            ++found;
+            std::cout << "CANDIDATE " << found << " attempt=" << attempt
+                      << " fen=" << initial_fen << '\n';
+            std::cout << "PROOF|red_moves=2|unique_first=true|all_defenses=true|nodes="
+                      << proof.visited_nodes << '\n';
+            for (const auto& item : pieces) {
+                std::cout << "PIECE|" << item.x << '|' << item.y << '|'
+                          << (item.piece.side == Side::red ? "RED" : "BLACK")
+                          << '|' << piece_name(item.piece.type) << '\n';
+            }
+            for (const auto& move : proof.winning_lines.front()) {
+                const auto& a = move.arguments;
+                std::cout << "MOVE|" << a[0] << '|' << a[1] << '|' << a[2] << '|' << a[3] << '\n';
+            }
+            continue;
+        }
         int winners = 0;
         std::array<int, 4> winning_move{};
         for (const auto& action : actions) {
@@ -199,6 +245,6 @@ int main() {
         std::cout << "MOVE|" << winning_move[0] << '|' << winning_move[1]
                   << '|' << winning_move[2] << '|' << winning_move[3] << '\n';
     }
-    std::cerr << "generated=" << found << '\n';
-    return found == 20 ? 0 : 1;
+    std::cerr << "generated=" << found << " exhausted=" << exhausted << '\n';
+    return found == requested ? 0 : 1;
 }

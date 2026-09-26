@@ -9,12 +9,64 @@ import com.masterofchessstrategy.engine.RestoreResult
 import com.masterofchessstrategy.engine.ChineseChessPieceType
 import com.masterofchessstrategy.engine.ChineseChessSide
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class ChineseChessEndgamePackInstrumentedTest {
+    @Test
+    fun twoMoveLevelsWinAgainstEveryDefenseWithExactlyOneFirstMove() {
+        val assets = InstrumentationRegistry.getInstrumentation().targetContext.assets
+        val levels = ChineseChessEndgamePackParser.loadBundled(assets).levels
+            .filter { it.theme == "两步强制胜" }
+        assertEquals(2, levels.size)
+        var cooperativeOnlyMoves = 0
+        levels.forEach { level ->
+            assertEquals(2, level.maxPlayerMoves)
+            NativeChineseChessEngine().use { engine ->
+                assertTrue(engine.restore(level.initialEngineState) is RestoreResult.Restored)
+                val before = engine.serialize()
+                // Independent fixed-depth traversal of the actual APK asset;
+                // a valid sample PV alone does not establish a forced win.
+                val winningFirstMoves = engine.legalActions().filter { first ->
+                    assertTrue(engine.apply(first) is ActionResult.Accepted)
+                    assertTrue("${level.id}: must not already win in one move",
+                        engine.gameResult() != GameResult.FIRST_PLAYER_WIN)
+                    var everyReplyLoses = engine.gameResult() == GameResult.ONGOING
+                    var someReplyLoses = false
+                    if (everyReplyLoses) {
+                        val replies = engine.legalActions()
+                        assertTrue(replies.isNotEmpty())
+                        replies.forEach { reply ->
+                            assertTrue(engine.apply(reply) is ActionResult.Accepted)
+                            val canWin = when (engine.gameResult()) {
+                                GameResult.FIRST_PLAYER_WIN -> true
+                                GameResult.ONGOING -> engine.legalActions().any { finish ->
+                                    assertTrue(engine.apply(finish) is ActionResult.Accepted)
+                                    val wins = engine.gameResult() == GameResult.FIRST_PLAYER_WIN
+                                    assertTrue(engine.undo())
+                                    wins
+                                }
+                                else -> false
+                            }
+                            everyReplyLoses = everyReplyLoses && canWin
+                            someReplyLoses = someReplyLoses || canWin
+                            assertTrue(engine.undo())
+                        }
+                    }
+                    if (someReplyLoses && !everyReplyLoses) cooperativeOnlyMoves++
+                    assertTrue(engine.undo())
+                    everyReplyLoses
+                }
+                assertEquals(level.id, listOf(level.principalVariation.first()), winningFirstMoves)
+                assertArrayEquals(level.id, before, engine.serialize())
+            }
+        }
+        assertTrue("Fixtures must distinguish cooperative PVs from forced wins", cooperativeOnlyMoves > 0)
+    }
+
     @Test
     fun everyBundledPrincipalVariationWinsWithinItsLimit() {
         val assets = InstrumentationRegistry.getInstrumentation().targetContext.assets

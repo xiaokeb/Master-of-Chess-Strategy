@@ -79,11 +79,14 @@ class ChineseChessEndgamePackTest {
 
         assertEquals("GPL-3.0-or-later", pack.license)
         assertEquals(Difficulty.entries.toSet(), pack.levels.map { it.difficulty }.toSet())
-        assertEquals(14, pack.levels.size)
+        assertEquals(16, pack.levels.size)
         assertEquals(9, pack.levels.count { it.theme == "唯一一步杀" })
         assertEquals(5, pack.levels.count { it.theme == "多解胜局" })
         assertEquals(5, pack.levels.count { it.track == ChineseChessEndgameTrack.MAIN })
-        assertEquals(9, pack.levels.count { it.track == ChineseChessEndgameTrack.BONUS })
+        assertEquals(11, pack.levels.count { it.track == ChineseChessEndgameTrack.BONUS })
+        val twoMoveLevels = pack.levels.filter { it.theme == "两步强制胜" }
+        assertEquals(listOf("xq-easy-009", "xq-easy-010"), twoMoveLevels.map { it.id })
+        assertTrue(twoMoveLevels.all { it.maxPlayerMoves == 2 && it.principalVariation.size == 3 })
         assertTrue(pack.levels.all { it.principalVariation.isNotEmpty() })
     }
 

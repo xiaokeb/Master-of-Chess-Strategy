@@ -28,12 +28,22 @@ class ChineseChessEndgameAuditTest(unittest.TestCase):
         source = pack.read_bytes()
         report = audit(source.decode("utf-8"))
 
-        self.assertEqual(14, report["level_count"])
-        self.assertEqual({"BONUS": 9, "MAIN": 5}, report["by_track"])
-        self.assertEqual(14, len(report["index"]))
+        self.assertEqual(16, report["level_count"])
+        self.assertEqual({"BONUS": 11, "MAIN": 5}, report["by_track"])
+        self.assertEqual(16, len(report["index"]))
+        self.assertEqual(2, report["by_theme"]["两步强制胜"])
         self.assertEqual("xq-easy-001", report["index"][0]["id"])
         self.assertEqual(hashlib.sha256(source).hexdigest(), report["source_sha256"])
         self.assertEqual(report, audit(source.decode("utf-8")))
+
+    def test_additive_revision_preserves_old_v5_levels_byte_for_byte(self) -> None:
+        repository = Path(__file__).resolve().parents[2]
+        source = (repository / "app/src/main/assets/endgames/chinese_chess/endgames-v5.txt").read_bytes()
+        old_pack = source.split(b"\n# Additive revision:", 1)[0]
+        self.assertEqual(
+            "c651394d69d0bf55db4c2df709f67e2335a9af16dcf1e56dd10ad6eb33a2d20b",
+            hashlib.sha256(old_pack).hexdigest(),
+        )
 
     def test_duplicate_board_is_rejected_even_with_new_id(self) -> None:
         second = LEVEL.replace("xq-easy-001|0|1", "xq-easy-002|0|2")
