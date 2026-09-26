@@ -8,6 +8,7 @@ import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
+import com.masterofchessstrategy.custom.ChineseChessHandicapConfig
 
 internal enum class StoredGameMode(val code: Int) {
     LOCAL_TWO_PLAYER(0),
@@ -21,9 +22,10 @@ internal enum class StoredGameMode(val code: Int) {
     BLIND_CHALLENGE(8),
     ASSESSMENT_CHALLENGE(9),
     OPENING_AUTO_PLAY(10),
+    HANDICAP(11),
 }
 
-/** Only standard-start human games use the global first-move preference. */
+/** Human games with a red-to-move start may use the global first-move preference. */
 internal val StoredGameMode.supportsAiFirst: Boolean
     get() = this in setOf(
         StoredGameMode.HUMAN_VS_AI,
@@ -31,6 +33,7 @@ internal val StoredGameMode.supportsAiFirst: Boolean
         StoredGameMode.STREAK_CHALLENGE,
         StoredGameMode.BLIND_CHALLENGE,
         StoredGameMode.ASSESSMENT_CHALLENGE,
+        StoredGameMode.HANDICAP,
     )
 
 internal fun StoredGameMode.acceptsPlayerIndex(index: Int): Boolean =
@@ -260,6 +263,12 @@ internal class RoomGameSessionRepository(
 internal fun StoredGameMode.acceptsSessionVariant(variantId: String): Boolean =
     when (this) {
         StoredGameMode.ENDGAME -> variantId.isNotBlank()
+        StoredGameMode.HANDICAP -> try {
+            ChineseChessHandicapConfig.initialState(variantId)
+            true
+        } catch (_: IllegalArgumentException) {
+            false
+        }
         StoredGameMode.CUSTOM_POSITION,
         StoredGameMode.OPENING_AUTO_PLAY,
         -> try {
@@ -302,6 +311,7 @@ internal fun StoredGameMode.acceptsSessionDifficulty(difficulty: Difficulty?): B
         StoredGameMode.ASSESSMENT_CHALLENGE,
         StoredGameMode.OPENING_AUTO_PLAY,
         -> difficulty != null
+        StoredGameMode.HANDICAP -> difficulty != null
         StoredGameMode.TUTORIAL -> false
     }
 

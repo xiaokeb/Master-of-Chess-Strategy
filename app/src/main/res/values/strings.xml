@@ -365,7 +365,21 @@
     <string name="draw_game">和棋</string>
     <string name="game_ongoing">进行中</string>
     <string name="ai_first_title">象棋 AI 先手</string>
-    <string name="ai_first_summary">开启后玩家执黑、AI 执红先行。用于标准人机及限时、连胜、盲棋、评测的新对局；已有存档与进行中的挑战系列不变。标准对局可重开应用设置；残局、自由摆局与自动演局不受影响。</string>
+    <string name="ai_first_summary">开启后玩家执黑、AI 执红先行。用于标准人机、让子及限时、连胜、盲棋、评测的新对局；已有存档与进行中的挑战系列不变。标准对局可重开应用设置；残局、自由摆局与自动演局不受影响。</string>
     <string name="player_red_side">玩家执红 · AI 执黑</string>
     <string name="player_black_side">玩家执黑 · AI 执红</string>
+    <string name="handicap_title">让子对局</string>
+    <string name="handicap_edit_hint">点选棋子让出，再点蓝圈恢复；将帅不可移除。</string>
+    <string name="handicap_rules">从标准局面让子，红方先行，行棋规则不变。保存棋谱，不计排位胜场、积分或难度解锁。先手偏好仅用于新局。</string>
+    <string name="handicap_settings_hint">配置一局新的让子对战；原棋局保留到新局开始。</string>
+    <string name="handicap_removed_count">已让子：红方 %1$d · 黑方 %2$d</string>
+    <string name="handicap_horse">让一马</string>
+    <string name="handicap_chariot">让一车</string>
+    <string name="handicap_reset">全部恢复</string>
+    <string name="handicap_start">开始新的让子对局</string>
+    <string name="handicap_continue">继续上次让子对局</string>
+    <string name="handicap_general_protected">双方将帅必须保留。</string>
+    <string name="handicap_invalid_position">让子方案不可开局，请保留双方将帅及中路遮挡子，并确认至少让出一子。</string>
+    <string name="handicap_engine_unavailable">规则引擎暂不可用，未开始对局。</string>
+    <string name="handicap_difficulty_locked">请先完成教程，并选择已解锁难度。</string>
 </resources>

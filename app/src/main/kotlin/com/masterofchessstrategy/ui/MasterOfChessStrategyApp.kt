@@ -73,6 +73,9 @@ import com.masterofchessstrategy.data.RoomTutorialProgressRepository
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.custom.ChineseChessSetupViewModel
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
+import com.masterofchessstrategy.custom.ChineseChessHandicapConfig
+import com.masterofchessstrategy.custom.ChineseChessHandicapViewModel
+import com.masterofchessstrategy.custom.PreparedHandicapGame
 import com.masterofchessstrategy.custom.PreparedCustomPosition
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessPiece
@@ -331,6 +334,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                                 QuickStartDestination.OPENING_TRAINING -> {
                                     AppDestination.CHINESE_CHESS_OPENINGS
                                 }
+                                QuickStartDestination.HANDICAP_SETUP -> AppDestination.CHINESE_CHESS_HANDICAP_SETUP
 
                                 QuickStartDestination.MODE_SELECTION -> {
                                     AppDestination.CHINESE_CHESS_MODES
@@ -402,6 +406,64 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onExtensions = {
                         navController.navigate(AppDestination.CHINESE_CHESS_EXTENSIONS)
                     },
+                    onHandicap = { navController.navigate(AppDestination.CHINESE_CHESS_HANDICAP_SETUP) },
+                )
+            }
+            composable(AppDestination.CHINESE_CHESS_HANDICAP_SETUP) {
+                val unlocked = difficultyEntries.filter { it.isPlayable }.mapTo(linkedSetOf()) { it.difficulty }
+                val factory = remember(gameSessionRepository, unlocked) {
+                    ChineseChessHandicapViewModel.factory(gameSessionRepository, unlocked)
+                }
+                val setup: ChineseChessHandicapViewModel = viewModel(factory = factory)
+                LaunchedEffect(setup) { setup.refreshSavedGame() }
+                val openGame: (PreparedHandicapGame) -> Unit = { prepared ->
+                    navigationViewModel.recordChineseChessSelection(StoredGameMode.HANDICAP, prepared.difficulty)
+                    navController.navigate(AppDestination.chineseChessHandicapGame(prepared.difficulty, prepared.variant))
+                }
+                ChineseChessHandicapScreen(
+                    state = setup.uiState,
+                    playerSide = if (settingsViewModel.uiState.settings.aiFirstEnabled) ChineseChessSide.BLACK else ChineseChessSide.RED,
+                    onBack = navController::popBackStack,
+                    onSquareTap = setup::toggleSquare,
+                    onPresetSide = setup::selectPresetSide,
+                    onPreset = setup::addPreset,
+                    onDifficulty = setup::selectDifficulty,
+                    onReset = setup::reset,
+                    onStart = { setup.prepareNewGame()?.let(openGame) },
+                    onContinue = { setup.continueSavedGame()?.let(openGame) },
+                )
+            }
+            composable(
+                route = AppDestination.CHINESE_CHESS_HANDICAP_GAME,
+                arguments = listOf(
+                    navArgument(AppDestination.HANDICAP_DIFFICULTY_ARGUMENT) { type = NavType.IntType },
+                    navArgument(AppDestination.HANDICAP_VARIANT_ARGUMENT) { type = NavType.StringType },
+                ),
+            ) { entry ->
+                val difficulty = checkNotNull(Difficulty.entries.firstOrNull {
+                    it.code == entry.arguments?.getInt(AppDestination.HANDICAP_DIFFICULTY_ARGUMENT)
+                })
+                check(difficultyEntries.any { it.difficulty == difficulty && it.isPlayable })
+                val variant = checkNotNull(entry.arguments?.getString(AppDestination.HANDICAP_VARIANT_ARGUMENT))
+                val initial = remember(variant) { ChineseChessHandicapConfig.initialState(variant) }
+                val factory = remember(gameSessionRepository, gameRecordsViewModel, difficulty, variant, settingsViewModel) {
+                    ChineseChessGameViewModel.factory(
+                        repository = gameSessionRepository, mode = StoredGameMode.HANDICAP,
+                        difficulty = difficulty, initialPositionState = initial, sessionVariantId = variant,
+                        aiFirstEnabled = settingsViewModel.uiState.settings.aiFirstEnabled,
+                        timeControlMinutes = settingsViewModel.uiState.settings.gameDurationMinutes,
+                        onGameRecorded = gameRecordsViewModel::record,
+                        engineFactory = { NativeChineseChessEngine(pikafishNetworkProvider::requireNetworkPath) },
+                    )
+                }
+                val game: ChineseChessGameViewModel = viewModel(factory = factory)
+                ChineseChessGameSoundEffect(game, settingsViewModel.uiState.settings.soundEnabled)
+                ChineseChessGameScreen(
+                    state = game.uiState, onSquareTap = game::onSquareTap, onUndo = game::undo,
+                    onHint = game::requestHint, onResign = game::resign, onDraw = game::offerOrAcceptDraw,
+                    onRestart = { game.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled) },
+                    onBack = navController::popBackStack,
+                    onSettings = { navController.navigate(AppDestination.SETTINGS) { launchSingleTop = true } },
                 )
             }
             composable(AppDestination.CHINESE_CHESS_EXTENSIONS) {
@@ -1461,6 +1523,13 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                         settingsViewModel::adjustAutoContinueLimit,
                     onSoundEnabled = settingsViewModel::setSoundEnabled,
                     onAiFirstEnabled = settingsViewModel::setAiFirstEnabled,
+                    onHandicap = {
+                        // Dispose any underlying timed/AI game before starting another mode.
+                        // Its database checkpoint remains intact until a new game is opened.
+                        navController.navigate(AppDestination.CHINESE_CHESS_HANDICAP_SETUP) {
+                            popUpTo(AppDestination.HOME)
+                        }
+                    },
                     onHighlightCondition = settingsViewModel::setHighlightCondition,
                     onTimeLimitEnabled = settingsViewModel::setTimeLimitEnabled,
                     onAdjustDuration = settingsViewModel::adjustDuration,
@@ -2132,6 +2201,9 @@ private fun gameStatusText(state: ChineseChessGameUiState): String =
 
 @Composable
 private fun gameModeTitle(state: ChineseChessGameUiState): String {
+    if (state.isHandicap) {
+        return stringResource(R.string.handicap_title) + " · " + difficultyTitle(requireNotNull(state.difficulty))
+    }
     if (state.isOpeningAutoPlay) {
         return stringResource(
             R.string.opening_auto_play_mode,

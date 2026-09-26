@@ -600,6 +600,21 @@ private fun ChineseChessAiFirstPreview() {
     }
 }
 
+@Preview(name = "19 中国象棋让子设置", group = "已完成界面", widthDp = 960, heightDp = 540, showBackground = true)
+@Composable
+private fun ChineseChessHandicapPreview() {
+    MocsTheme {
+        ChineseChessHandicapScreen(
+            state = com.masterofchessstrategy.custom.ChineseChessHandicapUiState(
+                removed = setOf(1, 82), unlockedDifficulties = setOf(Difficulty.EASY, Difficulty.MEDIUM),
+            ),
+            playerSide = ChineseChessSide.RED,
+            onBack = {}, onSquareTap = {}, onPresetSide = {}, onPreset = {}, onDifficulty = {},
+            onReset = {}, onStart = {}, onContinue = {},
+        )
+    }
+}
+
 private fun previewRecord() = GameRecord(
     recordId = "preview-record",
     gameType = com.masterofchessstrategy.engine.GameType.CHINESE_CHESS,

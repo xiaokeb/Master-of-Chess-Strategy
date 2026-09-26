@@ -264,7 +264,8 @@ internal object LocalDataBackupCodec {
                 mode == StoredGameMode.STREAK_CHALLENGE ||
                 mode == StoredGameMode.BLIND_CHALLENGE ||
                 mode == StoredGameMode.ASSESSMENT_CHALLENGE ||
-                mode == StoredGameMode.OPENING_AUTO_PLAY
+                mode == StoredGameMode.OPENING_AUTO_PLAY ||
+                mode == StoredGameMode.HANDICAP
             ) {
                 true
             } else {
@@ -528,5 +529,6 @@ internal object LocalDataBackupCodec {
         StoredGameMode.BLIND_CHALLENGE,
         StoredGameMode.ASSESSMENT_CHALLENGE,
         StoredGameMode.OPENING_AUTO_PLAY,
+        StoredGameMode.HANDICAP,
     )
 }

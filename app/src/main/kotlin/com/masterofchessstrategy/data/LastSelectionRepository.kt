@@ -88,7 +88,7 @@ internal class RoomLastSelectionRepository(
             StoredGameMode.OPENING_AUTO_PLAY,
             -> true
 
-            StoredGameMode.CUSTOM_POSITION -> difficulty != null
+            StoredGameMode.CUSTOM_POSITION, StoredGameMode.HANDICAP -> difficulty != null
 
             StoredGameMode.LOCAL_TWO_PLAYER,
             StoredGameMode.ENDGAME,

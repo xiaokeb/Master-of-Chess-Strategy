@@ -11,6 +11,7 @@ import com.masterofchessstrategy.data.GameSessionSnapshot
 import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.LoadGameSessionResult
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
+import com.masterofchessstrategy.custom.ChineseChessHandicapConfig
 import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.BoardMove
 import com.masterofchessstrategy.engine.BoardPosition
@@ -797,6 +798,43 @@ class ChineseChessAiGameViewModelTest {
         assertEquals(GameResult.FIRST_PLAYER_WIN, viewModel.uiState.result)
         assertEquals(0, engine.chooseCalls)
         assertEquals(GameResult.FIRST_PLAYER_WIN, records.single().result)
+    }
+
+    @Test
+    fun handicapKeepsAssistanceClocksRecordsAndRestartButNeverAwardsRank() = runTest(dispatcher) {
+        for (aiFirst in listOf(false, true)) {
+            val variant = ChineseChessHandicapConfig.sessionVariant(setOf(1), "0".repeat(32))
+            val initial = ChineseChessHandicapConfig.initialState(variant)
+            val engine = FakeAiEngine()
+            val records = mutableListOf<GameRecord>()
+            val outcomes = mutableListOf<com.masterofchessstrategy.data.MatchOutcome>()
+            val repository = RecordingSessionRepository()
+            val vm = ChineseChessGameViewModel(
+                sessionRepository = repository, mode = StoredGameMode.HANDICAP,
+                difficulty = Difficulty.MEDIUM, aiFirstEnabled = aiFirst, aiDispatcher = dispatcher,
+                initialPositionState = initial, sessionVariantId = variant, engineFactory = { engine },
+                onGameRecorded = records::add, onMatchFinished = outcomes::add,
+                initialTimeControlMinutes = 5, clockTickIntervalMillis = null,
+            )
+            advanceUntilIdle()
+            assertTrue(vm.uiState.isHandicap)
+            assertEquals(if (aiFirst) ChineseChessSide.BLACK else ChineseChessSide.RED, vm.uiState.playerSide)
+            assertEquals(3, vm.uiState.undoRemaining)
+            assertEquals(3, vm.uiState.hintRemaining)
+            assertEquals(5, vm.uiState.timeControlMinutes)
+            vm.resign()
+            advanceUntilIdle()
+            assertTrue(outcomes.isEmpty())
+            assertEquals(StoredGameMode.HANDICAP, records.single().mode)
+            assertEquals(if (aiFirst) 1 else 0, records.single().playerIndex)
+            assertEquals(variant, repository.saved.last().sessionVariantId)
+            vm.restart()
+            advanceUntilIdle()
+            assertEquals(GameResult.ONGOING, vm.uiState.result)
+            assertTrue(engine.restoreCalls >= 2)
+            assertEquals(0, engine.resetCalls)
+            assertEquals(variant, repository.saved.last().sessionVariantId)
+        }
     }
 
     private class RecordingSessionRepository(

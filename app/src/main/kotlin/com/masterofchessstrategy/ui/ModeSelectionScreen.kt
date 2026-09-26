@@ -1,6 +1,8 @@
 package com.masterofchessstrategy.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,11 +46,13 @@ internal fun ChineseChessModeScreen(
     onEndgame: () -> Unit,
     onExtensions: () -> Unit,
     modifier: Modifier = Modifier,
+    onHandicap: () -> Unit = {},
 ) {
     Surface(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -82,6 +87,9 @@ internal fun ChineseChessModeScreen(
                         androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
                     }
                 }
+            }
+            OutlinedButton(onClick = onHandicap, modifier = Modifier.testTag(HANDICAP_ENTRY_TAG)) {
+                Text(stringResource(R.string.handicap_title))
             }
         }
     }

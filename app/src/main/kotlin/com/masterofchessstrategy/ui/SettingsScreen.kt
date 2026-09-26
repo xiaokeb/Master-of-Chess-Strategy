@@ -56,6 +56,7 @@ internal fun SettingsScreen(
     onOpenSourceLicenses: () -> Unit,
     modifier: Modifier = Modifier,
     onAiFirstEnabled: (Boolean) -> Unit = {},
+    onHandicap: () -> Unit = {},
 ) {
     Surface(
         modifier = modifier
@@ -83,6 +84,16 @@ internal fun SettingsScreen(
                 onCheckedChange = onAiFirstEnabled,
                 switchTag = SETTINGS_AI_FIRST_TAG,
             )
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.handicap_settings_hint), style = MaterialTheme.typography.bodySmall)
+                    OutlinedButton(
+                        onClick = onHandicap,
+                        enabled = state.isInteractionEnabled && !backupState.isWorking,
+                        modifier = Modifier.testTag(HANDICAP_ENTRY_TAG),
+                    ) { Text(stringResource(R.string.handicap_title)) }
+                }
+            }
             BooleanSettingCard(
                 title = stringResource(R.string.auto_continue_title),
                 summary = stringResource(R.string.auto_continue_summary),

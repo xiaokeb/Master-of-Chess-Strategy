@@ -461,7 +461,7 @@ internal class ChineseChessSetupViewModel(
     }
 }
 
-private fun standardBoard(): List<ChineseChessPiece?> {
+internal fun standardBoard(): List<ChineseChessPiece?> {
     val board = MutableList<ChineseChessPiece?>(
         ChineseChessBoard.WIDTH * ChineseChessBoard.HEIGHT,
     ) { null }

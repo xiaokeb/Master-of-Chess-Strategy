@@ -37,6 +37,7 @@ internal data class ChineseChessAssistancePolicy(
                 mode != StoredGameMode.HUMAN_VS_AI &&
                 mode != StoredGameMode.ENDGAME &&
                 mode != StoredGameMode.CUSTOM_POSITION &&
+                mode != StoredGameMode.HANDICAP &&
                 mode != StoredGameMode.TIMED_CHALLENGE &&
                 mode != StoredGameMode.STREAK_CHALLENGE
             ) {

@@ -8,6 +8,7 @@ import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.challenge.AssessmentChallengeState
 import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
+import com.masterofchessstrategy.custom.ChineseChessHandicapConfig
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameType
 import org.junit.Assert.assertArrayEquals
@@ -17,6 +18,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AppNavigationModelTest {
+    @Test
+    fun handicapRoutePreservesCanonicalIdentityAndQuickStartReturnsToSetup() {
+        val variant = ChineseChessHandicapConfig.sessionVariant(setOf(1, 81), "0".repeat(32))
+        assertEquals("chinese-chess/handicap/game/1/$variant", AppDestination.chineseChessHandicapGame(Difficulty.MEDIUM, variant))
+        val selection = LastGameSelection(GameType.CHINESE_CHESS, StoredGameMode.HANDICAP, Difficulty.MEDIUM, 1L)
+        assertEquals(QuickStartDestination.HANDICAP_SETUP, selection.quickStartDestination())
+    }
+
     @Test
     fun homeCatalogHasFiveCardsAndCoversEveryGameType() {
         assertEquals(5, HomeGameEntry.entries.size)

@@ -10,6 +10,7 @@ import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
+import com.masterofchessstrategy.custom.ChineseChessHandicapConfig
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -18,6 +19,34 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LocalDataBackupCodecTest {
+    @Test
+    fun handicapBackupPreservesOriginalPlanOwnerAndRecordsAndRejectsFacingGenerals() {
+        val variant = ChineseChessHandicapConfig.sessionVariant(setOf(1, 81), "0".repeat(32))
+        val initial = ChineseChessHandicapConfig.initialState(variant)
+        val session = GameSessionSnapshot(
+            GameType.CHINESE_CHESS, StoredGameMode.HANDICAP, Difficulty.MEDIUM, initial, 1L,
+            sessionId = "handicap", sessionVariantId = variant, playerIndex = 1,
+        )
+        val record = GameRecord(
+            "handicap", GameType.CHINESE_CHESS, StoredGameMode.HANDICAP, Difficulty.MEDIUM,
+            GameResult.DRAW, initial, 0, completedAtEpochMillis = 2L, playerIndex = 1,
+        )
+        val snapshot = LocalDataSnapshot(
+            3L, activeSessions = listOf(session), gameRecords = listOf(record),
+            lastSelections = listOf(LastGameSelection(GameType.CHINESE_CHESS, StoredGameMode.HANDICAP, Difficulty.MEDIUM, 1L)),
+        )
+        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(snapshot))
+        assertEquals(variant, restored.activeSessions.single().sessionVariantId)
+        assertEquals(1, restored.activeSessions.single().playerIndex)
+        assertEquals(StoredGameMode.HANDICAP, restored.gameRecords.single().mode)
+        assertEquals(1, restored.gameRecords.single().playerIndex)
+        assertEquals(snapshot.lastSelections, restored.lastSelections)
+        val invalid = session.copy(sessionVariantId = ChineseChessHandicapConfig.sessionVariant(setOf(31, 58), "0".repeat(32)))
+        assertThrows(IllegalArgumentException::class.java) {
+            LocalDataBackupCodec.encode(snapshot.copy(activeSessions = listOf(invalid)))
+        }
+    }
+
     @Test
     fun blackPlayerAndAiFirstSettingsRoundTripInVersionThree() {
         val old = completeSnapshot()

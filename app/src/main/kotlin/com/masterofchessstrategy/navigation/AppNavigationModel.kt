@@ -8,6 +8,7 @@ import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.challenge.AssessmentChallengeState
 import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
+import com.masterofchessstrategy.custom.ChineseChessHandicapConfig
 
 internal object AppDestination {
     const val HOME = "home"
@@ -48,6 +49,11 @@ internal object AppDestination {
         "chinese-chess/extensions/openings/auto/{$OPENING_DIFFICULTY_ARGUMENT}/" +
             "{$OPENING_POSITION_ARGUMENT}"
     const val CHINESE_CHESS_CUSTOM_SETUP = "chinese-chess/extensions/custom/setup"
+    const val CHINESE_CHESS_HANDICAP_SETUP = "chinese-chess/handicap/setup"
+    const val HANDICAP_DIFFICULTY_ARGUMENT = "handicapDifficulty"
+    const val HANDICAP_VARIANT_ARGUMENT = "handicapVariant"
+    const val CHINESE_CHESS_HANDICAP_GAME =
+        "chinese-chess/handicap/game/{$HANDICAP_DIFFICULTY_ARGUMENT}/{$HANDICAP_VARIANT_ARGUMENT}"
     const val CUSTOM_DIFFICULTY_ARGUMENT = "customDifficultyCode"
     const val CUSTOM_POSITION_ARGUMENT = "customPosition"
     const val CHINESE_CHESS_CUSTOM_GAME =
@@ -70,6 +76,11 @@ internal object AppDestination {
 
     fun chineseChessAiGame(difficulty: Difficulty): String =
         "chinese-chess/ai-game/" + difficulty.code
+
+    fun chineseChessHandicapGame(difficulty: Difficulty, variant: String): String {
+        ChineseChessHandicapConfig.initialState(variant)
+        return "chinese-chess/handicap/game/${difficulty.code}/$variant"
+    }
 
     fun chineseChessAutoPlayGame(difficulty: Difficulty): String =
         "chinese-chess/auto-play/" + difficulty.code

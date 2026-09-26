@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.masterofchessstrategy.endgame.ChineseChessEndgameLevel
 import com.masterofchessstrategy.endgame.ChineseChessEndgamePack
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
+import com.masterofchessstrategy.custom.ChineseChessHandicapConfig
 import com.masterofchessstrategy.engine.GameType
 
 internal data class LocalDataRestoreSummary(
@@ -134,9 +135,12 @@ internal class RoomLocalDataBackupRepository(
                     it.mode == StoredGameMode.OPENING_AUTO_PLAY
             }
             .map { CustomPositionStateCodec.decodeSessionVariant(it.sessionVariantId) }
+        val handicapInitialStates = snapshot.activeSessions
+            .filter { it.mode == StoredGameMode.HANDICAP }
+            .map { ChineseChessHandicapConfig.initialState(it.sessionVariantId) }
         (snapshot.activeSessions.map(GameSessionSnapshot::engineState) +
             snapshot.gameRecords.map(GameRecord::engineState) +
-            customInitialStates).forEach { state ->
+            customInitialStates + handicapInitialStates).forEach { state ->
             require(validateEngineState(state.copyOf())) {
                 "Backup contains an engine state that cannot be restored"
             }

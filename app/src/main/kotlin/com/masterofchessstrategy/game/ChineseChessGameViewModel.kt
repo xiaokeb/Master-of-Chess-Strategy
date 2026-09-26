@@ -23,6 +23,7 @@ import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.challenge.AssessmentChallengeState
 import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
+import com.masterofchessstrategy.custom.ChineseChessHandicapConfig
 import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.BoardMove
 import com.masterofchessstrategy.engine.BoardPosition
@@ -126,6 +127,7 @@ class ChineseChessGameViewModel internal constructor(
         mode == StoredGameMode.HUMAN_VS_AI ||
             mode == StoredGameMode.ENDGAME ||
             mode == StoredGameMode.CUSTOM_POSITION ||
+            mode == StoredGameMode.HANDICAP ||
             mode == StoredGameMode.TIMED_CHALLENGE ||
             mode == StoredGameMode.STREAK_CHALLENGE ||
             mode == StoredGameMode.BLIND_CHALLENGE ||
@@ -148,6 +150,7 @@ class ChineseChessGameViewModel internal constructor(
             difficulty = difficulty,
             isEndgame = mode == StoredGameMode.ENDGAME,
             isCustomPosition = mode == StoredGameMode.CUSTOM_POSITION,
+            isHandicap = mode == StoredGameMode.HANDICAP,
             isTimedChallenge = mode == StoredGameMode.TIMED_CHALLENGE,
             perMoveTimeLimitSeconds = perMoveTimeLimitSeconds,
             isStreakChallenge = mode == StoredGameMode.STREAK_CHALLENGE,
@@ -269,6 +272,11 @@ class ChineseChessGameViewModel internal constructor(
                     initialAssessmentState == null
                 },
             ) { "Assessment challenge requires a canonical series state" }
+            if (mode == StoredGameMode.HANDICAP) {
+                require(this.initialPositionState?.contentEquals(
+                    ChineseChessHandicapConfig.initialState(sessionVariantId),
+                ) == true) { "Handicap initial state must match its canonical variant" }
+            }
             engine = engineFactory().also { created ->
                 require(!isAiGame || created is ChineseChessAiEngine) {
                     "AI modes require an AI-capable engine"
@@ -916,6 +924,7 @@ class ChineseChessGameViewModel internal constructor(
                 difficulty = difficulty,
                 isEndgame = mode == StoredGameMode.ENDGAME,
                 isCustomPosition = mode == StoredGameMode.CUSTOM_POSITION,
+                isHandicap = mode == StoredGameMode.HANDICAP,
                 isTimedChallenge = mode == StoredGameMode.TIMED_CHALLENGE,
                 perMoveTimeLimitSeconds = perMoveTimeLimitSeconds,
                 isStreakChallenge = mode == StoredGameMode.STREAK_CHALLENGE,

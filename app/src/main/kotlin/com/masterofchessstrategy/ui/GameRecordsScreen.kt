@@ -313,6 +313,7 @@ private fun StoredGameMode.displayName(): String = stringResource(
         StoredGameMode.ENDGAME -> R.string.endgame_mode
         StoredGameMode.TUTORIAL -> R.string.tutorial_mode
         StoredGameMode.CUSTOM_POSITION -> R.string.custom_position_mode
+        StoredGameMode.HANDICAP -> R.string.handicap_title
         StoredGameMode.TIMED_CHALLENGE -> R.string.timed_challenge_mode
         StoredGameMode.STREAK_CHALLENGE -> R.string.streak_challenge_mode
         StoredGameMode.BLIND_CHALLENGE -> R.string.blind_challenge_mode

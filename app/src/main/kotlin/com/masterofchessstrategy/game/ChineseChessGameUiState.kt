@@ -82,6 +82,7 @@ data class ChineseChessGameUiState(
     val difficulty: Difficulty? = null,
     val isEndgame: Boolean = false,
     val isCustomPosition: Boolean = false,
+    val isHandicap: Boolean = false,
     val isTimedChallenge: Boolean = false,
     val perMoveTimeLimitSeconds: Int? = null,
     val isStreakChallenge: Boolean = false,
