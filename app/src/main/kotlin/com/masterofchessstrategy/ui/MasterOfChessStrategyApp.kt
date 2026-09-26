@@ -104,6 +104,7 @@ import com.masterofchessstrategy.opening.PreparedOpeningAutoPlay
 import com.masterofchessstrategy.settings.AppSettingsViewModel
 import com.masterofchessstrategy.settings.LocalDataBackupViewModel
 import com.masterofchessstrategy.tutorial.ChineseChessTutorialViewModel
+import com.masterofchessstrategy.tutorial.availableTutorialEndgame
 import com.masterofchessstrategy.ui.theme.MocsTheme
 
 internal const val UNDO_BUTTON_TAG = "undo_button"
@@ -120,13 +121,20 @@ internal const val GAME_SETTINGS_BUTTON_TAG = "game_settings_button"
 
 @Composable
 fun MasterOfChessStrategyApp() {
+    val context = LocalContext.current
+    val database = remember(context.applicationContext) { MocsDatabase.getInstance(context) }
+    MasterOfChessStrategyApp(database)
+}
+
+/** An isolated database can exercise the complete navigation without touching user saves. */
+@Composable
+internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
     MocsTheme {
         val navController = rememberNavController()
         val context = LocalContext.current
         val pikafishNetworkProvider = remember(context.applicationContext) {
             PikafishNetworkProvider(context.applicationContext)
         }
-        val database = remember { MocsDatabase.getInstance(context) }
         val gameSessionRepository = remember {
             RoomGameSessionRepository(database.activeGameDao())
         }
@@ -1086,6 +1094,9 @@ fun MasterOfChessStrategyApp() {
                 )
             }
             composable(AppDestination.CHINESE_CHESS_TUTORIAL) {
+                val practice = availableTutorialEndgame(
+                    tutorialViewModel.uiState, endgameViewModel.uiState,
+                )
                 ChineseChessTutorialScreen(
                     state = tutorialViewModel.uiState,
                     onBack = navController::popBackStack,
@@ -1094,6 +1105,18 @@ fun MasterOfChessStrategyApp() {
                     onCompletePractice = tutorialViewModel::completePractice,
                     onAnswerQuiz = tutorialViewModel::answerQuiz,
                     onCompleteQuiz = tutorialViewModel::completeQuiz,
+                    practiceTitle = practice?.title,
+                    onOpenEndgamePractice = {
+                        // Recheck at activation; an optimistic COMPLETE state is
+                        // not a saved checkpoint while isSaving is still true.
+                        availableTutorialEndgame(
+                            tutorialViewModel.uiState, endgameViewModel.uiState,
+                        )?.let { level ->
+                            navController.navigate(AppDestination.chineseChessEndgame(level.id)) {
+                                launchSingleTop = true
+                            }
+                        }
+                    },
                 )
             }
             composable(AppDestination.CHINESE_CHESS_ENDGAMES) {

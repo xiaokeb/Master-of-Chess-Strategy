@@ -105,6 +105,30 @@ class ChineseChessTutorialViewModelTest {
         assertEquals(TutorialFeedback.SAVE_FAILED, viewModel.uiState.feedback)
     }
 
+    @Test
+    fun failedFinalSaveRollsBackCompletionAndCanBeRetried() = runTest(dispatcher) {
+        val repository = FakeTutorialRepository(
+            LoadTutorialProgressResult.Loaded(progressAt(3)), failSave = true,
+        )
+        val viewModel = ChineseChessTutorialViewModel(repository)
+        advanceUntilIdle()
+        viewModel.answerQuiz(StalemateAnswer.SIDE_TO_MOVE_LOSES)
+        viewModel.completeQuiz()
+        assertEquals(TutorialStage.COMPLETE, viewModel.uiState.stage)
+        assertFalse(viewModel.uiState.isInteractionEnabled)
+        advanceUntilIdle()
+        assertEquals(TutorialStage.QUIZ, viewModel.uiState.stage)
+        assertFalse(viewModel.uiState.progress.isCompleted)
+        assertEquals(TutorialFeedback.SAVE_FAILED, viewModel.uiState.feedback)
+
+        repository.failSave = false
+        viewModel.completeQuiz()
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.progress.isCompleted)
+        assertTrue(viewModel.uiState.isInteractionEnabled)
+        assertEquals(true, repository.saved?.isCompleted)
+    }
+
     private fun progressAt(completedStepCount: Int) = TutorialProgress(
         gameType = GameType.CHINESE_CHESS,
         contentVersion = TutorialProgress.CURRENT_CONTENT_VERSION,
@@ -115,7 +139,7 @@ class ChineseChessTutorialViewModelTest {
 
     private class FakeTutorialRepository(
         private val loadResult: LoadTutorialProgressResult,
-        private val failSave: Boolean = false,
+        var failSave: Boolean = false,
     ) : TutorialProgressRepository {
         var saved: TutorialProgress? = null
 

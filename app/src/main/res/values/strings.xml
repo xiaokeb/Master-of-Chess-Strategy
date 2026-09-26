@@ -267,6 +267,9 @@
     <string name="tutorial_complete_title">教程已完成</string>
     <string name="tutorial_complete_summary">简单难度已永久解锁，可返回难度页查看状态。</string>
     <string name="tutorial_complete_boundary">当前教程教授入门规则；复杂重复局面与裁判棋例会在专项训练中继续扩充。</string>
+    <string name="tutorial_endgame_summary">接着练习将死：在一步内找出红方胜着，体会棋子配合。这是多解入门题，不必局限于一种走法；练习后返回此页，通关与奖励按正式残局规则保存。</string>
+    <string name="tutorial_endgame_open">练习残局：%1$s</string>
+    <string name="tutorial_endgame_unavailable">练习关卡尚未准备好</string>
     <string name="tutorial_load_recovered">旧教程进度无效，已从第一步安全开始。</string>
     <string name="tutorial_save_failed">进度保存失败，请重试当前步骤。</string>
     <string name="restoring_game">正在恢复棋局…</string>

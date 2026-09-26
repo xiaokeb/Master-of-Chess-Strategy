@@ -38,6 +38,7 @@ import com.masterofchessstrategy.tutorial.TutorialStage
 internal const val TUTORIAL_SCREEN_TAG = "tutorial_screen"
 internal const val TUTORIAL_CONTINUE_TAG = "tutorial_continue"
 internal const val TUTORIAL_CORRECT_ANSWER_TAG = "tutorial_correct_answer"
+internal const val TUTORIAL_ENDGAME_TAG = "tutorial_endgame"
 
 @Composable
 internal fun ChineseChessTutorialScreen(
@@ -49,6 +50,8 @@ internal fun ChineseChessTutorialScreen(
     onAnswerQuiz: (StalemateAnswer) -> Unit,
     onCompleteQuiz: () -> Unit,
     modifier: Modifier = Modifier,
+    practiceTitle: String? = null,
+    onOpenEndgamePractice: () -> Unit = {},
 ) {
     BackHandler(enabled = state.isSaving) {
         // Keep the destination alive until a tutorial checkpoint is committed.
@@ -113,7 +116,11 @@ internal fun ChineseChessTutorialScreen(
                         onComplete = onCompleteQuiz,
                     )
 
-                    TutorialStage.COMPLETE -> CompleteLesson()
+                    TutorialStage.COMPLETE -> CompleteLesson(
+                        practiceTitle = practiceTitle,
+                        enabled = state.isInteractionEnabled && practiceTitle != null,
+                        onOpenPractice = onOpenEndgamePractice,
+                    )
                 }
             }
             TutorialStatus(state)
@@ -247,7 +254,11 @@ private fun QuizAnswerButton(
 }
 
 @Composable
-private fun CompleteLesson() {
+private fun CompleteLesson(
+    practiceTitle: String?,
+    enabled: Boolean,
+    onOpenPractice: () -> Unit,
+) {
     LessonCard(
         title = stringResource(R.string.tutorial_complete_title),
         paragraphs = listOf(
@@ -255,6 +266,23 @@ private fun CompleteLesson() {
             stringResource(R.string.tutorial_complete_boundary),
         ),
     )
+    Text(
+        stringResource(R.string.tutorial_endgame_summary),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    Button(
+        onClick = onOpenPractice,
+        enabled = enabled,
+        modifier = Modifier.testTag(TUTORIAL_ENDGAME_TAG),
+    ) {
+        Text(
+            if (practiceTitle != null) {
+                stringResource(R.string.tutorial_endgame_open, practiceTitle)
+            } else {
+                stringResource(R.string.tutorial_endgame_unavailable)
+            },
+        )
+    }
 }
 
 @Composable
