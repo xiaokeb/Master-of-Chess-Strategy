@@ -117,6 +117,9 @@ internal class ChineseChessBackgroundController private constructor(private val 
         mutableServiceState.value = BackgroundServiceState(leaseToken,
             active.backgroundDemand.needsCpu && !active.isRuntimeForeground)
         if (!requested) {
+            // A restored paused/terminal snapshot may finish loading before Service.onStartCommand.
+            // Do not create a foreground-start obligation for transient restore/checkpoint work.
+            if (!active.backgroundDemand.canStartService) return
             // Never try to restart a service from an invisible Activity or after system termination.
             if (!active.isRuntimeForeground) { status = BackgroundRunStatus.UNAVAILABLE; return }
             try {
@@ -168,7 +171,9 @@ internal class ChineseChessBackgroundController private constructor(private val 
         mutableServiceState.value = null
         if (requested) {
             requested = false
-            context.stopService(Intent(context, ChineseChessBackgroundService::class.java))
+            // A pending start must first publish its notification, then observe the revoked lease.
+            // Stopping it before startForeground can crash the process on newer Android versions.
+            if (isServiceRunning) context.stopService(Intent(context, ChineseChessBackgroundService::class.java))
         }
     }
 

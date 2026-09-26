@@ -81,6 +81,8 @@ class RoomMatchStatisticsRepositoryTest {
     private class FakeMatchOutcomeDao : MatchOutcomeDao {
         val entities = linkedMapOf<String, MatchOutcomeEntity>()
 
+        override suspend fun find(matchId: String): MatchOutcomeEntity? = entities[matchId]
+
         override suspend fun insert(entity: MatchOutcomeEntity): Long {
             if (entities.containsKey(entity.matchId)) return -1L
             entities[entity.matchId] = entity

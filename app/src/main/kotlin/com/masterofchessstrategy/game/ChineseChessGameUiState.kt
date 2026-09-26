@@ -73,6 +73,7 @@ data class ChineseChessGameUiState(
     val isEngineAvailable: Boolean = true,
     val isRestoring: Boolean = false,
     val isPersisting: Boolean = false,
+    val hasUncommittedResult: Boolean = false,
     val isAiGame: Boolean = false,
     val isAutoPlay: Boolean = false,
     val isAutoPlayPaused: Boolean = false,
@@ -116,6 +117,7 @@ data class ChineseChessGameUiState(
             isEngineAvailable &&
                 !isRestoring &&
                 !isPersisting &&
+                !hasUncommittedResult &&
                 !isAiThinking &&
                 !isHintThinking &&
                 !isAutoPlay &&

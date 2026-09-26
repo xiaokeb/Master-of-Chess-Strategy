@@ -1,4 +1,6 @@
 <resources>
+    <string name="terminal_save_pending">终局尚未保存，保存成功后才能离开或开始下一局。</string>
+    <string name="retry_terminal_save">重试保存终局</string>
     <string name="app_name">棋术大师</string>
     <string name="chinese_chess_title">中国象棋</string>
     <string name="local_two_player">本地双人 · 基础规则</string>

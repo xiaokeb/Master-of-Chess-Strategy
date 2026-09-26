@@ -1,7 +1,7 @@
 param(
     [Parameter(Mandatory = $true)][string]$AdbPath,
     [string]$DeviceSerial = 'emulator-5554',
-    [ValidateSet('auto', 'human', 'timed')][string[]]$Scenarios = @('auto', 'human', 'timed'),
+    [ValidateSet('auto', 'human', 'timed', 'transaction')][string[]]$Scenarios = @('auto', 'human', 'timed', 'transaction'),
     [switch]$AllowEmulatorDataReset
 )
 

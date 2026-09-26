@@ -45,23 +45,32 @@ class ChineseChessBackgroundService : Service() {
             return START_NOT_STICKY
         }
         val state = controller.serviceState.value
-        if (state == null || requestedToken != state.token) {
+        if (requestedToken == null) {
             if (token == null) stopSelf(startId)
             return START_NOT_STICKY
         }
-        token = state.token
         try {
-            val notification = buildNotification(state.token)
+            // Even a lease cancelled before delivery must honor the foreground-start contract.
+            // Prefer the current lease in the notification if an older start arrives late.
+            val notification = buildNotification(state?.token ?: requestedToken)
             if (Build.VERSION.SDK_INT >= 34) {
                 startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
             } else {
                 startForeground(NOTIFICATION_ID, notification)
             }
         } catch (_: RuntimeException) {
-            controller.serviceFailed(state.token)
+            controller.serviceFailed(requestedToken)
             stopSelf(startId)
             return START_NOT_STICKY
         }
+        if (state == null || requestedToken != state.token) {
+            if (state == null || token == null) {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf(startId)
+            }
+            return START_NOT_STICKY
+        }
+        token = state.token
         controller.serviceFlags(state.token, running = true, held = false)
         observer?.cancel()
         observer = scope.launch {

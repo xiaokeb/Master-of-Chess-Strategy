@@ -7,6 +7,9 @@ import androidx.room.Query
 
 @Dao
 internal interface MatchOutcomeDao {
+    @Query("SELECT * FROM match_outcomes WHERE matchId = :matchId LIMIT 1")
+    suspend fun find(matchId: String): MatchOutcomeEntity?
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(entity: MatchOutcomeEntity): Long
 

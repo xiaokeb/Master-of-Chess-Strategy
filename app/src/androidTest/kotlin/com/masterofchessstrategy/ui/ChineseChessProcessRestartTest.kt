@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.room.withTransaction
 import androidx.test.platform.app.InstrumentationRegistry
 import com.masterofchessstrategy.MainActivity
 import com.masterofchessstrategy.data.AppSettings
@@ -20,6 +21,13 @@ import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.RoomAppSettingsRepository
 import com.masterofchessstrategy.data.RoomGameSessionRepository
 import com.masterofchessstrategy.data.TutorialProgressEntity
+import com.masterofchessstrategy.data.CompletedGameSession
+import com.masterofchessstrategy.data.RoomCompletedGameSessionRepository
+import com.masterofchessstrategy.data.GameRecord
+import com.masterofchessstrategy.data.MatchOutcome
+import com.masterofchessstrategy.data.StoredGameMode
+import com.masterofchessstrategy.endgame.ChineseChessEndgamePackParser
+import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
@@ -57,7 +65,7 @@ class ChineseChessProcessRestartTest {
             assumeTrue("Run with tools/android/test-process-restart.ps1", arguments.getString("restartHarness") == "true")
             require(Build.HARDWARE in setOf("ranchu", "goldfish")) { "Emulator-only fixture" }
             require(phase in setOf("prepare", "resume", "verify"))
-            require(scenario in setOf("auto", "human", "timed"))
+            require(scenario in setOf("auto", "human", "timed", "transaction"))
             require(runId.matches(Regex("[a-f0-9]{32}")))
             database = MocsDatabase.getInstance(context)
             if (phase == "prepare") {
@@ -89,6 +97,10 @@ class ChineseChessProcessRestartTest {
     @get:Rule val rules: RuleChain = RuleChain.outerRule(seed).around(composeRule)
 
     @Test fun processRestartScenario() = runBlocking {
+        if (scenario == "transaction") {
+            atomicTransactionScenario()
+            return@runBlocking
+        }
         openGame()
         val controller = ChineseChessBackgroundController.get(context)
         composeRule.waitUntil(30_000L) { controller.game?.uiState?.let { !it.isRestoring && !it.isPersisting } == true }
@@ -209,8 +221,50 @@ class ChineseChessProcessRestartTest {
         (RoomGameSessionRepository(database.activeGameDao()).load(GameType.CHINESE_CHESS) as LoadGameSessionResult.Loaded).snapshot
     }
 
-    private suspend fun writeReceipt() {
-        val snapshot = saved()
+    /** Hold an outer real SQLite transaction open after the production terminal writes. */
+    private suspend fun atomicTransactionScenario() {
+        val repository = RoomCompletedGameSessionRepository(database, ChineseChessEndgamePackParser.loadBundled(context.assets))
+        if (phase == "prepare") {
+            val state = NativeChineseChessEngine().use { it.serialize() }
+            val initial = GameSessionSnapshot(GameType.CHINESE_CHESS, StoredGameMode.HUMAN_VS_AI,
+                Difficulty.EASY, state, System.currentTimeMillis(), sessionId = "transaction-$runId")
+            repository.save(initial)
+            val terminal = terminalFixture(initial)
+            database.withTransaction {
+                repository.complete(terminal)
+                // This receipt describes visible uncommitted rows, not durable success.
+                writeReceipt(terminal.snapshot)
+                holdForHostKill()
+            }
+        } else if (phase == "resume") {
+            assertNull("Uncommitted terminal session survived SIGKILL", requireNotNull(beforeLaunch).resultOverride)
+            assertTrue("Uncommitted record survived SIGKILL", database.gameRecordDao().listAll().isEmpty())
+            assertTrue("Uncommitted award survived SIGKILL", database.matchOutcomeDao().listAll().isEmpty())
+            repository.complete(terminalFixture(requireNotNull(beforeLaunch)))
+            writeReceipt()
+            holdForHostKill()
+        } else {
+            val old = requireNotNull(preceding)
+            assertEquals(GameResult.SECOND_PLAYER_WIN, saved().resultOverride)
+            repository.complete(terminalFixture(saved()))
+            assertEquals(1, database.gameRecordDao().listAll().size)
+            assertEquals(1, database.matchOutcomeDao().listAll().size)
+            assertEquals(old.getLong("recordTime"), database.gameRecordDao().listAll().single().completedAtEpochMillis)
+            assertEquals(old.getLong("outcomeTime"), database.matchOutcomeDao().listAll().single().settledAtEpochMillis)
+            writeReceipt()
+        }
+    }
+
+    private fun terminalFixture(snapshot: GameSessionSnapshot): CompletedGameSession {
+        val terminal = snapshot.copy(resultOverride = GameResult.SECOND_PLAYER_WIN, turnStartedAtEpochMillis = null)
+        val now = System.currentTimeMillis()
+        return CompletedGameSession(terminal, GameRecord(snapshot.sessionId, snapshot.gameType, snapshot.mode,
+            snapshot.difficulty, GameResult.SECOND_PLAYER_WIN, snapshot.engineState, snapshot.acceptedMoveCount,
+            completedAtEpochMillis = now), MatchOutcome(snapshot.sessionId, snapshot.gameType, snapshot.mode,
+            requireNotNull(snapshot.difficulty), 0, GameResult.SECOND_PLAYER_WIN, now))
+    }
+
+    private suspend fun writeReceipt(snapshot: GameSessionSnapshot = saved()) {
         val records = database.gameRecordDao().listAll()
         val outcomes = database.matchOutcomeDao().listAll()
         val receipt = JSONObject().put("runId", runId).put("scenario", scenario).put("phase", phase)

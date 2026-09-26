@@ -1,5 +1,8 @@
 package com.masterofchessstrategy.game
 
+import com.masterofchessstrategy.data.CompletedGameSession
+import com.masterofchessstrategy.data.CompletedGameSessionRepository
+import com.masterofchessstrategy.data.CompletedGameCommitResult
 import androidx.lifecycle.ViewModelStore
 import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.StoredGameMode
@@ -300,6 +303,107 @@ class ChineseChessBackgroundRuntimeTest {
         assertEquals(30_000L, budget.remainingMillis("game:1", 61_000L))
         assertEquals(60_000L, budget.remainingMillis("next-game:0", 70_000L))
         assertEquals(0L, budget.remainingMillis("next-game:0", 130_000L))
+    }
+
+    @Test fun restoringAndInitialCheckpointCannotRequestForegroundStartup() = runTest(dispatcher) {
+        val repository = object : GameSessionRepository {
+            override suspend fun load(gameType: GameType): LoadGameSessionResult { delay(100L); return LoadGameSessionResult.NotFound }
+            override suspend fun save(snapshot: GameSessionSnapshot) { delay(100L) }
+            override suspend fun clear(gameType: GameType) = Unit
+        }
+        val game = keep(ChineseChessGameViewModel(sessionRepository = repository,
+            mode = StoredGameMode.HUMAN_VS_AI, difficulty = Difficulty.EASY,
+            aiDispatcher = dispatcher, engineFactory = { Engine() }))
+        runCurrent()
+        assertTrue(game.uiState.isRestoring)
+        assertFalse(game.backgroundDemand.canStartService)
+        advanceTimeBy(100L); runCurrent()
+        assertTrue(game.uiState.isPersisting)
+        assertFalse(game.backgroundDemand.canStartService)
+        advanceTimeBy(100L); runCurrent()
+        assertTrue(game.backgroundDemand.canStartService)
+    }
+
+    @Test fun terminalFailureBlocksRestartAndRetriesTheSameImmutableCheckpoint() = runTest(dispatcher) {
+        val repository = CompletionRepository()
+        var notifications = 0
+        var legacyWrites = 0
+        var nextId = 0
+        val game = keep(ChineseChessGameViewModel(
+            sessionRepository = repository, mode = StoredGameMode.HUMAN_VS_AI, difficulty = Difficulty.EASY,
+            nowEpochMillis = { 1_000L + testScheduler.currentTime }, matchIdFactory = { "match-${nextId++}" },
+            onCompletionCommitted = { notifications++ }, onGameRecorded = { legacyWrites++ },
+            onMatchFinished = { legacyWrites++ }, aiDispatcher = dispatcher, engineFactory = { Engine() },
+        ))
+        runCurrent()
+        game.resign()
+        assertTrue(game.uiState.hasUncommittedResult)
+        advanceUntilIdle()
+        assertEquals(ChineseChessFeedback.SAVE_FAILED, game.uiState.feedback)
+        assertFalse(game.uiState.isPersisting)
+        assertTrue(game.uiState.hasUncommittedResult)
+        assertEquals(GameResult.SECOND_PLAYER_WIN, game.uiState.result)
+        game.restart()
+        assertEquals(GameResult.SECOND_PLAYER_WIN, game.uiState.result)
+        assertEquals(0, notifications)
+        assertEquals(0, legacyWrites)
+        val first = repository.attempts.single()
+        assertEquals(null, repository.saved?.resultOverride)
+        advanceTimeBy(1_000L)
+        repository.fail = false
+        game.retryTerminalSave()
+        advanceUntilIdle()
+        assertEquals(first, repository.attempts.last())
+        assertEquals(first.snapshot, repository.saved)
+        assertEquals(1, notifications)
+        assertFalse(game.uiState.hasUncommittedResult)
+        assertEquals(null, game.uiState.feedback)
+        game.restart()
+        advanceUntilIdle()
+        assertEquals(GameResult.ONGOING, game.uiState.result)
+        assertTrue(first.snapshot.sessionId != repository.saved?.sessionId)
+    }
+
+    @Test fun autoContinueCannotDiscardAnUncommittedTerminalGame() = runTest(dispatcher) {
+        val repository = CompletionRepository()
+        val game = keep(ChineseChessGameViewModel(
+            sessionRepository = repository, mode = StoredGameMode.AI_AUTO_PLAY, difficulty = Difficulty.EASY,
+            autoContinueEnabled = true, autoContinueGameLimit = 2,
+            aiDispatcher = dispatcher, engineFactory = { Engine(terminalAt = 2) },
+        ))
+        advanceUntilIdle()
+        assertEquals(GameResult.DRAW, game.uiState.result)
+        assertTrue(game.uiState.hasUncommittedResult)
+        assertFalse(game.backgroundDemand.canRun)
+        val first = repository.attempts.single()
+        game.toggleAutoPlayPaused()
+        game.setAutoPlaySpeed(4f)
+        game.persistAutoPlaySpeed()
+        advanceUntilIdle()
+        assertEquals(1, repository.attempts.size)
+        assertEquals(first.snapshot.sessionId, repository.saved?.sessionId)
+        repository.fail = false
+        game.retryTerminalSave()
+        advanceUntilIdle()
+        assertEquals(2, game.uiState.completedAutoGames)
+        assertTrue(game.uiState.isAutoPlayPaused)
+        assertFalse(game.uiState.hasUncommittedResult)
+    }
+
+    private class CompletionRepository : CompletedGameSessionRepository {
+        var fail = true
+        var saved: GameSessionSnapshot? = null
+        val attempts = mutableListOf<CompletedGameSession>()
+        override suspend fun load(gameType: GameType): LoadGameSessionResult =
+            saved?.let(LoadGameSessionResult::Loaded) ?: LoadGameSessionResult.NotFound
+        override suspend fun save(snapshot: GameSessionSnapshot) { saved = snapshot }
+        override suspend fun clear(gameType: GameType) { saved = null }
+        override suspend fun complete(game: CompletedGameSession): CompletedGameCommitResult {
+            attempts += game
+            if (fail) error("Injected transaction failure")
+            saved = game.snapshot
+            return CompletedGameCommitResult()
+        }
     }
 
     private fun keep(game: ChineseChessGameViewModel) = game.also {

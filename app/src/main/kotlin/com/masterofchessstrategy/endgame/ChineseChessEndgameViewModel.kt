@@ -133,6 +133,11 @@ internal class ChineseChessEndgameViewModel(
         }
     }
 
+    internal fun refreshAfterCommit(result: CompleteEndgameResult?) {
+        if (result != null) uiState = uiState.copy(feedback = result.toFeedback())
+        reload()
+    }
+
     internal fun reload() {
         viewModelScope.launch {
             try {

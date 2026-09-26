@@ -162,6 +162,21 @@ class ChineseChessBackgroundServiceTest {
         await { controller.game == null && !controller.isServiceRunning && !controller.isWakeLockHeld }
     }
 
+    @Test fun cancellingLeaseBeforeServiceStartPublishesThenRemovesNotificationWithoutCrash() = runBlocking {
+        allowNotifications()
+        await { !game.uiState.isPersisting && !game.uiState.isRestoring }
+        instrumentation.runOnMainSync {
+            controller.enable()
+            // onStartCommand cannot run until this main-thread block returns.
+            game.retireBackgroundRuntime()
+        }
+        delay(6_000L)
+        await { controller.game == null && !controller.isServiceRunning && !controller.isWakeLockHeld }
+        assertTrue(context.getSystemService(NotificationManager::class.java).activeNotifications.none {
+            it.id == ChineseChessBackgroundService.NOTIFICATION_ID
+        })
+    }
+
     @Test fun restoringBackupStopsOldRuntimeAndReloadsRetainedSettings() = runBlocking {
         allowNotifications()
         instrumentation.runOnMainSync { controller.enable(); game.stopBackgroundAutomation() }

@@ -59,7 +59,8 @@ internal class PlayerStatisticsViewModel(
     }
 
     internal fun loadStatistics() {
-        uiState = PlayerStatisticsUiState(isLoading = true)
+        // Keep unlocks stable while a committed result is reloaded on the current game route.
+        uiState = uiState.copy(isLoading = true)
         viewModelScope.launch {
             uiState = try {
                 when (val result = repository.load()) {

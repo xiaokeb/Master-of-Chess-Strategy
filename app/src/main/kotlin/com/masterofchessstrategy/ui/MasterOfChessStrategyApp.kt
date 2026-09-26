@@ -61,7 +61,8 @@ import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.RoomAppSettingsRepository
-import com.masterofchessstrategy.data.RoomGameSessionRepository
+import com.masterofchessstrategy.data.RoomCompletedGameSessionRepository
+import com.masterofchessstrategy.data.CompletedGameCommitResult
 import com.masterofchessstrategy.data.RoomGameRecordRepository
 import com.masterofchessstrategy.data.RoomEndgameProgressRepository
 import com.masterofchessstrategy.data.RoomLastSelectionRepository
@@ -101,6 +102,7 @@ import com.masterofchessstrategy.progress.PlayerStatisticsViewModel
 import com.masterofchessstrategy.progress.PlayerGrowthSummary
 import com.masterofchessstrategy.records.ChineseChessReplayViewModel
 import com.masterofchessstrategy.records.GameRecordsViewModel
+import com.masterofchessstrategy.records.ChineseChessHighlightPolicy
 import com.masterofchessstrategy.opening.ChineseChessOpeningViewModel
 import com.masterofchessstrategy.opening.PreparedOpeningAutoPlay
 import com.masterofchessstrategy.settings.AppSettingsViewModel
@@ -137,9 +139,6 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
         val context = LocalContext.current
         val pikafishNetworkProvider = remember(context.applicationContext) {
             PikafishNetworkProvider(context.applicationContext)
-        }
-        val gameSessionRepository = remember {
-            RoomGameSessionRepository(database.activeGameDao())
         }
         val selectionRepository = remember {
             RoomLastSelectionRepository(database.lastSelectionDao())
@@ -224,6 +223,16 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
         val endgameViewModel: ChineseChessEndgameViewModel = viewModel(
             factory = endgameFactory,
         )
+        val gameSessionRepository = remember(database, endgamePack, settingsViewModel) {
+            RoomCompletedGameSessionRepository(database, endgamePack) { record ->
+                ChineseChessHighlightPolicy.matches(record, settingsViewModel.uiState.settings.highlightConditionsMask)
+            }
+        }
+        val refreshCompletion: (CompletedGameCommitResult) -> Unit = { result ->
+            statisticsViewModel.loadStatistics()
+            gameRecordsViewModel.reload()
+            endgameViewModel.refreshAfterCommit(result.endgame)
+        }
         // A modal also blocks back navigation and settings writes while a document is processed.
         if (backupViewModel.uiState.isWorking) {
             AlertDialog(
@@ -461,7 +470,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                         difficulty = difficulty, initialPositionState = initial, sessionVariantId = variant,
                         aiFirstEnabled = settingsViewModel.uiState.settings.aiFirstEnabled,
                         timeControlMinutes = settingsViewModel.uiState.settings.gameDurationMinutes,
-                        onGameRecorded = gameRecordsViewModel::record,
+                        onCompletionCommitted = refreshCompletion,
                         engineFactory = { NativeChineseChessEngine(pikafishNetworkProvider::requireNetworkPath) },
                     )
                 }
@@ -469,6 +478,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                 ChineseChessGameSoundEffect(game, settingsViewModel.uiState.settings.soundEnabled)
                 ChineseChessGameScreen(
                     state = game.uiState, onSquareTap = game::onSquareTap, onUndo = game::undo,
+                    onRetrySave = game::retryTerminalSave,
                     onHint = game::requestHint, onResign = game::resign, onDraw = game::offerOrAcceptDraw,
                     onRestart = { game.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled) },
                     onBack = navController::popBackStack,
@@ -575,7 +585,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                         repository = gameSessionRepository,
                         mode = StoredGameMode.OPENING_AUTO_PLAY,
                         difficulty = difficulty,
-                        onGameRecorded = gameRecordsViewModel::record,
+                        onCompletionCommitted = refreshCompletion,
                         timeControlMinutes =
                             settingsViewModel.uiState.settings.gameDurationMinutes,
                         autoContinueEnabled =
@@ -598,6 +608,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                 )
                 ChineseChessGameScreen(
                     state = gameViewModel.uiState,
+                    onRetrySave = gameViewModel::retryTerminalSave,
                     onSquareTap = gameViewModel::onSquareTap,
                     onUndo = gameViewModel::undo,
                     onHint = gameViewModel::requestHint,
@@ -679,7 +690,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                         mode = StoredGameMode.ASSESSMENT_CHALLENGE,
                         aiFirstEnabled = settingsViewModel.uiState.settings.aiFirstEnabled,
                         difficulty = difficulty,
-                        onGameRecorded = gameRecordsViewModel::record,
+                        onCompletionCommitted = refreshCompletion,
                         timeControlMinutes =
                             settingsViewModel.uiState.settings.gameDurationMinutes,
                         sessionVariantId = encodedState,
@@ -698,6 +709,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                 )
                 ChineseChessGameScreen(
                     state = gameViewModel.uiState,
+                    onRetrySave = gameViewModel::retryTerminalSave,
                     onSquareTap = gameViewModel::onSquareTap,
                     onUndo = gameViewModel::undo,
                     onHint = gameViewModel::requestHint,
@@ -774,7 +786,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                         mode = StoredGameMode.BLIND_CHALLENGE,
                         aiFirstEnabled = settingsViewModel.uiState.settings.aiFirstEnabled,
                         difficulty = difficulty,
-                        onGameRecorded = gameRecordsViewModel::record,
+                        onCompletionCommitted = refreshCompletion,
                         timeControlMinutes =
                             settingsViewModel.uiState.settings.gameDurationMinutes,
                         engineFactory = {
@@ -791,6 +803,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                 )
                 ChineseChessGameScreen(
                     state = gameViewModel.uiState,
+                    onRetrySave = gameViewModel::retryTerminalSave,
                     onSquareTap = gameViewModel::onSquareTap,
                     onUndo = gameViewModel::undo,
                     onHint = gameViewModel::requestHint,
@@ -878,7 +891,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                         mode = StoredGameMode.STREAK_CHALLENGE,
                         aiFirstEnabled = settingsViewModel.uiState.settings.aiFirstEnabled,
                         difficulty = difficulty,
-                        onGameRecorded = gameRecordsViewModel::record,
+                        onCompletionCommitted = refreshCompletion,
                         timeControlMinutes =
                             settingsViewModel.uiState.settings.gameDurationMinutes,
                         sessionVariantId = encodedState,
@@ -897,6 +910,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                 )
                 ChineseChessGameScreen(
                     state = gameViewModel.uiState,
+                    onRetrySave = gameViewModel::retryTerminalSave,
                     onSquareTap = gameViewModel::onSquareTap,
                     onUndo = gameViewModel::undo,
                     onHint = gameViewModel::requestHint,
@@ -989,7 +1003,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                         mode = StoredGameMode.TIMED_CHALLENGE,
                         aiFirstEnabled = settingsViewModel.uiState.settings.aiFirstEnabled,
                         difficulty = difficulty,
-                        onGameRecorded = gameRecordsViewModel::record,
+                        onCompletionCommitted = refreshCompletion,
                         perMoveTimeLimitSeconds = secondsPerMove,
                         sessionVariantId = sessionVariant,
                         engineFactory = {
@@ -1006,6 +1020,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                 )
                 ChineseChessGameScreen(
                     state = gameViewModel.uiState,
+                    onRetrySave = gameViewModel::retryTerminalSave,
                     onSquareTap = gameViewModel::onSquareTap,
                     onUndo = gameViewModel::undo,
                     onHint = gameViewModel::requestHint,
@@ -1109,7 +1124,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                         difficulty = difficulty,
                         initialPositionState = encodedPosition,
                         sessionVariantId = sessionVariant,
-                        onGameRecorded = gameRecordsViewModel::record,
+                        onCompletionCommitted = refreshCompletion,
                         timeControlMinutes =
                             settingsViewModel.uiState.settings.gameDurationMinutes,
                         engineFactory = {
@@ -1126,6 +1141,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                 )
                 ChineseChessGameScreen(
                     state = gameViewModel.uiState,
+                    onRetrySave = gameViewModel::retryTerminalSave,
                     onSquareTap = gameViewModel::onSquareTap,
                     onUndo = gameViewModel::undo,
                     onHint = gameViewModel::requestHint,
@@ -1262,15 +1278,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                         sessionVariantId = endgamePack.sessionVariantId(level.id),
                         endgameTitle = level.title,
                         endgameMaxPlayerMoves = level.maxPlayerMoves,
-                        onGameRecorded = { record ->
-                            gameRecordsViewModel.record(record)
-                            if (record.result == GameResult.FIRST_PLAYER_WIN) {
-                                endgameViewModel.complete(
-                                    level.id,
-                                    (record.moveCount + 1) / 2,
-                                )
-                            }
-                        },
+                        onCompletionCommitted = refreshCompletion,
                         engineFactory = {
                             NativeChineseChessEngine(
                                 pikafishNetworkProvider::requireNetworkPath,
@@ -1285,6 +1293,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                 )
                 ChineseChessGameScreen(
                     state = gameViewModel.uiState,
+                    onRetrySave = gameViewModel::retryTerminalSave,
                     onSquareTap = gameViewModel::onSquareTap,
                     onUndo = gameViewModel::undo,
                     onHint = gameViewModel::requestHint,
@@ -1311,7 +1320,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     ChineseChessGameViewModel.factory(
                         repository = gameSessionRepository,
                         timeControlMinutes = timeControlMinutes,
-                        onGameRecorded = gameRecordsViewModel::record,
+                        onCompletionCommitted = refreshCompletion,
                     )
                 }
                 val gameViewModel: ChineseChessGameViewModel = viewModel(factory = factory)
@@ -1321,6 +1330,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                 )
                 ChineseChessGameScreen(
                     state = gameViewModel.uiState,
+                    onRetrySave = gameViewModel::retryTerminalSave,
                     onSquareTap = gameViewModel::onSquareTap,
                     onUndo = gameViewModel::undo,
                     onHint = gameViewModel::requestHint,
@@ -1367,8 +1377,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                         mode = StoredGameMode.HUMAN_VS_AI,
                         aiFirstEnabled = settingsViewModel.uiState.settings.aiFirstEnabled,
                         difficulty = difficulty,
-                        onMatchFinished = statisticsViewModel::record,
-                        onGameRecorded = gameRecordsViewModel::record,
+                        onCompletionCommitted = refreshCompletion,
                         timeControlMinutes =
                             settingsViewModel.uiState.settings.gameDurationMinutes,
                         engineFactory = {
@@ -1385,6 +1394,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                 )
                 ChineseChessGameScreen(
                     state = gameViewModel.uiState,
+                    onRetrySave = gameViewModel::retryTerminalSave,
                     onSquareTap = gameViewModel::onSquareTap,
                     onUndo = gameViewModel::undo,
                     onHint = gameViewModel::requestHint,
@@ -1430,7 +1440,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                         repository = gameSessionRepository,
                         mode = StoredGameMode.AI_AUTO_PLAY,
                         difficulty = difficulty,
-                        onGameRecorded = gameRecordsViewModel::record,
+                        onCompletionCommitted = refreshCompletion,
                         timeControlMinutes = settings.gameDurationMinutes,
                         autoContinueEnabled = settings.autoContinueEnabled,
                         autoContinueGameLimit = settings.autoContinueGameLimit,
@@ -1448,6 +1458,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                 )
                 ChineseChessGameScreen(
                     state = gameViewModel.uiState,
+                    onRetrySave = gameViewModel::retryTerminalSave,
                     onSquareTap = gameViewModel::onSquareTap,
                     onUndo = gameViewModel::undo,
                     onHint = gameViewModel::requestHint,
@@ -1675,10 +1686,12 @@ internal fun ChineseChessGameScreen(
     onSettings: () -> Unit = {},
     onContinueStreak: () -> Unit = {},
     onContinueAssessment: () -> Unit = {},
+    onRetrySave: () -> Unit = {},
 ) {
     BackHandler(
         enabled =
             state.isRestoring ||
+                state.hasUncommittedResult ||
                 state.isPersisting ||
                 state.isAiThinking ||
                 state.isHintThinking,
@@ -1719,6 +1732,7 @@ internal fun ChineseChessGameScreen(
                                 onAutoPlaySpeedChangeFinished =
                                     onAutoPlaySpeedChangeFinished,
                                 onRestart = onRestart,
+                                onRetrySave = onRetrySave,
                                 onContinueStreak = onContinueStreak,
                                 onContinueAssessment = onContinueAssessment,
                                 modifier = Modifier
@@ -1749,6 +1763,7 @@ internal fun ChineseChessGameScreen(
                                 onAutoPlaySpeedChangeFinished =
                                     onAutoPlaySpeedChangeFinished,
                                 onRestart = onRestart,
+                                onRetrySave = onRetrySave,
                                 onContinueStreak = onContinueStreak,
                                 onContinueAssessment = onContinueAssessment,
                                 modifier = Modifier.fillMaxWidth(),
@@ -1778,6 +1793,7 @@ private fun GameHeader(
                 enabled =
                     !state.isRestoring &&
                         !state.isPersisting &&
+                        !state.hasUncommittedResult &&
                         !state.isAiThinking &&
                         !state.isHintThinking,
                 modifier = Modifier.testTag(GAME_BACK_BUTTON_TAG),
@@ -1857,6 +1873,7 @@ private fun GameHeader(
                 enabled =
                     !state.isRestoring &&
                         !state.isPersisting &&
+                        !state.hasUncommittedResult &&
                         !state.isAiThinking &&
                         !state.isHintThinking,
                 modifier = Modifier.testTag(GAME_SETTINGS_BUTTON_TAG),
@@ -1899,6 +1916,7 @@ private fun GameControls(
     onAutoPlaySpeedChange: (Float) -> Unit,
     onAutoPlaySpeedChangeFinished: () -> Unit,
     onRestart: () -> Unit,
+    onRetrySave: () -> Unit,
     onContinueStreak: () -> Unit,
     onContinueAssessment: () -> Unit,
     modifier: Modifier,
@@ -1907,6 +1925,7 @@ private fun GameControls(
         state.isEngineAvailable &&
             !state.isRestoring &&
             !state.isPersisting &&
+            !state.hasUncommittedResult &&
             !state.isAiThinking &&
             !state.isHintThinking
     var showResignConfirmation by remember { mutableStateOf(false) }
@@ -1948,6 +1967,13 @@ private fun GameControls(
                 text = selectionText(state),
                 style = MaterialTheme.typography.bodyLarge,
             )
+            if (state.hasUncommittedResult) {
+                Text(stringResource(R.string.terminal_save_pending))
+                Button(onClick = onRetrySave, enabled = !state.isPersisting,
+                    modifier = Modifier.fillMaxWidth().testTag("retry_terminal_save")) {
+                    Text(stringResource(R.string.retry_terminal_save))
+                }
+            }
             if (state.isEndgame) {
                 Text(
                     text = stringResource(
@@ -2104,7 +2130,7 @@ private fun GameControls(
                         enabled =
                             state.isEngineAvailable &&
                                 !state.isRestoring &&
-                                !state.isPersisting,
+                                !state.isPersisting && !state.hasUncommittedResult,
                         modifier = Modifier
                             .weight(1f)
                             .testTag(AUTO_PLAY_TOGGLE_TAG),
@@ -2129,7 +2155,7 @@ private fun GameControls(
                     enabled =
                         state.isEngineAvailable &&
                             !state.isRestoring &&
-                            !state.isPersisting,
+                            !state.isPersisting && !state.hasUncommittedResult,
                     modifier = Modifier.testTag(AUTO_PLAY_SPEED_TAG),
                 )
                 Text(

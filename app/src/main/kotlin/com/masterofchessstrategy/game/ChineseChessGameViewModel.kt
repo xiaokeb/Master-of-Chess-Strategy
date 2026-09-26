@@ -12,6 +12,9 @@ import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.data.GameSessionRepository
 import com.masterofchessstrategy.data.GameSessionSnapshot
 import com.masterofchessstrategy.data.GameRecord
+import com.masterofchessstrategy.data.CompletedGameSession
+import com.masterofchessstrategy.data.CompletedGameSessionRepository
+import com.masterofchessstrategy.data.CompletedGameCommitResult
 import com.masterofchessstrategy.data.LoadGameSessionResult
 import com.masterofchessstrategy.data.MatchOutcome
 import com.masterofchessstrategy.data.StoredGameMode
@@ -67,6 +70,7 @@ class ChineseChessGameViewModel internal constructor(
     private val matchIdFactory: () -> String = { UUID.randomUUID().toString() },
     private val onMatchFinished: (MatchOutcome) -> Unit = {},
     private val onGameRecorded: (GameRecord) -> Unit = {},
+    private val onCompletionCommitted: (CompletedGameCommitResult) -> Unit = {},
     private val initialTimeControlMinutes: Int? = null,
     private val perMoveTimeLimitSeconds: Int? = null,
     private val autoContinueEnabled: Boolean = false,
@@ -99,6 +103,7 @@ class ChineseChessGameViewModel internal constructor(
     private var settlementRequested = false
     private var terminalHandled = false
     private var recordRequested = false
+    private var pendingCompletion: CompletedGameSession? = null
     private val perMoveTimeLimitMillis = perMoveTimeLimitSeconds?.times(1_000L)
     private val initialClockMillis =
         perMoveTimeLimitMillis ?: initialTimeControlMinutes?.toClockMillis()
@@ -461,7 +466,7 @@ class ChineseChessGameViewModel internal constructor(
 
     fun toggleAutoPlayPaused() {
         val activeEngine = engine ?: return
-        if (!isAutoPlay || !uiState.isEngineAvailable) return
+        if (!isAutoPlay || !uiState.isEngineAvailable || uiState.hasUncommittedResult) return
         if (autoPlayPaused && uiState.result != GameResult.ONGOING) {
             runEngineOperation {
                 resetPosition(activeEngine)
@@ -500,7 +505,7 @@ class ChineseChessGameViewModel internal constructor(
     }
 
     fun setAutoPlaySpeed(speed: Float) {
-        if (!isAutoPlay || !uiState.isEngineAvailable || !speed.isFinite()) return
+        if (!isAutoPlay || !uiState.isEngineAvailable || uiState.hasUncommittedResult || !speed.isFinite()) return
         autoPlaySpeedPermille = (
             speed.coerceIn(MIN_AUTO_PLAY_SPEED, MAX_AUTO_PLAY_SPEED) * 1_000f
         ).roundToInt()
@@ -508,7 +513,7 @@ class ChineseChessGameViewModel internal constructor(
     }
 
     fun persistAutoPlaySpeed() {
-        if (!isAutoPlay || !uiState.isEngineAvailable) return
+        if (!isAutoPlay || !uiState.isEngineAvailable || uiState.hasUncommittedResult) return
         if (!uiState.isAiThinking) {
             persistCurrentSession()
         }
@@ -527,10 +532,11 @@ class ChineseChessGameViewModel internal constructor(
             val continuing = isAutoPlay && !autoPlayPaused && autoContinueEnabled &&
                 completedAutoGames < autoContinueGameLimit
             val running = (uiState.result == GameResult.ONGOING || continuing) &&
-                (!isAutoPlay || !autoPlayPaused)
+                (!isAutoPlay || !autoPlayPaused) && !uiState.hasUncommittedResult
             val available = engine != null && uiState.isEngineAvailable
             return ChineseChessBackgroundDemand(
                 canRun = available && (running || busy),
+                canStartService = available && running && !uiState.isRestoring && !uiState.isPersisting,
                 needsCpu = available && (busy || (isAutoPlay && running)),
                 isBusy = available && busy,
                 isForeground = isRuntimeForeground,
@@ -788,7 +794,9 @@ class ChineseChessGameViewModel internal constructor(
                     completedAutoGames = snapshot.completedAutoGames
                     refresh(ChineseChessFeedback.GAME_RESTORED)
                     synchronizeClock()
-                    resumeRuntimeWork()
+                    if (sessionRepository is CompletedGameSessionRepository && uiState.result != GameResult.ONGOING) {
+                        if (!uiState.isPersisting) persistCurrentSession()
+                    } else resumeRuntimeWork()
                 }
 
                 is RestoreResult.Rejected -> rejectStoredSession(repository)
@@ -835,18 +843,52 @@ class ChineseChessGameViewModel internal constructor(
         }
         uiState = uiState.copy(isPersisting = true)
         val snapshot = createSnapshot(stateBytes)
+        val completionRepository = repository as? CompletedGameSessionRepository
+        val terminal = if (completionRepository != null && uiState.result != GameResult.ONGOING) {
+            pendingCompletion ?: createCompletion(snapshot, uiState.result).also { pendingCompletion = it }
+        } else null
+        uiState = uiState.copy(hasUncommittedResult = terminal != null)
         viewModelScope.launch {
-            try {
-                repository.save(snapshot)
-                uiState = uiState.copy(isPersisting = false)
-                resumeRuntimeWork()
+            val committed = try {
+                if (terminal != null) requireNotNull(completionRepository).complete(terminal)
+                    else { repository.save(snapshot); null }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (_: RuntimeException) {
                 uiState = uiState.copy(
                     isPersisting = false,
                     feedback = ChineseChessFeedback.SAVE_FAILED,
                 )
+                return@launch
             }
+            pendingCompletion = null
+            uiState = uiState.copy(isPersisting = false, hasUncommittedResult = false)
+            if (committed != null) onCompletionCommitted(committed)
+            resumeRuntimeWork()
         }
+    }
+
+    /** A failed terminal checkpoint must be saved before restart or automatic continuation. */
+    fun retryTerminalSave() {
+        if (uiState.hasUncommittedResult && !uiState.isPersisting && engine != null) {
+            uiState = uiState.copy(feedback = null)
+            persistCurrentSession()
+        }
+    }
+
+    private fun createCompletion(snapshot: GameSessionSnapshot, result: GameResult): CompletedGameSession {
+        val record = GameRecord(
+            recordId = snapshot.sessionId, gameType = snapshot.gameType, mode = snapshot.mode,
+            difficulty = snapshot.difficulty, result = result, engineState = snapshot.engineState,
+            moveCount = snapshot.acceptedMoveCount, isEndgame = mode == StoredGameMode.ENDGAME,
+            completedAtEpochMillis = snapshot.updatedAtEpochMillis, playerIndex = snapshot.playerIndex,
+        )
+        val outcome = if (mode == StoredGameMode.HUMAN_VS_AI) MatchOutcome(
+            matchId = snapshot.sessionId, gameType = snapshot.gameType, mode = mode,
+            difficulty = requireNotNull(snapshot.difficulty), playerIndex = snapshot.playerIndex,
+            result = result, settledAtEpochMillis = snapshot.updatedAtEpochMillis,
+        ) else null
+        return CompletedGameSession(snapshot.copy(resultOverride = result, turnStartedAtEpochMillis = null), record, outcome)
     }
 
     private fun selectPiece(
@@ -1263,6 +1305,7 @@ class ChineseChessGameViewModel internal constructor(
         if (
             uiState.isRestoring ||
             uiState.isPersisting ||
+            uiState.hasUncommittedResult ||
             !uiState.isEngineAvailable
         ) {
             return
@@ -1536,6 +1579,7 @@ class ChineseChessGameViewModel internal constructor(
         settlementRequested = false
         terminalHandled = false
         recordRequested = false
+        pendingCompletion = null
         acceptedMoveCount = 0
         undoUseCount = 0
         hintUseCount = 0
@@ -1554,6 +1598,7 @@ class ChineseChessGameViewModel internal constructor(
         uiState.isEngineAvailable &&
             !uiState.isRestoring &&
             !uiState.isPersisting &&
+            !uiState.hasUncommittedResult &&
             !uiState.isAiThinking &&
             !uiState.isHintThinking
 
@@ -1598,6 +1643,7 @@ class ChineseChessGameViewModel internal constructor(
         )
 
     private fun requestSettlement(result: GameResult) {
+        if (sessionRepository is CompletedGameSessionRepository) return
         if (
             mode != StoredGameMode.HUMAN_VS_AI ||
             result == GameResult.ONGOING ||
@@ -1637,6 +1683,7 @@ class ChineseChessGameViewModel internal constructor(
         result: GameResult,
         activeEngine: ChineseChessRuleEngine,
     ) {
+        if (sessionRepository is CompletedGameSessionRepository) return
         if (result == GameResult.ONGOING || recordRequested) return
         val state = try {
             activeEngine.serialize()
@@ -1746,6 +1793,7 @@ class ChineseChessGameViewModel internal constructor(
             difficulty: Difficulty? = null,
             onMatchFinished: (MatchOutcome) -> Unit = {},
             onGameRecorded: (GameRecord) -> Unit = {},
+            onCompletionCommitted: (CompletedGameCommitResult) -> Unit = {},
             timeControlMinutes: Int? = null,
             perMoveTimeLimitSeconds: Int? = null,
             autoContinueEnabled: Boolean = false,
@@ -1769,6 +1817,7 @@ class ChineseChessGameViewModel internal constructor(
                         difficulty = difficulty,
                         onMatchFinished = onMatchFinished,
                         onGameRecorded = onGameRecorded,
+                        onCompletionCommitted = onCompletionCommitted,
                         initialTimeControlMinutes = timeControlMinutes,
                         perMoveTimeLimitSeconds = perMoveTimeLimitSeconds,
                         autoContinueEnabled = autoContinueEnabled,
