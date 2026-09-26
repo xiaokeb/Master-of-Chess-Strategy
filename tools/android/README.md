@@ -1,4 +1,30 @@
-# Android 跨进程验收
+# Android 运行稳定性验收
+
+## 连续完整对局
+
+`test-continuous-play.ps1` 使用正式 MainActivity、导航、Room、音效组件和真实 Pikafish，
+从标准初始局面连续完成三局简单档自动演局。开启正式续局设置，上限三局，观看速度 4 倍，
+不限棋钟；不使用认输、模拟终局、换引擎或缩短时限让测试提前结束。
+
+```powershell
+.\gradlew.bat :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
+.\tools\android\test-continuous-play.ps1 -AdbPath 'E:\Backend_Env\SDK\platform-tools\adb.exe' -DeviceSerial emulator-5554 -AllowEmulatorDataReset
+```
+
+与下方冷启动脚本相同，执行前须确认该模拟器的本项目数据可丢弃；脚本安装 APK 并清空这些数据，
+不可恢复。不能与 Gradle connected 测试或冷启动脚本同时运行。普通设备测试默认跳过该类，
+只有显式 `continuousHarness=true` 和 runId 才启用。
+
+覆盖真实暂停按钮及存档稳定、90 秒熄屏跨唤醒锁检查周期、返回相同 ViewModel、三次自然终局
+原子存档、续局上限、无排位污染和退出资源释放。每份终局棋谱由原生规则层恢复并逐步撤回到
+标准初始局面，核对实际结果与历史长度。20 分钟对局等待超时算失败，不生成和棋记录。
+
+证据位于 `.build/continuous-play/<runId>/`；设备 `files/continuous-play.json` 持续更新阶段与采样。
+主机同时要求最终 `OK (1 test)` 和同 runId 的 `passed` 报告，失败保留棋局，不自动重跑掩盖故障。
+每约 15 秒记录 PSS、原生已分配内存、线程、文件描述符及服务/唤醒锁状态；这是包含调试器材的
+AVD 观测，不设置任意“内存无泄漏”阈值，也不证明 Release 性能、真机耗电或音效试听合格。
+
+## 跨进程恢复
 
 `test-process-restart.ps1` 协调真实进程终止和重新启动，不把 Activity 重建当作进程死亡。
 仅允许 `emulator-*` 且 `ro.kernel.qemu=1` 的模拟器；Android 测试另校验 ranchu/goldfish。
