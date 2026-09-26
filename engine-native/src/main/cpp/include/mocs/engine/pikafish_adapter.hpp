@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mocs/engine/engine_types.hpp"
+#include "mocs/engine/chinese_chess_search_position.hpp"
 
 #include <cstdint>
 #include <optional>
@@ -23,14 +24,16 @@ inline constexpr std::int64_t pikafish_move_time_millis = 1'200;
 ) noexcept;
 
 /**
- * Runs the bundled Pikafish engine for one position.
+ * Replays the complete authoritative position history, verifies its final
+ * board/side, and searches with the bundled Pikafish. Terminal snapshots never
+ * produce a move, even if geometric board moves still exist.
  *
  * Calls are serialized because Pikafish owns mutable search threads and a
  * transposition table. The network path must point to the verified private
  * app copy of the bundled NNUE asset.
  */
 [[nodiscard]] std::optional<EngineAction> choose_pikafish_move(
-    const std::string& fen,
+    const ChineseChessSearchPosition& position,
     const std::vector<EngineAction>& legal_actions,
     const std::string& network_path,
     Difficulty difficulty = Difficulty::master,

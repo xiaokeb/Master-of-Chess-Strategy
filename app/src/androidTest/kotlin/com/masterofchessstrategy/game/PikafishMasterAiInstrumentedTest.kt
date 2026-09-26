@@ -6,6 +6,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.NativeChineseChessEngine
 import com.masterofchessstrategy.engine.ActionResult
+import com.masterofchessstrategy.engine.BoardMove
+import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessFenCodec
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.GameResult
@@ -51,6 +53,57 @@ class PikafishMasterAiInstrumentedTest {
         NativeChineseChessEngine(provider::requireNetworkPath).use { engine ->
             assertEquals(RestoreResult.Restored, engine.restore(state))
             assertConvertsWin(engine, remainingPlies = 11)
+        }
+    }
+
+    @Test
+    fun repeatedPositionHistorySurvivesRestoreAndUndoBeforeSearch() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val provider = PikafishNetworkProvider(context)
+        val cycle = listOf(
+            BoardMove(BoardPosition(7, 9), BoardPosition(6, 7)),
+            BoardMove(BoardPosition(7, 0), BoardPosition(6, 2)),
+            BoardMove(BoardPosition(6, 7), BoardPosition(7, 9)),
+            BoardMove(BoardPosition(6, 2), BoardPosition(7, 0)),
+        )
+        NativeChineseChessEngine(provider::requireNetworkPath).use { engine ->
+            cycle.forEach { assertEquals(ActionResult.Accepted, engine.apply(it)) }
+            assertEquals(GameResult.ONGOING, engine.gameResult())
+            val state = engine.serialize()
+            NativeChineseChessEngine(provider::requireNetworkPath).use { restored ->
+                assertEquals(RestoreResult.Restored, restored.restore(state))
+                for (session in listOf(engine, restored)) {
+                    val move = requireNotNull(session.chooseMove(Difficulty.MEDIUM))
+                    assertTrue(move in session.legalActions())
+                    assertTrue(state.contentEquals(session.serialize()))
+                    assertEquals(ActionResult.Accepted, session.apply(move))
+                    assertTrue(session.undo())
+                    assertTrue(state.contentEquals(session.serialize()))
+                }
+            }
+            cycle.forEach { assertEquals(ActionResult.Accepted, engine.apply(it)) }
+            assertEquals(GameResult.DRAW, engine.gameResult())
+            assertEquals(null, engine.chooseMove(Difficulty.EASY))
+        }
+    }
+
+    @Test
+    fun blackFirstCustomHistoryKeepsItsOriginalNoCaptureClock() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val provider = PikafishNetworkProvider(context)
+        NativeChineseChessEngine(provider::requireNetworkPath).use { engine ->
+            assertEquals(RestoreResult.Restored, engine.restore(ChineseChessFenCodec.parse(
+                "4k4/9/9/9/r8/4P4/9/9/9/4K4 b - - 118 1",
+            ).toEngineState()))
+            assertEquals(ActionResult.Accepted, engine.apply(
+                BoardMove(BoardPosition(0, 4), BoardPosition(0, 5)),
+            ))
+            val state = engine.serialize()
+            val selected = requireNotNull(engine.chooseMove(Difficulty.EASY))
+            assertTrue(selected in engine.legalActions())
+            assertTrue(state.contentEquals(engine.serialize()))
+            assertEquals(ActionResult.Accepted, engine.apply(selected))
+            assertEquals(GameResult.DRAW, engine.gameResult())
         }
     }
 

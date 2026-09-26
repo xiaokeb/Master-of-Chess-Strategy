@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mocs/engine/rule_engine.hpp"
+#include "mocs/engine/chinese_chess_search_position.hpp"
 
 #include <array>
 #include <cstddef>
@@ -70,6 +71,7 @@ public:
     ) const noexcept;
     [[nodiscard]] bool is_in_check(Side side) const noexcept;
     [[nodiscard]] std::string fen() const;
+    [[nodiscard]] ChineseChessSearchPosition search_position() const;
     // Legacy diagnostic search; production JNI uses Pikafish for all levels.
     [[nodiscard]] std::optional<EngineAction> best_move(
         Difficulty difficulty

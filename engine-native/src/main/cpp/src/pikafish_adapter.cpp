@@ -35,10 +35,19 @@ void initialize_pikafish() {
     });
 }
 
+std::string board_and_side(const std::string& fen) {
+    std::istringstream input(fen);
+    std::string board, side;
+    if (!(input >> board >> side) || (side != "w" && side != "b")) {
+        throw std::invalid_argument("Invalid search position identity");
+    }
+    return board + ' ' + side;
+}
+
 class PikafishRuntime final {
 public:
     [[nodiscard]] std::optional<EngineAction> choose(
-        const std::string& fen,
+        const ChineseChessSearchPosition& position,
         const std::vector<EngineAction>& legal_actions,
         const std::string& network_path,
         const Difficulty difficulty,
@@ -56,8 +65,14 @@ public:
         std::istringstream option("name MultiPV value " + std::to_string(profile.multi_pv));
         engine_->get_options().setoption(option);
 
-        if (const auto error = engine_->set_position(fen, {}); error) {
-            throw std::invalid_argument("Pikafish rejected the position");
+        if (const auto error = engine_->set_position(position.initial_fen, position.moves); error) {
+            throw std::invalid_argument("Pikafish rejected the position history");
+        }
+        // Replaying must reach the authoritative board and side. Do not compare
+        // rule60 clocks: upstream discounts checks beyond ten per side, while
+        // the local rules currently retain a raw no-capture ply counter.
+        if (board_and_side(engine_->fen()) != board_and_side(position.current_fen)) {
+            throw std::invalid_argument("Pikafish history does not reach the current position");
         }
 
         {
@@ -232,16 +247,16 @@ std::optional<EngineAction> decode_pikafish_move(
 }
 
 std::optional<EngineAction> choose_pikafish_move(
-    const std::string& fen,
+    const ChineseChessSearchPosition& position,
     const std::vector<EngineAction>& legal_actions,
     const std::string& network_path,
     const Difficulty difficulty,
     const std::optional<std::uint64_t> selection_seed
 ) {
-    if (legal_actions.empty()) {
+    if (position.result != GameResult::ongoing || legal_actions.empty()) {
         return std::nullopt;
     }
-    return runtime().choose(fen, legal_actions, network_path, difficulty, selection_seed);
+    return runtime().choose(position, legal_actions, network_path, difficulty, selection_seed);
 }
 
 void reset_pikafish_search() { runtime().reset_search(); }

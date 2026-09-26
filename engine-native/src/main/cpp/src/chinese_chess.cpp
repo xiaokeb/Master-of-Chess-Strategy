@@ -311,6 +311,21 @@ std::string ChineseChessEngine::fen() const {
     );
 }
 
+ChineseChessSearchPosition ChineseChessEngine::search_position() const {
+    const auto& first = position_history_.front();
+    const auto first_clock = history_.empty()
+        ? no_capture_plies_ : history_.front().previous_no_capture_plies;
+    ChineseChessSearchPosition result{
+        encode_fen(first.board, first.side, first_clock, 0), {}, fen(), game_result()};
+    result.moves.reserve(history_.size());
+    for (const auto& move : history_) {
+        result.moves.push_back(std::string{
+            static_cast<char>('a' + move.from_x), static_cast<char>('9' - move.from_y),
+            static_cast<char>('a' + move.to_x), static_cast<char>('9' - move.to_y)});
+    }
+    return result;
+}
+
 std::string ChineseChessEngine::encode_fen(
     const Board& board,
     const Side side,
@@ -343,7 +358,10 @@ std::string ChineseChessEngine::encode_fen(
     value += side == Side::red ? " w - - " : " b - - ";
     value += std::to_string(no_capture_plies);
     value.push_back(' ');
-    value += std::to_string(completed_plies / 2 + 1);
+    // A fullmove is completed after Black's turn, including a custom position
+    // that starts with Black. The initial side follows from parity/current side.
+    const bool initially_black = (side == Side::black) != (completed_plies % 2 != 0);
+    value += std::to_string((completed_plies + (initially_black ? 1 : 0)) / 2 + 1);
     return value;
 }
 

@@ -131,7 +131,8 @@ int main(const int argc, const char* argv[]) {
                   << "\",\"backend\":\"" << backend
                   << "\",\"openings\":" << count << ",\"max_search_plies\":" << limit
                   << ",\"master_move_ms\":" << pikafish_move_time_millis
-                  << ",\"profile_version\":1,\"selection_seed\":20260926}\n";
+                  << ",\"profile_version\":1,\"selection_seed\":20260926"
+                  << ",\"history_mode\":\"full\"}\n";
         for (int opening = 0; opening < count; ++opening) {
             for (int strong_side = 0; strong_side < 2; ++strong_side) {
                 ChineseChessEngine engine;
@@ -151,7 +152,7 @@ int main(const int argc, const char* argv[]) {
                     const auto difficulty = stronger_turn ? strong : weak;
                     const auto start = Clock::now();
                     const auto move = backend == "pikafish" || difficulty == Difficulty::master
-                        ? choose_pikafish_move(engine.fen(), engine.legal_actions(), network,
+                        ? choose_pikafish_move(engine.search_position(), engine.legal_actions(), network,
                                               difficulty, selection_rng())
                         : engine.best_move(difficulty);
                     const auto elapsed = std::chrono::duration<double, std::milli>(

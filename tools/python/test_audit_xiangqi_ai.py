@@ -22,7 +22,7 @@ class XiangqiAiAuditTest(unittest.TestCase):
     def test_saved_baselines_pass(self) -> None:
         for pair in ("easy-medium", "medium-hard", "hard-master",
                      "easy-medium-horizon", "medium-hard-horizon",
-                     "pikafish-easy-medium", "pikafish-medium-hard"):
+                     "pikafish-easy-medium", "pikafish-medium-hard", "pikafish-history-smoke"):
             with self.subTest(pair=pair):
                 audit((RESULTS / f"2026-09-26-ai-{pair}-v1.jsonl").read_text(encoding="utf-8"))
 
@@ -34,6 +34,11 @@ class XiangqiAiAuditTest(unittest.TestCase):
     def test_unknown_backend_is_rejected(self) -> None:
         self.records[0]["backend"] = "unknown"
         with self.assertRaisesRegex(ValueError, "backend"):
+            audit(self.report())
+
+    def test_unknown_history_mode_is_rejected(self) -> None:
+        self.records[0]["history_mode"] = "partial"
+        with self.assertRaisesRegex(ValueError, "history mode"):
             audit(self.report())
 
     def test_pikafish_requires_versioned_profile_and_seed(self) -> None:

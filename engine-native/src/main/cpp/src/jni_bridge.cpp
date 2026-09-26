@@ -247,7 +247,7 @@ Java_com_masterofchessstrategy_engine_internal_NativeBindings_chineseChessBestMo
         const auto difficulty =
             static_cast<mocs::engine::Difficulty>(difficulty_code);
         const auto action = mocs::engine::choose_pikafish_move(
-            engine->fen(),
+            engine->search_position(),
             engine->legal_actions(),
             require_utf8(env, network_path),
             difficulty

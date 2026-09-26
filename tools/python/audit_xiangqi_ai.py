@@ -21,6 +21,8 @@ def audit(text: str) -> dict:
         raise ValueError("unsupported suite or pair")
     if config.get("backend", "legacy") not in ("legacy", "pikafish"):
         raise ValueError("unsupported AI backend")
+    if config.get("history_mode", "fen-only") not in ("fen-only", "full"):
+        raise ValueError("unsupported search history mode")
     if config.get("backend") == "pikafish" and (
         config.get("profile_version") != 1 or config.get("selection_seed") != 20260926
     ):

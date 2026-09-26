@@ -205,6 +205,57 @@ std::vector<std::uint8_t> custom_position(
     return data;
 }
 
+void search_history_survives_capture_undo_restore_and_reset() {
+    ChineseChessEngine engine;
+    const auto initial_fen = engine.fen();
+    assert(engine.apply(make_board_move(0, 6, 0, 5)).accepted);
+    assert(engine.apply(make_board_move(0, 3, 0, 4)).accepted);
+    assert(engine.apply(make_board_move(0, 5, 0, 4)).accepted);
+    const auto snapshot = engine.search_position();
+    assert(snapshot.initial_fen == initial_fen);
+    assert((snapshot.moves == std::vector<std::string>{"a3a4", "a6a5", "a4a5"}));
+    assert(snapshot.current_fen == engine.fen());
+    assert(snapshot.current_fen.substr(snapshot.current_fen.size() - 3) == "0 2");
+    ChineseChessEngine restored;
+    assert(restored.restore(engine.serialize()).restored);
+    assert(restored.search_position().initial_fen == snapshot.initial_fen);
+    assert(restored.search_position().moves == snapshot.moves);
+    assert(restored.search_position().current_fen == snapshot.current_fen);
+    assert(engine.undo());
+    assert(restored.undo());
+    assert(engine.search_position().moves.size() == 2);
+    assert(engine.search_position().moves == restored.search_position().moves);
+    assert(engine.fen() == restored.fen());
+    assert(snapshot.moves.size() == 3); // The snapshot owns its history.
+    engine.reset();
+    assert(engine.search_position().moves.empty());
+    assert(engine.search_position().initial_fen == initial_fen);
+    assert(engine.search_position().current_fen == initial_fen);
+}
+
+void black_first_search_history_preserves_initial_clock_and_fullmove() {
+    ChineseChessEngine engine;
+    assert(engine.restore(custom_position(Side::black, {
+        {4, 9, {PieceType::general, Side::red}},
+        {4, 0, {PieceType::general, Side::black}},
+        {4, 5, {PieceType::soldier, Side::red}},
+        {0, 4, {PieceType::chariot, Side::black}},
+    }, 118)).restored);
+    const auto initial = engine.fen();
+    assert(initial.substr(initial.size() - 5) == "118 1");
+    assert(engine.apply(make_board_move(0, 4, 0, 5)).accepted);
+    const auto snapshot = engine.search_position();
+    assert(snapshot.initial_fen == initial);
+    assert((snapshot.moves == std::vector<std::string>{"a5a4"}));
+    assert(snapshot.current_fen.substr(snapshot.current_fen.size() - 5) == "119 2");
+    ChineseChessEngine restored;
+    assert(restored.restore(engine.serialize()).restored);
+    assert(restored.search_position().initial_fen == initial);
+    assert(restored.fen() == engine.fen());
+    assert(engine.undo());
+    assert(engine.fen() == initial);
+}
+
 void moving_the_only_screen_between_generals_is_illegal() {
     ChineseChessEngine engine;
     const auto restored = engine.restore(
@@ -426,6 +477,11 @@ void repeated_long_check_loses_for_the_checking_side() {
     ChineseChessEngine restored;
     assert(restored.restore(engine.serialize()).restored);
     assert(restored.game_result() == GameResult::second_player_win);
+    const auto snapshot = restored.search_position();
+    assert(snapshot.moves.size() == 8);
+    assert(snapshot.result == GameResult::second_player_win);
+    assert(adjudicate_pikafish_repetition(snapshot.initial_fen, snapshot.moves) ==
+           GameResult::second_player_win);
     assert(restored.undo());
     assert(restored.game_result() == GameResult::ongoing);
 
@@ -977,6 +1033,8 @@ int main() {
     corrupted_positions_are_rejected();
     legacy_seed_endgames_have_a_winning_first_move();
     unique_seed_mates_are_checked_and_unambiguous();
+    search_history_survives_capture_undo_restore_and_reset();
+    black_first_search_history_preserves_initial_clock_and_fullmove();
     pikafish_profiles_bound_search_and_random_deviation();
     hard_ai_recognizes_forced_stalemate_at_search_horizon();
     wrong_game_type_is_rejected_after_checksum_validation();
