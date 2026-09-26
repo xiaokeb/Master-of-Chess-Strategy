@@ -23,7 +23,8 @@ class GameRecordExportCodecTest {
 
         val text = GameRecordExportCodec.encode(record).toString(Charsets.UTF_8)
 
-        assertTrue(text.contains("\"version\": 1"))
+        assertTrue(text.contains("\"version\": 2"))
+        assertTrue(text.contains("\"playerIndex\": 0"))
         assertTrue(text.contains("\"recordId\": \"quoted-\\\"id\""))
         assertTrue(text.contains("\"engineStateHex\": \"010203\""))
         assertTrue(

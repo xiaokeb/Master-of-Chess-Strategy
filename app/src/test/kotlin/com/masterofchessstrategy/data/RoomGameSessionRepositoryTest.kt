@@ -19,6 +19,20 @@ import org.junit.Test
 
 class RoomGameSessionRepositoryTest {
     @Test
+    fun blackIdentityRoundTripsAndInvalidOwnerIsRejected() = runBlocking {
+        val dao = FakeActiveGameDao()
+        val repository = RoomGameSessionRepository(dao)
+        repository.save(GameSessionSnapshot(
+            gameType = GameType.CHINESE_CHESS, mode = StoredGameMode.HUMAN_VS_AI,
+            difficulty = Difficulty.EASY, engineState = byteArrayOf(1),
+            updatedAtEpochMillis = 1L, sessionId = "black", playerIndex = 1,
+        ))
+        assertEquals(1, (repository.load(GameType.CHINESE_CHESS) as LoadGameSessionResult.Loaded).snapshot.playerIndex)
+        dao.entity = requireNotNull(dao.entity).copy(playerIndex = 2)
+        assertSame(LoadGameSessionResult.Incompatible, repository.load(GameType.CHINESE_CHESS))
+    }
+
+    @Test
     fun saveMapsStableCodesAndCopiesEngineBytes() = runBlocking {
         val dao = FakeActiveGameDao()
         val repository = RoomGameSessionRepository(dao)
@@ -51,7 +65,7 @@ class RoomGameSessionRepositoryTest {
         val stored = requireNotNull(dao.entity)
         assertEquals(GameType.CHINESE_CHESS.code, stored.gameTypeCode)
         assertEquals(StoredGameMode.LOCAL_TWO_PLAYER.code, stored.modeCode)
-        assertEquals(4, stored.envelopeVersion)
+        assertEquals(5, stored.envelopeVersion)
         assertEquals(2, stored.engineFormatVersion)
         assertEquals("match-42", stored.sessionId)
         assertEquals(8, stored.acceptedMoveCount)
@@ -76,7 +90,7 @@ class RoomGameSessionRepositoryTest {
                 gameTypeCode = GameType.CHINESE_CHESS.code,
                 modeCode = StoredGameMode.ENDGAME.code,
                 difficultyCode = Difficulty.EASY.code,
-                envelopeVersion = 4,
+                envelopeVersion = 5,
                 engineFormatVersion = 2,
                 engineState = storedBytes,
                 updatedAtEpochMillis = 84L,
@@ -143,7 +157,7 @@ class RoomGameSessionRepositoryTest {
                 gameTypeCode = GameType.CHINESE_CHESS.code,
                 modeCode = StoredGameMode.LOCAL_TWO_PLAYER.code,
                 difficultyCode = null,
-                envelopeVersion = 4,
+                envelopeVersion = 5,
                 engineFormatVersion = 2,
                 engineState = byteArrayOf(1),
                 updatedAtEpochMillis = 1L,
@@ -166,7 +180,7 @@ class RoomGameSessionRepositoryTest {
                 gameTypeCode = GameType.CHINESE_CHESS.code,
                 modeCode = StoredGameMode.CUSTOM_POSITION.code,
                 difficultyCode = Difficulty.EASY.code,
-                envelopeVersion = 4,
+                envelopeVersion = 5,
                 engineFormatVersion = 2,
                 engineState = byteArrayOf(9),
                 updatedAtEpochMillis = 1L,
@@ -196,7 +210,7 @@ class RoomGameSessionRepositoryTest {
                 gameTypeCode = GameType.CHINESE_CHESS.code,
                 modeCode = StoredGameMode.TIMED_CHALLENGE.code,
                 difficultyCode = Difficulty.EASY.code,
-                envelopeVersion = 4,
+                envelopeVersion = 5,
                 engineFormatVersion = 2,
                 engineState = byteArrayOf(9),
                 updatedAtEpochMillis = 1L,
@@ -247,7 +261,7 @@ class RoomGameSessionRepositoryTest {
                 gameTypeCode = GameType.CHINESE_CHESS.code,
                 modeCode = StoredGameMode.STREAK_CHALLENGE.code,
                 difficultyCode = Difficulty.EASY.code,
-                envelopeVersion = 4,
+                envelopeVersion = 5,
                 engineFormatVersion = 2,
                 engineState = byteArrayOf(9),
                 updatedAtEpochMillis = 1L,
@@ -289,7 +303,7 @@ class RoomGameSessionRepositoryTest {
                 gameTypeCode = GameType.CHINESE_CHESS.code,
                 modeCode = StoredGameMode.BLIND_CHALLENGE.code,
                 difficultyCode = Difficulty.MEDIUM.code,
-                envelopeVersion = 4,
+                envelopeVersion = 5,
                 engineFormatVersion = 2,
                 engineState = byteArrayOf(9),
                 updatedAtEpochMillis = 1L,
@@ -326,7 +340,7 @@ class RoomGameSessionRepositoryTest {
                 gameTypeCode = GameType.CHINESE_CHESS.code,
                 modeCode = StoredGameMode.ASSESSMENT_CHALLENGE.code,
                 difficultyCode = Difficulty.HARD.code,
-                envelopeVersion = 4,
+                envelopeVersion = 5,
                 engineFormatVersion = 2,
                 engineState = byteArrayOf(9),
                 updatedAtEpochMillis = 1L,
@@ -364,7 +378,7 @@ class RoomGameSessionRepositoryTest {
                 gameTypeCode = GameType.CHINESE_CHESS.code,
                 modeCode = StoredGameMode.OPENING_AUTO_PLAY.code,
                 difficultyCode = Difficulty.MEDIUM.code,
-                envelopeVersion = 4,
+                envelopeVersion = 5,
                 engineFormatVersion = 2,
                 engineState = byteArrayOf(9),
                 updatedAtEpochMillis = 1L,

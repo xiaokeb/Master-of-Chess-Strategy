@@ -37,6 +37,8 @@ internal data class ActiveGameEntity(
     val completedAutoGames: Int = 0,
     @ColumnInfo(defaultValue = "''")
     val sessionVariantId: String = "",
+    @ColumnInfo(defaultValue = "0")
+    val playerIndex: Int = 0,
 ) {
     override fun equals(other: Any?): Boolean =
         this === other ||
@@ -62,7 +64,8 @@ internal data class ActiveGameEntity(
                     autoPlayPaused == other.autoPlayPaused &&
                     autoPlaySpeedPermille == other.autoPlaySpeedPermille &&
                     completedAutoGames == other.completedAutoGames &&
-                    sessionVariantId == other.sessionVariantId
+                    sessionVariantId == other.sessionVariantId &&
+                    playerIndex == other.playerIndex
                 )
 
     override fun hashCode(): Int {
@@ -87,6 +90,7 @@ internal data class ActiveGameEntity(
         result = 31 * result + autoPlaySpeedPermille
         result = 31 * result + completedAutoGames
         result = 31 * result + sessionVariantId.hashCode()
+        result = 31 * result + playerIndex
         return result
     }
 }

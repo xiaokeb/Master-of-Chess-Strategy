@@ -14,6 +14,24 @@ import org.junit.Test
 
 class ChineseChessBoardViewportTest {
     @Test
+    fun blackPerspectiveRoundTripsEveryVisibleSquareWithZoomAndPan() {
+        for (size in listOf(Size(600f, 600f), Size(1100f, 350f), Size(350f, 700f))) {
+            val geometry = calculateBoardGeometry(size.width, size.height).copy(reversed = true)
+            assertTrue(geometry.center(BoardPosition(0, 0)).y > geometry.center(BoardPosition(0, 9)).y)
+            for (scale in listOf(1f, 1.5f, 2.5f)) {
+                val view = ChineseChessBoardViewport().transform(size, Offset(100f, 200f), Offset(80f, -130f), scale)
+                for (y in 0..9) for (x in 0..8) {
+                    val position = BoardPosition(x, y)
+                    val screen = view.screenPoint(geometry.center(position), size)
+                    if (screen.x in 0f..size.width && screen.y in 0f..size.height) {
+                        assertEquals(position, view.positionAt(screen, size)?.fromPlayerView(true))
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
     fun visibleIntersectionsRoundTripAcrossZoomPanAndAspectRatios() {
         for (size in listOf(Size(600f, 600f), Size(1100f, 350f), Size(350f, 700f))) {
             val geometry = calculateBoardGeometry(size.width, size.height)

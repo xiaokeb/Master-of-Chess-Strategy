@@ -59,8 +59,9 @@ class LocalDataBackupRepositoryInstrumentedTest {
         sessionRepository.save(
             GameSessionSnapshot(
                 gameType = GameType.CHINESE_CHESS,
-                mode = StoredGameMode.LOCAL_TWO_PLAYER,
-                difficulty = null,
+                mode = StoredGameMode.HUMAN_VS_AI,
+                difficulty = Difficulty.EASY,
+                playerIndex = 1,
                 engineState = VALID_ENGINE_STATE,
                 updatedAtEpochMillis = 10L,
                 sessionId = "session-1",
@@ -80,6 +81,7 @@ class LocalDataBackupRepositoryInstrumentedTest {
             soundEnabled = false,
             gameDurationMinutes = 30,
             updatedAtEpochMillis = 12L,
+            aiFirstEnabled = true,
         )
         settingsRepository.save(expectedSettings)
         tutorialRepository.save(
@@ -106,8 +108,9 @@ class LocalDataBackupRepositoryInstrumentedTest {
             GameRecord(
                 recordId = "record-1",
                 gameType = GameType.CHINESE_CHESS,
-                mode = StoredGameMode.LOCAL_TWO_PLAYER,
-                difficulty = null,
+                mode = StoredGameMode.HUMAN_VS_AI,
+                difficulty = Difficulty.EASY,
+                playerIndex = 1,
                 result = GameResult.DRAW,
                 engineState = VALID_ENGINE_STATE,
                 moveCount = 4,
@@ -135,6 +138,8 @@ class LocalDataBackupRepositoryInstrumentedTest {
         val restoredSession =
             sessionRepository.load(GameType.CHINESE_CHESS) as LoadGameSessionResult.Loaded
         assertArrayEquals(VALID_ENGINE_STATE, restoredSession.snapshot.engineState)
+        assertEquals(1, restoredSession.snapshot.playerIndex)
+        assertEquals(1, recordRepository.load("record-1")?.playerIndex)
         assertEquals(
             expectedSettings,
             (settingsRepository.load() as LoadAppSettingsResult.Loaded).settings,

@@ -15,6 +15,8 @@ import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.LoadGameSessionResult
 import com.masterofchessstrategy.data.MatchOutcome
 import com.masterofchessstrategy.data.StoredGameMode
+import com.masterofchessstrategy.data.acceptsPlayerIndex
+import com.masterofchessstrategy.data.supportsAiFirst
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.challenge.StreakChallengeState
 import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
@@ -74,11 +76,18 @@ class ChineseChessGameViewModel internal constructor(
     initialAssessmentState: AssessmentChallengeState? = null,
     private val endgameTitle: String? = null,
     private val endgameMaxPlayerMoves: Int? = null,
+    aiFirstEnabled: Boolean = false,
     private val engineFactory: () -> ChineseChessRuleEngine,
 ) : ViewModel() {
     private val initialPositionState = initialPositionState?.copyOf()
     private var streakState = initialStreakState
     private var assessmentState = initialAssessmentState
+    // Red still moves first. This preference changes ownership, not chess rules.
+    private var playerSide = if (aiFirstEnabled && mode.supportsAiFirst) {
+        ChineseChessSide.BLACK
+    } else {
+        ChineseChessSide.RED
+    }
     private var engine: ChineseChessRuleEngine? = null
     private var acceptedMoveCount = 0
     private var undoUseCount = 0
@@ -134,6 +143,7 @@ class ChineseChessGameViewModel internal constructor(
     var uiState by mutableStateOf(
         ChineseChessGameUiState(
             isAiGame = isAiGame,
+            playerSide = playerSide,
             isAutoPlay = isAutoPlay,
             difficulty = difficulty,
             isEndgame = mode == StoredGameMode.ENDGAME,
@@ -341,6 +351,10 @@ class ChineseChessGameViewModel internal constructor(
     }
 
     fun restart() {
+        restartWithAiFirst(playerSide == ChineseChessSide.BLACK)
+    }
+
+    fun restartWithAiFirst(aiFirstEnabled: Boolean) {
         if (
             mode == StoredGameMode.STREAK_CHALLENGE ||
             mode == StoredGameMode.ASSESSMENT_CHALLENGE
@@ -348,6 +362,11 @@ class ChineseChessGameViewModel internal constructor(
         val activeEngine = engine ?: return
         if (!canRunControl()) return
         runEngineOperation {
+            playerSide = if (aiFirstEnabled && mode.supportsAiFirst) {
+                ChineseChessSide.BLACK
+            } else {
+                ChineseChessSide.RED
+            }
             resetPosition(activeEngine)
             resetSessionState(resetAutoGameCount = true)
             refresh(ChineseChessFeedback.GAME_RESTARTED)
@@ -612,6 +631,10 @@ class ChineseChessGameViewModel internal constructor(
         snapshot: GameSessionSnapshot,
     ) {
         val activeEngine = engine ?: return
+        if (!mode.acceptsPlayerIndex(snapshot.playerIndex)) {
+            rejectStoredSession(repository)
+            return
+        }
         val restoredStreakState = if (mode == StoredGameMode.STREAK_CHALLENGE) {
             try {
                 StreakChallengeStateCodec.decode(snapshot.sessionVariantId)
@@ -683,6 +706,7 @@ class ChineseChessGameViewModel internal constructor(
                                     activeEngine.gameResult() != GameResult.ONGOING
                                 )
                     acceptedMoveCount = snapshot.acceptedMoveCount
+                    playerSide = ChineseChessSide.entries.first { it.code == snapshot.playerIndex }
                     undoUseCount = snapshot.undoUseCount
                     hintUseCount = snapshot.hintUseCount
                     resultOverride = snapshot.resultOverride
@@ -821,7 +845,7 @@ class ChineseChessGameViewModel internal constructor(
                     emitMoveSound(resolvedResult, isCapture)
                     if (
                         isHumanControlledAiGame &&
-                        activeEngine.currentPlayer.value == ChineseChessSide.BLACK.code &&
+                        activeEngine.currentPlayer.value != playerSide.code &&
                         resolvedResult == GameResult.ONGOING
                     ) {
                         startAiTurn(activeEngine)
@@ -868,11 +892,12 @@ class ChineseChessGameViewModel internal constructor(
             uiState = ChineseChessGameUiState(
                 board = board,
                 currentSide = currentSide,
+                playerSide = playerSide,
                 checkedSide = currentSide.takeIf { activeEngine.isInCheck(it) },
                 result = result,
                 canUndo =
                     !isAutoPlay &&
-                    acceptedMoveCount > 0 &&
+                    acceptedMoveCount >= (if (isHumanControlledAiGame) 2 else 1) &&
                         result == GameResult.ONGOING &&
                         (undoRemaining == null || undoRemaining > 0),
                 undoRemaining = undoRemaining,
@@ -1026,7 +1051,7 @@ class ChineseChessGameViewModel internal constructor(
         acceptedMoveCount = (acceptedMoveCount - 1).coerceAtLeast(0)
         if (
             isAiGame &&
-            activeEngine.currentPlayer.value == ChineseChessSide.BLACK.code &&
+            activeEngine.currentPlayer.value != playerSide.code &&
             acceptedMoveCount > 0
         ) {
             if (!activeEngine.undo()) return false
@@ -1088,8 +1113,8 @@ class ChineseChessGameViewModel internal constructor(
             val aiDeclinedDraw =
                 isHumanControlledAiGame &&
                     mode != StoredGameMode.ENDGAME &&
-                    pendingDrawOfferSide == ChineseChessSide.RED &&
-                    activeEngine.currentPlayer.value == ChineseChessSide.BLACK.code
+                    pendingDrawOfferSide == playerSide &&
+                    activeEngine.currentPlayer.value != playerSide.code
             if (aiDeclinedDraw) {
                 pendingDrawOfferSide = null
             }
@@ -1183,7 +1208,7 @@ class ChineseChessGameViewModel internal constructor(
             }
 
             isHumanControlledAiGame &&
-                activeEngine.currentPlayer.value == ChineseChessSide.BLACK.code -> {
+                activeEngine.currentPlayer.value != playerSide.code -> {
                 startAiTurn(activeEngine, saveHumanPosition = false)
             }
         }
@@ -1306,9 +1331,9 @@ class ChineseChessGameViewModel internal constructor(
         val cue = when (result) {
             GameResult.ONGOING -> return
             GameResult.DRAW -> ChineseChessSoundCue.DRAW
-            GameResult.FIRST_PLAYER_WIN -> ChineseChessSoundCue.VICTORY
+            GameResult.FIRST_PLAYER_WIN,
             GameResult.SECOND_PLAYER_WIN -> {
-                if (isHumanControlledAiGame) {
+                if (isHumanControlledAiGame && playerRelativeResult(result) == GameResult.SECOND_PLAYER_WIN) {
                     ChineseChessSoundCue.DEFEAT
                 } else {
                     ChineseChessSoundCue.VICTORY
@@ -1321,6 +1346,14 @@ class ChineseChessGameViewModel internal constructor(
     private fun emitSound(cue: ChineseChessSoundCue) {
         mutableSoundEvents.tryEmit(cue)
     }
+
+    /** Progression/audio use human-relative wins; native results and records remain absolute. */
+    private fun playerRelativeResult(result: GameResult): GameResult =
+        if (playerSide == ChineseChessSide.RED) result else when (result) {
+            GameResult.FIRST_PLAYER_WIN -> GameResult.SECOND_PLAYER_WIN
+            GameResult.SECOND_PLAYER_WIN -> GameResult.FIRST_PLAYER_WIN
+            else -> result
+        }
 
     private fun handleAutoPlayTerminal(result: GameResult) {
         if (!isAutoPlay || result == GameResult.ONGOING || terminalHandled) return
@@ -1343,7 +1376,7 @@ class ChineseChessGameViewModel internal constructor(
         }
         val active = streakState ?: return
         if (active.nextDifficulty != null) return
-        val completed = active.complete(result, requireNotNull(difficulty))
+        val completed = active.complete(playerRelativeResult(result), requireNotNull(difficulty))
         streakState = completed
         sessionVariantId = StreakChallengeStateCodec.encode(completed)
     }
@@ -1364,7 +1397,7 @@ class ChineseChessGameViewModel internal constructor(
         ) return
         val active = assessmentState ?: return
         if (active.nextDifficulty != null || active.isFinished) return
-        val completed = active.complete(result, requireNotNull(difficulty))
+        val completed = active.complete(playerRelativeResult(result), requireNotNull(difficulty))
         assessmentState = completed
         sessionVariantId = AssessmentChallengeStateCodec.encode(completed)
     }
@@ -1469,6 +1502,7 @@ class ChineseChessGameViewModel internal constructor(
             autoPlaySpeedPermille = autoPlaySpeedPermille,
             completedAutoGames = completedAutoGames,
             sessionVariantId = sessionVariantId,
+            playerIndex = playerSide.code,
         )
 
     private fun requestSettlement(result: GameResult) {
@@ -1487,7 +1521,7 @@ class ChineseChessGameViewModel internal constructor(
                 gameType = GameType.CHINESE_CHESS,
                 mode = StoredGameMode.HUMAN_VS_AI,
                 difficulty = selectedDifficulty,
-                playerIndex = ChineseChessSide.RED.code,
+                playerIndex = playerSide.code,
                 result = result,
                 settledAtEpochMillis = nowEpochMillis(),
             ),
@@ -1530,6 +1564,7 @@ class ChineseChessGameViewModel internal constructor(
                 moveCount = acceptedMoveCount,
                 isEndgame = mode == StoredGameMode.ENDGAME,
                 completedAtEpochMillis = nowEpochMillis(),
+                playerIndex = playerSide.code,
             )
         } catch (_: IllegalArgumentException) {
             return
@@ -1628,6 +1663,7 @@ class ChineseChessGameViewModel internal constructor(
             assessmentState: AssessmentChallengeState? = null,
             endgameTitle: String? = null,
             endgameMaxPlayerMoves: Int? = null,
+            aiFirstEnabled: Boolean = false,
             engineFactory: () -> ChineseChessRuleEngine = {
                 NativeChineseChessEngine()
             },
@@ -1650,6 +1686,7 @@ class ChineseChessGameViewModel internal constructor(
                         initialAssessmentState = assessmentState,
                         endgameTitle = endgameTitle,
                         endgameMaxPlayerMoves = endgameMaxPlayerMoves,
+                        aiFirstEnabled = aiFirstEnabled,
                         engineFactory = engineFactory,
                     )
                 }

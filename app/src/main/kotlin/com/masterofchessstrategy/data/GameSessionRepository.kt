@@ -23,6 +23,19 @@ internal enum class StoredGameMode(val code: Int) {
     OPENING_AUTO_PLAY(10),
 }
 
+/** Only standard-start human games use the global first-move preference. */
+internal val StoredGameMode.supportsAiFirst: Boolean
+    get() = this in setOf(
+        StoredGameMode.HUMAN_VS_AI,
+        StoredGameMode.TIMED_CHALLENGE,
+        StoredGameMode.STREAK_CHALLENGE,
+        StoredGameMode.BLIND_CHALLENGE,
+        StoredGameMode.ASSESSMENT_CHALLENGE,
+    )
+
+internal fun StoredGameMode.acceptsPlayerIndex(index: Int): Boolean =
+    index == 0 || (index == 1 && supportsAiFirst)
+
 internal data class GameSessionSnapshot(
     val gameType: GameType,
     val mode: StoredGameMode,
@@ -43,6 +56,7 @@ internal data class GameSessionSnapshot(
     val autoPlaySpeedPermille: Int = 1_000,
     val completedAutoGames: Int = 0,
     val sessionVariantId: String = "",
+    val playerIndex: Int = 0,
 ) {
     fun defensiveCopy(): GameSessionSnapshot = copy(engineState = engineState.copyOf())
 }
@@ -84,7 +98,9 @@ internal class RoomGameSessionRepository(
         }
         val mode = StoredGameMode.entries.firstOrNull { it.code == entity.modeCode }
             ?: return LoadGameSessionResult.Incompatible
-        if (!mode.acceptsSessionVariant(entity.sessionVariantId)) {
+        if (!mode.acceptsSessionVariant(entity.sessionVariantId) ||
+            !mode.acceptsPlayerIndex(entity.playerIndex)
+        ) {
             return LoadGameSessionResult.Incompatible
         }
         if (
@@ -134,11 +150,13 @@ internal class RoomGameSessionRepository(
                 autoPlaySpeedPermille = entity.autoPlaySpeedPermille,
                 completedAutoGames = entity.completedAutoGames,
                 sessionVariantId = entity.sessionVariantId,
+                playerIndex = entity.playerIndex,
             ),
         )
     }
 
     override suspend fun save(snapshot: GameSessionSnapshot) {
+        require(snapshot.mode.acceptsPlayerIndex(snapshot.playerIndex))
         require(
             snapshot.sessionId.isNotBlank() &&
                 snapshot.sessionId.length <= MatchOutcome.MAX_MATCH_ID_LENGTH
@@ -199,6 +217,7 @@ internal class RoomGameSessionRepository(
                 autoPlaySpeedPermille = snapshot.autoPlaySpeedPermille,
                 completedAutoGames = snapshot.completedAutoGames,
                 sessionVariantId = snapshot.sessionVariantId,
+                playerIndex = snapshot.playerIndex,
             ),
         )
     }
@@ -208,7 +227,7 @@ internal class RoomGameSessionRepository(
     }
 
     private companion object {
-        const val CURRENT_ENVELOPE_VERSION = 4
+        const val CURRENT_ENVELOPE_VERSION = 5
         const val CHINESE_CHESS_ENGINE_FORMAT_VERSION = 2
         const val MAX_ENGINE_STATE_BYTES = 64 * 1024
         const val MAX_TRACKED_ACTIONS = 10_000

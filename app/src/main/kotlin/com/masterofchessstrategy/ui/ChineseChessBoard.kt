@@ -52,15 +52,21 @@ internal const val BOARD_RESET_VIEW_TAG = "board_reset_view"
 internal val BoardViewportKey = SemanticsPropertyKey<ChineseChessBoardViewport>("BoardViewport")
 internal val BoardMovePulseKey = SemanticsPropertyKey<Boolean>("BoardMovePulse")
 internal val BoardMovePulseProgressKey = SemanticsPropertyKey<Float>("BoardMovePulseProgress")
+internal val BoardReversedKey = SemanticsPropertyKey<Boolean>("BoardReversed")
+
+/** The same involution maps native squares to the player's view and back. */
+internal fun BoardPosition.fromPlayerView(reversed: Boolean): BoardPosition =
+    if (reversed) BoardPosition(8 - x, 9 - y) else this
 
 internal data class ChineseChessBoardGeometry(
     val origin: Offset,
     val cellSize: Float,
+    val reversed: Boolean = false,
 ) {
     fun center(position: BoardPosition): Offset =
         Offset(
-            x = origin.x + position.x * cellSize,
-            y = origin.y + position.y * cellSize,
+            x = origin.x + position.fromPlayerView(reversed).x * cellSize,
+            y = origin.y + position.fromPlayerView(reversed).y * cellSize,
         )
 }
 
@@ -138,6 +144,7 @@ internal fun ChineseChessBoard(
                     "方行棋" + (state.checkedSide?.let { "，${it.displayName()}方被将军" } ?: "")
                 stateDescription = description
                 this[BoardViewportKey] = viewport
+                this[BoardReversedKey] = state.playerSide == ChineseChessSide.BLACK
                 customActions = listOf(
                     CustomAccessibilityAction(zoomIn) { accessibleZoom(1.25f) },
                     CustomAccessibilityAction(zoomOut) { accessibleZoom(0.8f) },
@@ -155,7 +162,9 @@ internal fun ChineseChessBoard(
                     },
                     onTap = { tap ->
                         if (currentState.isInteractionEnabled) {
-                            viewport.positionAt(tap, boardSize)?.let(currentTap)
+                            viewport.positionAt(tap, boardSize)
+                                ?.fromPlayerView(currentState.playerSide == ChineseChessSide.BLACK)
+                                ?.let(currentTap)
                         }
                     },
                 )
@@ -213,7 +222,9 @@ private fun ChineseChessBoardCanvas(state: ChineseChessGameUiState, modifier: Mo
     ) {
         // During navigation Compose can draw a zero-sized transitional canvas.
         if (size.width <= 0f || size.height <= 0f) return@Canvas
-        val geometry = calculateBoardGeometry(size.width, size.height)
+        val geometry = calculateBoardGeometry(size.width, size.height).copy(
+            reversed = state.playerSide == ChineseChessSide.BLACK,
+        )
         val cell = geometry.cellSize
         val origin = geometry.origin
         val boardRight = origin.x + 8 * cell

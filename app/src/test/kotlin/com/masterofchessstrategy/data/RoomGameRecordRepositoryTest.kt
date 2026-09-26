@@ -12,6 +12,16 @@ import org.junit.Test
 
 class RoomGameRecordRepositoryTest {
     @Test
+    fun blackIdentityRoundTripsAndInvalidOwnerIsRejected() = runBlocking {
+        val dao = FakeGameRecordDao()
+        val repository = RoomGameRecordRepository(dao)
+        repository.saveCompleted(record("black").copy(playerIndex = 1))
+        assertEquals(1, repository.load("black")?.playerIndex)
+        dao.entities["black"] = dao.entities.getValue("black").copy(playerIndex = 2)
+        assertSame(LoadGameRecordsResult.Incompatible, repository.list(GameRecordCategory.ALL))
+    }
+
+    @Test
     fun completedGameIsIdempotentAndFavoriteFilterUsesStoredFlag() = runBlocking {
         val dao = FakeGameRecordDao()
         val repository = RoomGameRecordRepository(dao)

@@ -67,6 +67,10 @@ internal class AppSettingsViewModel(
         update { copy(soundEnabled = enabled) }
     }
 
+    fun setAiFirstEnabled(enabled: Boolean) {
+        update { copy(aiFirstEnabled = enabled) }
+    }
+
     fun setHighlightCondition(condition: HighlightCondition, enabled: Boolean) {
         update {
             copy(

@@ -344,6 +344,41 @@ class MocsDatabaseMigrationTest {
         migrated.close()
     }
 
+    @Test
+    fun migrateElevenToTwelvePreservesGamesAsRedAndDefaultsAiFirstOff() {
+        val name = "migration-11-12-test"
+        helper.createDatabase(name, 11).apply {
+            execSQL("INSERT INTO app_settings (id, defaultDifficultyCode, autoContinueEnabled, soundEnabled, gameDurationMinutes, updatedAtEpochMillis, highlightConditionsMask) VALUES (0, 2, 1, 1, 30, 123, 7)")
+            execSQL("INSERT INTO active_games (gameTypeCode, modeCode, difficultyCode, envelopeVersion, engineFormatVersion, engineState, updatedAtEpochMillis, sessionId, acceptedMoveCount) VALUES (0, 1, 0, 4, 2, X'010203', 99, 'old-red', 8)")
+            execSQL("INSERT INTO game_records (recordId, gameTypeCode, modeCode, difficultyCode, resultCode, engineFormatVersion, engineState, moveCount, isFavorite, completedAtEpochMillis) VALUES ('old-record', 0, 1, 0, 2, 2, X'040506', 18, 1, 100)")
+            close()
+        }
+        val migrated = helper.runMigrationsAndValidate(name, 12, true, MocsDatabase.MIGRATION_11_12)
+        assertEquals(0, migrated.singleInt("SELECT aiFirstEnabled FROM app_settings"))
+        assertEquals(7, migrated.singleInt("SELECT highlightConditionsMask FROM app_settings"))
+        assertEquals(0, migrated.singleInt("SELECT playerIndex FROM active_games"))
+        assertEquals(5, migrated.singleInt("SELECT envelopeVersion FROM active_games"))
+        assertEquals(8, migrated.singleInt("SELECT acceptedMoveCount FROM active_games"))
+        assertEquals("010203", migrated.singleString("SELECT hex(engineState) FROM active_games"))
+        assertEquals(0, migrated.singleInt("SELECT playerIndex FROM game_records"))
+        assertEquals(2, migrated.singleInt("SELECT resultCode FROM game_records"))
+        assertEquals(1, migrated.singleInt("SELECT isFavorite FROM game_records"))
+        assertEquals("040506", migrated.singleString("SELECT hex(engineState) FROM game_records"))
+        migrated.close()
+    }
+
+    @Test
+    fun migrationChainOneToTwelveIsComplete() {
+        val name = "migration-1-12-test"
+        helper.createDatabase(name, 1).close()
+        helper.runMigrationsAndValidate(
+            name, 12, true, MocsDatabase.MIGRATION_1_2, MocsDatabase.MIGRATION_2_3,
+            MocsDatabase.MIGRATION_3_4, MocsDatabase.MIGRATION_4_5, MocsDatabase.MIGRATION_5_6,
+            MocsDatabase.MIGRATION_6_7, MocsDatabase.MIGRATION_7_8, MocsDatabase.MIGRATION_8_9,
+            MocsDatabase.MIGRATION_9_10, MocsDatabase.MIGRATION_10_11, MocsDatabase.MIGRATION_11_12,
+        ).close()
+    }
+
     private fun SupportSQLiteDatabase.singleInt(query: String): Int =
         this.query(query).use { cursor ->
             check(cursor.moveToFirst())

@@ -33,6 +33,7 @@ import com.masterofchessstrategy.settings.SettingsFeedback
 
 internal const val SETTINGS_SCREEN_TAG = "settings_screen"
 internal const val SETTINGS_SOUND_TAG = "settings_sound"
+internal const val SETTINGS_AI_FIRST_TAG = "settings_ai_first"
 internal const val SETTINGS_HIGHLIGHT_MASTER_TAG = "settings_highlight_master"
 internal const val SETTINGS_LICENSES_TAG = "settings_licenses"
 internal const val SETTINGS_EXPORT_DATA_TAG = "settings_export_data"
@@ -54,6 +55,7 @@ internal fun SettingsScreen(
     onRestoreData: () -> Unit,
     onOpenSourceLicenses: () -> Unit,
     modifier: Modifier = Modifier,
+    onAiFirstEnabled: (Boolean) -> Unit = {},
 ) {
     Surface(
         modifier = modifier
@@ -73,6 +75,14 @@ internal fun SettingsScreen(
                 onBack = onBack,
             )
             DifficultySetting(state, onDefaultDifficulty)
+            BooleanSettingCard(
+                title = stringResource(R.string.ai_first_title),
+                summary = stringResource(R.string.ai_first_summary),
+                checked = state.settings.aiFirstEnabled,
+                enabled = state.isInteractionEnabled,
+                onCheckedChange = onAiFirstEnabled,
+                switchTag = SETTINGS_AI_FIRST_TAG,
+            )
             BooleanSettingCard(
                 title = stringResource(R.string.auto_continue_title),
                 summary = stringResource(R.string.auto_continue_summary),

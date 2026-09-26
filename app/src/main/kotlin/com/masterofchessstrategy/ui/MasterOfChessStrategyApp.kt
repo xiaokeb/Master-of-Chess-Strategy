@@ -239,6 +239,13 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
             statistics = statisticsViewModel.uiState.statistics,
             endgameProgress = endgameViewModel.uiState.progress,
         )
+        // A restored navigation stack must not create a new game using unloaded defaults.
+        if (settingsViewModel.uiState.isLoading) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(stringResource(R.string.settings_loading))
+            }
+            return@MocsTheme
+        }
         NavHost(
             navController = navController,
             startDestination = AppDestination.HOME,
@@ -528,7 +535,9 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onToggleAutoPlay = gameViewModel::toggleAutoPlayPaused,
                     onAutoPlaySpeedChange = gameViewModel::setAutoPlaySpeed,
                     onAutoPlaySpeedChangeFinished = gameViewModel::persistAutoPlaySpeed,
-                    onRestart = gameViewModel::restart,
+                    onRestart = {
+                        gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
+                    },
                     onBack = navController::popBackStack,
                     onSettings = {
                         navController.navigate(AppDestination.SETTINGS) {
@@ -597,6 +606,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     ChineseChessGameViewModel.factory(
                         repository = gameSessionRepository,
                         mode = StoredGameMode.ASSESSMENT_CHALLENGE,
+                        aiFirstEnabled = settingsViewModel.uiState.settings.aiFirstEnabled,
                         difficulty = difficulty,
                         onGameRecorded = gameRecordsViewModel::record,
                         timeControlMinutes =
@@ -622,7 +632,9 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
-                    onRestart = gameViewModel::restart,
+                    onRestart = {
+                        gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
+                    },
                     onContinueAssessment = gameViewModel::continueAssessmentChallenge,
                     onBack = navController::popBackStack,
                     onSettings = {
@@ -689,6 +701,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     ChineseChessGameViewModel.factory(
                         repository = gameSessionRepository,
                         mode = StoredGameMode.BLIND_CHALLENGE,
+                        aiFirstEnabled = settingsViewModel.uiState.settings.aiFirstEnabled,
                         difficulty = difficulty,
                         onGameRecorded = gameRecordsViewModel::record,
                         timeControlMinutes =
@@ -712,7 +725,9 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
-                    onRestart = gameViewModel::restart,
+                    onRestart = {
+                        gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
+                    },
                     onBack = navController::popBackStack,
                     onSettings = {
                         navController.navigate(AppDestination.SETTINGS) {
@@ -790,6 +805,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     ChineseChessGameViewModel.factory(
                         repository = gameSessionRepository,
                         mode = StoredGameMode.STREAK_CHALLENGE,
+                        aiFirstEnabled = settingsViewModel.uiState.settings.aiFirstEnabled,
                         difficulty = difficulty,
                         onGameRecorded = gameRecordsViewModel::record,
                         timeControlMinutes =
@@ -815,7 +831,9 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
-                    onRestart = gameViewModel::restart,
+                    onRestart = {
+                        gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
+                    },
                     onContinueStreak = gameViewModel::continueStreakChallenge,
                     onBack = navController::popBackStack,
                     onSettings = {
@@ -898,6 +916,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     ChineseChessGameViewModel.factory(
                         repository = gameSessionRepository,
                         mode = StoredGameMode.TIMED_CHALLENGE,
+                        aiFirstEnabled = settingsViewModel.uiState.settings.aiFirstEnabled,
                         difficulty = difficulty,
                         onGameRecorded = gameRecordsViewModel::record,
                         perMoveTimeLimitSeconds = secondsPerMove,
@@ -921,7 +940,9 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
-                    onRestart = gameViewModel::restart,
+                    onRestart = {
+                        gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
+                    },
                     onBack = navController::popBackStack,
                     onSettings = {
                         navController.navigate(AppDestination.SETTINGS) {
@@ -1039,7 +1060,9 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
-                    onRestart = gameViewModel::restart,
+                    onRestart = {
+                        gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
+                    },
                     onBack = navController::popBackStack,
                     onSettings = {
                         navController.navigate(AppDestination.SETTINGS) {
@@ -1195,7 +1218,9 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onUndo = gameViewModel::undo,
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
-                    onRestart = gameViewModel::restart,
+                    onRestart = {
+                        gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
+                    },
                     onBack = navController::popBackStack,
                     onSettings = {
                         navController.navigate(AppDestination.SETTINGS) {
@@ -1230,7 +1255,9 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
-                    onRestart = gameViewModel::restart,
+                    onRestart = {
+                        gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
+                    },
                     onBack = navController::popBackStack,
                     onSettings = {
                         navController.navigate(AppDestination.SETTINGS) {
@@ -1267,6 +1294,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     ChineseChessGameViewModel.factory(
                         repository = gameSessionRepository,
                         mode = StoredGameMode.HUMAN_VS_AI,
+                        aiFirstEnabled = settingsViewModel.uiState.settings.aiFirstEnabled,
                         difficulty = difficulty,
                         onMatchFinished = statisticsViewModel::record,
                         onGameRecorded = gameRecordsViewModel::record,
@@ -1291,7 +1319,9 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
-                    onRestart = gameViewModel::restart,
+                    onRestart = {
+                        gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
+                    },
                     onBack = navController::popBackStack,
                     onSettings = {
                         navController.navigate(AppDestination.SETTINGS) {
@@ -1356,7 +1386,9 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onAutoPlaySpeedChange = gameViewModel::setAutoPlaySpeed,
                     onAutoPlaySpeedChangeFinished =
                         gameViewModel::persistAutoPlaySpeed,
-                    onRestart = gameViewModel::restart,
+                    onRestart = {
+                        gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
+                    },
                     onBack = navController::popBackStack,
                     onSettings = {
                         navController.navigate(AppDestination.SETTINGS) {
@@ -1428,6 +1460,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onAdjustAutoContinueLimit =
                         settingsViewModel::adjustAutoContinueLimit,
                     onSoundEnabled = settingsViewModel::setSoundEnabled,
+                    onAiFirstEnabled = settingsViewModel::setAiFirstEnabled,
                     onHighlightCondition = settingsViewModel::setHighlightCondition,
                     onTimeLimitEnabled = settingsViewModel::setTimeLimitEnabled,
                     onAdjustDuration = settingsViewModel::adjustDuration,
@@ -1672,6 +1705,15 @@ private fun GameHeader(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
+                if (state.isAiGame && !state.isAutoPlay) {
+                    Text(
+                        text = stringResource(
+                            if (state.playerSide == ChineseChessSide.RED) R.string.player_red_side
+                            else R.string.player_black_side,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {

@@ -21,6 +21,7 @@ internal data class GameRecord(
     val isFavorite: Boolean = false,
     val isEndgame: Boolean = false,
     val completedAtEpochMillis: Long,
+    val playerIndex: Int = 0,
 ) {
     init {
         require(recordId.isNotBlank() && recordId.length <= MAX_RECORD_ID_LENGTH)
@@ -29,6 +30,7 @@ internal data class GameRecord(
         require(moveCount in 0..MAX_MOVE_COUNT)
         require(completedAtEpochMillis >= 0L)
         require(isEndgame == (mode == StoredGameMode.ENDGAME))
+        require(mode.acceptsPlayerIndex(playerIndex))
     }
 
     fun defensiveCopy(): GameRecord = copy(engineState = engineState.copyOf())
@@ -104,6 +106,7 @@ internal fun GameRecord.toGameRecordEntity() = GameRecordEntity(
     isFavorite = isFavorite,
     isEndgame = isEndgame,
     completedAtEpochMillis = completedAtEpochMillis,
+    playerIndex = playerIndex,
 )
 
 internal fun GameRecordEntity.toGameRecord(): GameRecord? {
@@ -138,6 +141,7 @@ internal fun GameRecordEntity.toGameRecord(): GameRecord? {
             isFavorite = isFavorite,
             isEndgame = isEndgame,
             completedAtEpochMillis = completedAtEpochMillis,
+            playerIndex = playerIndex,
         )
     } catch (_: IllegalArgumentException) {
         null

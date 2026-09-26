@@ -19,6 +19,46 @@ import org.junit.Test
 
 class LocalDataBackupCodecTest {
     @Test
+    fun blackPlayerAndAiFirstSettingsRoundTripInVersionThree() {
+        val old = completeSnapshot()
+        val session = old.activeSessions.single().copy(
+            mode = StoredGameMode.HUMAN_VS_AI, sessionVariantId = "", playerIndex = 1,
+        )
+        val record = old.gameRecords.single().copy(
+            mode = StoredGameMode.HUMAN_VS_AI, isEndgame = false, playerIndex = 1,
+        )
+        val source = old.copy(
+            settings = AppSettings.DEFAULT.copy(aiFirstEnabled = true),
+            activeSessions = listOf(session), gameRecords = listOf(record),
+        )
+        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+        assertEquals(true, restored.settings?.aiFirstEnabled)
+        assertEquals(1, restored.activeSessions.single().playerIndex)
+        assertEquals(1, restored.gameRecords.single().playerIndex)
+        assertThrows(IllegalArgumentException::class.java) {
+            LocalDataBackupCodec.encode(source.copy(activeSessions = listOf(session.copy(playerIndex = 2))))
+        }
+    }
+
+    @Test
+    fun versionOneAndTwoKeepOriginalRedIdentityAndSettings() {
+        for (version in 1..2) {
+            val body = "MOCS-BACKUP|$version\nCREATED|1\n" +
+                "ACTIVE|0|1|0|07|2|6d|0|0|0|-|-|-|-|-|-|0|1000|0|-\n" +
+                (if (version == 1) "SETTINGS|0|0|10|1|-|0|2\n" else "SETTINGS|0|0|10|1|-|0|7|2\n") +
+                "RECORD|72|0|1|0|2|07|2|0|0|3\n"
+            val hash = java.security.MessageDigest.getInstance("SHA-256").digest(body.toByteArray())
+                .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+            val restored = LocalDataBackupCodec.decode((body + "SHA256|$hash\n").toByteArray())
+            assertEquals(false, restored.settings?.aiFirstEnabled)
+            assertEquals(if (version == 1) 0 else 7, restored.settings?.highlightConditionsMask)
+            assertEquals(0, restored.activeSessions.single().playerIndex)
+            assertEquals(0, restored.gameRecords.single().playerIndex)
+            assertEquals(GameResult.SECOND_PLAYER_WIN, restored.gameRecords.single().result)
+        }
+    }
+
+    @Test
     fun fullSnapshotRoundTripsWithCanonicalChecksum() {
         val source = completeSnapshot()
 
@@ -42,7 +82,7 @@ class LocalDataBackupCodecTest {
             restored.gameRecords.single().engineState,
         )
         val text = encoded.toString(Charsets.UTF_8)
-        assertTrue(text.startsWith("MOCS-BACKUP|2\nCREATED|900\n"))
+        assertTrue(text.startsWith("MOCS-BACKUP|3\nCREATED|900\n"))
         assertTrue(text.substringAfterLast("SHA256|").trim().matches(Regex("[0-9a-f]{64}")))
         assertFalse('\r' in text)
     }

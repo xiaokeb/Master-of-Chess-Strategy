@@ -158,6 +158,22 @@ class AppSettingsViewModelTest {
         assertEquals(SettingsFeedback.LOAD_RECOVERED, viewModel.uiState.feedback)
     }
 
+    @Test
+    fun aiFirstSettingSavesAndRollsBackOnFailure() = runTest(dispatcher) {
+        for (fail in listOf(false, true)) {
+            val repository = FakeSettingsRepository(LoadAppSettingsResult.NotFound, failSave = fail)
+            val viewModel = AppSettingsViewModel(repository)
+            advanceUntilIdle()
+            assertFalse(viewModel.uiState.settings.aiFirstEnabled)
+            viewModel.setAiFirstEnabled(true)
+            assertTrue(viewModel.uiState.isSaving)
+            advanceUntilIdle()
+            assertEquals(!fail, viewModel.uiState.settings.aiFirstEnabled)
+            if (!fail) assertEquals(true, repository.saved?.aiFirstEnabled)
+            else assertEquals(SettingsFeedback.SAVE_FAILED, viewModel.uiState.feedback)
+        }
+    }
+
     private class FakeSettingsRepository(
         private val loadResult: LoadAppSettingsResult,
         private val failSave: Boolean = false,

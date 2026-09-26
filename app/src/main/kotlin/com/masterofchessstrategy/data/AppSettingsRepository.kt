@@ -16,6 +16,7 @@ internal data class AppSettings(
     val gameDurationMinutes: Int?,
     val selectedAppearanceCode: Int = 0,
     val highlightConditionsMask: Int = 0,
+    val aiFirstEnabled: Boolean = false,
     val updatedAtEpochMillis: Long,
 ) {
     init {
@@ -101,6 +102,7 @@ internal class RoomAppSettingsRepository(
                 gameDurationMinutes = duration,
                 selectedAppearanceCode = entity.selectedAppearanceCode,
                 highlightConditionsMask = entity.highlightConditionsMask,
+                aiFirstEnabled = entity.aiFirstEnabled,
                 updatedAtEpochMillis = entity.updatedAtEpochMillis,
             ),
         )
@@ -117,6 +119,7 @@ internal class RoomAppSettingsRepository(
                 gameDurationMinutes = settings.gameDurationMinutes,
                 selectedAppearanceCode = settings.selectedAppearanceCode,
                 highlightConditionsMask = settings.highlightConditionsMask,
+                aiFirstEnabled = settings.aiFirstEnabled,
                 updatedAtEpochMillis = settings.updatedAtEpochMillis,
             ),
         )

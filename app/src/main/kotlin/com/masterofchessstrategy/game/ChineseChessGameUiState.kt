@@ -59,6 +59,7 @@ data class ChineseChessGameUiState(
         null
     },
     val currentSide: ChineseChessSide = ChineseChessSide.RED,
+    val playerSide: ChineseChessSide = ChineseChessSide.RED,
     val checkedSide: ChineseChessSide? = null,
     val selectedPosition: BoardPosition? = null,
     val legalDestinations: Set<BoardPosition> = emptySet(),
@@ -117,7 +118,7 @@ data class ChineseChessGameUiState(
                 !isAiThinking &&
                 !isHintThinking &&
                 !isAutoPlay &&
-                (!isAiGame || currentSide == ChineseChessSide.RED)
+                (!isAiGame || currentSide == playerSide)
 
     init {
         require(board.size == ChineseChessBoard.WIDTH * ChineseChessBoard.HEIGHT) {

@@ -364,4 +364,8 @@
     <string name="record_favorite_failed">收藏状态保存失败。</string>
     <string name="draw_game">和棋</string>
     <string name="game_ongoing">进行中</string>
+    <string name="ai_first_title">象棋 AI 先手</string>
+    <string name="ai_first_summary">开启后玩家执黑、AI 执红先行。用于标准人机及限时、连胜、盲棋、评测的新对局；已有存档与进行中的挑战系列不变。标准对局可重开应用设置；残局、自由摆局与自动演局不受影响。</string>
+    <string name="player_red_side">玩家执红 · AI 执黑</string>
+    <string name="player_black_side">玩家执黑 · AI 执红</string>
 </resources>

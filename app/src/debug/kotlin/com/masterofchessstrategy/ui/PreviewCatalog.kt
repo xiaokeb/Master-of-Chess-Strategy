@@ -581,6 +581,25 @@ private fun ChineseChessOpeningScreenPreview() {
     )
 }
 
+@Preview(name = "18 AI 先手与玩家执黑", group = "已完成界面", widthDp = 960, heightDp = 540, showBackground = true)
+@Composable
+private fun ChineseChessAiFirstPreview() {
+    val afterRedOpening = standardChineseChessBoard().toMutableList().apply {
+        this[49] = this[58] // Red's central soldier advances once in this static fixture.
+        this[58] = null
+    }
+    MocsTheme {
+        ChineseChessGameScreen(
+            state = ChineseChessGameUiState(
+                board = afterRedOpening, currentSide = ChineseChessSide.BLACK,
+                playerSide = ChineseChessSide.BLACK, isAiGame = true, difficulty = Difficulty.EASY,
+                canRequestHint = true, hintRemaining = null,
+            ),
+            onSquareTap = {}, onUndo = {}, onHint = {}, onResign = {}, onRestart = {}, onBack = {},
+        )
+    }
+}
+
 private fun previewRecord() = GameRecord(
     recordId = "preview-record",
     gameType = com.masterofchessstrategy.engine.GameType.CHINESE_CHESS,

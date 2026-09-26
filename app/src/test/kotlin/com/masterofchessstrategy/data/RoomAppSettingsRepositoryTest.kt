@@ -25,6 +25,7 @@ class RoomAppSettingsRepositoryTest {
             soundEnabled = false,
             gameDurationMinutes = 45,
             selectedAppearanceCode = 4,
+            aiFirstEnabled = true,
             updatedAtEpochMillis = 99L,
         )
 

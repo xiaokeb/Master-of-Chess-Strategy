@@ -274,7 +274,7 @@ class AppNavigationScreenTest {
             )
         }
 
-        composeRule.onNodeWithTag(SETTINGS_SOUND_TAG).performClick()
+        composeRule.onNodeWithTag(SETTINGS_SOUND_TAG).performScrollTo().performClick()
 
         composeRule.runOnIdle {
             assertFalse(requestedSound)
@@ -304,7 +304,7 @@ class AppNavigationScreenTest {
             )
         }
 
-        composeRule.onNodeWithTag(SETTINGS_HIGHLIGHT_MASTER_TAG).performClick()
+        composeRule.onNodeWithTag(SETTINGS_HIGHLIGHT_MASTER_TAG).performScrollTo().performClick()
 
         composeRule.runOnIdle {
             assertEquals(HighlightCondition.MASTER to true, requested)

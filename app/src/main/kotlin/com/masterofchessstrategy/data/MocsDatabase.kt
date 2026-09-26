@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         GameRecordEntity::class,
         EndgameProgressEntity::class,
     ],
-    version = 11,
+    version = 12,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -242,6 +242,16 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Historical games always had a red-side human; preserve that identity.
+                db.execSQL("ALTER TABLE app_settings ADD COLUMN aiFirstEnabled INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE active_games ADD COLUMN playerIndex INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE game_records ADD COLUMN playerIndex INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("UPDATE active_games SET envelopeVersion = 5 WHERE envelopeVersion = 4")
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -263,6 +273,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_8_9,
                         MIGRATION_9_10,
                         MIGRATION_10_11,
+                        MIGRATION_11_12,
                     )
                     .build()
                     .also { instance = it }

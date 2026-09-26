@@ -21,6 +21,8 @@ internal data class GameRecordEntity(
     @ColumnInfo(defaultValue = "0")
     val isEndgame: Boolean = false,
     val completedAtEpochMillis: Long,
+    @ColumnInfo(defaultValue = "0")
+    val playerIndex: Int = 0,
 ) {
     override fun equals(other: Any?): Boolean =
         this === other ||
@@ -36,7 +38,8 @@ internal data class GameRecordEntity(
                     moveCount == other.moveCount &&
                     isFavorite == other.isFavorite &&
                     isEndgame == other.isEndgame &&
-                    completedAtEpochMillis == other.completedAtEpochMillis
+                    completedAtEpochMillis == other.completedAtEpochMillis &&
+                    playerIndex == other.playerIndex
                 )
 
     override fun hashCode(): Int {
@@ -51,6 +54,7 @@ internal data class GameRecordEntity(
         result = 31 * result + isFavorite.hashCode()
         result = 31 * result + isEndgame.hashCode()
         result = 31 * result + completedAtEpochMillis.hashCode()
+        result = 31 * result + playerIndex
         return result
     }
 }

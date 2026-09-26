@@ -49,6 +49,7 @@ internal object LocalDataBackupCodec {
                         value.autoPlaySpeedPermille,
                         value.completedAutoGames,
                         value.sessionVariantId.encodeText(),
+                        value.playerIndex,
                     ).joinToString("|"),
                 )
             }
@@ -74,6 +75,7 @@ internal object LocalDataBackupCodec {
                         value.gameDurationMinutes.encodeNullable(),
                         value.selectedAppearanceCode,
                         value.highlightConditionsMask,
+                        value.aiFirstEnabled.encodeBoolean(),
                         value.updatedAtEpochMillis,
                     ).joinToString("|"),
                 )
@@ -122,6 +124,7 @@ internal object LocalDataBackupCodec {
                         value.isFavorite.encodeBoolean(),
                         value.isEndgame.encodeBoolean(),
                         value.completedAtEpochMillis,
+                        value.playerIndex,
                     ).joinToString("|"),
                 )
             }
@@ -165,7 +168,8 @@ internal object LocalDataBackupCodec {
         val lines = body.lineSequence().filter(String::isNotEmpty).toList()
         require(lines.size in 2..MAX_LINE_COUNT)
         val backupVersion = when (lines.first()) {
-            HEADER -> 2
+            HEADER -> 3
+            "MOCS-BACKUP|2" -> 2
             LEGACY_HEADER -> 1
             else -> error("Unsupported backup format")
         }
@@ -182,7 +186,7 @@ internal object LocalDataBackupCodec {
         lines.drop(2).forEach { line ->
             val fields = line.split('|')
             when (fields.firstOrNull()) {
-                "ACTIVE" -> active += fields.decodeActive()
+                "ACTIVE" -> active += fields.decodeActive(backupVersion)
                 "SELECTION" -> selections += fields.decodeSelection()
                 "SETTINGS" -> {
                     require(settings == null)
@@ -190,7 +194,7 @@ internal object LocalDataBackupCodec {
                 }
                 "TUTORIAL" -> tutorials += fields.decodeTutorial()
                 "OUTCOME" -> outcomes += fields.decodeOutcome()
-                "RECORD" -> records += fields.decodeRecord()
+                "RECORD" -> records += fields.decodeRecord(backupVersion)
                 "ENDGAME" -> endgames += fields.decodeEndgame()
                 else -> error("Unknown backup record")
             }
@@ -207,8 +211,8 @@ internal object LocalDataBackupCodec {
         ).also(::validateSnapshot)
     }
 
-    private fun List<String>.decodeActive(): GameSessionSnapshot {
-        require(size == 20)
+    private fun List<String>.decodeActive(version: Int): GameSessionSnapshot {
+        require(size == if (version >= 3) 21 else 20)
         val gameType = this[1].decodeGameType()
         val mode = this[2].decodeMode()
         val difficulty = this[3].decodeNullableDifficulty()
@@ -243,6 +247,7 @@ internal object LocalDataBackupCodec {
             autoPlaySpeedPermille = this[17].boundedInt(500, 4_000),
             completedAutoGames = this[18].boundedInt(0, MAX_ACTION_COUNT),
             sessionVariantId = variantId,
+            playerIndex = if (version >= 3) this[20].boundedInt(0, 1) else 0,
         )
     }
 
@@ -275,7 +280,11 @@ internal object LocalDataBackupCodec {
     }
 
     private fun List<String>.decodeSettings(version: Int): AppSettings {
-        require(if (version == 2) size == 9 else size == 7 || size == 8)
+        require(when (version) {
+            3 -> size == 10
+            2 -> size == 9
+            else -> size == 7 || size == 8
+        })
         val hasAppearance = size >= 8
         return AppSettings(
             defaultDifficulty = this[1].decodeDifficulty(),
@@ -294,12 +303,13 @@ internal object LocalDataBackupCodec {
             } else {
                 0
             },
-            highlightConditionsMask = if (version == 2) {
+            highlightConditionsMask = if (version >= 2) {
                 this[7].boundedInt(0, AppSettings.ALL_HIGHLIGHT_CONDITIONS)
             } else {
                 0
             },
             updatedAtEpochMillis = last().nonNegativeLong(),
+            aiFirstEnabled = version >= 3 && this[8].decodeBoolean(),
         )
     }
 
@@ -327,8 +337,8 @@ internal object LocalDataBackupCodec {
         )
     }
 
-    private fun List<String>.decodeRecord(): GameRecord {
-        require(size == 11)
+    private fun List<String>.decodeRecord(version: Int): GameRecord {
+        require(size == if (version >= 3) 12 else 11)
         val gameType = this[2].decodeGameType()
         require(gameType == GameType.CHINESE_CHESS)
         return GameRecord(
@@ -342,6 +352,7 @@ internal object LocalDataBackupCodec {
             isFavorite = this[8].decodeBoolean(),
             isEndgame = this[9].decodeBoolean(),
             completedAtEpochMillis = this[10].nonNegativeLong(),
+            playerIndex = if (version >= 3) this[11].boundedInt(0, 1) else 0,
         )
     }
 
@@ -379,6 +390,7 @@ internal object LocalDataBackupCodec {
             require(it.engineState.size in 1..GameRecord.MAX_ENGINE_STATE_BYTES)
             require(it.mode.acceptsSessionDifficulty(it.difficulty))
             require(it.mode.acceptsSessionVariant(it.sessionVariantId))
+            require(it.mode.acceptsPlayerIndex(it.playerIndex))
             require(it.hasValidPersistedClock())
         }
         snapshot.lastSelections.forEach { require(it.updatedAtEpochMillis >= 0L) }
@@ -494,7 +506,7 @@ internal object LocalDataBackupCodec {
     private fun sha256(bytes: ByteArray): String =
         MessageDigest.getInstance("SHA-256").digest(bytes).toHex()
 
-    private const val HEADER = "MOCS-BACKUP|2"
+    private const val HEADER = "MOCS-BACKUP|3"
     private const val LEGACY_HEADER = "MOCS-BACKUP|1"
     private const val NULL = "-"
     private const val MAX_LINE_COUNT = 200_000

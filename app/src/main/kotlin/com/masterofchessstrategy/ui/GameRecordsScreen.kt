@@ -34,6 +34,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.masterofchessstrategy.R
 import com.masterofchessstrategy.data.GameRecord
+import com.masterofchessstrategy.data.supportsAiFirst
+import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.data.GameRecordCategory
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.engine.Difficulty
@@ -208,6 +210,7 @@ internal fun ChineseChessReplayScreen(
                         state = ChineseChessGameUiState(
                             board = frame.board,
                             currentSide = frame.sideToMove,
+                            playerSide = ChineseChessSide.entries.first { it.code == requireNotNull(state.record).playerIndex },
                             result = if (state.frameIndex == state.frames.lastIndex) {
                                 requireNotNull(state.record).result
                             } else {
@@ -286,8 +289,14 @@ private fun replayStatus(state: ChineseChessReplayUiState): String =
     }
 
 @Composable
-private fun recordTitle(record: GameRecord): String =
-    stringResource(R.string.record_title, record.result.displayName())
+private fun recordTitle(record: GameRecord): String {
+    val result = stringResource(R.string.record_title, record.result.displayName())
+    return if (record.mode.supportsAiFirst) {
+        result + " · " + stringResource(
+            if (record.playerIndex == 0) R.string.player_red_side else R.string.player_black_side,
+        )
+    } else result
+}
 
 private fun GameRecordCategory.titleResource(): Int = when (this) {
     GameRecordCategory.ALL -> R.string.records_all

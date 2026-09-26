@@ -18,9 +18,10 @@ internal object GameRecordExportCodec {
         return buildString {
             appendLine("{")
             appendLine("  \"format\": \"mocs-chinese-chess-record\",")
-            appendLine("  \"version\": 1,")
+            appendLine("  \"version\": 2,")
             appendLine("  \"recordId\": \"${record.recordId.jsonEscape()}\",")
             appendLine("  \"modeCode\": ${record.mode.code},")
+            appendLine("  \"playerIndex\": ${record.playerIndex},")
             appendLine("  \"difficultyCode\": ${record.difficulty?.code ?: "null"},")
             appendLine("  \"result\": \"${record.result.name}\",")
             appendLine("  \"moveCount\": ${record.moveCount},")
