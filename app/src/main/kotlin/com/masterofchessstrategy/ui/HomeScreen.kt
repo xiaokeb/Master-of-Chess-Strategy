@@ -79,7 +79,8 @@ internal fun HomeScreen(
                         onGameSelected = onGameSelected,
                         quickStartEntries = quickStartEntries,
                         onQuickStart = onQuickStart,
-                        modifier = Modifier.weight(0.6f),
+                        // System bars/font scaling can leave less height than the three catalog rows.
+                        modifier = Modifier.weight(0.6f).fillMaxHeight().verticalScroll(rememberScrollState()),
                     )
                 }
             } else {

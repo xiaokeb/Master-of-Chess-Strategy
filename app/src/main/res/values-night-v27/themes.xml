@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.MasterofChessStrategy" parent="Theme.MasterofChessStrategy.Base">
+        <item name="android:navigationBarColor">@color/mocs_night_ink</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

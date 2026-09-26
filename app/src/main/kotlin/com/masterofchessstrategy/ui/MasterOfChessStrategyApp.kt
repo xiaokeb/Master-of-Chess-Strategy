@@ -111,6 +111,7 @@ import com.masterofchessstrategy.settings.awaitLocalDataWriters
 import com.masterofchessstrategy.tutorial.ChineseChessTutorialViewModel
 import com.masterofchessstrategy.tutorial.availableTutorialEndgame
 import com.masterofchessstrategy.ui.theme.MocsTheme
+import com.masterofchessstrategy.ui.theme.MocsAppWindow
 
 internal const val UNDO_BUTTON_TAG = "undo_button"
 internal const val RESTART_BUTTON_TAG = "restart_button"
@@ -134,7 +135,7 @@ fun MasterOfChessStrategyApp() {
 /** An isolated database can exercise the complete navigation without touching user saves. */
 @Composable
 internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
-    MocsTheme {
+    MocsAppWindow {
         val navController = rememberNavController()
         val context = LocalContext.current
         val pikafishNetworkProvider = remember(context.applicationContext) {
@@ -265,7 +266,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(stringResource(R.string.settings_loading))
             }
-            return@MocsTheme
+            return@MocsAppWindow
         }
         NavHost(
             navController = navController,

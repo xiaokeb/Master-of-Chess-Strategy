@@ -1,8 +1,11 @@
 <resources>
-    <style name="Theme.MasterofChessStrategy" parent="@android:style/Theme.Material.Light.NoActionBar">
-        <item name="android:colorAccent">@color/purple_500</item>
-        <item name="android:statusBarColor">@color/purple_700</item>
-        <item name="android:navigationBarColor">@color/black</item>
-        <item name="android:windowLightStatusBar">false</item>
+    <style name="Theme.MasterofChessStrategy.Base" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:colorAccent">@color/mocs_jade</item>
+        <item name="android:windowBackground">@color/mocs_parchment</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- Older Android versions cannot display dark navigation icons. -->
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
+    <style name="Theme.MasterofChessStrategy" parent="Theme.MasterofChessStrategy.Base" />
 </resources>

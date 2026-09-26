@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="black">#FF000000</color>
+    <!-- Startup window colors mirror the Compose palette, before its first frame is drawn. -->
+    <color name="mocs_jade">#FF316C58</color>
+    <color name="mocs_pale_jade">#FFAEDCCB</color>
+    <color name="mocs_parchment">#FFF4EFE3</color>
+    <color name="mocs_night_ink">#FF111713</color>
 </resources>
