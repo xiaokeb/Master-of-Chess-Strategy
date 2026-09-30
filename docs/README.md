@@ -6,6 +6,7 @@
 - architecture/：系统、引擎和数据架构。
 - interfaces/：Kotlin、C++、JNI 和业务接口。
 - development/：环境、编码规范和二次开发说明。
+- development/chat-coordination.md：多棋种对话分工、阶段线与共享文件协调。
 - testing/：测试策略与测试报告。
 - delivery/：变更日志、用户手册和发布资料。
 - prompts/：按开发场景整理的提示词索引。

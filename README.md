@@ -1,6 +1,6 @@
 # Master of Chess Strategy
 
-Master of Chess Strategy 是离线多棋种策略训练 Android 项目。当前正式开发顺序为中国象棋、围棋、国标麻将、兰州麻将与兰州特色棋；中国象棋完成并通过对应测试后才进入下一棋种。
+Master of Chess Strategy 是离线多棋种策略训练 Android 项目。正式开发顺序为中国象棋、围棋、国标麻将、兰州麻将、兰州方棋、老虎吃羊棋；某棋种可玩功能经证据核验达到 80% 后，可同步启动下一棋种。内容量与最终验收仍独立推进，协作边界见 `docs/development/chat-coordination.md`。
 
 ## 当前状态
 
