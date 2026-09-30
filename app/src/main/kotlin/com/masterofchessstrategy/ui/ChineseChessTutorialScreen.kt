@@ -3,9 +3,11 @@ package com.masterofchessstrategy.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeightIn
 import androidx.compose.foundation.rememberScrollState
@@ -44,10 +46,16 @@ internal const val TUTORIAL_SCREEN_TAG = "tutorial_screen"
 internal const val TUTORIAL_CONTINUE_TAG = "tutorial_continue"
 internal const val TUTORIAL_CORRECT_ANSWER_TAG = "tutorial_correct_answer"
 internal const val TUTORIAL_ENDGAME_TAG = "tutorial_endgame"
-internal const val TUTORIAL_HORSE_DIAGRAM_TAG = "tutorial_horse_diagram"
-internal const val TUTORIAL_CANNON_DIAGRAM_TAG = "tutorial_cannon_diagram"
-
-internal enum class TutorialMoveDiagram { HORSE, CANNON }
+internal const val TUTORIAL_PIECE_SELECTOR_TAG = "tutorial_piece_selector"
+internal enum class TutorialMoveDiagram(val titleRes: Int, val explanationRes: Int) {
+    CHARIOT(R.string.tutorial_chariot_diagram_title, R.string.tutorial_chariot_diagram_explanation),
+    HORSE(R.string.tutorial_horse_diagram_title, R.string.tutorial_horse_diagram_explanation),
+    CANNON(R.string.tutorial_cannon_diagram_title, R.string.tutorial_cannon_diagram_explanation),
+    ELEPHANT(R.string.tutorial_elephant_diagram_title, R.string.tutorial_elephant_diagram_explanation),
+    ADVISOR(R.string.tutorial_advisor_diagram_title, R.string.tutorial_advisor_diagram_explanation),
+    GENERAL(R.string.tutorial_general_diagram_title, R.string.tutorial_general_diagram_explanation),
+    SOLDIER(R.string.tutorial_soldier_diagram_title, R.string.tutorial_soldier_diagram_explanation),
+}
 
 @Composable
 internal fun ChineseChessTutorialScreen(
@@ -164,7 +172,7 @@ private fun PiecesLesson(
     enabled: Boolean,
     onContinue: () -> Unit,
 ) {
-    var diagram by remember { mutableStateOf(TutorialMoveDiagram.HORSE) }
+    var diagram by remember { mutableStateOf(TutorialMoveDiagram.CHARIOT) }
     LessonCard(
         title = stringResource(R.string.tutorial_pieces_title),
         paragraphs = listOf(
@@ -177,29 +185,27 @@ private fun PiecesLesson(
         text = stringResource(R.string.tutorial_piece_diagram_intro),
         style = MaterialTheme.typography.bodyLarge,
     )
-    OutlinedButton(
-        onClick = { diagram = TutorialMoveDiagram.HORSE },
-        enabled = enabled,
-        modifier = Modifier.fillMaxWidth().testTag(TUTORIAL_HORSE_DIAGRAM_TAG),
-    ) { Text(stringResource(R.string.tutorial_horse_diagram_title)) }
-    OutlinedButton(
-        onClick = { diagram = TutorialMoveDiagram.CANNON },
-        enabled = enabled,
-        modifier = Modifier.fillMaxWidth().testTag(TUTORIAL_CANNON_DIAGRAM_TAG),
-    ) { Text(stringResource(R.string.tutorial_cannon_diagram_title)) }
+    Row(
+        modifier = Modifier.fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .testTag(TUTORIAL_PIECE_SELECTOR_TAG),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        TutorialMoveDiagram.entries.forEach { option ->
+            OutlinedButton(
+                onClick = { diagram = option },
+                enabled = enabled,
+                modifier = Modifier.testTag("tutorial_${option.name.lowercase()}_diagram"),
+            ) { Text(stringResource(option.titleRes)) }
+        }
+    }
     ChineseChessBoard(
         state = tutorialMoveDiagramState(diagram),
         onSquareTap = {},
         modifier = Modifier.fillMaxWidth().height(300.dp),
     )
     Text(
-        text = stringResource(
-            if (diagram == TutorialMoveDiagram.HORSE) {
-                R.string.tutorial_horse_diagram_explanation
-            } else {
-                R.string.tutorial_cannon_diagram_explanation
-            },
-        ),
+        text = stringResource(diagram.explanationRes),
         style = MaterialTheme.typography.bodyLarge,
     )
     Button(
@@ -409,6 +415,14 @@ internal fun tutorialMoveDiagramState(diagram: TutorialMoveDiagram): ChineseChes
     val selected: BoardPosition
     val destinations: Set<BoardPosition>
     when (diagram) {
+        TutorialMoveDiagram.CHARIOT -> {
+            place(0, 6, ChineseChessPieceType.CHARIOT, ChineseChessSide.RED)
+            selected = BoardPosition(0, 6)
+            destinations = buildSet {
+                (0..8).filter { it != 0 }.forEach { add(BoardPosition(it, 6)) }
+                (0..9).filter { it != 6 }.forEach { add(BoardPosition(0, it)) }
+            }
+        }
         TutorialMoveDiagram.HORSE -> {
             place(4, 5, ChineseChessPieceType.HORSE, ChineseChessSide.RED)
             place(4, 4, ChineseChessPieceType.SOLDIER, ChineseChessSide.RED)
@@ -425,6 +439,27 @@ internal fun tutorialMoveDiagramState(diagram: TutorialMoveDiagram): ChineseChes
             place(1, 3, ChineseChessPieceType.CHARIOT, ChineseChessSide.BLACK)
             selected = BoardPosition(1, 7)
             destinations = setOf(BoardPosition(1, 3))
+        }
+        TutorialMoveDiagram.ELEPHANT -> {
+            place(2, 9, ChineseChessPieceType.ELEPHANT, ChineseChessSide.RED)
+            place(1, 8, ChineseChessPieceType.SOLDIER, ChineseChessSide.RED)
+            selected = BoardPosition(2, 9)
+            destinations = setOf(BoardPosition(4, 7))
+        }
+        TutorialMoveDiagram.ADVISOR -> {
+            place(3, 9, ChineseChessPieceType.ADVISOR, ChineseChessSide.RED)
+            selected = BoardPosition(3, 9)
+            destinations = setOf(BoardPosition(4, 8))
+        }
+        TutorialMoveDiagram.GENERAL -> {
+            place(4, 5, ChineseChessPieceType.SOLDIER, ChineseChessSide.RED)
+            selected = BoardPosition(5, 9)
+            destinations = setOf(BoardPosition(4, 9), BoardPosition(5, 8))
+        }
+        TutorialMoveDiagram.SOLDIER -> {
+            place(4, 4, ChineseChessPieceType.SOLDIER, ChineseChessSide.RED)
+            selected = BoardPosition(4, 4)
+            destinations = setOf(BoardPosition(4, 3), BoardPosition(3, 4), BoardPosition(5, 4))
         }
     }
     return ChineseChessGameUiState(

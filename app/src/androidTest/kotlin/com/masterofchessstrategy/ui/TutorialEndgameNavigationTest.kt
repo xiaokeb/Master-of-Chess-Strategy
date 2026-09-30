@@ -4,6 +4,7 @@ import android.os.ParcelFileDescriptor
 import android.content.pm.ActivityInfo
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -12,6 +13,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.room.Room
@@ -53,6 +55,32 @@ class TutorialEndgameNavigationTest {
     @After
     fun closeDatabase() {
         database.close()
+    }
+
+    @Test
+    fun piecesLessonShowsSelectedDiagramInLandscapeAppNavigation() {
+        runBlocking {
+            database.tutorialProgressDao().upsert(TutorialProgressEntity(
+                gameTypeCode = GameType.CHINESE_CHESS.code, contentVersion = 1,
+                completedStepCount = 1, isCompleted = false, updatedAtEpochMillis = 1L,
+            ))
+        }
+        composeRule.setContent { MasterOfChessStrategyApp(database) }
+        composeRule.onNodeWithTag(HOME_CHINESE_CHESS_TAG).performClick()
+        composeRule.onNodeWithTag(MODE_TUTORIAL_TAG).performClick()
+        composeRule.onNodeWithTag(TUTORIAL_PIECE_SELECTOR_TAG).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag("tutorial_soldier_diagram")
+            .performScrollTo().assertIsDisplayed().assertIsEnabled().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("此红兵已过河", substring = true).assertExists()
+        composeRule.onNodeWithTag(CHINESE_CHESS_BOARD_TAG).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag(TUTORIAL_SCREEN_TAG).performTouchInput { swipeUp() }
+        composeRule.onNodeWithTag(TUTORIAL_SCREEN_TAG).performTouchInput { swipeUp() }
+        composeRule.waitForIdle()
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand(
+            "screencap -p /data/local/tmp/mocs-tutorial-pieces-landscape.png",
+        )).use { it.readBytes() }
     }
 
     @Test

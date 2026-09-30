@@ -257,6 +257,7 @@ class ChineseChessGameViewModelTest {
     fun incompleteNaturalLimitRecordDisablesApplicationWithoutClockPenalty() {
         val engine = FakeChineseChessEngine().apply { naturalRecordComplete = false }
         val viewModel = ChineseChessGameViewModel(
+            nowEpochMillis = { 1_000L },
             initialTimeControlMinutes = 10,
             clockTickIntervalMillis = null,
             engineFactory = { engine },
