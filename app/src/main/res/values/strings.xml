@@ -260,6 +260,11 @@
     <string name="tutorial_pieces_line_one">车走直线，炮不吃子时走直线、吃子时隔一个炮架；马走日并受蹩马腿限制。</string>
     <string name="tutorial_pieces_line_two">相走田且不能过河，士斜走一格、将帅直走一格，二者都不能离开九宫。</string>
     <string name="tutorial_pieces_line_three">兵卒过河前只能前进，过河后可前进或横走，始终不能后退。</string>
+    <string name="tutorial_piece_diagram_intro">点选下方示意，观察绿色落点和阻挡棋子。示意棋盘只读，不会改变对局或教程进度。</string>
+    <string name="tutorial_horse_diagram_title">查看蹩马腿示意</string>
+    <string name="tutorial_horse_diagram_explanation">红兵挡在马正上方，马不能落到左上、右上两点；绿色点表示其余可走位置。</string>
+    <string name="tutorial_cannon_diagram_title">查看炮架吃子示意</string>
+    <string name="tutorial_cannon_diagram_explanation">红炮与黑车之间恰隔一枚红兵作炮架，因此炮可以吃黑车。绿色点标出这次吃子目标。</string>
     <string name="tutorial_next">继续</string>
     <string name="tutorial_start_practice">开始走子练习</string>
     <string name="tutorial_practice_title">第三步：红兵前进一步</string>

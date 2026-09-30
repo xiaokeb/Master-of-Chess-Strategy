@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeightIn
 import androidx.compose.foundation.rememberScrollState
@@ -17,6 +18,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -39,6 +44,10 @@ internal const val TUTORIAL_SCREEN_TAG = "tutorial_screen"
 internal const val TUTORIAL_CONTINUE_TAG = "tutorial_continue"
 internal const val TUTORIAL_CORRECT_ANSWER_TAG = "tutorial_correct_answer"
 internal const val TUTORIAL_ENDGAME_TAG = "tutorial_endgame"
+internal const val TUTORIAL_HORSE_DIAGRAM_TAG = "tutorial_horse_diagram"
+internal const val TUTORIAL_CANNON_DIAGRAM_TAG = "tutorial_cannon_diagram"
+
+internal enum class TutorialMoveDiagram { HORSE, CANNON }
 
 @Composable
 internal fun ChineseChessTutorialScreen(
@@ -155,6 +164,7 @@ private fun PiecesLesson(
     enabled: Boolean,
     onContinue: () -> Unit,
 ) {
+    var diagram by remember { mutableStateOf(TutorialMoveDiagram.HORSE) }
     LessonCard(
         title = stringResource(R.string.tutorial_pieces_title),
         paragraphs = listOf(
@@ -162,6 +172,35 @@ private fun PiecesLesson(
             stringResource(R.string.tutorial_pieces_line_two),
             stringResource(R.string.tutorial_pieces_line_three),
         ),
+    )
+    Text(
+        text = stringResource(R.string.tutorial_piece_diagram_intro),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    OutlinedButton(
+        onClick = { diagram = TutorialMoveDiagram.HORSE },
+        enabled = enabled,
+        modifier = Modifier.fillMaxWidth().testTag(TUTORIAL_HORSE_DIAGRAM_TAG),
+    ) { Text(stringResource(R.string.tutorial_horse_diagram_title)) }
+    OutlinedButton(
+        onClick = { diagram = TutorialMoveDiagram.CANNON },
+        enabled = enabled,
+        modifier = Modifier.fillMaxWidth().testTag(TUTORIAL_CANNON_DIAGRAM_TAG),
+    ) { Text(stringResource(R.string.tutorial_cannon_diagram_title)) }
+    ChineseChessBoard(
+        state = tutorialMoveDiagramState(diagram),
+        onSquareTap = {},
+        modifier = Modifier.fillMaxWidth().height(300.dp),
+    )
+    Text(
+        text = stringResource(
+            if (diagram == TutorialMoveDiagram.HORSE) {
+                R.string.tutorial_horse_diagram_explanation
+            } else {
+                R.string.tutorial_cannon_diagram_explanation
+            },
+        ),
+        style = MaterialTheme.typography.bodyLarge,
     )
     Button(
         onClick = onContinue,
@@ -354,6 +393,45 @@ private fun practiceBoardState(
             emptySet()
         },
         isEngineAvailable = state.isInteractionEnabled,
+    )
+}
+
+/** Static rule illustrations reuse the formal board renderer but accept no taps. */
+internal fun tutorialMoveDiagramState(diagram: TutorialMoveDiagram): ChineseChessGameUiState {
+    val board = MutableList<ChineseChessPiece?>(
+        ChineseChessBoard.WIDTH * ChineseChessBoard.HEIGHT,
+    ) { null }
+    fun place(x: Int, y: Int, type: ChineseChessPieceType, side: ChineseChessSide) {
+        board[indexOf(BoardPosition(x, y))] = ChineseChessPiece(type, side)
+    }
+    place(4, 0, ChineseChessPieceType.GENERAL, ChineseChessSide.BLACK)
+    place(5, 9, ChineseChessPieceType.GENERAL, ChineseChessSide.RED)
+    val selected: BoardPosition
+    val destinations: Set<BoardPosition>
+    when (diagram) {
+        TutorialMoveDiagram.HORSE -> {
+            place(4, 5, ChineseChessPieceType.HORSE, ChineseChessSide.RED)
+            place(4, 4, ChineseChessPieceType.SOLDIER, ChineseChessSide.RED)
+            selected = BoardPosition(4, 5)
+            destinations = setOf(
+                BoardPosition(2, 4), BoardPosition(2, 6),
+                BoardPosition(6, 4), BoardPosition(6, 6),
+                BoardPosition(3, 7), BoardPosition(5, 7),
+            )
+        }
+        TutorialMoveDiagram.CANNON -> {
+            place(1, 7, ChineseChessPieceType.CANNON, ChineseChessSide.RED)
+            place(1, 5, ChineseChessPieceType.SOLDIER, ChineseChessSide.RED)
+            place(1, 3, ChineseChessPieceType.CHARIOT, ChineseChessSide.BLACK)
+            selected = BoardPosition(1, 7)
+            destinations = setOf(BoardPosition(1, 3))
+        }
+    }
+    return ChineseChessGameUiState(
+        board = board,
+        selectedPosition = selected,
+        legalDestinations = destinations,
+        isEngineAvailable = false,
     )
 }
 
