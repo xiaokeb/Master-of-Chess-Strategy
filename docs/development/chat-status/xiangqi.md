@@ -13,3 +13,5 @@
 - NDK 原生象棋规则测试与使用已核验 NNUE 的 Pikafish 历史测试均在 Pixel_7_Pro AVD 运行通过；自然限着弹窗定向仪器测试 2/2 通过。报告见 `../../testing/2026-09-30-chinese-chess-natural-limit-emulator.md`。
 - 已查看本地申请弹窗截图；风险提示、有效着数和按钮可见。尚未完成真实长局 JNI 全链路与阈值附近 AI 搜索对弈，因此不宣称自然限着完整验收。
 - 本轮只新增象棋专属仪器测试及测试报告，并维护本状态。公共构建与 AVD 窗口已释放。
+- 追加 `NativeChineseChessNaturalLimitInstrumentedTest`：模拟器通过正式 Kotlin/JNI 接口重演 120 个无吃子半回合、存档恢复及审核判和，1/1 通过；仍待 ViewModel 与真实界面长局联动。
+- 追加阈值搜索冒烟：经核验 NNUE 的 Pikafish 在 120 半回合适配窗口返回当前合法着，原生规则测试以 0 退出；尚非长局棋力验收。上游拒绝历史时现保留具体校验原因，便于定位非法摆局。

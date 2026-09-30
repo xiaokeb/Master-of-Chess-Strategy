@@ -76,7 +76,9 @@ public:
         const auto& moves = use_rule60_window
             ? position.rule60_safe_moves : position.moves;
         if (const auto error = engine_->set_position(initial_fen, moves); error) {
-            throw std::invalid_argument("Pikafish rejected the position history");
+            throw std::invalid_argument(
+                std::string("Pikafish rejected the position history: ") + error->what()
+            );
         }
         // Replaying must reach the authoritative board and side. Do not compare
         // rule60 clocks: upstream's automatic rule is not the local claim rule.

@@ -845,7 +845,9 @@ void legacy_saved_history_cannot_resume_after_old_automatic_limit() {
     assert(result.error == EngineError::corrupted_data);
 }
 
-void complete_sixty_round_record_can_be_claimed_but_not_auto_drawn() {
+void complete_sixty_round_record_can_be_claimed_but_not_auto_drawn(
+    const char* network_path
+) {
     assert(natural_limit_effective_plies(120, 10) == 120);
     assert(natural_limit_effective_plies(120, 11) == 118);
     assert(natural_limit_effective_plies(122, 11) == 120);
@@ -862,7 +864,7 @@ void complete_sixty_round_record_can_be_claimed_but_not_auto_drawn() {
     assert(engine.restore(custom_position(Side::red, {
         {5, 9, {PieceType::general, Side::red}},
         {5, 0, {PieceType::general, Side::black}},
-        {5, 5, {PieceType::soldier, Side::red}},
+        {5, 4, {PieceType::soldier, Side::red}},
         {0, 6, {PieceType::chariot, Side::red}},
         {6, 0, {PieceType::chariot, Side::black}},
     })).restored);
@@ -882,6 +884,17 @@ void complete_sixty_round_record_can_be_claimed_but_not_auto_drawn() {
     assert(search.moves.size() == 120);
     assert(search.rule60_safe_moves.size() == 80);
     assert(search.rule60_safe_initial_fen.find(" 0 ") != std::string::npos);
+    if (network_path != nullptr) {
+        const auto legal = engine.legal_actions();
+        const auto suggested = mocs::engine::choose_pikafish_move(
+            search, legal, network_path, Difficulty::easy, 20260930
+        );
+        assert(suggested);
+        assert(std::any_of(legal.begin(), legal.end(), [&](const auto& action) {
+            return action.arguments == suggested->arguments;
+        }));
+        assert(engine.game_result() == GameResult::ongoing);
+    }
     assert(engine.claim_natural_limit() == NaturalLimitClaimResult::draw);
     assert(engine.game_result() == GameResult::draw);
     const auto saved = engine.serialize();
@@ -1120,7 +1133,8 @@ void unique_seed_mates_are_checked_and_unambiguous() {
 
 }  // namespace
 
-int main() {
+int main(const int argc, const char* argv[]) {
+    assert(argc == 1 || argc == 2);
     initial_position_is_stable();
     pikafish_coordinates_are_converted_and_validated();
     pikafish_history_judge_validates_repetition_windows();
@@ -1150,7 +1164,7 @@ int main() {
     repeated_idle_moves_are_drawn_instead_of_treated_as_long_block();
     saved_history_cannot_continue_after_repetition_draw();
     legacy_saved_history_cannot_resume_after_old_automatic_limit();
-    complete_sixty_round_record_can_be_claimed_but_not_auto_drawn();
+    complete_sixty_round_record_can_be_claimed_but_not_auto_drawn(argc == 2 ? argv[1] : nullptr);
     incomplete_history_does_not_create_an_automatic_natural_limit_draw();
     checkmate_on_the_natural_limit_move_still_wins();
     capture_resets_the_natural_limit_counter();
