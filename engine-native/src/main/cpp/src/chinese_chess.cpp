@@ -18,13 +18,15 @@ constexpr std::array<std::uint8_t, 4> position_magic{
     'C',
     'X',
 };
-constexpr std::uint8_t position_version = 2;
+constexpr std::uint8_t position_version = 3;
+constexpr std::uint8_t legacy_position_version = 2;
 constexpr std::uint8_t position_game_type =
     static_cast<std::uint8_t>(GameType::chinese_chess);
 constexpr std::size_t position_header_size = 12;
 constexpr std::size_t checksum_size = 4;
 constexpr std::size_t move_record_size = 11;
 constexpr std::size_t maximum_history_size = 4096;
+constexpr std::size_t maximum_claim_events = 8192;
 constexpr std::uint16_t natural_limit_plies = 120;
 constexpr std::int32_t winning_score = 1'000'000;
 constexpr std::int32_t check_bonus = 30;
@@ -185,6 +187,7 @@ std::uint8_t ChineseChessEngine::current_player() const noexcept {
 void ChineseChessEngine::reset() {
     board_.fill(std::nullopt);
     history_.clear();
+    natural_limit_claims_.clear();
     position_history_.clear();
     current_side_ = Side::red;
     no_capture_plies_ = 0;
@@ -269,6 +272,9 @@ bool ChineseChessEngine::undo() {
 
     const auto move = history_.back();
     history_.pop_back();
+    while (!natural_limit_claims_.empty() && natural_limit_claims_.back().ply_index > history_.size()) {
+        natural_limit_claims_.pop_back();
+    }
     board_[index(move.from_x, move.from_y)] = move.moved;
     board_[index(move.to_x, move.to_y)] = move.captured;
     current_side_ = move.previous_side;
@@ -316,14 +322,69 @@ ChineseChessSearchPosition ChineseChessEngine::search_position() const {
     const auto first_clock = history_.empty()
         ? no_capture_plies_ : history_.front().previous_no_capture_plies;
     ChineseChessSearchPosition result{
-        encode_fen(first.board, first.side, first_clock, 0), {}, fen(), game_result()};
+        encode_fen(first.board, first.side, first_clock, 0), {}, fen(), game_result(), {}, {}};
     result.moves.reserve(history_.size());
     for (const auto& move : history_) {
         result.moves.push_back(std::string{
             static_cast<char>('a' + move.from_x), static_cast<char>('9' - move.from_y),
             static_cast<char>('a' + move.to_x), static_cast<char>('9' - move.to_y)});
     }
+    if (no_capture_plies_ >= 100) {
+        // Pikafish auto-adjudicates at rule60=120; local 2020 review requires
+        // a request. Keep eighty recent plies rather than dropping all history.
+        const auto start = history_.size() > 80U ? history_.size() - 80U : 0U;
+        const auto& first_safe = position_history_[start];
+        result.rule60_safe_initial_fen = encode_fen(first_safe.board, first_safe.side, 0, start);
+        result.rule60_safe_moves.assign(result.moves.begin() + static_cast<std::ptrdiff_t>(start), result.moves.end());
+    }
     return result;
+}
+
+NaturalLimitReview ChineseChessEngine::natural_limit_review(const Side claimant) const noexcept {
+    std::size_t stage_start = 0;
+    for (std::size_t cursor = history_.size(); cursor > 0; --cursor) {
+        if (history_[cursor - 1].captured) {
+            stage_start = cursor;
+            break;
+        }
+    }
+    const auto recorded = history_.size() - stage_start;
+    std::size_t checks = 0;
+    for (std::size_t i = stage_start; i < history_.size(); ++i) {
+        if (history_[i].previous_side == claimant && history_[i].nature == MoveNature::check) ++checks;
+    }
+    const auto effective = natural_limit_effective_plies(no_capture_plies_, static_cast<std::uint16_t>(checks));
+    const bool complete = recorded == no_capture_plies_;
+    return NaturalLimitReview{
+        no_capture_plies_, static_cast<std::uint16_t>(recorded), static_cast<std::uint16_t>(checks),
+        effective, complete, complete && effective >= natural_limit_plies};
+}
+
+NaturalLimitClaimResult ChineseChessEngine::claim_natural_limit() noexcept {
+    if (game_result() != GameResult::ongoing || natural_limit_claims_.size() >= maximum_claim_events) {
+        return NaturalLimitClaimResult::invalid_state;
+    }
+    const auto claimant = current_side_;
+    const auto review = natural_limit_review(claimant);
+    // An imported position without a verifiable move record cannot be
+    // audited. Declining its request is not a false claim or a clock penalty.
+    if (!review.complete_record) return NaturalLimitClaimResult::invalid_state;
+    std::size_t stage_start = history_.size() - review.recorded_plies;
+    std::size_t previous_false_claims = 0;
+    for (const auto& claim : natural_limit_claims_) {
+        if (claim.ply_index >= stage_start && claim.claimant == claimant) ++previous_false_claims;
+    }
+    natural_limit_claims_.push_back(NaturalLimitClaimRecord{static_cast<std::uint16_t>(history_.size()), claimant});
+    if (review.eligible) {
+        adjudicated_result_ = GameResult::draw;
+        return NaturalLimitClaimResult::draw;
+    }
+    if (previous_false_claims != 0) {
+        adjudicated_result_ = claimant == Side::red
+            ? GameResult::second_player_win : GameResult::first_player_win;
+        return NaturalLimitClaimResult::second_false_claim_loss;
+    }
+    return NaturalLimitClaimResult::first_false_claim;
 }
 
 std::string ChineseChessEngine::encode_fen(
@@ -476,12 +537,13 @@ GameResult ChineseChessEngine::game_result() const noexcept {
 
 std::vector<std::uint8_t> ChineseChessEngine::serialize() const {
     std::vector<std::uint8_t> data;
-    if (history_.size() > maximum_history_size) {
+    if (history_.size() > maximum_history_size || natural_limit_claims_.size() > maximum_claim_events) {
         return {};
     }
     data.reserve(
         position_header_size + board_size +
-        history_.size() * move_record_size + checksum_size
+        history_.size() * move_record_size + 2U +
+        natural_limit_claims_.size() * 3U + checksum_size
     );
     data.insert(data.end(), position_magic.begin(), position_magic.end());
     data.push_back(position_version);
@@ -508,6 +570,11 @@ std::vector<std::uint8_t> ChineseChessEngine::serialize() const {
         );
         data.push_back(static_cast<std::uint8_t>(move.nature));
     }
+    append_u16(data, static_cast<std::uint16_t>(natural_limit_claims_.size()));
+    for (const auto& claim : natural_limit_claims_) {
+        append_u16(data, claim.ply_index);
+        data.push_back(static_cast<std::uint8_t>(claim.claimant));
+    }
     append_u32(data, crc32(data, data.size()));
     return data;
 }
@@ -525,7 +592,8 @@ RestoreResult ChineseChessEngine::restore(
     if (!std::equal(position_magic.begin(), position_magic.end(), data.begin())) {
         return RestoreResult{false, EngineError::corrupted_data};
     }
-    if (data[4] != position_version) {
+    const bool legacy = data[4] == legacy_position_version;
+    if (!legacy && data[4] != position_version) {
         return RestoreResult{false, EngineError::unsupported};
     }
     if (data[5] != position_game_type) {
@@ -535,17 +603,18 @@ RestoreResult ChineseChessEngine::restore(
         return RestoreResult{false, EngineError::corrupted_data};
     }
     const auto restored_no_capture_plies = read_u16(data, 7);
-    if (restored_no_capture_plies > natural_limit_plies) {
+    if (restored_no_capture_plies > (legacy ? natural_limit_plies : maximum_history_size + natural_limit_plies)) {
         return RestoreResult{false, EngineError::corrupted_data};
     }
     if (!is_valid_result_code(data[9])) {
         return RestoreResult{false, EngineError::corrupted_data};
     }
     const auto history_size = read_u16(data, 10);
+    const auto records_end = position_header_size + board_size +
+        static_cast<std::size_t>(history_size) * move_record_size;
     if (history_size > maximum_history_size ||
-        data.size() != position_header_size + board_size +
-            static_cast<std::size_t>(history_size) * move_record_size +
-            checksum_size) {
+        (legacy && data.size() != records_end + checksum_size) ||
+        (!legacy && data.size() < records_end + 2U + checksum_size)) {
         return RestoreResult{false, EngineError::corrupted_data};
     }
 
@@ -594,7 +663,7 @@ RestoreResult ChineseChessEngine::restore(
             !moved ||
             (captured_code != 0 && !captured) ||
             previous_side_code > static_cast<std::uint8_t>(Side::black) ||
-            previous_no_capture_plies > natural_limit_plies ||
+            previous_no_capture_plies > (legacy ? natural_limit_plies : maximum_history_size + natural_limit_plies) ||
             !is_valid_result_code(previous_result_code) ||
             nature_code > static_cast<std::uint8_t>(MoveNature::chase)) {
             return RestoreResult{false, EngineError::corrupted_data};
@@ -617,6 +686,27 @@ RestoreResult ChineseChessEngine::restore(
             static_cast<MoveNature>(nature_code),
         });
         offset += move_record_size;
+    }
+
+    std::vector<NaturalLimitClaimRecord> restored_claims;
+    if (!legacy) {
+        const auto count = read_u16(data, records_end);
+        if (count > maximum_claim_events ||
+            data.size() != records_end + 2U + static_cast<std::size_t>(count) * 3U + checksum_size) {
+            return RestoreResult{false, EngineError::corrupted_data};
+        }
+        restored_claims.reserve(count);
+        offset = records_end + 2U;
+        for (std::size_t i = 0; i < count; ++i) {
+            const auto ply_index = read_u16(data, offset);
+            const auto side_code = data[offset + 2];
+            if (ply_index > history_size || side_code > static_cast<std::uint8_t>(Side::black) ||
+                (!restored_claims.empty() && ply_index < restored_claims.back().ply_index)) {
+                return RestoreResult{false, EngineError::corrupted_data};
+            }
+            restored_claims.push_back(NaturalLimitClaimRecord{ply_index, static_cast<Side>(side_code)});
+            offset += 3U;
+        }
     }
 
     auto working_board = restored;
@@ -648,7 +738,7 @@ RestoreResult ChineseChessEngine::restore(
     auto expected_no_capture_plies = history_size > 0
         ? restored_history.front().previous_no_capture_plies
         : restored_no_capture_plies;
-    if (history_size > 0 && expected_no_capture_plies == natural_limit_plies) {
+    if (legacy && history_size > 0 && expected_no_capture_plies == natural_limit_plies) {
         return RestoreResult{false, EngineError::corrupted_data};
     }
 
@@ -664,6 +754,7 @@ RestoreResult ChineseChessEngine::restore(
     prefix.position_history_.push_back(restored_positions.front());
     prefix.history_.reserve(history_size);
     prefix.position_history_.reserve(static_cast<std::size_t>(history_size) + 1U);
+    prefix.natural_limit_claims_.reserve(restored_claims.size());
     const auto position_key = [](const PositionState& position) {
         std::string key;
         key.reserve(board_size + 1U);
@@ -675,7 +766,15 @@ RestoreResult ChineseChessEngine::restore(
     };
     std::unordered_map<std::string, std::size_t> occurrences;
     occurrences.emplace(position_key(restored_positions.front()), 1U);
+    std::size_t claim_cursor = 0;
     for (std::size_t i = 0; i < history_size; ++i) {
+        while (claim_cursor < restored_claims.size() && restored_claims[claim_cursor].ply_index == i) {
+            if (restored_claims[claim_cursor].claimant != prefix.current_side_ ||
+                prefix.claim_natural_limit() == NaturalLimitClaimResult::invalid_state) {
+                return RestoreResult{false, EngineError::corrupted_data};
+            }
+            ++claim_cursor;
+        }
         auto& move = restored_history[i];
         const auto& before = restored_positions[i];
         const auto& after = restored_positions[i + 1];
@@ -688,6 +787,7 @@ RestoreResult ChineseChessEngine::restore(
             !(before.board[index(move.to_x, move.to_y)] == move.captured) ||
             move.previous_no_capture_plies != expected_no_capture_plies ||
             move.previous_adjudicated_result != GameResult::ongoing ||
+            prefix.game_result() != GameResult::ongoing ||
             !is_legal_move_on_board(
                 before.board,
                 move.previous_side,
@@ -703,8 +803,8 @@ RestoreResult ChineseChessEngine::restore(
             ? 0
             : static_cast<std::uint16_t>(expected_no_capture_plies + 1U);
         if (
-            expected_no_capture_plies > natural_limit_plies ||
-            (expected_no_capture_plies == natural_limit_plies && i + 1 < history_size) ||
+            expected_no_capture_plies > maximum_history_size + natural_limit_plies ||
+            (legacy && expected_no_capture_plies == natural_limit_plies && i + 1 < history_size) ||
             after.side != opposite(move.previous_side)
         ) {
             return RestoreResult{false, EngineError::corrupted_data};
@@ -731,16 +831,21 @@ RestoreResult ChineseChessEngine::restore(
     if (expected_no_capture_plies != restored_no_capture_plies) {
         return RestoreResult{false, EngineError::corrupted_data};
     }
-
-    board_ = restored;
-    current_side_ = static_cast<Side>(data[6]);
-    history_ = std::move(restored_history);
-    position_history_ = std::move(restored_positions);
-    no_capture_plies_ = restored_no_capture_plies;
-    // The saved outcome is not authoritative: replayed history and the
-    // current rules must decide it, including after a ruleset correction.
-    adjudicated_result_ = GameResult::ongoing;
-    adjudicate_history();
+    prefix.adjudicate_history();
+    while (claim_cursor < restored_claims.size()) {
+        if (restored_claims[claim_cursor].ply_index != history_size ||
+            restored_claims[claim_cursor].claimant != prefix.current_side_ ||
+            prefix.claim_natural_limit() == NaturalLimitClaimResult::invalid_state) {
+            return RestoreResult{false, EngineError::corrupted_data};
+        }
+        ++claim_cursor;
+    }
+    // v2 stored a derived auto-draw that is intentionally recalculated under
+    // the new request-only rule. v3 terminal claim events must replay exactly.
+    if (!legacy && static_cast<std::uint8_t>(prefix.adjudicated_result_) != data[9]) {
+        return RestoreResult{false, EngineError::corrupted_data};
+    }
+    *this = std::move(prefix);
     return RestoreResult{true, EngineError::none};
 }
 
@@ -1779,14 +1884,6 @@ std::optional<GameResult> ChineseChessEngine::adjudicate_2020_cycle(
 }
 
 void ChineseChessEngine::adjudicate_history() noexcept {
-    if (no_capture_plies_ >= natural_limit_plies) {
-        // A mating or stalemating move ends the game before the natural-limit
-        // draw can override it. The normal game_result() path awards the win.
-        if (has_legal_action()) {
-            adjudicated_result_ = GameResult::draw;
-        }
-        return;
-    }
     if (position_history_.size() < 3) {
         return;
     }

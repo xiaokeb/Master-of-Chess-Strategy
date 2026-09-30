@@ -4,6 +4,7 @@ import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessBoard
 import com.masterofchessstrategy.engine.ChineseChessPiece
 import com.masterofchessstrategy.engine.ChineseChessSide
+import com.masterofchessstrategy.engine.ChineseChessNaturalLimitReview
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 
@@ -32,6 +33,10 @@ enum class ChineseChessFeedback {
     DRAW_WAITING,
     DRAW_ACCEPTED,
     DRAW_DECLINED,
+    NATURAL_LIMIT_DRAW,
+    NATURAL_LIMIT_FALSE_CLAIM,
+    NATURAL_LIMIT_SECOND_FALSE_CLAIM,
+    NATURAL_LIMIT_UNAVAILABLE,
     TIME_EXPIRED,
     AUTO_PLAY_PAUSED,
     AUTO_PLAY_RESUMED,
@@ -108,6 +113,8 @@ data class ChineseChessGameUiState(
     val blackRemainingMillis: Long? = null,
     val pendingDrawOfferSide: ChineseChessSide? = null,
     val canOfferOrAcceptDraw: Boolean = false,
+    val naturalLimitReview: ChineseChessNaturalLimitReview? = null,
+    val canClaimNaturalLimit: Boolean = false,
     val isAiThinking: Boolean = false,
     val isHintThinking: Boolean = false,
     val feedback: ChineseChessFeedback? = null,

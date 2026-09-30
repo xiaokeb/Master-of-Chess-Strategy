@@ -36,6 +36,10 @@ internal interface ChineseChessBridge {
     fun pieceAt(handle: Long, x: Int, y: Int): Int
 
     fun isInCheck(handle: Long, sideCode: Int): Boolean
+
+    fun naturalLimitReview(handle: Long, sideCode: Int): IntArray
+
+    fun claimNaturalLimit(handle: Long): Int
 }
 
 internal object JniChineseChessBridge : ChineseChessBridge {
@@ -96,4 +100,10 @@ internal object JniChineseChessBridge : ChineseChessBridge {
 
     override fun isInCheck(handle: Long, sideCode: Int): Boolean =
         NativeBindings.chineseChessIsInCheck(handle, sideCode)
+
+    override fun naturalLimitReview(handle: Long, sideCode: Int): IntArray =
+        NativeBindings.chineseChessNaturalLimitReview(handle, sideCode)
+
+    override fun claimNaturalLimit(handle: Long): Int =
+        NativeBindings.claimChineseChessNaturalLimit(handle)
 }

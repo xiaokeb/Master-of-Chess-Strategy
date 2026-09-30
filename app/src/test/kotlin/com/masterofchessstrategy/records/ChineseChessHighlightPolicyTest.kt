@@ -38,25 +38,28 @@ class ChineseChessHighlightPolicyTest {
 
     @Test
     fun materialDeficitFollowedByWinQualifiesAsComeback() {
-        val state = mocxState(
-            finalPieces = listOf(
+        for (version in 2..3) {
+            val state = mocxState(
+                finalPieces = listOf(
                 4 to 0x81, // Black general.
                 85 to 1, // Red general.
                 49 to 7, // Red soldier blocks the generals.
                 0 to 0x85, // Black chariot.
                 1 to 0x86, // Black cannon.
-            ),
-            capturedPieces = listOf(5), // A red chariot was lost.
-        )
-        val game = record(state = state, result = GameResult.FIRST_PLAYER_WIN)
+                ),
+                capturedPieces = listOf(5), // A red chariot was lost.
+                version = version,
+            )
+            val game = record(state = state, result = GameResult.FIRST_PLAYER_WIN)
 
-        assertTrue(ChineseChessHighlightPolicy.matches(game, HighlightCondition.COMEBACK.bit))
-        assertFalse(
-            ChineseChessHighlightPolicy.matches(
-                game.copy(result = GameResult.DRAW),
-                HighlightCondition.COMEBACK.bit,
-            ),
-        )
+            assertTrue(ChineseChessHighlightPolicy.matches(game, HighlightCondition.COMEBACK.bit))
+            assertFalse(
+                ChineseChessHighlightPolicy.matches(
+                    game.copy(result = GameResult.DRAW),
+                    HighlightCondition.COMEBACK.bit,
+                ),
+            )
+        }
     }
 
     @Test
@@ -89,10 +92,11 @@ class ChineseChessHighlightPolicyTest {
     private fun mocxState(
         finalPieces: List<Pair<Int, Int>>,
         capturedPieces: List<Int>,
+        version: Int = 2,
     ): ByteArray {
-        val data = ByteArray(12 + 90 + 11 * capturedPieces.size + 4)
+        val data = ByteArray(12 + 90 + 11 * capturedPieces.size + (if (version == 3) 2 else 0) + 4)
         "MOCX".encodeToByteArray().copyInto(data)
-        data[4] = 2
+        data[4] = version.toByte()
         data[10] = capturedPieces.size.toByte()
         finalPieces.forEach { (square, code) -> data[12 + square] = code.toByte() }
         capturedPieces.forEachIndexed { index, code ->

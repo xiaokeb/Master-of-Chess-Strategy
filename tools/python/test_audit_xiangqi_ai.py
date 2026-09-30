@@ -38,6 +38,11 @@ class XiangqiAiAuditTest(unittest.TestCase):
         self.describe_profiles(candidate=True)
         audit(self.report())
 
+    def test_adaptive_rule60_window_is_declared_and_accepted(self) -> None:
+        self.describe_profiles(candidate=True)
+        self.records[0]["history_mode"] = "adaptive-rule60-window"
+        audit(self.report())
+
     def test_candidate_cannot_use_frozen_holdout(self) -> None:
         self.describe_profiles(candidate=True)
         self.records[0]["suite"] = 2
@@ -57,7 +62,7 @@ class XiangqiAiAuditTest(unittest.TestCase):
             audit(self.report())
         self.describe_profiles(candidate=True)
         self.records[0]["history_mode"] = "fen-only"
-        with self.assertRaisesRegex(ValueError, "full-history"):
+        with self.assertRaisesRegex(ValueError, "replay-history"):
             audit(self.report())
 
     def test_identical_defaults_cannot_be_labelled_candidate(self) -> None:

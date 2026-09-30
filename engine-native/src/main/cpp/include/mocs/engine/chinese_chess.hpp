@@ -41,6 +41,32 @@ struct Piece {
     }
 };
 
+/** A natural-limit request is adjudicated separately from mutual draw offers. */
+enum class NaturalLimitClaimResult : std::uint8_t {
+    draw = 0,
+    first_false_claim = 1,
+    second_false_claim_loss = 2,
+    invalid_state = 3,
+};
+
+struct NaturalLimitReview {
+    std::uint16_t no_capture_plies;
+    std::uint16_t recorded_plies;
+    std::uint16_t claimant_checks;
+    std::uint16_t effective_plies;
+    bool complete_record;
+    bool eligible;
+};
+
+// One checking move beyond the claimant's first ten removes one full round.
+[[nodiscard]] inline constexpr std::uint16_t natural_limit_effective_plies(
+    const std::uint16_t raw_plies, const std::uint16_t claimant_checks
+) noexcept {
+    const auto excess = claimant_checks > 10U ? static_cast<std::uint32_t>(claimant_checks - 10U) : 0U;
+    const auto excluded = excess * 2U;
+    return raw_plies > excluded ? static_cast<std::uint16_t>(raw_plies - excluded) : 0U;
+}
+
 [[nodiscard]] EngineAction make_board_move(
     std::int32_t from_x,
     std::int32_t from_y,
@@ -72,6 +98,8 @@ public:
     [[nodiscard]] bool is_in_check(Side side) const noexcept;
     [[nodiscard]] std::string fen() const;
     [[nodiscard]] ChineseChessSearchPosition search_position() const;
+    [[nodiscard]] NaturalLimitReview natural_limit_review(Side claimant) const noexcept;
+    [[nodiscard]] NaturalLimitClaimResult claim_natural_limit() noexcept;
     // Legacy diagnostic search; production JNI uses Pikafish for all levels.
     [[nodiscard]] std::optional<EngineAction> best_move(
         Difficulty difficulty
@@ -114,6 +142,11 @@ private:
         std::uint16_t previous_no_capture_plies;
         GameResult previous_adjudicated_result;
         MoveNature nature;
+    };
+
+    struct NaturalLimitClaimRecord {
+        std::uint16_t ply_index;
+        Side claimant;
     };
 
     struct PositionState {
@@ -260,6 +293,7 @@ private:
     Board board_{};
     Side current_side_{Side::red};
     std::vector<MoveRecord> history_;
+    std::vector<NaturalLimitClaimRecord> natural_limit_claims_;
     std::vector<PositionState> position_history_;
     std::uint16_t no_capture_plies_{0};
     GameResult adjudicated_result_{GameResult::ongoing};

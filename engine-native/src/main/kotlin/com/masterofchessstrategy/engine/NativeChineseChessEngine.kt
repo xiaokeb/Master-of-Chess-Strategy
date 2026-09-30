@@ -7,7 +7,7 @@ import com.masterofchessstrategy.engine.internal.JniChineseChessBridge
 class NativeChineseChessEngine internal constructor(
     private val bridge: ChineseChessBridge,
     private val networkPathProvider: (() -> String)? = null,
-) : ChineseChessAiEngine {
+) : ChineseChessAiEngine, ChineseChessNaturalLimitEngine {
     private val lock = Any()
     private var handle = bridge.create().also {
         check(it > 0) { "Native engine could not be created" }
@@ -139,6 +139,29 @@ class NativeChineseChessEngine internal constructor(
 
     override fun isInCheck(side: ChineseChessSide): Boolean =
         withHandle { bridge.isInCheck(it, side.code) }
+
+    override fun naturalLimitReview(side: ChineseChessSide): ChineseChessNaturalLimitReview {
+        val fields = withHandle { bridge.naturalLimitReview(it, side.code) }
+        check(fields.size == 6 && fields.all { it >= 0 } && fields[4] in 0..1 && fields[5] in 0..1) {
+            "Native engine returned malformed natural-limit review"
+        }
+        return ChineseChessNaturalLimitReview(
+            noCapturePlies = fields[0],
+            recordedPlies = fields[1],
+            claimantChecks = fields[2],
+            effectivePlies = fields[3],
+            completeRecord = fields[4] == 1,
+            eligible = fields[5] == 1,
+        )
+    }
+
+    override fun claimNaturalLimit(): NaturalLimitClaimOutcome = when (val code = withHandle(bridge::claimNaturalLimit)) {
+        0 -> NaturalLimitClaimOutcome.DRAW
+        1 -> NaturalLimitClaimOutcome.FIRST_FALSE_CLAIM
+        2 -> NaturalLimitClaimOutcome.SECOND_FALSE_CLAIM_LOSS
+        3 -> NaturalLimitClaimOutcome.INVALID_STATE
+        else -> protocolFailure("natural-limit claim", code)
+    }
 
     override fun close() {
         synchronized(lock) {

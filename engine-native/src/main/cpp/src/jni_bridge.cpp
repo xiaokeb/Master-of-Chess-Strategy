@@ -364,3 +364,31 @@ Java_com_masterofchessstrategy_engine_internal_NativeBindings_chineseChessIsInCh
             : JNI_FALSE;
     });
 }
+
+extern "C" JNIEXPORT jintArray JNICALL
+Java_com_masterofchessstrategy_engine_internal_NativeBindings_chineseChessNaturalLimitReview(
+    JNIEnv* env, jobject, const jlong handle, const jint side_code
+) noexcept {
+    return guard_jni<jintArray>(env, nullptr, [=] {
+        if (side_code != 0 && side_code != 1) {
+            throw std::invalid_argument("Invalid Chinese chess side");
+        }
+        const auto side = side_code == 0 ? mocs::engine::Side::red : mocs::engine::Side::black;
+        const auto review = require_chinese_chess_engine(handle)->natural_limit_review(side);
+        const std::array<jint, 6> fields{
+            review.no_capture_plies, review.recorded_plies, review.claimant_checks,
+            review.effective_plies, review.complete_record ? 1 : 0, review.eligible ? 1 : 0};
+        const auto result = env->NewIntArray(static_cast<jsize>(fields.size()));
+        if (result != nullptr) env->SetIntArrayRegion(result, 0, static_cast<jsize>(fields.size()), fields.data());
+        return result;
+    });
+}
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_masterofchessstrategy_engine_internal_NativeBindings_claimChineseChessNaturalLimit(
+    JNIEnv* env, jobject, const jlong handle
+) noexcept {
+    return guard_jni<jint>(env, 3, [=] {
+        return static_cast<jint>(require_chinese_chess_engine(handle)->claim_natural_limit());
+    });
+}

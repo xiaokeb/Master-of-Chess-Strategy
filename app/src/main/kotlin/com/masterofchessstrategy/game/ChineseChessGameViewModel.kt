@@ -32,6 +32,7 @@ import com.masterofchessstrategy.engine.BoardMove
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessAiEngine
 import com.masterofchessstrategy.engine.ChineseChessBoard
+import com.masterofchessstrategy.engine.ChineseChessNaturalLimitEngine
 import com.masterofchessstrategy.engine.ChineseChessRuleEngine
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.Difficulty
@@ -39,6 +40,7 @@ import com.masterofchessstrategy.engine.EngineError
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.NativeChineseChessEngine
+import com.masterofchessstrategy.engine.NaturalLimitClaimOutcome
 import com.masterofchessstrategy.engine.RestoreResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -461,6 +463,42 @@ class ChineseChessGameViewModel internal constructor(
                 emitSound(ChineseChessSoundCue.DRAW)
                 persistCurrentSession()
             }
+        }
+    }
+
+    fun claimNaturalLimit() {
+        val activeEngine = engine as? ChineseChessNaturalLimitEngine ?: return
+        if (!uiState.isInteractionEnabled || !uiState.canClaimNaturalLimit ||
+            uiState.result != GameResult.ONGOING || mode == StoredGameMode.ENDGAME) return
+        runEngineOperation {
+            val now = nowEpochMillis()
+            if (!commitActiveClock(now)) return@runEngineOperation
+            when (activeEngine.claimNaturalLimit()) {
+                NaturalLimitClaimOutcome.DRAW -> {
+                    refresh(ChineseChessFeedback.NATURAL_LIMIT_DRAW)
+                    emitSound(ChineseChessSoundCue.DRAW)
+                }
+                NaturalLimitClaimOutcome.FIRST_FALSE_CLAIM -> {
+                    if (timeControlMinutes != null) {
+                        val side = uiState.currentSide
+                        val remaining = (remainingFor(side, now, side) ?: 0L) - 5 * 60_000L
+                        setRemaining(side, remaining.coerceAtLeast(0L))
+                        if (remaining <= 0L) {
+                            expireActiveClock(now)
+                            return@runEngineOperation
+                        }
+                    }
+                    refresh(ChineseChessFeedback.NATURAL_LIMIT_FALSE_CLAIM)
+                }
+                NaturalLimitClaimOutcome.SECOND_FALSE_CLAIM_LOSS -> {
+                    refresh(ChineseChessFeedback.NATURAL_LIMIT_SECOND_FALSE_CLAIM)
+                    emitTerminalSound(activeEngine.gameResult())
+                }
+                NaturalLimitClaimOutcome.INVALID_STATE -> {
+                    refresh(ChineseChessFeedback.NATURAL_LIMIT_UNAVAILABLE)
+                }
+            }
+            persistCurrentSession()
         }
     }
 
@@ -993,6 +1031,8 @@ class ChineseChessGameViewModel internal constructor(
                 ChineseChessSide.BLACK.code -> ChineseChessSide.BLACK
                 else -> error("Engine returned an unsupported player")
             }
+            val naturalLimitReview = (activeEngine as? ChineseChessNaturalLimitEngine)
+                ?.naturalLimitReview(currentSide)
             handleAutoPlayTerminal(result)
             requestSettlement(result)
             requestCompletedRecord(result, activeEngine)
@@ -1063,6 +1103,10 @@ class ChineseChessGameViewModel internal constructor(
                     !isAutoPlay &&
                         mode != StoredGameMode.ENDGAME &&
                         result == GameResult.ONGOING,
+                naturalLimitReview = naturalLimitReview,
+                canClaimNaturalLimit =
+                    naturalLimitReview?.completeRecord == true && !isAutoPlay &&
+                        mode != StoredGameMode.ENDGAME && result == GameResult.ONGOING,
                 feedback = feedback,
             )
         }

@@ -52,6 +52,30 @@ class NativeChineseChessEngineTest {
     }
 
     @Test
+    fun naturalLimitReviewAndClaimCodesStaySeparateFromMutualDraw() {
+        val bridge = FakeChineseChessBridge().apply {
+            review = intArrayOf(120, 120, 11, 118, 1, 0)
+            claimCode = 1
+        }
+        NativeChineseChessEngine(bridge).use { engine ->
+            assertEquals(
+                ChineseChessNaturalLimitReview(120, 120, 11, 118, true, false),
+                engine.naturalLimitReview(ChineseChessSide.RED),
+            )
+            assertEquals(NaturalLimitClaimOutcome.FIRST_FALSE_CLAIM, engine.claimNaturalLimit())
+            bridge.claimCode = 2
+            assertEquals(NaturalLimitClaimOutcome.SECOND_FALSE_CLAIM_LOSS, engine.claimNaturalLimit())
+            bridge.review = intArrayOf(120, 120, 10, 120, 1, 1)
+            assertTrue(engine.naturalLimitReview(ChineseChessSide.BLACK).eligible)
+            bridge.claimCode = 0
+            assertEquals(NaturalLimitClaimOutcome.DRAW, engine.claimNaturalLimit())
+            bridge.review = intArrayOf(120, 120, 10, 120, 2, 1)
+            assertThrows(IllegalStateException::class.java) { engine.naturalLimitReview(ChineseChessSide.RED) }
+        }
+        assertEquals(ChineseChessSide.RED.code, bridge.reviewedSideCode)
+    }
+
+    @Test
     fun moveAndRestoreCodesMapWithoutOrdinalCoupling() {
         val bridge = FakeChineseChessBridge()
         NativeChineseChessEngine(bridge).use { engine ->
@@ -191,6 +215,9 @@ private class FakeChineseChessBridge : ChineseChessBridge {
     var currentPlayerCode = 0
     var pieceCode = 0x80 or ChineseChessPieceType.CHARIOT.code
     var checkedSideCode: Int? = null
+    var reviewedSideCode: Int? = null
+    var review = intArrayOf(0, 0, 0, 0, 1, 0)
+    var claimCode = 3
     var lastDifficultyCode: Int? = null
     var lastNetworkPath: String? = null
 
@@ -245,6 +272,14 @@ private class FakeChineseChessBridge : ChineseChessBridge {
 
     override fun isInCheck(handle: Long, sideCode: Int): Boolean =
         observe(handle) { checkedSideCode == sideCode }
+
+    override fun naturalLimitReview(handle: Long, sideCode: Int): IntArray =
+        observe(handle) {
+            reviewedSideCode = sideCode
+            review.copyOf()
+        }
+
+    override fun claimNaturalLimit(handle: Long): Int = observe(handle) { claimCode }
 
     private inline fun <T> observe(handle: Long, value: () -> T): T {
         observedHandles += handle

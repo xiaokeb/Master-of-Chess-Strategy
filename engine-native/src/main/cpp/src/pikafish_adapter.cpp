@@ -66,12 +66,20 @@ public:
         std::istringstream option("name MultiPV value " + std::to_string(profile.multi_pv));
         engine_->get_options().setoption(option);
 
-        if (const auto error = engine_->set_position(position.initial_fen, position.moves); error) {
+        // Pikafish rejects an initial rule60 clock above 119 and adjudicates
+        // rule60 automatically. The local referee instead waits for a claim.
+        // Near that boundary, replay a recent window with a reset search clock;
+        // the authoritative engine still owns legality and adjudication.
+        const bool use_rule60_window = !position.rule60_safe_initial_fen.empty();
+        const auto& initial_fen = use_rule60_window
+            ? position.rule60_safe_initial_fen : position.initial_fen;
+        const auto& moves = use_rule60_window
+            ? position.rule60_safe_moves : position.moves;
+        if (const auto error = engine_->set_position(initial_fen, moves); error) {
             throw std::invalid_argument("Pikafish rejected the position history");
         }
         // Replaying must reach the authoritative board and side. Do not compare
-        // rule60 clocks: upstream discounts checks beyond ten per side, while
-        // the local rules currently retain a raw no-capture ply counter.
+        // rule60 clocks: upstream's automatic rule is not the local claim rule.
         if (board_and_side(engine_->fen()) != board_and_side(position.current_fen)) {
             throw std::invalid_argument("Pikafish history does not reach the current position");
         }

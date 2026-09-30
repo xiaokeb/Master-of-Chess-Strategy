@@ -43,4 +43,8 @@ internal object NativeBindings {
     external fun chineseChessPieceAt(handle: Long, x: Int, y: Int): Int
 
     external fun chineseChessIsInCheck(handle: Long, sideCode: Int): Boolean
+
+    external fun chineseChessNaturalLimitReview(handle: Long, sideCode: Int): IntArray
+
+    external fun claimChineseChessNaturalLimit(handle: Long): Int
 }

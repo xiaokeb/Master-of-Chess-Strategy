@@ -120,6 +120,7 @@ internal const val ASSESSMENT_NEXT_GAME_TAG = "assessment_next_game"
 internal const val HINT_BUTTON_TAG = "hint_button"
 internal const val RESIGN_BUTTON_TAG = "resign_button"
 internal const val DRAW_BUTTON_TAG = "draw_button"
+internal const val NATURAL_LIMIT_BUTTON_TAG = "natural_limit_button"
 internal const val AUTO_PLAY_TOGGLE_TAG = "auto_play_toggle"
 internal const val AUTO_PLAY_SPEED_TAG = "auto_play_speed"
 internal const val GAME_BACK_BUTTON_TAG = "game_back_button"
@@ -481,6 +482,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     state = game.uiState, onSquareTap = game::onSquareTap, onUndo = game::undo,
                     onRetrySave = game::retryTerminalSave,
                     onHint = game::requestHint, onResign = game::resign, onDraw = game::offerOrAcceptDraw,
+                    onNaturalLimitClaim = game::claimNaturalLimit,
                     onRestart = { game.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled) },
                     onBack = navController::popBackStack,
                     onSettings = { navController.navigate(AppDestination.SETTINGS) { launchSingleTop = true } },
@@ -615,6 +617,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
+                    onNaturalLimitClaim = gameViewModel::claimNaturalLimit,
                     onToggleAutoPlay = gameViewModel::toggleAutoPlayPaused,
                     onAutoPlaySpeedChange = gameViewModel::setAutoPlaySpeed,
                     onAutoPlaySpeedChangeFinished = gameViewModel::persistAutoPlaySpeed,
@@ -716,6 +719,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
+                    onNaturalLimitClaim = gameViewModel::claimNaturalLimit,
                     onRestart = {
                         gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
                     },
@@ -810,6 +814,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
+                    onNaturalLimitClaim = gameViewModel::claimNaturalLimit,
                     onRestart = {
                         gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
                     },
@@ -917,6 +922,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
+                    onNaturalLimitClaim = gameViewModel::claimNaturalLimit,
                     onRestart = {
                         gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
                     },
@@ -1027,6 +1033,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
+                    onNaturalLimitClaim = gameViewModel::claimNaturalLimit,
                     onRestart = {
                         gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
                     },
@@ -1148,6 +1155,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
+                    onNaturalLimitClaim = gameViewModel::claimNaturalLimit,
                     onRestart = {
                         gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
                     },
@@ -1337,6 +1345,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
+                    onNaturalLimitClaim = gameViewModel::claimNaturalLimit,
                     onRestart = {
                         gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
                     },
@@ -1401,6 +1410,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
+                    onNaturalLimitClaim = gameViewModel::claimNaturalLimit,
                     onRestart = {
                         gameViewModel.restartWithAiFirst(settingsViewModel.uiState.settings.aiFirstEnabled)
                     },
@@ -1465,6 +1475,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onHint = gameViewModel::requestHint,
                     onResign = gameViewModel::resign,
                     onDraw = gameViewModel::offerOrAcceptDraw,
+                    onNaturalLimitClaim = gameViewModel::claimNaturalLimit,
                     onToggleAutoPlay = gameViewModel::toggleAutoPlayPaused,
                     onAutoPlaySpeedChange = gameViewModel::setAutoPlaySpeed,
                     onAutoPlaySpeedChangeFinished =
@@ -1681,6 +1692,7 @@ internal fun ChineseChessGameScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onDraw: () -> Unit = {},
+    onNaturalLimitClaim: () -> Unit = {},
     onToggleAutoPlay: () -> Unit = {},
     onAutoPlaySpeedChange: (Float) -> Unit = {},
     onAutoPlaySpeedChangeFinished: () -> Unit = {},
@@ -1728,6 +1740,7 @@ internal fun ChineseChessGameScreen(
                                 onHint = onHint,
                                 onResign = onResign,
                                 onDraw = onDraw,
+                                onNaturalLimitClaim = onNaturalLimitClaim,
                                 onToggleAutoPlay = onToggleAutoPlay,
                                 onAutoPlaySpeedChange = onAutoPlaySpeedChange,
                                 onAutoPlaySpeedChangeFinished =
@@ -1759,6 +1772,7 @@ internal fun ChineseChessGameScreen(
                                 onHint = onHint,
                                 onResign = onResign,
                                 onDraw = onDraw,
+                                onNaturalLimitClaim = onNaturalLimitClaim,
                                 onToggleAutoPlay = onToggleAutoPlay,
                                 onAutoPlaySpeedChange = onAutoPlaySpeedChange,
                                 onAutoPlaySpeedChangeFinished =
@@ -1913,6 +1927,7 @@ private fun GameControls(
     onHint: () -> Unit,
     onResign: () -> Unit,
     onDraw: () -> Unit,
+    onNaturalLimitClaim: () -> Unit,
     onToggleAutoPlay: () -> Unit,
     onAutoPlaySpeedChange: (Float) -> Unit,
     onAutoPlaySpeedChangeFinished: () -> Unit,
@@ -1930,6 +1945,7 @@ private fun GameControls(
             !state.isAiThinking &&
             !state.isHintThinking
     var showResignConfirmation by remember { mutableStateOf(false) }
+    var showNaturalLimitConfirmation by remember { mutableStateOf(false) }
     if (showResignConfirmation) {
         AlertDialog(
             onDismissRequest = { showResignConfirmation = false },
@@ -1947,6 +1963,34 @@ private fun GameControls(
             },
             dismissButton = {
                 TextButton(onClick = { showResignConfirmation = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+    if (showNaturalLimitConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showNaturalLimitConfirmation = false },
+            title = { Text(stringResource(R.string.natural_limit_confirm_title)) },
+            text = {
+                Column {
+                    Text(stringResource(R.string.natural_limit_confirm_message))
+                    state.naturalLimitReview?.let { review ->
+                        Text(stringResource(R.string.natural_limit_current_count, review.effectivePlies))
+                        if (!review.completeRecord) {
+                            Text(stringResource(R.string.natural_limit_incomplete_record))
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showNaturalLimitConfirmation = false
+                    onNaturalLimitClaim()
+                }) { Text(stringResource(R.string.natural_limit_confirm_action)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNaturalLimitConfirmation = false }) {
                     Text(stringResource(R.string.cancel))
                 }
             },
@@ -2208,6 +2252,13 @@ private fun GameControls(
                     }
                 }
                 OutlinedButton(
+                    onClick = { showNaturalLimitConfirmation = true },
+                    enabled = state.isInteractionEnabled && state.canClaimNaturalLimit,
+                    modifier = Modifier.fillMaxWidth().testTag(NATURAL_LIMIT_BUTTON_TAG),
+                ) {
+                    Text(stringResource(R.string.claim_natural_limit))
+                }
+                OutlinedButton(
                     onClick = { showResignConfirmation = true },
                     enabled =
                         state.isInteractionEnabled &&
@@ -2380,6 +2431,10 @@ private fun feedbackText(feedback: ChineseChessFeedback): String =
             ChineseChessFeedback.DRAW_WAITING -> R.string.feedback_draw_waiting
             ChineseChessFeedback.DRAW_ACCEPTED -> R.string.feedback_draw_accepted
             ChineseChessFeedback.DRAW_DECLINED -> R.string.feedback_draw_declined
+            ChineseChessFeedback.NATURAL_LIMIT_DRAW -> R.string.feedback_natural_limit_draw
+            ChineseChessFeedback.NATURAL_LIMIT_FALSE_CLAIM -> R.string.feedback_natural_limit_false_claim
+            ChineseChessFeedback.NATURAL_LIMIT_SECOND_FALSE_CLAIM -> R.string.feedback_natural_limit_second_false_claim
+            ChineseChessFeedback.NATURAL_LIMIT_UNAVAILABLE -> R.string.feedback_natural_limit_unavailable
             ChineseChessFeedback.TIME_EXPIRED -> R.string.feedback_time_expired
             ChineseChessFeedback.AUTO_PLAY_PAUSED -> R.string.feedback_auto_play_paused
             ChineseChessFeedback.AUTO_PLAY_RESUMED -> R.string.feedback_auto_play_resumed

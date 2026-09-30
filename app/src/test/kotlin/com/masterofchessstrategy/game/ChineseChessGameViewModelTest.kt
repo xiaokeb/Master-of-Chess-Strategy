@@ -5,11 +5,14 @@ import com.masterofchessstrategy.engine.BoardMove
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessPiece
 import com.masterofchessstrategy.engine.ChineseChessPieceType
+import com.masterofchessstrategy.engine.ChineseChessNaturalLimitEngine
+import com.masterofchessstrategy.engine.ChineseChessNaturalLimitReview
 import com.masterofchessstrategy.engine.ChineseChessRuleEngine
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.PlayerId
+import com.masterofchessstrategy.engine.NaturalLimitClaimOutcome
 import com.masterofchessstrategy.engine.RestoreResult
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.data.GameRecord
@@ -195,9 +198,78 @@ class ChineseChessGameViewModelTest {
         assertEquals(ChineseChessFeedback.DRAW_ACCEPTED, viewModel.uiState.feedback)
     }
 
+    @Test
+    fun naturalLimitClaimIsDistinctFromMutualOfferAndDeductsFiveMinutes() {
+        var now = 1_000L
+        val engine = FakeChineseChessEngine()
+        val viewModel = ChineseChessGameViewModel(
+            nowEpochMillis = { now },
+            initialTimeControlMinutes = 10,
+            clockTickIntervalMillis = null,
+            engineFactory = { engine },
+        )
+        assertTrue(viewModel.uiState.canClaimNaturalLimit)
+        now += 10_000L
+        viewModel.claimNaturalLimit()
+        assertEquals(290_000L, viewModel.uiState.redRemainingMillis)
+        assertEquals(GameResult.ONGOING, viewModel.uiState.result)
+        assertNull(viewModel.uiState.pendingDrawOfferSide)
+        assertEquals(ChineseChessFeedback.NATURAL_LIMIT_FALSE_CLAIM, viewModel.uiState.feedback)
+
+        engine.naturalClaimOutcome = NaturalLimitClaimOutcome.SECOND_FALSE_CLAIM_LOSS
+        viewModel.claimNaturalLimit()
+        assertEquals(GameResult.SECOND_PLAYER_WIN, viewModel.uiState.result)
+        assertEquals(ChineseChessFeedback.NATURAL_LIMIT_SECOND_FALSE_CLAIM, viewModel.uiState.feedback)
+    }
+
+    @Test
+    fun naturalLimitFalseClaimCanCauseImmediateClockLoss() {
+        var now = 1_000L
+        val viewModel = ChineseChessGameViewModel(
+            nowEpochMillis = { now },
+            initialTimeControlMinutes = 5,
+            clockTickIntervalMillis = null,
+            engineFactory = { FakeChineseChessEngine() },
+        )
+        now += 1L
+        viewModel.claimNaturalLimit()
+        assertEquals(0L, viewModel.uiState.redRemainingMillis)
+        assertEquals(GameResult.SECOND_PLAYER_WIN, viewModel.uiState.result)
+        assertEquals(ChineseChessFeedback.TIME_EXPIRED, viewModel.uiState.feedback)
+    }
+
+    @Test
+    fun successfulNaturalLimitClaimSettlesDrawWithoutOpponentConsent() = runTest {
+        val engine = FakeChineseChessEngine().apply {
+            naturalClaimOutcome = NaturalLimitClaimOutcome.DRAW
+        }
+        val viewModel = ChineseChessGameViewModel { engine }
+        val soundEvent = async(start = CoroutineStart.UNDISPATCHED) {
+            viewModel.soundEvents.first()
+        }
+        viewModel.claimNaturalLimit()
+        assertEquals(ChineseChessSoundCue.DRAW, soundEvent.await())
+        assertEquals(GameResult.DRAW, viewModel.uiState.result)
+        assertEquals(ChineseChessFeedback.NATURAL_LIMIT_DRAW, viewModel.uiState.feedback)
+    }
+
+    @Test
+    fun incompleteNaturalLimitRecordDisablesApplicationWithoutClockPenalty() {
+        val engine = FakeChineseChessEngine().apply { naturalRecordComplete = false }
+        val viewModel = ChineseChessGameViewModel(
+            initialTimeControlMinutes = 10,
+            clockTickIntervalMillis = null,
+            engineFactory = { engine },
+        )
+        assertFalse(viewModel.uiState.canClaimNaturalLimit)
+        viewModel.claimNaturalLimit()
+        assertEquals(600_000L, viewModel.uiState.redRemainingMillis)
+        assertEquals(GameResult.ONGOING, viewModel.uiState.result)
+    }
+
     private inner class FakeChineseChessEngine(
         private val captureAtDestination: Boolean = false,
-    ) : ChineseChessRuleEngine {
+    ) : ChineseChessNaturalLimitEngine {
         override val gameType = GameType.CHINESE_CHESS
         private val positions = mutableMapOf(
             redRook to ChineseChessPiece(ChineseChessPieceType.CHARIOT, ChineseChessSide.RED),
@@ -215,6 +287,9 @@ class ChineseChessGameViewModelTest {
         var resetCalls = 0
             private set
         var checkedSide: ChineseChessSide? = null
+        var naturalClaimOutcome = NaturalLimitClaimOutcome.FIRST_FALSE_CLAIM
+        var naturalRecordComplete = true
+        private var naturalResult = GameResult.ONGOING
 
         override val currentPlayer: PlayerId
             get() = player
@@ -234,6 +309,7 @@ class ChineseChessGameViewModelTest {
             }
             player = PlayerId(ChineseChessSide.RED.code)
             canUndo = false
+            naturalResult = GameResult.ONGOING
         }
 
         override fun apply(action: BoardMove): ActionResult {
@@ -263,7 +339,19 @@ class ChineseChessGameViewModelTest {
                 emptyList()
             }
 
-        override fun gameResult(): GameResult = GameResult.ONGOING
+        override fun gameResult(): GameResult = naturalResult
+
+        override fun naturalLimitReview(side: ChineseChessSide): ChineseChessNaturalLimitReview =
+            ChineseChessNaturalLimitReview(0, 0, 0, 0, naturalRecordComplete, false)
+
+        override fun claimNaturalLimit(): NaturalLimitClaimOutcome = naturalClaimOutcome.also {
+            naturalResult = when (it) {
+                NaturalLimitClaimOutcome.DRAW -> GameResult.DRAW
+                NaturalLimitClaimOutcome.SECOND_FALSE_CLAIM_LOSS ->
+                    if (currentPlayer.value == ChineseChessSide.RED.code) GameResult.SECOND_PLAYER_WIN else GameResult.FIRST_PLAYER_WIN
+                else -> GameResult.ONGOING
+            }
+        }
 
         override fun serialize(): ByteArray = byteArrayOf(1)
 

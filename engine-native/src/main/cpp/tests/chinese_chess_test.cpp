@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -16,12 +17,14 @@ using mocs::engine::ChineseChessEngine;
 using mocs::engine::Difficulty;
 using mocs::engine::EngineError;
 using mocs::engine::GameResult;
+using mocs::engine::NaturalLimitClaimResult;
 using mocs::engine::Piece;
 using mocs::engine::PieceType;
 using mocs::engine::Side;
 using mocs::engine::make_board_move;
 using mocs::engine::adjudicate_pikafish_repetition;
 using mocs::engine::decode_pikafish_move;
+using mocs::engine::natural_limit_effective_plies;
 
 void initial_position_is_stable() {
     const ChineseChessEngine engine;
@@ -345,8 +348,10 @@ void saved_adjudication_is_derived_from_history() {
             assert(engine.apply(make_board_move(0, 6, 0, 5)).accepted);
         }
         auto data = engine.serialize();
+        // v2 had no claim events; its derived outcome can be recalculated.
+        data.resize(data.size() - 6);
+        data[4] = 2;
         data[9] = static_cast<std::uint8_t>(GameResult::draw);
-        data.resize(data.size() - 4);
         append_u32(data, crc32(data, data.size()));
 
         ChineseChessEngine restored;
@@ -355,6 +360,13 @@ void saved_adjudication_is_derived_from_history() {
         assert(restored.serialize()[9] ==
             static_cast<std::uint8_t>(GameResult::ongoing));
     }
+
+    auto forged_v3 = engine.serialize();
+    forged_v3[9] = static_cast<std::uint8_t>(GameResult::draw);
+    forged_v3.resize(forged_v3.size() - 4);
+    append_u32(forged_v3, crc32(forged_v3, forged_v3.size()));
+    ChineseChessEngine forged_restore;
+    assert(!forged_restore.restore(forged_v3).restored);
 
     ChineseChessEngine one_move;
     assert(one_move.apply(make_board_move(0, 6, 0, 5)).accepted);
@@ -790,7 +802,7 @@ void saved_history_cannot_continue_after_repetition_draw() {
     data[10] = 9;
     data[12 + 9 * 9 + 3] = 0;
     data[12 + 8 * 9 + 4] = 2; // Red advisor.
-    data.insert(data.end(), {3, 9, 4, 8, 2, 0, 0, 8, 0, 0, 0});
+    data.insert(data.end() - 2, {3, 9, 4, 8, 2, 0, 0, 8, 0, 0, 0});
     append_u32(data, crc32(data, data.size()));
 
     ChineseChessEngine restored;
@@ -799,7 +811,7 @@ void saved_history_cannot_continue_after_repetition_draw() {
     assert(result.error == EngineError::corrupted_data);
 }
 
-void saved_history_cannot_capture_after_natural_limit_draw() {
+void legacy_saved_history_cannot_resume_after_old_automatic_limit() {
     const auto initial = custom_position(
         Side::red,
         {
@@ -813,7 +825,9 @@ void saved_history_cannot_capture_after_natural_limit_draw() {
     );
     ChineseChessEngine finished;
     assert(finished.restore(initial).restored);
-    assert(finished.game_result() == GameResult::draw);
+    assert(finished.game_result() == GameResult::ongoing);
+    assert(finished.apply(make_board_move(0, 5, 0, 4)).accepted);
+    assert(finished.game_result() == GameResult::ongoing);
 
     auto data = initial;
     data.resize(data.size() - 4);
@@ -831,7 +845,56 @@ void saved_history_cannot_capture_after_natural_limit_draw() {
     assert(result.error == EngineError::corrupted_data);
 }
 
-void sixty_rounds_without_capture_reaches_the_natural_limit() {
+void complete_sixty_round_record_can_be_claimed_but_not_auto_drawn() {
+    assert(natural_limit_effective_plies(120, 10) == 120);
+    assert(natural_limit_effective_plies(120, 11) == 118);
+    assert(natural_limit_effective_plies(122, 11) == 120);
+    assert(natural_limit_effective_plies(20, 100) == 0);
+    constexpr std::array<std::array<int, 2>, 12> red_path{{
+        {{0, 6}}, {{1, 6}}, {{2, 6}}, {{3, 6}}, {{3, 7}}, {{3, 8}},
+        {{3, 9}}, {{2, 9}}, {{1, 9}}, {{0, 9}}, {{0, 8}}, {{0, 7}},
+    }};
+    constexpr std::array<std::array<int, 2>, 10> black_path{{
+        {{6, 0}}, {{7, 0}}, {{8, 0}}, {{8, 1}}, {{8, 2}},
+        {{8, 3}}, {{7, 3}}, {{6, 3}}, {{6, 2}}, {{6, 1}},
+    }};
+    ChineseChessEngine engine;
+    assert(engine.restore(custom_position(Side::red, {
+        {5, 9, {PieceType::general, Side::red}},
+        {5, 0, {PieceType::general, Side::black}},
+        {5, 5, {PieceType::soldier, Side::red}},
+        {0, 6, {PieceType::chariot, Side::red}},
+        {6, 0, {PieceType::chariot, Side::black}},
+    })).restored);
+    for (std::size_t round = 0; round < 60; ++round) {
+        const auto& red_from = red_path[round % red_path.size()];
+        const auto& red_to = red_path[(round + 1) % red_path.size()];
+        assert(engine.apply(make_board_move(red_from[0], red_from[1], red_to[0], red_to[1])).accepted);
+        const auto& black_from = black_path[round % black_path.size()];
+        const auto& black_to = black_path[(round + 1) % black_path.size()];
+        assert(engine.apply(make_board_move(black_from[0], black_from[1], black_to[0], black_to[1])).accepted);
+    }
+    const auto review = engine.natural_limit_review(Side::red);
+    assert(review.no_capture_plies == 120 && review.recorded_plies == 120);
+    assert(review.claimant_checks == 0 && review.complete_record && review.eligible);
+    assert(engine.game_result() == GameResult::ongoing);
+    const auto search = engine.search_position();
+    assert(search.moves.size() == 120);
+    assert(search.rule60_safe_moves.size() == 80);
+    assert(search.rule60_safe_initial_fen.find(" 0 ") != std::string::npos);
+    assert(engine.claim_natural_limit() == NaturalLimitClaimResult::draw);
+    assert(engine.game_result() == GameResult::draw);
+    const auto saved = engine.serialize();
+    assert(saved[4] == 3);
+    ChineseChessEngine restored;
+    assert(restored.restore(saved).restored);
+    assert(restored.serialize() == saved);
+    assert(restored.game_result() == GameResult::draw);
+    assert(restored.undo());
+    assert(restored.game_result() == GameResult::ongoing);
+}
+
+void incomplete_history_does_not_create_an_automatic_natural_limit_draw() {
     ChineseChessEngine engine;
     assert(
         engine.restore(
@@ -849,7 +912,24 @@ void sixty_rounds_without_capture_reaches_the_natural_limit() {
     );
 
     assert(engine.apply(make_board_move(0, 5, 1, 5)).accepted);
-    assert(engine.game_result() == GameResult::draw);
+    assert(engine.game_result() == GameResult::ongoing);
+    const auto review = engine.natural_limit_review(Side::black);
+    assert(review.no_capture_plies == 120 && review.recorded_plies == 1);
+    assert(!review.complete_record && !review.eligible);
+    assert(engine.claim_natural_limit() == NaturalLimitClaimResult::invalid_state);
+    assert(engine.game_result() == GameResult::ongoing);
+    ChineseChessEngine complete_record;
+    assert(complete_record.restore(custom_position(Side::red, {
+        {5, 9, {PieceType::general, Side::red}},
+        {5, 0, {PieceType::general, Side::black}},
+        {5, 5, {PieceType::soldier, Side::red}},
+        {0, 5, {PieceType::chariot, Side::red}},
+    })).restored);
+    assert(complete_record.claim_natural_limit() == NaturalLimitClaimResult::first_false_claim);
+    ChineseChessEngine restored;
+    assert(restored.restore(complete_record.serialize()).restored);
+    assert(restored.claim_natural_limit() == NaturalLimitClaimResult::second_false_claim_loss);
+    assert(restored.game_result() == GameResult::second_player_win);
 }
 
 void checkmate_on_the_natural_limit_move_still_wins() {
@@ -1069,8 +1149,9 @@ int main() {
     repeated_equal_exchange_is_drawn();
     repeated_idle_moves_are_drawn_instead_of_treated_as_long_block();
     saved_history_cannot_continue_after_repetition_draw();
-    saved_history_cannot_capture_after_natural_limit_draw();
-    sixty_rounds_without_capture_reaches_the_natural_limit();
+    legacy_saved_history_cannot_resume_after_old_automatic_limit();
+    complete_sixty_round_record_can_be_claimed_but_not_auto_drawn();
+    incomplete_history_does_not_create_an_automatic_natural_limit_draw();
     checkmate_on_the_natural_limit_move_still_wins();
     capture_resets_the_natural_limit_counter();
     easy_ai_returns_legal_move_without_mutating_position();

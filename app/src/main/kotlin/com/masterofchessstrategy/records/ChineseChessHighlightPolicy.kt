@@ -17,6 +17,7 @@ internal object ChineseChessHighlightPolicy {
     private const val MOVE_BYTES = 11
     private const val CRC_BYTES = 4
     private const val MAX_HISTORY = 4_096
+    private const val MAX_CLAIMS = 8_192
 
     fun matches(record: GameRecord, conditionsMask: Int): Boolean {
         if (
@@ -51,15 +52,19 @@ internal object ChineseChessHighlightPolicy {
         val state = record.engineState
         if (state.size < HEADER_BYTES + BOARD_BYTES + CRC_BYTES ||
             !state.copyOfRange(0, 4).contentEquals("MOCX".encodeToByteArray()) ||
-            state[4].toInt() != 2 || state[5].toInt() != GameType.CHINESE_CHESS.code
+            state[4].toInt() !in 2..3 || state[5].toInt() != GameType.CHINESE_CHESS.code
         ) {
             return false
         }
         val count = (state[10].toInt() and 0xff) or ((state[11].toInt() and 0xff) shl 8)
-        if (count > MAX_HISTORY ||
-            state.size != HEADER_BYTES + BOARD_BYTES + count * MOVE_BYTES + CRC_BYTES
-        ) {
-            return false
+        if (count > MAX_HISTORY) return false
+        val recordsEnd = HEADER_BYTES + BOARD_BYTES + count * MOVE_BYTES
+        if (state[4].toInt() == 2 && state.size != recordsEnd + CRC_BYTES) return false
+        if (state[4].toInt() == 3) {
+            if (state.size < recordsEnd + 2 + CRC_BYTES) return false
+            val claimCount = (state[recordsEnd].toInt() and 0xff) or
+                ((state[recordsEnd + 1].toInt() and 0xff) shl 8)
+            if (claimCount > MAX_CLAIMS || state.size != recordsEnd + 2 + 3 * claimCount + CRC_BYTES) return false
         }
         val checksum = CRC32().apply { update(state, 0, state.size - CRC_BYTES) }.value
         val storedChecksum = (0 until CRC_BYTES).fold(0L) { value, index ->

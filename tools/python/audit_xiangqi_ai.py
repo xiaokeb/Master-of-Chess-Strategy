@@ -36,8 +36,9 @@ def audit_profiles(config: dict) -> None:
             raise ValueError("profile outside calibration bounds")
         actual.append(values)
     if config["profile_version"] == 0:
-        if config["profile_source"] != "candidate" or actual == expected or config["suite"] != 1 or config.get("history_mode") != "full":
-            raise ValueError("candidate must be distinct, full-history and tuning-only")
+        if (config["profile_source"] != "candidate" or actual == expected or config["suite"] != 1 or
+                config.get("history_mode") not in ("full", "adaptive-rule60-window")):
+            raise ValueError("candidate must be distinct, replay-history and tuning-only")
     elif config["profile_source"] != "production" or actual != expected:
         raise ValueError("production profile differs from its versioned table")
     if config["pair"] == "hard-master" and (type(config.get("master_move_ms")) is not int or config["master_move_ms"] != actual[1][2]):
@@ -57,7 +58,7 @@ def audit(text: str) -> dict:
         raise ValueError("unsupported suite or pair")
     if config.get("backend", "legacy") not in ("legacy", "pikafish"):
         raise ValueError("unsupported AI backend")
-    if config.get("history_mode", "fen-only") not in ("fen-only", "full"):
+    if config.get("history_mode", "fen-only") not in ("fen-only", "full", "adaptive-rule60-window"):
         raise ValueError("unsupported search history mode")
     if config.get("backend") == "pikafish":
         audit_profiles(config)

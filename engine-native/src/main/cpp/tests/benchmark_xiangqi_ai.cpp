@@ -157,7 +157,8 @@ int main(const int argc, const char* argv[]) {
                   << "\",\"openings\":" << count << ",\"max_search_plies\":" << limit
                   << ",\"master_move_ms\":" << (strong == Difficulty::master ? strong_profile.move_time_millis : pikafish_move_time_millis)
                   << ",\"profile_version\":" << (candidate ? 0 : 1) << ",\"selection_seed\":20260926"
-                  << ",\"history_mode\":\"full\"";
+                  << ",\"history_mode\":\""
+                  << (backend == "pikafish" ? "adaptive-rule60-window" : "full") << '"';
         if (backend == "pikafish") {
             std::cout << ",\"base_profile_version\":1,\"profile_source\":\"" << (candidate ? "candidate" : "production") << '"';
             print_profile("weak_profile", weak_profile);

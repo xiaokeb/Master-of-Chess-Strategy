@@ -50,3 +50,27 @@ interface ChineseChessRuleEngine : RuleEngine<BoardMove> {
 interface ChineseChessAiEngine : ChineseChessRuleEngine {
     fun chooseMove(difficulty: Difficulty): BoardMove?
 }
+
+/** Request-only 2020 natural-limit review, distinct from mutual draw offers. */
+enum class NaturalLimitClaimOutcome {
+    DRAW,
+    FIRST_FALSE_CLAIM,
+    SECOND_FALSE_CLAIM_LOSS,
+    INVALID_STATE,
+}
+
+data class ChineseChessNaturalLimitReview(
+    val noCapturePlies: Int,
+    val recordedPlies: Int,
+    val claimantChecks: Int,
+    val effectivePlies: Int,
+    val completeRecord: Boolean,
+    val eligible: Boolean,
+)
+
+/** Optional rule capability; callers must not infer eligibility from FEN alone. */
+interface ChineseChessNaturalLimitEngine : ChineseChessRuleEngine {
+    fun naturalLimitReview(side: ChineseChessSide): ChineseChessNaturalLimitReview
+
+    fun claimNaturalLimit(): NaturalLimitClaimOutcome
+}
