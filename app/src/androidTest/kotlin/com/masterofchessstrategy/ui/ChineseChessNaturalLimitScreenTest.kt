@@ -18,6 +18,7 @@ import com.masterofchessstrategy.engine.ChineseChessNaturalLimitReview
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.NativeChineseChessEngine
 import com.masterofchessstrategy.engine.RestoreResult
+import com.masterofchessstrategy.game.ChineseChessFeedback
 import com.masterofchessstrategy.game.ChineseChessGameViewModel
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 import com.masterofchessstrategy.ui.theme.MocsAppWindow
@@ -150,9 +151,35 @@ class ChineseChessNaturalLimitScreenTest {
             composeRule.runOnIdle { assertEquals(GameResult.DRAW, game.uiState.result) }
             composeRule.onNodeWithText("自然限着申请审核属实，本局判和。")
                 .performScrollTo().assertExists()
+            composeRule.onNodeWithText("棋局已经结束，请重开。")
+                .performScrollTo().assertExists()
             composeRule.onNodeWithTag(NATURAL_LIMIT_BUTTON_TAG)
                 .performScrollTo().assertIsNotEnabled()
             screenshot("mocs-natural-limit-draw.png")
+        }
+    }
+
+    @Test
+    fun nativeFalseClaimsDeductClockAndSecondClaimLoses() {
+        var now = 1_000L
+        NativeChineseChessEngine().use { engine ->
+            val game = ChineseChessGameViewModel(
+                nowEpochMillis = { now },
+                initialTimeControlMinutes = 10,
+                clockTickIntervalMillis = null,
+                engineFactory = { engine },
+            )
+            assertEquals(true, game.uiState.canClaimNaturalLimit)
+            now += 10_000L
+            game.claimNaturalLimit()
+            assertEquals(290_000L, game.uiState.redRemainingMillis)
+            assertEquals(GameResult.ONGOING, game.uiState.result)
+            assertEquals(ChineseChessFeedback.NATURAL_LIMIT_FALSE_CLAIM, game.uiState.feedback)
+
+            game.claimNaturalLimit()
+            assertEquals(GameResult.SECOND_PLAYER_WIN, game.uiState.result)
+            assertEquals(ChineseChessFeedback.NATURAL_LIMIT_SECOND_FALSE_CLAIM, game.uiState.feedback)
+            assertEquals(GameResult.SECOND_PLAYER_WIN, engine.gameResult())
         }
     }
 

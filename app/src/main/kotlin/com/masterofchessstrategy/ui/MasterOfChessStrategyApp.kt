@@ -2385,7 +2385,9 @@ private fun formatClock(millis: Long?): String {
 
 @Composable
 private fun selectionText(state: ChineseChessGameUiState): String =
-    if (state.isAutoPlayPaused) {
+    if (state.result != GameResult.ONGOING) {
+        stringResource(R.string.feedback_game_finished)
+    } else if (state.isAutoPlayPaused) {
         stringResource(R.string.auto_play_paused_status)
     } else if (state.isAutoPlay) {
         stringResource(R.string.auto_play_watching)

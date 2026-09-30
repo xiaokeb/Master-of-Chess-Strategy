@@ -93,7 +93,7 @@ Android NDK 工具链，不接受 MinGW 或宿主机工具链。
 ## 下一节点
 
 1. 跨棋种 80% 启动门槛已由用户作废；六个棋种可以按共用接口依赖并行设计与开发。象棋仍需功能清单、模拟器操作证据、内容量及最终验收；象棋独立关卡配额仍未确定。见 `chinese-chess-80-percent-gate.md` 与 `chat-coordination.md`。
-2. 自然限着申请审核已接入，不再以本地自动判和作为终局；原生、Kotlin/JNI 120 半回合、真实 ViewModel/界面申请及 Pikafish 阈值单局搜索已在 AVD 定向通过。下一步仍需 Room 终局持久化、更多将军扣着/误申诉设备用例和阈值附近棋力验收。见 `chinese-chess-natural-limit-decision.md` 与 `../testing/2026-09-30-chinese-chess-natural-limit-emulator.md`。
+2. 自然限着申请审核已接入，不再以本地自动判和作为终局；原生、Kotlin/JNI 120 半回合、真实 ViewModel/界面申请、误申诉扣时/再犯判负及 Pikafish 阈值单局搜索已在 AVD 定向通过。下一步仍需 Room 终局持久化、将军扣着等更多设备边界和阈值附近棋力验收。见 `chinese-chess-natural-limit-decision.md` 与 `../testing/2026-09-30-chinese-chess-natural-limit-emulator.md`。
 3. 完成全 Pikafish 的相邻档梯度校准；困难—大师现有 12 局基线含五局未完，不能用 85.7143% 的已完成局得分率冒充整体胜率。保留开局 suite 2 已冻结，参数候选确定后再用其作独立验收，不根据验收结果挑删样本。
 4. 按官方棋例继续扩充长杀、暗根、少根及复杂多对象追捉判定。
 5. 依 v5 来源清单和离线审核扩充中国象棋残局与开局内容，并逐批做原生规则、唯一性和难度验收；两步全应手证明已接入，继续扩充战术类型而非仅复制镜像局面。
