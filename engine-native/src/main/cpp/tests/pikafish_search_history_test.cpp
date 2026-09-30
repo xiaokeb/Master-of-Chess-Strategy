@@ -31,6 +31,24 @@ int main(int argc, const char* argv[]) {
         }));
     };
     check_legal(choose(snapshot));
+    auto candidate = pikafish_profile(Difficulty::easy);
+    candidate.depth = 3;
+    candidate.deviation_percent = 45;
+    check_legal(choose_pikafish_calibration_move(snapshot, legal, argv[1], Difficulty::easy, candidate, 20260926));
+    // Return to defaults in the same process and difficulty; candidate caches must not carry over.
+    const auto after_candidate = choose(snapshot);
+    reset_pikafish_search();
+    const auto clean = choose(snapshot);
+    check_legal(after_candidate);
+    check_legal(clean);
+    assert(after_candidate->arguments == clean->arguments);
+    assert(pikafish_profile(Difficulty::easy).depth == 2);
+    auto invalid_profile = candidate;
+    invalid_profile.multi_pv = 0;
+    bool invalid_rejected = false;
+    try { (void)choose_pikafish_calibration_move(snapshot, legal, argv[1], Difficulty::easy, invalid_profile, 0); }
+    catch (const std::invalid_argument&) { invalid_rejected = true; }
+    assert(invalid_rejected);
     for (const auto result : {GameResult::draw, GameResult::first_player_win, GameResult::second_player_win}) {
         auto finished = snapshot;
         finished.result = result;

@@ -15,9 +15,16 @@ struct PikafishDifficultyProfile {
     std::size_t multi_pv;
     unsigned deviation_percent;
     int score_window_cp;
+
+    [[nodiscard]] bool operator==(const PikafishDifficultyProfile& other) const noexcept {
+        return depth == other.depth && nodes == other.nodes && move_time_millis == other.move_time_millis &&
+            multi_pv == other.multi_pv && deviation_percent == other.deviation_percent && score_window_cp == other.score_window_cp;
+    }
 };
 
 [[nodiscard]] PikafishDifficultyProfile pikafish_profile(Difficulty difficulty);
+// Bounded experimental inputs; does not change the production profile table.
+void validate_pikafish_profile(const PikafishDifficultyProfile& profile);
 
 // Scores must be ordered best first and come from a completed MultiPV depth.
 // Mate scores use +/-1,000,000 minus distance; winning mates are never weakened.

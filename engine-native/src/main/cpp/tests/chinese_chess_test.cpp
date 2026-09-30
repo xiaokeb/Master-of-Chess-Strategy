@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <stdexcept>
 #include <vector>
 
 namespace {
@@ -50,6 +51,25 @@ void pikafish_profiles_bound_search_and_random_deviation() {
     const auto medium = pikafish_profile(Difficulty::medium);
     const auto hard = pikafish_profile(Difficulty::hard);
     const auto master = pikafish_profile(Difficulty::master);
+    for (const auto& profile : {easy, medium, hard, master}) mocs::engine::validate_pikafish_profile(profile);
+    for (int field = 0; field < 8; ++field) {
+        auto invalid = easy;
+        switch (field) {
+            case 0: invalid.depth = -1; break;
+            case 1: invalid.depth = 129; break;
+            case 2: invalid.nodes = 1'000'000'001; break;
+            case 3: invalid.move_time_millis = 0; break;
+            case 4: invalid.move_time_millis = 2'001; break;
+            case 5: invalid.multi_pv = 9; break;
+            case 6: invalid.deviation_percent = 101; break;
+            case 7: invalid.score_window_cp = -1; break;
+        }
+        bool rejected = false;
+        try { mocs::engine::validate_pikafish_profile(invalid); }
+        catch (const std::invalid_argument&) { rejected = true; }
+        assert(rejected);
+        assert(!(invalid == easy));
+    }
     assert(easy.depth < medium.depth && medium.depth < hard.depth);
     assert(easy.nodes < medium.nodes && medium.nodes < hard.nodes);
     assert(master.depth == 0 && master.nodes == 0 && master.multi_pv == 1);

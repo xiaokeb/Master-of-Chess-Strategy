@@ -2,6 +2,7 @@
 
 #include "mocs/engine/engine_types.hpp"
 #include "mocs/engine/chinese_chess_search_position.hpp"
+#include "mocs/engine/pikafish_difficulty.hpp"
 
 #include <cstdint>
 #include <optional>
@@ -42,6 +43,14 @@ inline constexpr std::int64_t pikafish_move_time_millis = 1'200;
 
 // Clear search history between calibration games; keep the verified NNUE loaded.
 void reset_pikafish_search();
+
+// Offline experiments share the production search path, but never mutate its defaults.
+// JNI deliberately exposes only choose_pikafish_move, not this calibration entry point.
+[[nodiscard]] std::optional<EngineAction> choose_pikafish_calibration_move(
+    const ChineseChessSearchPosition& position, const std::vector<EngineAction>& legal_actions,
+    const std::string& network_path, Difficulty difficulty, const PikafishDifficultyProfile& profile,
+    std::uint64_t selection_seed
+);
 
 /**
  * Replays one completed repetition window through Pikafish's rule judge.

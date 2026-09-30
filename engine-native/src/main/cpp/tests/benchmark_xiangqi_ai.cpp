@@ -9,6 +9,7 @@
 #include <iostream>
 #include <random>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -81,6 +82,25 @@ std::string uci(const EngineAction& action) {
             static_cast<char>('a' + p[2]), static_cast<char>('9' - p[3])};
 }
 
+PikafishDifficultyProfile parse_profile(const std::string& text, Difficulty difficulty) {
+    if (text == "-") return pikafish_profile(difficulty);
+    std::istringstream input(text);
+    std::vector<int> fields;
+    std::string field;
+    while (std::getline(input, field, ',')) fields.push_back(bounded_number(field.c_str(), 0, 1'000'000'000));
+    if (fields.size() != 6 || text.back() == ',') throw std::invalid_argument("profile needs six comma-separated integers");
+    const PikafishDifficultyProfile profile{fields[0], static_cast<std::uint64_t>(fields[1]), fields[2],
+        static_cast<std::size_t>(fields[3]), static_cast<unsigned>(fields[4]), fields[5]};
+    validate_pikafish_profile(profile);
+    return profile;
+}
+
+void print_profile(const char* key, const PikafishDifficultyProfile& profile) {
+    std::cout << ",\"" << key << "\":{\"depth\":" << profile.depth << ",\"nodes\":" << profile.nodes
+              << ",\"move_time_ms\":" << profile.move_time_millis << ",\"multi_pv\":" << profile.multi_pv
+              << ",\"deviation_percent\":" << profile.deviation_percent << ",\"score_window_cp\":" << profile.score_window_cp << '}';
+}
+
 void latency(const char* name, std::vector<double> samples) {
     std::sort(samples.begin(), samples.end());
     double sum = 0;
@@ -100,7 +120,7 @@ int main(const int argc, const char* argv[]) {
             validate_openings();
             return 0;
         }
-        if (argc < 2 || argc > 7) throw std::invalid_argument("argument count");
+        if (argc < 2 || argc > 9) throw std::invalid_argument("argument count");
         const std::string pair(argv[1]);
         Difficulty weak;
         Difficulty strong;
@@ -125,14 +145,25 @@ int main(const int argc, const char* argv[]) {
         if ((backend == "pikafish" || strong == Difficulty::master) && network.empty()) {
             throw std::invalid_argument("Pikafish requires a verified NNUE path");
         }
+        const auto weak_profile = argc >= 8 ? parse_profile(argv[7], weak) : pikafish_profile(weak);
+        const auto strong_profile = argc >= 9 ? parse_profile(argv[8], strong) : pikafish_profile(strong);
+        const bool candidate = !(weak_profile == pikafish_profile(weak)) || !(strong_profile == pikafish_profile(strong));
+        if (argc >= 8 && backend != "pikafish") throw std::invalid_argument("profile overrides require Pikafish");
+        if (candidate && suite != 1) throw std::invalid_argument("candidate tuning must not use the frozen holdout suite");
         int wins = 0, losses = 0, draws = 0, unfinished = 0;
         std::vector<double> strong_times, weak_times;
         std::cout << "{\"type\":\"config\",\"suite\":" << suite << ",\"pair\":\"" << pair
                   << "\",\"backend\":\"" << backend
                   << "\",\"openings\":" << count << ",\"max_search_plies\":" << limit
-                  << ",\"master_move_ms\":" << pikafish_move_time_millis
-                  << ",\"profile_version\":1,\"selection_seed\":20260926"
-                  << ",\"history_mode\":\"full\"}\n";
+                  << ",\"master_move_ms\":" << (strong == Difficulty::master ? strong_profile.move_time_millis : pikafish_move_time_millis)
+                  << ",\"profile_version\":" << (candidate ? 0 : 1) << ",\"selection_seed\":20260926"
+                  << ",\"history_mode\":\"full\"";
+        if (backend == "pikafish") {
+            std::cout << ",\"base_profile_version\":1,\"profile_source\":\"" << (candidate ? "candidate" : "production") << '"';
+            print_profile("weak_profile", weak_profile);
+            print_profile("strong_profile", strong_profile);
+        }
+        std::cout << "}\n" << std::flush;
         for (int opening = 0; opening < count; ++opening) {
             for (int strong_side = 0; strong_side < 2; ++strong_side) {
                 ChineseChessEngine engine;
@@ -151,10 +182,12 @@ int main(const int argc, const char* argv[]) {
                     const bool stronger_turn = engine.current_player() == strong_side;
                     const auto difficulty = stronger_turn ? strong : weak;
                     const auto start = Clock::now();
-                    const auto move = backend == "pikafish" || difficulty == Difficulty::master
-                        ? choose_pikafish_move(engine.search_position(), engine.legal_actions(), network,
-                                              difficulty, selection_rng())
-                        : engine.best_move(difficulty);
+                    const auto move = candidate
+                        ? choose_pikafish_calibration_move(engine.search_position(), engine.legal_actions(), network,
+                            difficulty, stronger_turn ? strong_profile : weak_profile, selection_rng())
+                        : (backend == "pikafish" || difficulty == Difficulty::master
+                            ? choose_pikafish_move(engine.search_position(), engine.legal_actions(), network, difficulty, selection_rng())
+                            : engine.best_move(difficulty));
                     const auto elapsed = std::chrono::duration<double, std::milli>(
                         Clock::now() - start).count();
                     if (!move || !engine.apply(*move).accepted) {
@@ -204,7 +237,8 @@ int main(const int argc, const char* argv[]) {
         std::cerr << "calibration failed: " << error.what()
                   << "\nusage: mocs_benchmark_xiangqi_ai <easy-medium|medium-hard|hard-master>"
                   << " [openings 1..6, or 1..12 for suite 2] [max-search-plies 16..600]"
-                  << " [verified NNUE path] [pikafish|legacy] [suite 1|2]\n";
+                  << " [verified NNUE path] [pikafish|legacy] [suite 1|2]"
+                  << " [weak depth,nodes,ms,pv,deviation,cp or -] [strong profile or -]\n";
         return 2;
     }
 }

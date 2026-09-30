@@ -4,6 +4,15 @@
 
 namespace mocs::engine {
 
+void validate_pikafish_profile(const PikafishDifficultyProfile& profile) {
+    if (profile.depth < 0 || profile.depth > 128 || profile.nodes > 1'000'000'000 ||
+        profile.move_time_millis < 1 || profile.move_time_millis > 2'000 ||
+        profile.multi_pv < 1 || profile.multi_pv > 8 || profile.deviation_percent > 100 ||
+        profile.score_window_cp < 0 || profile.score_window_cp > 1'000) {
+        throw std::invalid_argument("Pikafish profile is outside calibration bounds");
+    }
+}
+
 PikafishDifficultyProfile pikafish_profile(const Difficulty difficulty) {
     switch (difficulty) {
         case Difficulty::easy: return {2, 2'000, 250, 8, 75, 250};

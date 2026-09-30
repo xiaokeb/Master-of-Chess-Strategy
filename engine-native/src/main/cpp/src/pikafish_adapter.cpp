@@ -51,16 +51,17 @@ public:
         const std::vector<EngineAction>& legal_actions,
         const std::string& network_path,
         const Difficulty difficulty,
+        const PikafishDifficultyProfile& profile,
         const std::optional<std::uint64_t> selection_seed
     ) {
         std::lock_guard lock(mutex_);
-        const auto profile = pikafish_profile(difficulty);
         ensure_engine(network_path);
-        if (last_difficulty_ != difficulty) {
+        if (last_difficulty_ != difficulty || !last_profile_ || !(*last_profile_ == profile)) {
             // Do not let a preceding master search strengthen a beginner turn
             // through its transposition table and learned move ordering.
             engine_->search_clear();
             last_difficulty_ = difficulty;
+            last_profile_ = profile;
         }
         std::istringstream option("name MultiPV value " + std::to_string(profile.multi_pv));
         engine_->get_options().setoption(option);
@@ -130,6 +131,7 @@ public:
         std::lock_guard lock(mutex_);
         if (engine_) engine_->search_clear();
         last_difficulty_.reset();
+        last_profile_.reset();
     }
 
 private:
@@ -189,6 +191,7 @@ private:
         engine_ = std::move(engine);
         loaded_network_path_ = network_path;
         last_difficulty_.reset();
+        last_profile_.reset();
     }
 
     std::mutex mutex_;
@@ -200,6 +203,7 @@ private:
     std::map<int, std::vector<std::optional<Candidate>>> candidates_;
     std::size_t candidate_count_{0};
     std::optional<Difficulty> last_difficulty_;
+    std::optional<PikafishDifficultyProfile> last_profile_;
     std::mt19937_64 random_{std::random_device{}()};
 };
 
@@ -256,7 +260,18 @@ std::optional<EngineAction> choose_pikafish_move(
     if (position.result != GameResult::ongoing || legal_actions.empty()) {
         return std::nullopt;
     }
-    return runtime().choose(position, legal_actions, network_path, difficulty, selection_seed);
+    return runtime().choose(position, legal_actions, network_path, difficulty, pikafish_profile(difficulty), selection_seed);
+}
+
+std::optional<EngineAction> choose_pikafish_calibration_move(
+    const ChineseChessSearchPosition& position, const std::vector<EngineAction>& legal_actions,
+    const std::string& network_path, const Difficulty difficulty, const PikafishDifficultyProfile& profile,
+    const std::uint64_t selection_seed
+) {
+    (void)pikafish_profile(difficulty); // Reject invalid difficulty identities even with a valid override.
+    validate_pikafish_profile(profile);
+    if (position.result != GameResult::ongoing || legal_actions.empty()) return std::nullopt;
+    return runtime().choose(position, legal_actions, network_path, difficulty, profile, selection_seed);
 }
 
 void reset_pikafish_search() { runtime().reset_search(); }

@@ -8,6 +8,42 @@ import re
 import sys
 
 
+PROFILE_FIELDS = ("depth", "nodes", "move_time_ms", "multi_pv", "deviation_percent", "score_window_cp")
+PROFILES_V1 = dict(zip(("easy", "medium", "hard", "master"), (
+    (2, 2000, 250, 8, 75, 250), (5, 12000, 500, 4, 20, 80),
+    (10, 80000, 900, 1, 0, 0), (0, 0, 1200, 1, 0, 0),
+)))
+
+
+def audit_profiles(config: dict) -> None:
+    """Experimental reports cannot masquerade as production or consume the holdout suite."""
+    if type(config.get("profile_version")) is not int or config["profile_version"] not in (0, 1) or config.get("selection_seed") != 20260926:
+        raise ValueError("unsupported Pikafish profile or seed")
+    fields = ("base_profile_version", "profile_source", "weak_profile", "strong_profile")
+    if not any(field in config for field in fields) and config["profile_version"] == 1:
+        return  # Historical v1 reports predate self-describing parameter envelopes.
+    if any(field not in config for field in fields) or type(config["base_profile_version"]) is not int or config["base_profile_version"] != 1:
+        raise ValueError("incomplete profile envelope")
+    expected = [PROFILES_V1[difficulty] for difficulty in config["pair"].split("-")]
+    actual = []
+    for key in ("weak_profile", "strong_profile"):
+        profile = config[key]
+        if not isinstance(profile, dict) or set(profile) != set(PROFILE_FIELDS):
+            raise ValueError("invalid profile fields")
+        values = tuple(profile[field] for field in PROFILE_FIELDS)
+        bounds = ((0, 128), (0, 1_000_000_000), (1, 2000), (1, 8), (0, 100), (0, 1000))
+        if any(type(value) is not int or not low <= value <= high for value, (low, high) in zip(values, bounds)):
+            raise ValueError("profile outside calibration bounds")
+        actual.append(values)
+    if config["profile_version"] == 0:
+        if config["profile_source"] != "candidate" or actual == expected or config["suite"] != 1 or config.get("history_mode") != "full":
+            raise ValueError("candidate must be distinct, full-history and tuning-only")
+    elif config["profile_source"] != "production" or actual != expected:
+        raise ValueError("production profile differs from its versioned table")
+    if config["pair"] == "hard-master" and (type(config.get("master_move_ms")) is not int or config["master_move_ms"] != actual[1][2]):
+        raise ValueError("master budget differs from profile")
+
+
 def audit(text: str) -> dict:
     records = [json.loads(line) for line in text.splitlines() if line.strip()]
     if len(records) < 4:
@@ -23,10 +59,10 @@ def audit(text: str) -> dict:
         raise ValueError("unsupported AI backend")
     if config.get("history_mode", "fen-only") not in ("fen-only", "full"):
         raise ValueError("unsupported search history mode")
-    if config.get("backend") == "pikafish" and (
-        config.get("profile_version") != 1 or config.get("selection_seed") != 20260926
-    ):
-        raise ValueError("unsupported Pikafish profile or seed")
+    if config.get("backend") == "pikafish":
+        audit_profiles(config)
+    elif any(key in config for key in ("profile_source", "weak_profile", "strong_profile")):
+        raise ValueError("explicit profiles require Pikafish backend")
     count, cap = config["openings"], config["max_search_plies"]
     maximum_count = 6 if config["suite"] == 1 else 12
     if type(count) is not int or not 1 <= count <= maximum_count or type(cap) is not int or not 16 <= cap <= 600:
