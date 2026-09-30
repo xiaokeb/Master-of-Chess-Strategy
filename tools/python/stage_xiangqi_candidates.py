@@ -13,6 +13,7 @@ from pathlib import Path
 import re
 
 from audit_chinese_chess_endgames import AuditError, parse_pack
+from verify_xiangqi_forced_win import principal_variation_wins, prove_red_win
 
 
 HEADER = re.compile(
@@ -140,6 +141,18 @@ def stage_candidates(stream: str, released_pack: str) -> dict[str, object]:
         item["symmetry_sha256"] = hashlib.sha256(
             json.dumps(key, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
+        red_moves = item["red_moves"]
+        if not principal_variation_wins(level, require_check=red_moves == 1):
+            raise AuditError("candidate principal variation is not a legal required win")
+        if red_moves == 2:
+            shallow = prove_red_win(level, 1)
+            if shallow.status != "complete" or shallow.winning_first_moves:
+                raise AuditError("candidate has an immediate win or unverified shallow proof")
+        proof = prove_red_win(level, red_moves)
+        if (proof.status != "complete" or len(proof.winning_first_moves) != 1 or
+                proof.winning_first_moves[0] != level.moves[0]):
+            raise AuditError("candidate host proof is incomplete or not unique")
+        item["host_proof_nodes"] = proof.visited_nodes
     return {"candidate_count": len(staged), "seed": seed,
             "source_sha256": hashlib.sha256(stream.encode("utf-8")).hexdigest(),
             "status": "staged-not-published", "candidates": staged}

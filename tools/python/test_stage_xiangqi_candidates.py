@@ -37,11 +37,29 @@ class CandidateStagingTest(unittest.TestCase):
         self.assertEqual(report["status"], "staged-not-published")
         self.assertEqual(len(report["candidates"][0]["symmetry_sha256"]), 64)
 
+    def test_two_move_candidate_is_independently_screened(self) -> None:
+        stream = "\n".join((
+            "CANDIDATE 1 seed=42 attempt=19 fen=9/4a2P1/5k3/5C3/9/9/8R/8N/4K4/9 w - - 0 1",
+            "PROOF|red_moves=2|unique_first=true|all_defenses=true|nodes=2355",
+            "PIECE|4|8|RED|GENERAL", "PIECE|5|2|BLACK|GENERAL",
+            "PIECE|7|1|RED|SOLDIER", "PIECE|8|6|RED|CHARIOT",
+            "PIECE|8|7|RED|HORSE", "PIECE|5|3|RED|CANNON",
+            "PIECE|4|1|BLACK|ADVISOR",
+            "MOVE|7|1|6|1", "MOVE|4|1|3|0", "MOVE|8|6|8|2",
+        )) + "\n"
+        report = stage_candidates(stream, RELEASED)
+        self.assertEqual(report["candidates"][0]["red_moves"], 2)
+        self.assertGreater(report["candidates"][0]["host_proof_nodes"], 0)
+
     def test_missing_proof_or_changed_fen_is_rejected(self) -> None:
         with self.assertRaisesRegex(AuditError, "recognized native proof"):
             stage_candidates(STREAM.replace(PROOF, "PROOF|red_moves=2|unique_first=true"), RELEASED)
         with self.assertRaisesRegex(AuditError, "FEN differs"):
             stage_candidates(STREAM.replace("/R8/", "/8R/"), RELEASED)
+
+    def test_claimed_proof_with_wrong_winning_move_is_rejected(self) -> None:
+        with self.assertRaisesRegex(AuditError, "legal required win|host proof"):
+            stage_candidates(STREAM.replace("MOVE|0|2|4|2", "MOVE|0|2|0|3"), RELEASED)
 
     def test_seed_and_attempt_must_describe_one_reproducible_batch(self) -> None:
         second = STREAM.replace("CANDIDATE 1 seed=42 attempt=9", "CANDIDATE 2 seed=43 attempt=10")
