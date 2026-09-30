@@ -29,6 +29,8 @@ class ChineseChessEndgameAuditTest(unittest.TestCase):
         report = audit(source.decode("utf-8"))
 
         self.assertEqual(16, report["level_count"])
+        self.assertEqual(15, report["unique_symmetry_positions"])
+        self.assertEqual(1, report["legacy_mirror_duplicates"])
         self.assertEqual({"BONUS": 11, "MAIN": 5}, report["by_track"])
         self.assertEqual(16, len(report["index"]))
         self.assertEqual(2, report["by_theme"]["两步强制胜"])
@@ -48,6 +50,13 @@ class ChineseChessEndgameAuditTest(unittest.TestCase):
     def test_duplicate_board_is_rejected_even_with_new_id(self) -> None:
         second = LEVEL.replace("xq-easy-001|0|1", "xq-easy-002|0|2")
         with self.assertRaisesRegex(AuditError, "duplicate board"):
+            parse_pack(PACK + second)
+
+    def test_new_mirrored_board_is_rejected_without_changing_legacy_levels(self) -> None:
+        second = LEVEL.replace("xq-easy-001|0|1", "xq-easy-002|0|2").replace(
+            "PIECE|3|1|RED|CHARIOT", "PIECE|5|1|RED|CHARIOT"
+        )
+        with self.assertRaisesRegex(AuditError, "mirrored duplicate board"):
             parse_pack(PACK + second)
 
     def test_bonus_without_main_is_rejected(self) -> None:

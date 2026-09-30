@@ -100,6 +100,16 @@ class XiangqiAiAuditTest(unittest.TestCase):
         summary = audit(report.read_text(encoding="utf-8"))
         self.assertEqual((summary["strong_wins"], summary["draws"], summary["unfinished"]), (5, 2, 5))
         self.assertEqual(summary["completed"], 7)
+        self.assertAlmostEqual(summary["completion_fraction"], 7 / 12)
+        self.assertAlmostEqual(summary["score_lower_bound_all_games"], 6 / 12)
+        self.assertAlmostEqual(summary["score_upper_bound_all_games"], 11 / 12)
+
+    def test_fully_completed_report_has_no_censoring_gap(self) -> None:
+        report = RESULTS / "2026-09-26-ai-pikafish-easy-medium-v1.jsonl"
+        summary = audit(report.read_text(encoding="utf-8"))
+        self.assertEqual(summary["completion_fraction"], 1)
+        self.assertAlmostEqual(summary["score_lower_bound_all_games"], summary["strong_score"], places=6)
+        self.assertAlmostEqual(summary["score_upper_bound_all_games"], summary["strong_score"], places=6)
 
     def test_missing_summary_is_rejected(self) -> None:
         self.records.pop()

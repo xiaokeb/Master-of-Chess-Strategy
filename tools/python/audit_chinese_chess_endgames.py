@@ -21,6 +21,7 @@ DIFFICULTIES = ("easy", "medium", "hard", "master")
 PIECE_TYPES = {"GENERAL", "ADVISOR", "ELEPHANT", "HORSE", "CHARIOT", "CANNON", "SOLDIER"}
 SIDES = {"RED", "BLACK"}
 TRACKS = {"MAIN", "BONUS"}
+LEGACY_MIRROR_PAIR = frozenset(("xq-easy-003", "xq-easy-004"))
 PIECE_QUOTAS = {
     "GENERAL": 1, "ADVISOR": 2, "ELEPHANT": 2, "HORSE": 2,
     "CHARIOT": 2, "CANNON": 2, "SOLDIER": 5,
@@ -49,6 +50,12 @@ class Level:
 
     def position_key(self) -> tuple[tuple[int, int, str, str], ...]:
         return tuple(sorted(self.pieces))
+
+    def mirrored_position_key(self) -> tuple[tuple[int, int, str, str], ...]:
+        return tuple(sorted((8 - x, y, side, kind) for x, y, side, kind in self.pieces))
+
+    def symmetry_key(self) -> tuple[tuple[int, int, str, str], ...]:
+        return min(self.position_key(), self.mirrored_position_key())
 
 
 def _number(value: str, minimum: int, maximum: int, location: str) -> int:
@@ -230,20 +237,27 @@ def _validate_catalog(levels: list[Level]) -> None:
         if chapter and chapter[0].track != "MAIN":
             raise AuditError(f"{DIFFICULTIES[difficulty]}: bonus without main")
     by_position: dict[tuple[tuple[int, int, str, str], ...], str] = {}
+    by_symmetry: dict[tuple[tuple[int, int, str, str], ...], str] = {}
     for level in levels:
         previous = by_position.setdefault(level.position_key(), level.id)
         if previous != level.id:
             raise AuditError(f"duplicate board: {previous} and {level.id}")
+        previous_mirror = by_symmetry.setdefault(level.symmetry_key(), level.id)
+        if previous_mirror != level.id and frozenset((previous_mirror, level.id)) != LEGACY_MIRROR_PAIR:
+            raise AuditError(f"mirrored duplicate board: {previous_mirror} and {level.id}")
 
 
 def audit(content: str) -> dict[str, object]:
     author, levels = parse_pack(content)
+    unique_symmetry_positions = len({level.symmetry_key() for level in levels})
     return {
         "format": PACK_HEADER,
         "license": REQUIRED_LICENSE,
         "author": author,
         "source_sha256": hashlib.sha256(content.encode("utf-8")).hexdigest(),
         "level_count": len(levels),
+        "unique_symmetry_positions": unique_symmetry_positions,
+        "legacy_mirror_duplicates": len(levels) - unique_symmetry_positions,
         "by_difficulty": dict(sorted(Counter(DIFFICULTIES[level.difficulty] for level in levels).items())),
         "by_theme": dict(sorted(Counter(level.theme for level in levels).items())),
         "by_track": dict(sorted(Counter(level.track for level in levels).items())),

@@ -124,7 +124,16 @@ def audit(text: str) -> dict:
             raise ValueError("invalid latency")
         if max(values[:2]) > values[2]:
             raise ValueError("latency exceeds maximum")
-    return summary
+    # Capped games are right-censored, not draws. Bound the eventual score
+    # without assuming their outcomes; these are not confidence intervals.
+    total = completed + outcomes["unfinished"]
+    settled_points = wins + 0.5 * draws
+    return {
+        **summary,
+        "completion_fraction": completed / total,
+        "score_lower_bound_all_games": settled_points / total,
+        "score_upper_bound_all_games": (settled_points + outcomes["unfinished"]) / total,
+    }
 
 
 if __name__ == "__main__":
