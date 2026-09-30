@@ -3,6 +3,7 @@
 #include "mocs/engine/chinese_chess.hpp"
 #include "xiangqi_forced_win.hpp"
 
+#include <algorithm>
 #include <array>
 #include <charconv>
 #include <cstdint>
@@ -118,26 +119,46 @@ const char* piece_name(const PieceType type) {
     return "UNKNOWN";
 }
 
+// Ignore left-right reflection when collecting candidate boards. The released
+// pack keeps one legacy mirror demonstration, but new batches must not add more.
+std::string symmetry_key(const std::vector<Placement>& pieces) {
+    std::string board(90, '\0'), mirror(90, '\0');
+    for (const auto& item : pieces) {
+        const auto code = static_cast<char>(static_cast<std::uint8_t>(item.piece.type) |
+            (item.piece.side == Side::black ? 0x80U : 0U));
+        board[item.y * 9 + item.x] = code;
+        mirror[item.y * 9 + 8 - item.x] = code;
+    }
+    return std::min(board, mirror);
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
     // Keep the original one-move candidate stream as the default. Two-move
     // mode proves wins against all defenses, rather than a cooperative PV.
     int red_moves = 1, requested = 20, attempts = 20000;
+    std::uint32_t seed = 20260925U;
     const auto read = [](const char* value, int& destination, int maximum) {
         const std::string text(value);
         const auto result = std::from_chars(text.data(), text.data() + text.size(), destination);
         return result.ec == std::errc{} && result.ptr == text.data() + text.size() &&
             destination >= 1 && destination <= maximum;
     };
-    if (argc > 4 || (argc > 1 && !read(argv[1], red_moves, 2)) ||
+    const auto read_seed = [](const char* value, std::uint32_t& destination) {
+        const std::string text(value);
+        const auto result = std::from_chars(text.data(), text.data() + text.size(), destination);
+        return result.ec == std::errc{} && result.ptr == text.data() + text.size();
+    };
+    if (argc > 5 || (argc > 1 && !read(argv[1], red_moves, 2)) ||
         (argc > 2 && !read(argv[2], requested, 100)) ||
-        (argc > 3 && !read(argv[3], attempts, 1000000))) {
+        (argc > 3 && !read(argv[3], attempts, 1000000)) ||
+        (argc > 4 && !read_seed(argv[4], seed))) {
         std::cerr << "usage: mocs_generate_xiangqi_mates [red-moves:1..2] "
-                     "[candidates:1..100] [attempts:1..1000000]\n";
+                     "[candidates:1..100] [attempts:1..1000000] [seed:uint32]\n";
         return 2;
     }
-    std::mt19937 rng(20260925U);
+    std::mt19937 rng(seed);
     const auto mobile = board_squares();
     const auto red_soldiers = soldier_squares(Side::red);
     const auto black_soldiers = soldier_squares(Side::black);
@@ -195,9 +216,9 @@ int main(int argc, char** argv) {
                 continue; // Unknown is neither a refutation nor proof of uniqueness.
             }
             if (proof.status != mocs::authoring::ProofStatus::complete ||
-                proof.winning_lines.size() != 1 || !seen.insert(initial_fen).second) continue;
+                proof.winning_lines.size() != 1 || !seen.insert(symmetry_key(pieces)).second) continue;
             ++found;
-            std::cout << "CANDIDATE " << found << " attempt=" << attempt
+            std::cout << "CANDIDATE " << found << " seed=" << seed << " attempt=" << attempt
                       << " fen=" << initial_fen << '\n';
             std::cout << "PROOF|red_moves=2|unique_first=true|all_defenses=true|nodes="
                       << proof.visited_nodes << '\n';
@@ -233,10 +254,11 @@ int main(int argc, char** argv) {
             }
             if (winners > 1) break;
         }
-        if (winners != 1 || !seen.insert(initial_fen).second) continue;
+        if (winners != 1 || !seen.insert(symmetry_key(pieces)).second) continue;
         ++found;
-        std::cout << "CANDIDATE " << found << " attempt=" << attempt
+        std::cout << "CANDIDATE " << found << " seed=" << seed << " attempt=" << attempt
                   << " fen=" << initial_fen << '\n';
+        std::cout << "PROOF|red_moves=1|unique_first=true|immediate_check_win=true\n";
         for (const auto& item : pieces) {
             std::cout << "PIECE|" << item.x << '|' << item.y << '|'
                       << (item.piece.side == Side::red ? "RED" : "BLACK")
@@ -245,6 +267,6 @@ int main(int argc, char** argv) {
         std::cout << "MOVE|" << winning_move[0] << '|' << winning_move[1]
                   << '|' << winning_move[2] << '|' << winning_move[3] << '\n';
     }
-    std::cerr << "generated=" << found << " exhausted=" << exhausted << '\n';
+    std::cerr << "seed=" << seed << " generated=" << found << " exhausted=" << exhausted << '\n';
     return found == requested ? 0 : 1;
 }

@@ -23,6 +23,8 @@
 `config/schemas/chinese-chess-endgame-pack-v5.md` 保存当前内容格式；
 `content/manifests/chinese-chess-endgames-v5.md` 保存逐批许可证据。
 
+批量候选生成器支持显式随机种子与同批镜像去重；主机端暂存工具会核对候选流和发布包，但不能代替原生证明及人工内容审核。既有 16 关仅算 15 个镜像等价独立局面；当前未另设象棋配额，也未追加未经运行验收的候选。
+
 残局对局仍通过同一个中国象棋规则引擎验证合法着；大师难度继续调用已固定
 版本的 Pikafish 和 NNUE。Pikafish 程序、对应源码、GPL 文本、修改记录及
 NNUE 独立使用限制沿用项目现有发布门禁，本节点未放宽任何许可边界。
