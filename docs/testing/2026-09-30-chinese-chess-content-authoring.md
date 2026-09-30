@@ -11,6 +11,6 @@
 ## 验证
 
 - 指定 NDK 30 LLVM 的 `mocs_generate_xiangqi_mates` 与 `mocs_xiangqi_forced_win_test` 目标编译链接通过；按当前要求未运行 Android 设备端原生可执行文件。
-- 项目 Conda 全部 Python 离线单测 43/43，通过合成候选与真实发布包的重复/镜像回归；`git diff --check` 通过。
+- 项目 Conda 全部 Python 离线单测 44/44，通过合成候选与真实发布包的重复/镜像回归；额外防止合成候选序号误借既有演示关的镜像豁免；`git diff --check` 通过。
 
 复现候选暂存：`python tools/python/stage_xiangqi_candidates.py <native-stdout.txt>`。此命令仅读取候选流和已发布包，不自动创建发布资源。

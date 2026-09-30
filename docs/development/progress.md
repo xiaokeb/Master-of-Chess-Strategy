@@ -80,7 +80,7 @@
 - 全 Pikafish 困难—大师既有报告见 `docs/testing/2026-09-30-pikafish-hard-master-baseline.md`：原始 JSONL 已恢复并做设备/本地 SHA-256 比对，12 局统计与审计器一致；五局未完不计和棋。候选校准入口的 NDK 目标编译和 Conda 审计回归通过，未新增设备端测试，也未改变正式参数。
 - 自然限着申请审核见 `docs/testing/2026-09-30-chinese-chess-natural-limit-claim.md`：规则、MOCX v3/JNI、棋钟及界面入口已接入；NDK 相关目标编译，JVM 259/259、Lint、双 ABI APK、Conda 审计 25/25 通过。未新增设备端测试，原生运行与阈值搜索仍未验收。
 - 后续离线审核增加 AI 未完局全样本得分上下界与残局左右镜像去重；全 Python 单测 37/37、发布包 16 关中 15 个镜像等价独立局面。未修改 APK 内容或正式 AI profile。
-- 残局候选生产暂存见 `docs/testing/2026-09-30-chinese-chess-content-authoring.md`：NDK 生成器新增显式种子及同批镜像去重，Conda 工具审核候选与发布包；NDK 两目标编译、全 Python 43/43。无新发布关卡、无新增设备端测试，不将暂存候选计入内容量。
+- 残局候选生产暂存见 `docs/testing/2026-09-30-chinese-chess-content-authoring.md`：NDK 生成器新增显式种子及同批镜像去重，Conda 工具审核候选与发布包；NDK 两目标编译、全 Python 44/44。无新发布关卡、无新增设备端测试，不将暂存候选计入内容量。
 
 ## 条件限制
 

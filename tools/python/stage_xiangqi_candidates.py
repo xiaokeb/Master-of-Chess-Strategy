@@ -129,11 +129,16 @@ def stage_candidates(stream: str, released_pack: str) -> dict[str, object]:
                        "pieces": pieces,
                        "principal_variation": moves})
     levels = parse_pack("\n".join(synthetic) + "\n")[1]
+    seen_candidates = set()
     for item, level in zip(staged, levels):
-        if level.symmetry_key() in released_positions:
+        key = level.symmetry_key()
+        if key in seen_candidates:
+            raise AuditError("candidate batch contains a mirrored duplicate")
+        seen_candidates.add(key)
+        if key in released_positions:
             raise AuditError("candidate duplicates a released board or its mirror")
         item["symmetry_sha256"] = hashlib.sha256(
-            json.dumps(level.symmetry_key(), separators=(",", ":")).encode("utf-8")
+            json.dumps(key, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
     return {"candidate_count": len(staged), "seed": seed,
             "source_sha256": hashlib.sha256(stream.encode("utf-8")).hexdigest(),

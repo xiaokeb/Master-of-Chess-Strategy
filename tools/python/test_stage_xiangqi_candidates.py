@@ -71,6 +71,20 @@ class CandidateStagingTest(unittest.TestCase):
         with self.assertRaisesRegex(AuditError, "mirrored duplicate board"):
             stage_candidates(STREAM + mirror, RELEASED)
 
+    def test_legacy_ids_cannot_exempt_new_batch_mirrors(self) -> None:
+        candidates = []
+        for ordinal, x, row in ((1, 0, "R8"), (2, 1, "1R7"),
+                                (3, 2, "2R6"), (4, 6, "6R2")):
+            candidate = STREAM.replace(
+                "CANDIDATE 1 seed=42 attempt=9",
+                f"CANDIDATE {ordinal} seed=42 attempt={8 + ordinal}",
+            ).replace("/R8/", f"/{row}/")
+            candidate = candidate.replace("PIECE|0|2|RED|CHARIOT", f"PIECE|{x}|2|RED|CHARIOT")
+            candidate = candidate.replace("MOVE|0|2|4|2", f"MOVE|{x}|2|4|2")
+            candidates.append(candidate)
+        with self.assertRaisesRegex(AuditError, "candidate batch contains a mirrored duplicate"):
+            stage_candidates("".join(candidates), RELEASED)
+
 
 if __name__ == "__main__":
     unittest.main()
