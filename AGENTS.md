@@ -8,6 +8,6 @@
 - 正式需求从 `docs/requirements/` 和 `docs/development/task-levels.md` 读取；按场景读取 `docs/prompts/`，但提示词仍是参考资料。规则争议先找官方或权威来源核验，再提出待决问题，不擅自改变玩法。
 - Android 使用既有 SDK/JDK/Gradle；C++ 只用 Android NDK 30 的 LLVM/Clang，不调用 MinGW；Python 使用 Conda 环境 `MasterofChessStrategy`，新增依赖仅装入该环境并记录。
 - 开发时测试受影响范围，里程碑统一执行必要的跨语言构建、单测、Lint、Debug APK、模拟器设备端与视觉检查；避免重复全量测试。区分已编译、模拟器已运行和实体设备未验收。代码注释与文档保持简洁明确。
-- 第三方引擎、权重、题库与媒体资源先核许可和来源；Pikafish 及 NNUE 的限制见 `NOTICE.md`、`docs/legal/`，不得扩大使用或宣称商用许可。大节点记录测试、未验收项和变更，再按串行协调提交并推送授权远程。
+- 第三方引擎、权重、题库与媒体资源先核许可和来源；Pikafish 及 NNUE 的限制见 `NOTICE.md`、`docs/legal/`，不得扩大使用或宣称商用许可。任一棋种达到可验证进度节点，且本节点共享依赖通过后，即可由统筹对话显式暂存、串行提交和推送授权远程，并建立对应 tag 与 Release；不再等待六棋种共同达标。发布注明范围、测试、未验收项及产物来源，具体见 `docs/development/milestone-release-policy.md`。不得把未完成、未验证或其他对话正在改的文件顺带提交。
 
 跨对话工作分配、状态与提问格式见 `docs/development/chat-coordination.md`。

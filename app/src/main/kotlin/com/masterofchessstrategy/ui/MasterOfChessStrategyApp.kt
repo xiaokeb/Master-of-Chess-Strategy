@@ -91,7 +91,6 @@ import com.masterofchessstrategy.game.ChineseChessFeedback
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 import com.masterofchessstrategy.game.ChineseChessGameViewModel
 import com.masterofchessstrategy.game.ChineseChessBackgroundController
-import com.masterofchessstrategy.game.ChineseChessSoundPlayer
 import com.masterofchessstrategy.game.PikafishNetworkProvider
 import com.masterofchessstrategy.navigation.AppDestination
 import com.masterofchessstrategy.navigation.AppNavigationViewModel
@@ -1666,19 +1665,7 @@ private fun ChineseChessGameSoundEffect(
     soundEnabled: Boolean,
 ) {
     ChineseChessRuntimeEffect(viewModel)
-    val context = LocalContext.current.applicationContext
-    val player = remember(context) { ChineseChessSoundPlayer(context) }
-    val currentSoundEnabled = rememberUpdatedState(soundEnabled)
-    DisposableEffect(player) {
-        onDispose(player::close)
-    }
-    LaunchedEffect(viewModel, player) {
-        viewModel.soundEvents.collect { cue ->
-            if (currentSoundEnabled.value) {
-                player.play(cue)
-            }
-        }
-    }
+    ChineseChessSoundEffect(viewModel.soundEvents, soundEnabled)
 }
 
 @Composable

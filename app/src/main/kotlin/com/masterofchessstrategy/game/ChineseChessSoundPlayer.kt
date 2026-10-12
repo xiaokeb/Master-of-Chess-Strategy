@@ -23,18 +23,20 @@ internal class ChineseChessSoundPlayer(context: Context) : Closeable {
         )
         .build()
     private val soundIds = mutableMapOf<ChineseChessSoundCue, Int>()
-    private val loadedSoundIds = mutableSetOf<Int>()
-    private var pendingCue: ChineseChessSoundCue? = null
-    private var isClosed = false
+    private val playback = ChineseChessSoundPlayback(
+        playLoaded = { cue -> playLoaded(soundIds.getValue(cue)) },
+        // Never autoResume: turning sound back on must not resume an old cue.
+        stopPlayback = soundPool::autoPause,
+        release = {
+            soundPool.setOnLoadCompleteListener(null)
+            soundPool.release()
+        },
+    )
 
     init {
         soundPool.setOnLoadCompleteListener { _, sampleId, status ->
-            if (isClosed || status != LOAD_SUCCESS) return@setOnLoadCompleteListener
-            loadedSoundIds += sampleId
-            val cue = pendingCue
-            if (cue != null && soundIds[cue] == sampleId) {
-                pendingCue = null
-                playLoaded(sampleId)
+            soundIds.entries.firstOrNull { it.value == sampleId }?.key?.let { cue ->
+                playback.onLoadCompleted(cue, status == LOAD_SUCCESS)
             }
         }
         soundIds[ChineseChessSoundCue.MOVE] =
@@ -49,26 +51,16 @@ internal class ChineseChessSoundPlayer(context: Context) : Closeable {
             soundPool.load(context, R.raw.game_draw, EFFECT_PRIORITY)
     }
 
-    fun play(cue: ChineseChessSoundCue) {
-        if (isClosed) return
-        val soundId = soundIds.getValue(cue)
-        if (soundId in loadedSoundIds) {
-            pendingCue = null
-            playLoaded(soundId)
-        } else {
-            pendingCue = cue
-        }
-    }
+    /** Returns whether Android accepted the cue for immediate playback. */
+    fun play(cue: ChineseChessSoundCue): Boolean = playback.play(cue)
 
-    override fun close() {
-        if (isClosed) return
-        isClosed = true
-        pendingCue = null
-        soundPool.setOnLoadCompleteListener(null)
-        soundPool.release()
-    }
+    internal fun isLoaded(cue: ChineseChessSoundCue): Boolean = playback.isLoaded(cue)
 
-    private fun playLoaded(soundId: Int) {
+    fun setEnabled(enabled: Boolean) = playback.setEnabled(enabled)
+
+    override fun close() = playback.close()
+
+    private fun playLoaded(soundId: Int): Boolean =
         soundPool.play(
             soundId,
             EFFECT_VOLUME,
@@ -76,8 +68,7 @@ internal class ChineseChessSoundPlayer(context: Context) : Closeable {
             EFFECT_PRIORITY,
             NO_LOOP,
             NORMAL_RATE,
-        )
-    }
+        ) != PLAYBACK_REJECTED
 
     private companion object {
         const val LOAD_SUCCESS = 0
@@ -85,5 +76,6 @@ internal class ChineseChessSoundPlayer(context: Context) : Closeable {
         const val EFFECT_PRIORITY = 1
         const val NO_LOOP = 0
         const val NORMAL_RATE = 1f
+        const val PLAYBACK_REJECTED = 0
     }
 }
