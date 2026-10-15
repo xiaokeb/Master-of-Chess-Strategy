@@ -80,6 +80,7 @@ add_library(
     src/chinese_chess.cpp
     src/health_check.cpp
     src/native_engine_registry.cpp
+    games/tiger-goat/tiger_goat_game.cpp
     src/pikafish_adapter.cpp
     src/pikafish_difficulty.cpp
 )
@@ -106,6 +107,7 @@ add_library(
     mocs_engine_native
     SHARED
     src/jni_bridge.cpp
+    src/jni_tiger_goat_bridge.cpp
 )
 target_link_libraries(
     mocs_engine_native

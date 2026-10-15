@@ -215,6 +215,11 @@ private fun DataBackupSetting(
                 }
             }
             Text(
+                text = stringResource(R.string.data_backup_boundary),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (state.isWorking || state.feedback != null) Text(
                 text = backupStatusText(state),
                 style = MaterialTheme.typography.bodySmall,
                 color = if (

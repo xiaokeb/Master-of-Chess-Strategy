@@ -63,6 +63,8 @@ internal object AppDestination {
     const val CHINESE_CHESS_ENDGAME_GAME =
         "chinese-chess/endgames/{$ENDGAME_LEVEL_ARGUMENT}"
     const val CHINESE_CHESS_GAME = "chinese-chess/game"
+    const val LANZHOU_TRADITIONAL_MODES = "lanzhou-traditional/modes"
+    const val TIGER_GOAT_LOCAL_GAME = "tiger-goat/local-game"
     const val AI_DIFFICULTY_ARGUMENT = "difficultyCode"
     const val CHINESE_CHESS_AI_GAME =
         "chinese-chess/ai-game/{$AI_DIFFICULTY_ARGUMENT}"
@@ -140,7 +142,7 @@ internal enum class HomeGameEntry(
     LANZHOU_MAHJONG(setOf(GameType.LANZHOU_MAHJONG), false),
     LANZHOU_TRADITIONAL(
         setOf(GameType.LANZHOU_SQUARE_CHESS, GameType.TIGER_AND_GOAT),
-        false,
+        true,
     ),
 }
 

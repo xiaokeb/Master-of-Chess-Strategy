@@ -11,6 +11,7 @@ import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.custom.ChineseChessHandicapConfig
+import com.masterofchessstrategy.games.xiangqi.MocxRuleRevisionFixtures
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -19,6 +20,40 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LocalDataBackupCodecTest {
+    // These core-only fixtures deliberately register no optional game module.
+    private object CoreCodec {
+        private val registry = GameBackupRegistry(emptyList())
+        fun encode(snapshot: LocalDataSnapshot) = LocalDataBackupCodec.encode(snapshot, registry)
+        fun decode(bytes: ByteArray) = LocalDataBackupCodec.decode(bytes, registry)
+    }
+    @Test
+    fun mocxRuleRevisionsAndLegacyVerdictsSurviveCanonicalBackupRoundTrip() {
+        for (fixture in MocxRuleRevisionFixtures.all()) {
+            val source = LocalDataSnapshot(
+                createdAtEpochMillis = 1L,
+                activeSessions = listOf(GameSessionSnapshot(
+                    gameType = GameType.CHINESE_CHESS, mode = StoredGameMode.LOCAL_TWO_PLAYER,
+                    difficulty = null, engineState = fixture.engineState.copyOf(),
+                    updatedAtEpochMillis = 1L, sessionId = fixture.id, acceptedMoveCount = 8,
+                )),
+                gameRecords = listOf(GameRecord(
+                    recordId = fixture.id, gameType = GameType.CHINESE_CHESS,
+                    mode = StoredGameMode.LOCAL_TWO_PLAYER, difficulty = null, result = fixture.result,
+                    engineState = fixture.engineState.copyOf(), moveCount = 8, completedAtEpochMillis = 1L,
+                )),
+            )
+            val encoded = CoreCodec.encode(source)
+            val restored = CoreCodec.decode(encoded)
+            assertArrayEquals(fixture.engineState, restored.activeSessions.single().engineState)
+            assertArrayEquals(fixture.engineState, restored.gameRecords.single().engineState)
+            assertEquals(fixture.result, restored.gameRecords.single().result)
+            assertArrayEquals(encoded, CoreCodec.encode(restored))
+            source.activeSessions.single().engineState.fill(0)
+            source.gameRecords.single().engineState.fill(0)
+            assertArrayEquals(fixture.engineState, restored.gameRecords.single().engineState)
+        }
+    }
+
     @Test
     fun handicapBackupPreservesOriginalPlanOwnerAndRecordsAndRejectsFacingGenerals() {
         val variant = ChineseChessHandicapConfig.sessionVariant(setOf(1, 81), "0".repeat(32))
@@ -35,7 +70,7 @@ class LocalDataBackupCodecTest {
             3L, activeSessions = listOf(session), gameRecords = listOf(record),
             lastSelections = listOf(LastGameSelection(GameType.CHINESE_CHESS, StoredGameMode.HANDICAP, Difficulty.MEDIUM, 1L)),
         )
-        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(snapshot))
+        val restored = CoreCodec.decode(CoreCodec.encode(snapshot))
         assertEquals(variant, restored.activeSessions.single().sessionVariantId)
         assertEquals(1, restored.activeSessions.single().playerIndex)
         assertEquals(StoredGameMode.HANDICAP, restored.gameRecords.single().mode)
@@ -43,7 +78,7 @@ class LocalDataBackupCodecTest {
         assertEquals(snapshot.lastSelections, restored.lastSelections)
         val invalid = session.copy(sessionVariantId = ChineseChessHandicapConfig.sessionVariant(setOf(31, 58), "0".repeat(32)))
         assertThrows(IllegalArgumentException::class.java) {
-            LocalDataBackupCodec.encode(snapshot.copy(activeSessions = listOf(invalid)))
+            CoreCodec.encode(snapshot.copy(activeSessions = listOf(invalid)))
         }
     }
 
@@ -60,12 +95,12 @@ class LocalDataBackupCodecTest {
             settings = AppSettings.DEFAULT.copy(aiFirstEnabled = true),
             activeSessions = listOf(session), gameRecords = listOf(record),
         )
-        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+        val restored = CoreCodec.decode(CoreCodec.encode(source))
         assertEquals(true, restored.settings?.aiFirstEnabled)
         assertEquals(1, restored.activeSessions.single().playerIndex)
         assertEquals(1, restored.gameRecords.single().playerIndex)
         assertThrows(IllegalArgumentException::class.java) {
-            LocalDataBackupCodec.encode(source.copy(activeSessions = listOf(session.copy(playerIndex = 2))))
+            CoreCodec.encode(source.copy(activeSessions = listOf(session.copy(playerIndex = 2))))
         }
     }
 
@@ -78,7 +113,7 @@ class LocalDataBackupCodecTest {
                 "RECORD|72|0|1|0|2|07|2|0|0|3\n"
             val hash = java.security.MessageDigest.getInstance("SHA-256").digest(body.toByteArray())
                 .joinToString("") { "%02x".format(it.toInt() and 0xff) }
-            val restored = LocalDataBackupCodec.decode((body + "SHA256|$hash\n").toByteArray())
+            val restored = CoreCodec.decode((body + "SHA256|$hash\n").toByteArray())
             assertEquals(false, restored.settings?.aiFirstEnabled)
             assertEquals(if (version == 1) 0 else 7, restored.settings?.highlightConditionsMask)
             assertEquals(0, restored.activeSessions.single().playerIndex)
@@ -91,8 +126,8 @@ class LocalDataBackupCodecTest {
     fun fullSnapshotRoundTripsWithCanonicalChecksum() {
         val source = completeSnapshot()
 
-        val encoded = LocalDataBackupCodec.encode(source)
-        val restored = LocalDataBackupCodec.decode(encoded)
+        val encoded = CoreCodec.encode(source)
+        val restored = CoreCodec.decode(encoded)
 
         assertEquals(source.createdAtEpochMillis, restored.createdAtEpochMillis)
         assertEquals(source.settings, restored.settings)
@@ -111,7 +146,7 @@ class LocalDataBackupCodecTest {
             restored.gameRecords.single().engineState,
         )
         val text = encoded.toString(Charsets.UTF_8)
-        assertTrue(text.startsWith("MOCS-BACKUP|3\nCREATED|900\n"))
+        assertTrue(text.startsWith("MOCS-BACKUP|4\nCREATED|900\n"))
         assertTrue(text.substringAfterLast("SHA256|").trim().matches(Regex("[0-9a-f]{64}")))
         assertFalse('\r' in text)
     }
@@ -124,7 +159,7 @@ class LocalDataBackupCodecTest {
             ),
         )
 
-        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+        val restored = CoreCodec.decode(CoreCodec.encode(source))
 
         assertEquals(4, restored.settings?.selectedAppearanceCode)
     }
@@ -138,7 +173,7 @@ class LocalDataBackupCodecTest {
         )
         val source = LocalDataSnapshot(createdAtEpochMillis = 1L, settings = settings)
 
-        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+        val restored = CoreCodec.decode(CoreCodec.encode(source))
         assertEquals(settings.highlightConditionsMask, restored.settings?.highlightConditionsMask)
 
         val legacyBody = "MOCS-BACKUP|1\nCREATED|1\nSETTINGS|0|0|10|1|-|0|2\n"
@@ -146,20 +181,20 @@ class LocalDataBackupCodecTest {
             .digest(legacyBody.toByteArray(Charsets.UTF_8))
             .joinToString("") { "%02x".format(it.toInt() and 0xff) }
         val legacy = (legacyBody + "SHA256|$checksum\n").toByteArray(Charsets.UTF_8)
-        val imported = LocalDataBackupCodec.decode(legacy)
+        val imported = CoreCodec.decode(legacy)
         assertEquals(0, imported.settings?.highlightConditionsMask)
         assertEquals(2L, imported.settings?.updatedAtEpochMillis)
     }
 
     @Test
     fun anyPayloadChangeFailsBeforeDecode() {
-        val encoded = LocalDataBackupCodec.encode(completeSnapshot())
+        val encoded = CoreCodec.encode(completeSnapshot())
         val changed = encoded.copyOf()
         val marker = changed.indexOf('A'.code.toByte())
         changed[marker] = 'B'.code.toByte()
 
         assertThrows(IllegalArgumentException::class.java) {
-            LocalDataBackupCodec.decode(changed)
+            CoreCodec.decode(changed)
         }
     }
 
@@ -167,7 +202,7 @@ class LocalDataBackupCodecTest {
     fun duplicatePrimaryKeysAndInvalidVariantModeAreRejected() {
         val source = completeSnapshot()
         assertThrows(IllegalArgumentException::class.java) {
-            LocalDataBackupCodec.encode(
+            CoreCodec.encode(
                 source.copy(gameRecords = source.gameRecords + source.gameRecords.single()),
             )
         }
@@ -176,7 +211,7 @@ class LocalDataBackupCodecTest {
             difficulty = null,
         )
         assertThrows(IllegalArgumentException::class.java) {
-            LocalDataBackupCodec.encode(
+            CoreCodec.encode(
                 source.copy(activeSessions = listOf(invalidSession)),
             )
         }
@@ -200,7 +235,7 @@ class LocalDataBackupCodecTest {
             ),
         )
 
-        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+        val restored = CoreCodec.decode(CoreCodec.encode(source))
 
         assertEquals(
             CustomPositionStateCodec.sessionVariant(initial),
@@ -228,14 +263,14 @@ class LocalDataBackupCodecTest {
             activeSessions = listOf(session),
         )
 
-        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+        val restored = CoreCodec.decode(CoreCodec.encode(source))
 
         assertEquals(
             TimedChallengeConfig.sessionVariant(10),
             restored.activeSessions.single().sessionVariantId,
         )
         assertThrows(IllegalArgumentException::class.java) {
-            LocalDataBackupCodec.encode(
+            CoreCodec.encode(
                 source.copy(
                     activeSessions = listOf(
                         session.copy(redRemainingMillis = 10_001L),
@@ -275,7 +310,7 @@ class LocalDataBackupCodecTest {
             ),
         )
 
-        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+        val restored = CoreCodec.decode(CoreCodec.encode(source))
 
         assertEquals(StoredGameMode.STREAK_CHALLENGE, restored.activeSessions.single().mode)
         assertEquals(Difficulty.MEDIUM, restored.lastSelections.single().difficulty)
@@ -311,7 +346,7 @@ class LocalDataBackupCodecTest {
             ),
         )
 
-        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+        val restored = CoreCodec.decode(CoreCodec.encode(source))
 
         assertEquals(StoredGameMode.BLIND_CHALLENGE, restored.activeSessions.single().mode)
         assertEquals(Difficulty.MEDIUM, restored.lastSelections.single().difficulty)
@@ -349,7 +384,7 @@ class LocalDataBackupCodecTest {
             ),
         )
 
-        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+        val restored = CoreCodec.decode(CoreCodec.encode(source))
 
         assertEquals(StoredGameMode.ASSESSMENT_CHALLENGE, restored.activeSessions.single().mode)
         assertEquals(
@@ -378,7 +413,7 @@ class LocalDataBackupCodecTest {
             ),
         )
 
-        val restored = LocalDataBackupCodec.decode(LocalDataBackupCodec.encode(source))
+        val restored = CoreCodec.decode(CoreCodec.encode(source))
 
         assertEquals(StoredGameMode.OPENING_AUTO_PLAY, restored.activeSessions.single().mode)
         assertEquals(

@@ -12,6 +12,7 @@ internal data class LocalDataRestoreSummary(
     val matchOutcomeCount: Int,
     val gameRecordCount: Int,
     val completedEndgameCount: Int,
+    val competitionMatchCount: Int = 0,
 )
 
 internal interface LocalDataBackupRepository {
@@ -25,6 +26,7 @@ internal class RoomLocalDataBackupRepository(
     private val database: MocsDatabase,
     private val endgamePack: ChineseChessEndgamePack,
     private val validateEngineState: (ByteArray) -> Boolean,
+    private val gameBackups: GameBackupRegistry,
 ) : LocalDataBackupRepository {
     private val sessionRepository = RoomGameSessionRepository(database.activeGameDao())
     private val selectionRepository = RoomLastSelectionRepository(database.lastSelectionDao())
@@ -40,9 +42,12 @@ internal class RoomLocalDataBackupRepository(
     override suspend fun export(createdAtEpochMillis: Long): ByteArray {
         require(createdAtEpochMillis >= 0L)
         val snapshot = database.withTransaction {
+            gameBackups.requireSupportedSlots(BackupStorageInventory.read(database))
             LocalDataSnapshot(
                 createdAtEpochMillis = createdAtEpochMillis,
-                activeSessions = GameType.entries.mapNotNull { gameType ->
+                gameExtensions = gameBackups.readRecords(database),
+                // Every other active row belongs to an explicitly registered game adapter.
+                activeSessions = listOf(GameType.CHINESE_CHESS).mapNotNull { gameType ->
                     when (val result = sessionRepository.load(gameType)) {
                         LoadGameSessionResult.NotFound -> null
                         LoadGameSessionResult.Incompatible -> error("Active session is incompatible")
@@ -84,12 +89,18 @@ internal class RoomLocalDataBackupRepository(
             )
         }
         validateEngineStates(snapshot)
-        return LocalDataBackupCodec.encode(snapshot)
+        // Export is subject to the same real engine admission as restore, without writes.
+        gameBackups.prepareRestore(snapshot.gameExtensions, gameBackups.containerVersion(snapshot.gameExtensions))
+        return LocalDataBackupCodec.encode(snapshot, gameBackups)
     }
 
     override suspend fun restore(bytes: ByteArray): LocalDataRestoreSummary {
-        val snapshot = LocalDataBackupCodec.decode(bytes)
+        val snapshot = LocalDataBackupCodec.decode(bytes, gameBackups)
         validateEngineStates(snapshot)
+        val preparedGames = gameBackups.prepareRestore(
+            snapshot.gameExtensions,
+            gameBackups.containerVersion(snapshot.gameExtensions),
+        )
         val endgameLevels = snapshot.endgameProgress.associateWith { progress ->
             val level = levelsById[progress.levelId]
                 ?: error("Backup references an unknown endgame level")
@@ -100,7 +111,10 @@ internal class RoomLocalDataBackupRepository(
             level
         }
         database.withTransaction {
+            // Recheck actual stored slots under the write transaction before clearing anything.
+            gameBackups.requireSupportedSlots(BackupStorageInventory.read(database))
             clearAll()
+            preparedGames.forEach { it.write(database) }
             snapshot.activeSessions.forEach { sessionRepository.save(it) }
             snapshot.lastSelections.forEach { selectionRepository.save(it) }
             snapshot.settings?.let { settingsRepository.save(it) }
@@ -121,10 +135,12 @@ internal class RoomLocalDataBackupRepository(
             }
         }
         return LocalDataRestoreSummary(
-            activeSessionCount = snapshot.activeSessions.size,
+            activeSessionCount = snapshot.activeSessions.size +
+                preparedGames.count { it.storageSlot.table == BackupStorageTable.ACTIVE_GAME },
             matchOutcomeCount = snapshot.matchOutcomes.size,
             gameRecordCount = snapshot.gameRecords.size,
             completedEndgameCount = snapshot.endgameProgress.size,
+            competitionMatchCount = preparedGames.count { it.storageSlot.table == BackupStorageTable.COMPETITION_MATCH },
         )
     }
 
@@ -148,6 +164,7 @@ internal class RoomLocalDataBackupRepository(
     }
 
     private suspend fun clearAll() {
+        database.competitionMahjongMatchDao().deleteAll()
         database.activeGameDao().deleteAll()
         database.lastSelectionDao().deleteAll()
         database.appSettingsDao().deleteAll()

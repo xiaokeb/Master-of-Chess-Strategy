@@ -23,6 +23,7 @@ import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.RoomAppSettingsRepository
 import com.masterofchessstrategy.data.RoomLocalDataBackupRepository
+import com.masterofchessstrategy.data.GameBackupRegistry
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.data.TutorialProgressEntity
 import com.masterofchessstrategy.endgame.ChineseChessEndgamePackParser
@@ -162,10 +163,11 @@ class ChineseChessHandicapNavigationTest {
         val validator: (ByteArray) -> Boolean = { bytes ->
             NativeChineseChessEngine().use { it.restore(bytes) is RestoreResult.Restored }
         }
-        val bytes = RoomLocalDataBackupRepository(database, pack, validator).export(100L)
+        val registry = GameBackupRegistry(emptyList())
+        val bytes = RoomLocalDataBackupRepository(database, pack, validator, registry).export(100L)
         val restored = Room.inMemoryDatabaseBuilder(context, MocsDatabase::class.java).build()
         try {
-            RoomLocalDataBackupRepository(restored, pack, validator).restore(bytes)
+            RoomLocalDataBackupRepository(restored, pack, validator, registry).restore(bytes)
             assertEquals(expected, restored.activeGameDao().find(GameType.CHINESE_CHESS.code))
             assertEquals(true, restored.appSettingsDao().find()?.aiFirstEnabled)
         } finally { restored.close() }

@@ -60,6 +60,8 @@ import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.data.MocsDatabase
+import com.masterofchessstrategy.data.GameBackupRegistry
+import com.masterofchessstrategy.games.tiger_goat.data.TigerGoatBackupAdapter
 import com.masterofchessstrategy.data.RoomAppSettingsRepository
 import com.masterofchessstrategy.data.RoomCompletedGameSessionRepository
 import com.masterofchessstrategy.data.CompletedGameCommitResult
@@ -107,6 +109,7 @@ import com.masterofchessstrategy.opening.PreparedOpeningAutoPlay
 import com.masterofchessstrategy.settings.AppSettingsViewModel
 import com.masterofchessstrategy.settings.LocalDataBackupViewModel
 import com.masterofchessstrategy.settings.awaitLocalDataWriters
+import com.masterofchessstrategy.settings.LocalDataWriterRegistry
 import com.masterofchessstrategy.tutorial.ChineseChessTutorialViewModel
 import com.masterofchessstrategy.tutorial.availableTutorialEndgame
 import com.masterofchessstrategy.ui.theme.MocsTheme
@@ -138,6 +141,8 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
     MocsAppWindow {
         val navController = rememberNavController()
         val context = LocalContext.current
+        val gameWriters = remember(database) { LocalDataWriterRegistry.forDatabase(database) }
+        val backupRegistry = remember(database) { GameBackupRegistry(listOf(TigerGoatBackupAdapter())) }
         val pikafishNetworkProvider = remember(context.applicationContext) {
             PikafishNetworkProvider(context.applicationContext)
         }
@@ -162,11 +167,12 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
         val endgameRepository = remember(database, endgamePack) {
             RoomEndgameProgressRepository(database.endgameProgressDao(), endgamePack)
         }
-        val backupRepository = remember(database, endgamePack) {
+        val backupRepository = remember(database, endgamePack, backupRegistry) {
             RoomLocalDataBackupRepository(
                 database = database,
                 endgamePack = endgamePack,
                 validateEngineState = ::isValidChineseChessState,
+                gameBackups = backupRegistry,
             )
         }
         val navigationFactory = remember(selectionRepository) {
@@ -277,6 +283,8 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onGameSelected = { entry ->
                         if (entry == HomeGameEntry.CHINESE_CHESS) {
                             navController.navigate(AppDestination.CHINESE_CHESS_MODES)
+                        } else if (entry == HomeGameEntry.LANZHOU_TRADITIONAL) {
+                            navController.navigate(AppDestination.LANZHOU_TRADITIONAL_MODES)
                         }
                     },
                     quickStartEntries = quickStartEntries,
@@ -386,6 +394,20 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                         score = growthSummary.totalScore,
                     ),
                 )
+            }
+            composable(AppDestination.LANZHOU_TRADITIONAL_MODES) {
+                LanzhouTraditionalModesScreen(
+                    menu = TraditionalGameMenu(listOf(
+                        TraditionalGameMenuEntry(
+                            "tiger_goat_local", stringResource(R.string.tiger_goat_title), TIGER_GOAT_LOCAL_TAG,
+                            { navController.navigate(AppDestination.TIGER_GOAT_LOCAL_GAME) },
+                        ),
+                    )),
+                    onBack = navController::popBackStack,
+                )
+            }
+            composable(AppDestination.TIGER_GOAT_LOCAL_GAME) { entry ->
+                TigerGoatNavigationRoute(database, entry, gameWriters, navController::popBackStack)
             }
             composable(AppDestination.CHINESE_CHESS_MODES) {
                 ChineseChessModeScreen(
@@ -1600,9 +1622,9 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                                         beforeRestore = {
                                             val activeGame = ChineseChessBackgroundController.get(context).game
                                             awaitLocalDataWriters(
-                                                listOfNotNull(activeGame, settingsViewModel, navigationViewModel,
+                                                (gameWriters.snapshot() + listOfNotNull(activeGame, settingsViewModel, navigationViewModel,
                                                     tutorialViewModel, statisticsViewModel, gameRecordsViewModel,
-                                                    endgameViewModel),
+                                                    endgameViewModel)).distinct(),
                                             ) {
                                                 activeGame?.retireBackgroundRuntime()
                                                 navController.navigate(AppDestination.SETTINGS) {

@@ -1,0 +1,489 @@
+{
+  "schemaVersion": 1,
+  "tag": "v0.1.0-tiger-goat-local.1",
+  "baselineCommit": "0adc314f5577676c574fd159d56f3ff33d9d8935",
+  "verifiedSourceFiles": 658,
+  "verifiedSourceIdentitySha256": "50f0dc0635a821ceb98c7e7d4b23bf17b14b531edb2c1b689c1ca6b157a06e8d",
+  "assemblyManifestSha256": "3a5f68d69d35c7525121049907014debe2f7e7f8d1ab78b2a22788d2e756a71a",
+  "scope": "Published Xiangqi baseline plus Tiger-goat local multiplayer; no other game runtime or Go/desugar changes.",
+  "note": "Baseline files not listed retain baseline Git blobs. Candidate/archive uses core.autocrlf=false;core.eol=lf; explicit .bat CRLF attributes remain respected. Entries use canonical overlay bytes; external licenses/assembly have LF checkout attributes. This manifest and the two reports are documentation-only additions.",
+  "overlays": [
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatForcedPassScreenTest.kt",
+      "sha256": "875cca6566c6228ad4239be6cd6e9724d2a32d4330f03540ab9199da16d3aadd"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatNativePassFixture.kt",
+      "sha256": "7e1b1606334912da63e268ea3b31c5f76710f862d79eb81febfc815f813255ef"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatPassRoomInstrumentedTest.kt",
+      "sha256": "ed3ef5c227c94b37c5ffb39fa93ea8dae606fdba3d27509f0aad979dcbc36eb1"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/NativeTigerGoatRulesSession.kt",
+      "sha256": "e657f03d6379e7736e061f8f8a53bf9f13b0fb1844aededb114f1048c5336d0e"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatBoardGeometry.kt",
+      "sha256": "8ca64fb074053ac408b16406ba47369546b65237511fdeeabe6fd81655db1ffb"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatGameController.kt",
+      "sha256": "3f5b604af12decb4a1f13836b2940f95967911da95d9f9abd4c45c60670c1f28"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatGameRoute.kt",
+      "sha256": "4732e852b4a9046154c2f25431c2c6b372c728bced662cd7a0eaf2a15e72bfbc"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatGameScreen.kt",
+      "sha256": "1dc9784bc0fb762c8c330c3ea050ebc72b692af95394de5bb1faa79da2cb1938"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatGameViewModel.kt",
+      "sha256": "20050f1fca6b0c3bebff4c99207375b1621ee006280f121198c97b326175c49b"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatSessionStore.kt",
+      "sha256": "58d37ec4069e180722e1c2fa63ea993b588fc85f80c35b83a32ccad3492fbac2"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatBoardGeometryTest.kt",
+      "sha256": "621b57ac20c98fe74aee75bac43fc8435fc416e430012f65f24b9f4856c954f6"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatForcedPassTest.kt",
+      "sha256": "04d048451e39b3c0eb8369f06b4380d5018aafaa185ea4cd85d3d135b587441b"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatGameControllerTest.kt",
+      "sha256": "63b9d6d316933d95903ddf058ced93a8cd33dd4b24c4c7be22917d23d0554877"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatGameViewModelTest.kt",
+      "sha256": "0ecfd37c05c887f53471a04efd1f932049199bac7064d69167c53dc409f35ff9"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatPassFixture.kt",
+      "sha256": "279aaab64b87f4ed07c3682e3c1669df7ce230688a44b7e921434031cd75d4d6"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatSessionStoreTest.kt",
+      "sha256": "6749ffbd97aef21ac917b248182e299f7df0c9c190bed863f23d5535f0436985"
+    },
+    {
+      "path": "docs/games/tiger-goat/2026-10-12-app-forced-pass.md",
+      "sha256": "54d89d82ae96f1b24320c4f7b4c9483aa1210fe5d1100e4e2cd1547896752b5d"
+    },
+    {
+      "path": "docs/games/tiger-goat/2026-10-12-backup-navigation.md",
+      "sha256": "4f31ceeb73b20d8b68205713746c0b1ff9c22c498e5a9673647b5f190b45af97"
+    },
+    {
+      "path": "docs/games/tiger-goat/2026-10-12-native-exception-safety.md",
+      "sha256": "e760b1e7df47c4c1503930e6cab75964990d3519743cb7cd328812976e6e2e94"
+    },
+    {
+      "path": "docs/games/tiger-goat/2026-10-12-native-turn-repair.md",
+      "sha256": "a065b3f830c179e975fd061aec0246dbb3da4822b56f56bee5679954ccb82415"
+    },
+    {
+      "path": "docs/games/tiger-goat/2026-10-12-shared-jni.md",
+      "sha256": "abc55278bec05056ea13aad0019d32cf7420953207e712b5496ce5403951d069"
+    },
+    {
+      "path": "docs/games/tiger-goat/2026-10-13-integration.md",
+      "sha256": "5df03f0a3085a15277b63f5ade257a4bde3b34d29cf4c1459058d28ba1940c56"
+    },
+    {
+      "path": "docs/games/tiger-goat/2026-10-13-lint-fix.md",
+      "sha256": "44bea18315b58911dff60f63bb0d6992cb87e580c90c8d06a96717253a65422d"
+    },
+    {
+      "path": "docs/games/tiger-goat/2026-10-13-release-dependencies.md",
+      "sha256": "560b8d74e91b4acfb5bf676d57276374ff25aca9c1039d5a21df7a466501b22a"
+    },
+    {
+      "path": "docs/games/tiger-goat/2026-10-14-backup-adapter.md",
+      "sha256": "8d15565c3d534d9979a2d6cfac0d90e5ae831c8b6490039013ede0f76f2b60b3"
+    },
+    {
+      "path": "docs/games/tiger-goat/acceptance-checklist.md",
+      "sha256": "719f373fa1b0fbd27733c38afed314d0f9c8fb34c6ebff229b0f603af7767238"
+    },
+    {
+      "path": "docs/games/tiger-goat/app-freeze-20261012.tsv",
+      "sha256": "e432bc59868e261b47a06efd4fd4f08ebf4e72c18bce349ac5dede7a8e7e1edb"
+    },
+    {
+      "path": "docs/games/tiger-goat/geometry.md",
+      "sha256": "83997756f418f61ba3c84f64accb07a30d46c5470feea8ff90dcf3b778665642"
+    },
+    {
+      "path": "docs/games/tiger-goat/native-freeze-20261012-oom.tsv",
+      "sha256": "39d1e13354372f1868621d4f9f861a4cb2e2c42db673becc6a2f215f999a278b"
+    },
+    {
+      "path": "docs/games/tiger-goat/native-freeze-20261012.tsv",
+      "sha256": "90d32097523e580b4fceb48c5bfbe369efd5b2075f0f8e784b02bd931620a9a0"
+    },
+    {
+      "path": "docs/games/tiger-goat/README.md",
+      "sha256": "b2a57a7fafc7585233e9dbce6334cea6520368aa8206dd6bff59af7e1f8ef84d"
+    },
+    {
+      "path": "docs/games/tiger-goat/rules-implementation.md",
+      "sha256": "5fc1a87faa0f0992e4592edf4ff542d62fef0111485c1a7182643d9b8c8ca37d"
+    },
+    {
+      "path": "docs/games/tiger-goat/shared-backup-navigation-freeze-20261012.tsv",
+      "sha256": "25217f418ce513eb154762e347aa3346dc1462028fbc7a8de23ecb906afbc3c8"
+    },
+    {
+      "path": "engine-native/src/androidTest/kotlin/com/masterofchessstrategy/engine/games/tiger_goat/NativeTigerGoatSessionInstrumentedTest.kt",
+      "sha256": "f60d4f48a3f9972fb0186babd1bbf3ce844e407d400c7f944635a737fc00c24c"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/tiger-goat/tiger_goat_exception_test.cpp",
+      "sha256": "c3e12f5d2a18a88b39492535f1dd61267b4ba5d73b72a4c51d93a1df8138de12"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/tiger-goat/tiger_goat_game_test.cpp",
+      "sha256": "a6b1f4485c100d5183702f2bc69aca5813a62b70730e2b52e18a214fa5ee30bf"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/tiger-goat/tiger_goat_game.cpp",
+      "sha256": "905feb0a13fe71a483111eba5868c4be634c3c7bd87375b20aa852f6f935854e"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/tiger-goat/tiger_goat_topology_test.cpp",
+      "sha256": "eeadd44093c1c92a20cda79a2ad2c9e9d5c21de528d3929fb40637c140c85e04"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/tiger_goat_board.hpp",
+      "sha256": "b701ab67a1be64a32b44c8255182986bfa7ed6c554a0f2f62ac5e98c60bb910f"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/tiger_goat_game.hpp",
+      "sha256": "4bbe2f4d3381f2ff98f98360bd47658d539d9cb080776567961a5901d943765d"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/tiger_goat_wire.hpp",
+      "sha256": "06a26cc30689975c8a0aa0fb3c6ef437aef95a33c87ebce79b03d04ccc8718c7"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/tiger_goat.hpp",
+      "sha256": "3493ed2c5c761793eb5c3601cde713d80b2f28ae6b8f49a37aa85dc88fe1ecec"
+    },
+    {
+      "path": "engine-native/src/main/cpp/tests/tiger_goat_step_test.cpp",
+      "sha256": "4f746d3a431b5316f66c1b1f179d1c1d6d7d642b888f09ed0f50930bcf4c3b97"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/games/tiger_goat/NativeTigerGoatSession.kt",
+      "sha256": "2f0de7eef10a3505b43babf3d92942076d052a2aac741e96af0c0e87f598f567"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/games/tiger_goat/TigerGoatBindings.kt",
+      "sha256": "76c279d276e89885c3efd267d13b2932eeb607570dbe937de269682000f09ece"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/games/tiger_goat/TigerGoatSession.kt",
+      "sha256": "cf5c5526c1be108efc956d1c1bc8355e67ed0dc1b886e673cadc31b7a79b0798"
+    },
+    {
+      "path": "engine-native/src/test/kotlin/com/masterofchessstrategy/engine/games/tiger_goat/NativeTigerGoatSessionTest.kt",
+      "sha256": "7eceaf0d78b5b31f496df48df662ad5e39cd8450e3b6faeb245fc41b04e76296"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/jni_tiger_goat_bridge.cpp",
+      "sha256": "ba1ceea8d5f2126b35d461dea93408aa2dd099db99d1f19db36886e6fdd1c58c"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/data/TigerGoatBackupAdapter.kt",
+      "sha256": "984f1318a4d48b4876b45466eea5aa2b1ab52a6cfe61c39188dff2cf340a4a0f"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/TigerGoatActiveArchive.kt",
+      "sha256": "4109ace6218509791d5d7ab07f96c16e68a0934a5697c4e82d2d8247e0f8c662"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/GameBackupRecord.kt",
+      "sha256": "46bbf194b479528d4c3da004e94690ffb49c30eda188e6b9089a1e3cd9de3e4d"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/GameBackupAdapter.kt",
+      "sha256": "8f7c5eaaacd01cf7ccf70805abe8e2559007d02c594b094056673e63f31405d6"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/GameBackupRegistry.kt",
+      "sha256": "d93cb81638561098eb190f00e297eb9d6bd8e51b6b452d97c6f8a237bdb45c7d"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/BackupStorageInventory.kt",
+      "sha256": "6d15981a4391a4f4fe9271ce36d037f8e6b9927b089a5184f9daec052081ea49"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/BackupStorageInventoryDao.kt",
+      "sha256": "6d13b438ed299ea5a47816ebac4efe4a19db5fe0a9c4a32ae065077e2ab62c31"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/BackupWireBuilder.kt",
+      "sha256": "f2dbd988562b0bb04fdd6b977e276d2a9bb932ca65c467115ec2a3b8d3375c36"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/LocalDataBackupCodec.kt",
+      "sha256": "a50c5ad7947296b3d6b3aaa04f9c6635d178383bf8a9a7fc158d7f8d16a3c5bc"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/LocalDataBackupRepository.kt",
+      "sha256": "7d2786f738f9876a7542f1ae0a0a097c801d97ddb1bc2178451cc815f864b709"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/MocsDatabase.kt",
+      "sha256": "673da7735809fd27224c57c2211efbe86f661ab363a3abef0544ae0dbcc9b822"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/CompetitionMahjongMatchEntity.kt",
+      "sha256": "44892f2975233f92c24503e0d002148779a730348ad6d65ee27709727bf190a5"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/CompetitionMahjongMatchDao.kt",
+      "sha256": "32bc000b045ac0ee495e35456ea5303019e548a08d665069c95d728e72b2d8cc"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/settings/LocalDataWriterRegistry.kt",
+      "sha256": "ff81d926f15b41b3e05e46ee9f8c4cef867fb26be4886780f8434cba8a5f161c"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/TraditionalGameMenuEntry.kt",
+      "sha256": "a9f2e1b004869d300f7fd99cee42f69fee30edfe24c048d54a0a02b313ec3f8d"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/LanzhouTraditionalModesScreen.kt",
+      "sha256": "a4ac809fd5a9f82b367aaaa7eb12c2cd67a1555eff5b0fa6d6af52f5599f7015"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/TigerGoatNavigationRoute.kt",
+      "sha256": "78ad1defd8c26a445e0601b813ed9e686625e988877d802906c895acdf1c4862"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/SettingsScreen.kt",
+      "sha256": "cd034da3ec042ea15b2415fbcad012511b3d9afb2a40145a2e0104092c5f786e"
+    },
+    {
+      "path": "app/src/main/res/values/lanzhou_traditional_navigation.xml",
+      "sha256": "a3fbedfa021dd7d974f535b6aceecc570499331ea82926226154fa1bab43c1f3"
+    },
+    {
+      "path": "app/src/main/res/values/tiger_goat_strings.xml",
+      "sha256": "279a93f898d7d7741a55173d1cb633837be68da7c9b453dabce85bde6dca99f5"
+    },
+    {
+      "path": "app/schemas/com.masterofchessstrategy.data.MocsDatabase/13.json",
+      "sha256": "7eb744a6dbbe9082fa6393c6df9b31f7a1d80290c8ed98fe060e84c92a117783"
+    },
+    {
+      "path": "app/src/debug/kotlin/com/masterofchessstrategy/ui/TigerGoatNavigationCheckActivity.kt",
+      "sha256": "6d046f1abe389aa40f521b858a8566cb97a9ad5148ec6d1189b490f59df858ae"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/data/LocalDataBackupCodecTest.kt",
+      "sha256": "c9153c0facf14fc987196201e38c7a1027c57ff426b9aeb5470de96f03835752"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/data/RegisteredBackupCodecTest.kt",
+      "sha256": "9411181116f082246a6f35137370f16f1233c494533d8e82cf6c960a2a249fbc"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/data/BackupWireBuilderTest.kt",
+      "sha256": "e389c7d2d4167eba224773f4b8e1b9ee31ddf39a82576464a2fc508bb875110c"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/data/GameBackupRegistryTest.kt",
+      "sha256": "34b8f5ae5c7d19e89336ead8372ae329c51c07289cb1c77ff0521ab293a3529b"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/data/TigerGoatBackupCodecTest.kt",
+      "sha256": "f0020a5b99ecfbe7326a00a913b03fe2d831ab5f5e939a6545d205c8e8e02aba"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/tiger_goat/data/TigerGoatBackupAdapterTest.kt",
+      "sha256": "6b7bec543af4a1b12ff2875727f4d09cb7bde02c7d5b1ae00e33e5b36e9833bb"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/xiangqi/MocxRuleRevisionFixtures.kt",
+      "sha256": "a4b9871938f76004e8dc319c1a0d95cd4f89466bb73b08bf94a47d8d4b44018f"
+    },
+    {
+      "path": "app/src/test/resources/games/xiangqi/rule-revision-snapshots.txt",
+      "sha256": "57821a4ddd7e393bf09f6880563730659b11ed53068a1af02a2778b7a2d30390"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/settings/LocalDataWriterRegistryTest.kt",
+      "sha256": "def2af8c6983442a02e0da1bde86ff4b6db4d1ff9269f2135fe95c25528431ff"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/ui/TraditionalGameMenuTest.kt",
+      "sha256": "edaee8e7ac59fb76938fcfd754d11a4fd37740e183ab86b2bd7a9eb63290a08a"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/data/RegisteredBackupRepositoryInstrumentedTest.kt",
+      "sha256": "840968c4d519c97b1239024e23c03b5411915dfb0a97be05c307bc8a272cddd2"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/data/BackupStorageInventoryInstrumentedTest.kt",
+      "sha256": "184f3712302aeb9851088e8db4af65e3f2ffb65ca4dde3b024441993c49099ab"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/data/LocalDataBackupRepositoryInstrumentedTest.kt",
+      "sha256": "c6181573ed4c4706930ed00480f8fcf3e7dafda0c4ecb07616de1045955cbe50"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/data/TigerGoatBackupRoomInstrumentedTest.kt",
+      "sha256": "a0d6b7b36e6e3f45325117738b879c64e58b11138fa1fa1e5dfd093cbffc58c7"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/data/CompetitionMahjongRoomMigrationTest.kt",
+      "sha256": "9f88aca05c520f30efb2921d109f4cd2251ae9336c9a14b225490e28874db9cc"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/TigerGoatNavigationIntegrationTest.kt",
+      "sha256": "84b365ddd8a3268993b1e61376bfae07ff91e42cd97e5327d6d64b256c0e9e0f"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/TraditionalGameMenuScreenTest.kt",
+      "sha256": "3f03df9ca686afe88fcf6bb4074524778a1977609c7a99d2768d6da30d292535"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/ChineseChessHandicapNavigationTest.kt",
+      "sha256": "31826ed83ea473f2173fdb25811a8e1cbef90df23e6e759742e9ab8e93252fc9"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/ChineseChessBackgroundServiceTest.kt",
+      "sha256": "552780cb08559ec02f5c7f421245209c4e723bda21e4efcce0d7393d53c8407a"
+    },
+    {
+      "path": "docs/interfaces/game-backup-adapter-v1.md",
+      "sha256": "7ce5698b99a2df3b6afef5a2d6689dcf4629c01a2da8fbdb8e9317e5e09759d2"
+    },
+    {
+      "path": "docs/development/milestone-release-policy.md",
+      "sha256": "ca1253e326768e385aa95ff456b71562d397d05284b922d910c9e3b4c765d61c"
+    },
+    {
+      "path": "docs/development/independent-game-release-plan-2026-10-13.md",
+      "sha256": "6e6cd7788812caac446f5e4c5af20c2cb57a9516c9a9e871601dce06d12c4705"
+    },
+    {
+      "path": "docs/testing/2026-10-13-independent-game-menu.md",
+      "sha256": "ba1cc7eabcae4d2b2d21dd5da05fcd88bf25c820fde02f1c53f11fdd623afce7"
+    },
+    {
+      "path": "docs/testing/2026-10-14-registered-backup-migration.md",
+      "sha256": "7ad901ac4316ea61f8613eeabd54aa78679f8506454272fa498c984b0cba0d1b"
+    },
+    {
+      "path": "tools/releases/prepare-source-candidate.ps1",
+      "sha256": "b7a01eec50877fe60dfe27fd676704fdd7fd9ed3e0300afc4cb89a3d33da4268"
+    },
+    {
+      "path": "tools/releases/test-source-candidate.ps1",
+      "sha256": "a4262ff4c35ac6576d0c55f6c1b2352fb26df29ef5bdc9a502c0c3e801f1ea1c"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/MasterOfChessStrategyApp.kt",
+      "sha256": "4cb9bf395c24d6949c972d8cfe5c3be1e2ca7d101e6cd5fbf600509a321523c9"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/HomeScreen.kt",
+      "sha256": "7948d990e350dc9f08f0d00627aa901eccc864f82cdef14ec97bb05f5b8a17aa"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/navigation/AppNavigationModel.kt",
+      "sha256": "46e0d044ee80125a77e96c7e5961070d13e8102012ae70d5b4752ed7540a6a08"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/navigation/AppNavigationModelTest.kt",
+      "sha256": "cc4d8219f5252c97177e3566a9776e469bbf6962f64cc5619e931479a5739948"
+    },
+    {
+      "path": "app/src/debug/AndroidManifest.xml",
+      "sha256": "0f6887de7a97c20da4488ca5d62a703f826aba8bb5ee5077fc92eb45a9b55993"
+    },
+    {
+      "path": "app/src/main/res/values/strings.xml",
+      "sha256": "3f9bcae3e96a3b39a66148972c812e4fd34087721c59d2cbb9ff0fd8fb122263"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/native_engine_registry.hpp",
+      "sha256": "89133cadedc097873911ee535f13718ecbb9c264c606cceb05a22b64b39030d7"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/native_engine_registry.cpp",
+      "sha256": "c2d1fcdc78e1e8a7445ad5d69e5a769f146dd52aaae7d0e6a52a8987ef4543bd"
+    },
+    {
+      "path": "engine-native/src/main/cpp/tests/native_engine_registry_test.cpp",
+      "sha256": "dd88ebbb5c9e258790dd08147db158f5647e5f2817b1347cc4a41f13872c6ff5"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/jni_bridge.cpp",
+      "sha256": "67ad5a58a96b70526778ccdc9ab6c85fcae98650d92330ddf0dc451698189e14"
+    },
+    {
+      "path": "engine-native/src/main/cpp/CMakeLists.txt",
+      "sha256": "efd99a2827f31f20ec0977953e0b127e5937791a90b59c9468f207898d916c49"
+    },
+    {
+      "path": "engine-native/src/main/cpp/tests/CMakeLists.txt",
+      "sha256": "9dfc44c52018e6ce4899d6795c42814edbcd97869fa98fa07a626b5b96c64fe1"
+    },
+    {
+      "path": "third_party/pikafish/.gitignore",
+      "sha256": "cdeb44ad781e45d03b62d00f975a6610a597ed03b2c7f61eefc46a049937f523"
+    },
+    {
+      "path": "third_party/pikafish/UPSTREAM.md",
+      "sha256": "2e55efb04c557b15252c4e3db37aa4de23a3a1584ae3a07487f4a57fade0f088"
+    },
+    {
+      "path": "third_party/pikafish/src/external/decompress/huf_decompress_amd64.S",
+      "sha256": "9c430fa95e7ff8bda568efd2bdadb16d17cc02e476bc8daa7cc0d87c28504279"
+    },
+    {
+      "path": "app/build.gradle.kts",
+      "sha256": "9752ca41df9df92a2e6e576cb9e4a26f1118ec135c4f639fc30060f366705586"
+    },
+    {
+      "path": "NOTICE.md",
+      "sha256": "e3822cbfbf96af5c365a065e78476395b4657dcd0647c17b2acc4c97937383d9"
+    },
+    {
+      "path": "app/src/main/assets/legal/OPEN-SOURCE-NOTICES.md",
+      "sha256": "e3822cbfbf96af5c365a065e78476395b4657dcd0647c17b2acc4c97937383d9"
+    },
+    {
+      "path": "docs/legal/open-source-notices.md",
+      "sha256": "2e17a53675e6d000fad78952a34fdfdd50d202aa5f1c37769961c64da6d54b54"
+    },
+    {
+      "path": "third_party/pikafish/src/external/LICENSE",
+      "sha256": "7055266497633c9025b777c78eb7235af13922117480ed5c674677adc381c9d8"
+    },
+    {
+      "path": "third_party/pikafish/src/external/COPYING",
+      "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+    },
+    {
+      "path": "docs/legal/pikafish-source-closure-2026-10-15.md",
+      "sha256": "d68f2af3201c7c2a5077972e8250492dd11a09c369325ae412d78915351f4ac8"
+    },
+    {
+      "path": ".gitattributes",
+      "sha256": "f6cf9ff2417e60519d37b179831f801b92e15f30c1413cfbf339b70acf7e0bd2"
+    }
+  ],
+  "archiveTextMode": "core.autocrlf=false;core.eol=lf"
+}

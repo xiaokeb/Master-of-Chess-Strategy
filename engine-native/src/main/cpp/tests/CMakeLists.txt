@@ -72,3 +72,25 @@ add_test(
     NAME mocs_engine_registry
     COMMAND mocs_engine_registry_test
 )
+
+# Keep registry assertions active in Release builds as well.
+target_compile_options(mocs_engine_registry_test PRIVATE -UNDEBUG)
+
+# Tiger-goat has independent rule/exception executables and constexpr-only topology/step targets.
+add_executable(mocs_tiger_goat_game_test ../games/tiger-goat/tiger_goat_game_test.cpp)
+target_link_libraries(mocs_tiger_goat_game_test PRIVATE mocs_engine_core)
+target_compile_options(mocs_tiger_goat_game_test PRIVATE -Wall -Wextra -Wpedantic -UNDEBUG)
+add_test(NAME mocs_tiger_goat_game COMMAND mocs_tiger_goat_game_test)
+
+add_executable(mocs_tiger_goat_exception_test ../games/tiger-goat/tiger_goat_exception_test.cpp)
+target_link_libraries(mocs_tiger_goat_exception_test PRIVATE mocs_engine_core)
+target_compile_options(mocs_tiger_goat_exception_test PRIVATE -Wall -Wextra -Wpedantic -UNDEBUG)
+add_test(NAME mocs_tiger_goat_exception COMMAND mocs_tiger_goat_exception_test)
+
+add_library(mocs_tiger_goat_topology_compile_test OBJECT ../games/tiger-goat/tiger_goat_topology_test.cpp)
+target_link_libraries(mocs_tiger_goat_topology_compile_test PRIVATE mocs_engine_core)
+target_compile_options(mocs_tiger_goat_topology_compile_test PRIVATE -Wall -Wextra -Wpedantic)
+
+add_library(mocs_tiger_goat_step_compile_test OBJECT tiger_goat_step_test.cpp)
+target_link_libraries(mocs_tiger_goat_step_compile_test PRIVATE mocs_engine_core)
+target_compile_options(mocs_tiger_goat_step_compile_test PRIVATE -Wall -Wextra -Wpedantic)

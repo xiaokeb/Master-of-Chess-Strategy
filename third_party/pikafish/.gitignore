@@ -1,6 +1,9 @@
 # Files from build
 **/*.o
 **/*.s
+# This uppercase assembly file is upstream source, not generated compiler output.
+# Windows ignore-case matching otherwise omits a required x86_64 build input.
+!src/external/decompress/huf_decompress_amd64.S
 src/.depend
 src/temp_builds
 .build_sha.txt

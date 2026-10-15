@@ -27,3 +27,7 @@ pikafish.nnue 由 official-pikafish/Networks 单独发布，不属于本项目
 7d13d73569a9b571ba0eb20cf1596247bc2a42738967e61afef6482b231e900e。
 Gradle 构建与首次安装到应用私有目录时都会验证该值，应用运行时不
 联网下载权重。
+
+## Pikafish 内置 Zstandard 解压器
+
+选用源码原头提供的BSD选项；完整LICENSE/COPYING保存在third_party/pikafish/src/external/，选定BSD正文及xxHash归属也在根NOTICE/随包通知页。汇编源与固定Pikafish提交逐字节一致，Windows ignore规则遗漏已补，不改搜索或汇编。独立Zstd源码提交未知；许可取证提交不冒充代码来源。细节见[来源核验](pikafish-source-closure-2026-10-15.md)，NNUE独立限制不变。

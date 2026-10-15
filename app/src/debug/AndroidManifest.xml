@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <!-- UUID-owned navigation QA only; not present in release builds. -->
+        <activity
+            android:name=".ui.TigerGoatNavigationCheckActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="adjustResize"
+            tools:ignore="DiscouragedApi" />
+    </application>
+</manifest>

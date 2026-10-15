@@ -15,6 +15,11 @@ app/src/main/assets/endgames/chinese_chess/*.txt text eol=lf
 CMakeLists.txt text eol=lf
 gradlew text eol=lf
 
+# Legal hashes and the restored upstream assembly must survive Windows checkouts.
+third_party/pikafish/src/external/LICENSE text eol=lf
+third_party/pikafish/src/external/COPYING text eol=lf
+third_party/pikafish/src/external/decompress/huf_decompress_amd64.S text eol=lf
+
 *.jar binary
 *.nnue binary
 *.webp binary

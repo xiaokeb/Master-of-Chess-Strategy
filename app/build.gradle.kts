@@ -96,6 +96,14 @@ val verifyGameSounds = tasks.register("verifyGameSounds") {
 }
 
 val verifyBundledLegalDocuments = tasks.register("verifyBundledLegalDocuments") {
+    val projectNotices = rootProject.file("NOTICE.md")
+    val zstdLicenses = listOf(
+        rootProject.file("third_party/pikafish/src/external/LICENSE") to
+            "7055266497633c9025b777c78eb7235af13922117480ed5c674677adc381c9d8",
+        rootProject.file("third_party/pikafish/src/external/COPYING") to
+            "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+    )
+    inputs.files(zstdLicenses.map { it.first })
     val legalCopies = listOf(
         rootProject.file("LICENSE") to
             layout.projectDirectory.file("src/main/assets/legal/GPL-3.0.txt").asFile,
@@ -106,6 +114,14 @@ val verifyBundledLegalDocuments = tasks.register("verifyBundledLegalDocuments") 
     )
     inputs.files(legalCopies.flatMap { listOf(it.first, it.second) })
     doLast {
+        zstdLicenses.forEach { (source, expected) ->
+            val actual = MessageDigest.getInstance("SHA-256").digest(source.readBytes())
+                .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+            check(actual == expected) { "Pikafish external license changed: ${source.name}" }
+        }
+        check(projectNotices.readText().contains(zstdLicenses.first().first.readText().trimEnd())) {
+            "The complete selected Zstandard BSD license must remain in the bundled notice"
+        }
         legalCopies.forEach { (source, bundled) ->
             check(source.readBytes().contentEquals(bundled.readBytes())) {
                 "Bundled legal document ${bundled.name} differs from ${source.path}"

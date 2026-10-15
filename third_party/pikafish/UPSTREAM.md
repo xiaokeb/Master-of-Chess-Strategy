@@ -27,3 +27,42 @@ process. No search or evaluation logic is changed.
 
 Application-specific FEN conversion, UCI move conversion, time limits, and
 legal-move validation live under engine-native/src/main/cpp.
+
+## Source archive correction (2026-10-15)
+
+The original vendored ignore rule `**/*.s` also matched the required upstream
+`src/external/decompress/huf_decompress_amd64.S` on Windows. Local mixed builds
+could read it, but the published Git baseline omitted it and a clean x86_64
+source snapshot could not configure. A narrow ignore exception now retains
+this assembly source; neither the assembly nor engine search logic is changed.
+The single-game release candidate must include it and pass a clean dual-ABI
+build before publication. Prior tags are not rewritten; this correction is
+delivered by a new verified commit/tag.
+
+Assembly identity note: upstream Git blob `dc1f3d9211353446e5d76ee665ead9922ad63655`
+has 19,676 LF bytes, SHA-256 `9c430fa95e7ff8bda568efd2bdadb16d17cc02e476bc8daa7cc0d87c28504279`.
+The Windows checkout/cache has 20,442 CRLF bytes, SHA-256
+`50b8a19c8220bc09f61570e516894102c3894d2f137b7d40df10e445a66f6615`;
+only the 766 CR bytes differ. The final source candidate uses the original
+LF blob so its verified bytes match the Git archive, not just the checkout.
+
+## Bundled Zstandard license restoration (2026-10-15)
+
+The external Zstandard/FSE/HUF/xxHash headers offer BSD or GPLv2; this
+integration selects their BSD option and retains the original dual-license
+headers. The previously missing referenced `src/external/LICENSE` and
+`COPYING` are now retained. The complete selected BSD text is also in the
+application's NOTICE page, together with the xxHash author attribution.
+
+License-text evidence is fixed to the official facebook/zstd commit
+`49cf51799ea051457f57243527aa2058f999f005`:
+
+- LICENSE upstream/local SHA-256: `7055266497633c9025b777c78eb7235af13922117480ed5c674677adc381c9d8`.
+- COPYING upstream SHA-256: `f9c375a1be4a41f7b70301dd83c91cb89e41567478859b77eef375a52d782505`.
+- COPYING local SHA-256: `8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643`; the sole difference is one final LF, not license wording.
+
+This commit identifies license text only. The bundled `zstd.h` reports
+1.6.0, but its original independent Zstandard source commit is not recorded;
+do not claim that it is the license evidence commit. The actual vendored
+code remains traceable to the exact Pikafish commit above. Restoring these
+notices does not grant commercial permission for the separate NNUE network.

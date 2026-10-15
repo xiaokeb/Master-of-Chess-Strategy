@@ -129,7 +129,7 @@ Java_com_masterofchessstrategy_engine_internal_NativeBindings_releaseChineseChes
     guard_jni_void(env, [handle] {
         // Releasing an already released handle is intentionally idempotent.
         static_cast<void>(
-            NativeEngineRegistry::instance().release(
+            NativeEngineRegistry::instance().release_chinese_chess(
                 static_cast<EngineHandle>(handle)
             )
         );

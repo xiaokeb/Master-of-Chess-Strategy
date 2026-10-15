@@ -23,6 +23,7 @@ import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.data.AppSettings
 import com.masterofchessstrategy.data.RoomAppSettingsRepository
 import com.masterofchessstrategy.data.RoomLocalDataBackupRepository
+import com.masterofchessstrategy.data.GameBackupRegistry
 import com.masterofchessstrategy.endgame.ChineseChessEndgamePackParser
 import com.masterofchessstrategy.settings.AppSettingsViewModel
 import com.masterofchessstrategy.settings.LocalDataBackupViewModel
@@ -186,7 +187,8 @@ class ChineseChessBackgroundServiceTest {
         settingsRepository.save(AppSettings.DEFAULT.copy(soundEnabled = false))
         val repository = RoomLocalDataBackupRepository(database,
             ChineseChessEndgamePackParser.loadBundled(context.assets),
-            validateEngineState = { bytes -> NativeChineseChessEngine().use { it.restore(bytes) == RestoreResult.Restored } })
+            validateEngineState = { bytes -> NativeChineseChessEngine().use { it.restore(bytes) == RestoreResult.Restored } },
+            gameBackups = GameBackupRegistry(emptyList()))
         val backup = repository.export(System.currentTimeMillis())
         settingsRepository.save(AppSettings.DEFAULT.copy(soundEnabled = true))
         lateinit var settings: AppSettingsViewModel

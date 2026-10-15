@@ -15,17 +15,24 @@ internal data class LocalDataSnapshot(
     val matchOutcomes: List<MatchOutcome> = emptyList(),
     val gameRecords: List<GameRecord> = emptyList(),
     val endgameProgress: List<CompletedEndgameLevel> = emptyList(),
+    val gameExtensions: List<GameBackupRecord> = emptyList(),
 )
 
 /** Versioned, checksummed codec for user-triggered offline backup files. */
 internal object LocalDataBackupCodec {
     const val MAX_BACKUP_BYTES = 128 * 1024 * 1024
 
-    fun encode(snapshot: LocalDataSnapshot): ByteArray {
-        validateSnapshot(snapshot)
-        val lines = buildList {
-            add(HEADER)
+    fun encode(snapshot: LocalDataSnapshot, registry: GameBackupRegistry,
+        maximumBytes: Int = MAX_BACKUP_BYTES): ByteArray {
+        val version = registry.containerVersion(snapshot.gameExtensions)
+        validateSnapshot(snapshot, registry, version)
+        val writer = BackupWireBuilder(maximumBytes, MAX_LINE_COUNT)
+        with(writer) {
+            add(if (version == 5) HEADER else HEADER_V4)
             add("CREATED|${snapshot.createdAtEpochMillis}")
+            registry.canonicalRecords(snapshot.gameExtensions, version).forEach { value ->
+                add((listOf(value.kind) + value.fields).joinToString("|"))
+            }
             snapshot.activeSessions.sortedBy { it.gameType.code }.forEach { value ->
                 add(
                     listOf(
@@ -142,12 +149,10 @@ internal object LocalDataBackupCodec {
                 )
             }
         }
-        val body = lines.joinToString(separator = "\n", postfix = "\n")
-        val checksum = sha256(body.toByteArray(Charsets.UTF_8))
-        return (body + "SHA256|$checksum\n").toByteArray(Charsets.UTF_8)
+        return writer.finish()
     }
 
-    fun decode(bytes: ByteArray): LocalDataSnapshot {
+    fun decode(bytes: ByteArray, registry: GameBackupRegistry): LocalDataSnapshot {
         require(bytes.size in 1..MAX_BACKUP_BYTES) { "Backup size is outside the limit" }
         val content = bytes.toString(Charsets.UTF_8)
         require(content.toByteArray(Charsets.UTF_8).contentEquals(bytes)) {
@@ -168,7 +173,9 @@ internal object LocalDataBackupCodec {
         val lines = body.lineSequence().filter(String::isNotEmpty).toList()
         require(lines.size in 2..MAX_LINE_COUNT)
         val backupVersion = when (lines.first()) {
-            HEADER -> 3
+            HEADER -> 5
+            HEADER_V4 -> 4
+            "MOCS-BACKUP|3" -> 3
             "MOCS-BACKUP|2" -> 2
             LEGACY_HEADER -> 1
             else -> error("Unsupported backup format")
@@ -183,6 +190,7 @@ internal object LocalDataBackupCodec {
         val outcomes = mutableListOf<MatchOutcome>()
         val records = mutableListOf<GameRecord>()
         val endgames = mutableListOf<CompletedEndgameLevel>()
+        val extensions = mutableListOf<GameBackupRecord>()
         lines.drop(2).forEach { line ->
             val fields = line.split('|')
             when (fields.firstOrNull()) {
@@ -196,7 +204,8 @@ internal object LocalDataBackupCodec {
                 "OUTCOME" -> outcomes += fields.decodeOutcome()
                 "RECORD" -> records += fields.decodeRecord(backupVersion)
                 "ENDGAME" -> endgames += fields.decodeEndgame()
-                else -> error("Unknown backup record")
+                else -> extensions += registry.normalizeRecord(
+                    GameBackupRecord(requireNotNull(fields.firstOrNull()), fields.drop(1)), backupVersion)
             }
         }
         return LocalDataSnapshot(
@@ -208,7 +217,8 @@ internal object LocalDataBackupCodec {
             matchOutcomes = outcomes,
             gameRecords = records,
             endgameProgress = endgames,
-        ).also(::validateSnapshot)
+            gameExtensions = registry.canonicalRecords(extensions, backupVersion),
+        ).also { validateSnapshot(it, registry, backupVersion) }
     }
 
     private fun List<String>.decodeActive(version: Int): GameSessionSnapshot {
@@ -282,7 +292,7 @@ internal object LocalDataBackupCodec {
 
     private fun List<String>.decodeSettings(version: Int): AppSettings {
         require(when (version) {
-            3 -> size == 10
+            3, 4, 5 -> size == 10
             2 -> size == 9
             else -> size == 7 || size == 8
         })
@@ -369,7 +379,7 @@ internal object LocalDataBackupCodec {
         )
     }
 
-    private fun validateSnapshot(snapshot: LocalDataSnapshot) {
+    private fun validateSnapshot(snapshot: LocalDataSnapshot, registry: GameBackupRegistry, version: Int) {
         require(snapshot.createdAtEpochMillis >= 0L)
         require(snapshot.activeSessions.size <= GameType.entries.size)
         require(snapshot.lastSelections.size <= GameType.entries.size)
@@ -377,6 +387,7 @@ internal object LocalDataBackupCodec {
         require(snapshot.matchOutcomes.size <= MAX_LEDGER_ROWS)
         require(snapshot.gameRecords.size <= MAX_LEDGER_ROWS)
         require(snapshot.endgameProgress.size <= MAX_LEDGER_ROWS)
+        registry.validate(snapshot.gameExtensions, version)
         require(snapshot.activeSessions.map { it.gameType }.distinct().size == snapshot.activeSessions.size)
         require(snapshot.lastSelections.map { it.gameType }.distinct().size == snapshot.lastSelections.size)
         require(snapshot.tutorialProgress.map { it.gameType }.distinct().size == snapshot.tutorialProgress.size)
@@ -507,7 +518,8 @@ internal object LocalDataBackupCodec {
     private fun sha256(bytes: ByteArray): String =
         MessageDigest.getInstance("SHA-256").digest(bytes).toHex()
 
-    private const val HEADER = "MOCS-BACKUP|3"
+    private const val HEADER = "MOCS-BACKUP|5"
+    private const val HEADER_V4 = "MOCS-BACKUP|4"
     private const val LEGACY_HEADER = "MOCS-BACKUP|1"
     private const val NULL = "-"
     private const val MAX_LINE_COUNT = 200_000

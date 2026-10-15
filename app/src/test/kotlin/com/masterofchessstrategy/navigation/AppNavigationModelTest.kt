@@ -36,11 +36,21 @@ class AppNavigationModelTest {
     }
 
     @Test
-    fun onlyImplementedChineseChessEntryIsAvailable() {
+    fun onlyPublishedChineseChessAndTigerTraditionalEntryAreAvailable() {
         assertTrue(HomeGameEntry.CHINESE_CHESS.isAvailable)
+        assertTrue(HomeGameEntry.LANZHOU_TRADITIONAL.isAvailable)
         HomeGameEntry.entries
-            .filterNot { it == HomeGameEntry.CHINESE_CHESS }
+            .filterNot { it == HomeGameEntry.CHINESE_CHESS || it == HomeGameEntry.LANZHOU_TRADITIONAL }
             .forEach { assertFalse(it.isAvailable) }
+    }
+
+    @Test
+    fun tigerLocalAndTraditionalMenuUseStableSeparateRoutes() {
+        assertEquals("lanzhou-traditional/modes", AppDestination.LANZHOU_TRADITIONAL_MODES)
+        assertEquals("tiger-goat/local-game", AppDestination.TIGER_GOAT_LOCAL_GAME)
+        assertFalse(HomeGameEntry.GO.isAvailable)
+        assertFalse(HomeGameEntry.STANDARD_MAHJONG.isAvailable)
+        assertFalse(HomeGameEntry.LANZHOU_MAHJONG.isAvailable)
     }
 
     @Test

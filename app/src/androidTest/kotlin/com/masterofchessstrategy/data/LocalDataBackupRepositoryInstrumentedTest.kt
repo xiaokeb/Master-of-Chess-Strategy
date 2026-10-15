@@ -32,6 +32,7 @@ class LocalDataBackupRepositoryInstrumentedTest {
             database = database,
             endgamePack = pack,
             validateEngineState = { state -> state.contentEquals(VALID_ENGINE_STATE) },
+            gameBackups = GameBackupRegistry(emptyList()),
         )
     }
 
