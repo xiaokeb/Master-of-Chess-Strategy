@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "status": "prototype-only-not-bundled",
+  "verifiedDate": "2026-10-04",
+  "katago": {
+    "repository": "https://github.com/lightvector/KataGo",
+    "tag": "v1.18.1",
+    "commit": "92ee95c0a4b25fec214da00951ab69e97e207729",
+    "archiveUrl": "https://codeload.github.com/lightvector/KataGo/zip/92ee95c0a4b25fec214da00951ab69e97e207729",
+    "archiveBytes": 69189571,
+    "archiveSha256": "260d30394387dff7c513c2fb696354b385e76ad9aa5b2756c2f0c65db3cf8e98",
+    "licenseSha256": "ead22455d923920cd152546d89e4f415c94d6b580aa109fda3b57a69c57c32e0"
+  },
+  "eigen": {
+    "repository": "https://gitlab.com/libeigen/eigen.git",
+    "tag": "3.4.0",
+    "commit": "3147391d946bb4b6c68edd901f2add6ac1f31f8c",
+    "sourceAcquisition": "official bare shallow Git tag, verified commit, git archive zip",
+    "localArchiveBytes": 3680314,
+    "localArchiveSha256": "3028eff8c23e90ad4bf875d3cc25286582f1821d004fc87fbc38d2f067f9e6a2",
+    "mpl2LicenseSha256": "cde215e5b42363eb28ca2462c4558ff4807b38f383c537624c31e44657ac58f4",
+    "requiredCompileDefinition": "EIGEN_MPL2_ONLY"
+  },
+  "network": {
+    "name": "kata1-b15c192-s1672170752-d466197061",
+    "internalName": "b15c192-s1672170752-d466197061",
+    "modelVersion": 8,
+    "blocks": 15,
+    "trunkChannels": 192,
+    "url": "https://media.katagotraining.org/uploaded/networks/models/kata1/kata1-b15c192-s1672170752-d466197061.txt.gz",
+    "bytes": 48038914,
+    "sha256": "09456899f1b9155217f4ca059cf8a68f79b7eba22cf6b7c00ffb7f17ce067967",
+    "licenseUrl": "https://katagotraining.org/network_license/",
+    "licensePageSha256": "590837548c66daca592955910aeeea36634daa49c722b1a80f6e24c0b714657e"
+  }
+}

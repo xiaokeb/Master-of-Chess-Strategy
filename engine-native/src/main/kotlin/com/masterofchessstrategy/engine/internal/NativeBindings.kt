@@ -47,4 +47,29 @@ internal object NativeBindings {
     external fun chineseChessNaturalLimitReview(handle: Long, sideCode: Int): IntArray
 
     external fun claimChineseChessNaturalLimit(handle: Long): Int
+    external fun createGoEngine(size: Int, blackKomiQuarters: Int, handicapStones: Int): Long
+    external fun releaseGoEngine(handle: Long)
+    external fun goCurrentPlayer(handle: Long): Int
+    external fun goKomiQuarters(handle: Long): Int
+    external fun goHandicapStones(handle: Long): Int
+    external fun resetGo(handle: Long)
+    external fun applyGoAction(handle: Long, kind: Int, a: Int, b: Int, c: Int, d: Int): Int
+    external fun undoGo(handle: Long): Boolean
+    /** Each action is kind plus four argument fields. */
+    external fun goLegalActions(handle: Long): IntArray
+    external fun goGameResult(handle: Long): Int
+    external fun serializeGo(handle: Long): ByteArray
+    external fun restoreGo(handle: Long, data: ByteArray): Int
+    external fun goStoneAt(handle: Long, x: Int, y: Int): Int
+    /** phase, revision, confirmations, count, then x/y pairs. */
+    external fun goScoringState(handle: Long): IntArray
+    /** Empty until both sides confirm the current proposal. */
+    external fun goFinalScore(handle: Long): IntArray
+    external fun goPreviewScore(handle: Long): IntArray
+    /** Standard UTF-8 bytes; SGF is not a full agreement save. */
+    external fun exportGoSgf(handle: Long): ByteArray
+    external fun restoreGoSgf(handle: Long, utf8: ByteArray): Int
+    /** version, event count, then kind and four arguments per accepted event. */
+    external fun goEventHistory(handle: Long): IntArray
+
 }

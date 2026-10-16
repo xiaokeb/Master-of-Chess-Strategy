@@ -1,0 +1,14 @@
+# target|staged_source|bytes|sha256
+games/go/ai/kata1-b15c192-s1672170752-d466197061.txt.gz.bin|assets/games/go/ai/kata1-b15c192-s1672170752-d466197061.txt.gz|48038914|09456899f1b9155217f4ca059cf8a68f79b7eba22cf6b7c00ffb7f17ce067967
+games/go/legal/Eigen-COPYING.APACHE|assets/games/go/legal/Eigen-COPYING.APACHE|11564|a724e50ee0e1de4b62c0540d7877c3ef383aa176f55be806df61420aba9b3de6
+games/go/legal/Eigen-COPYING.BSD|assets/games/go/legal/Eigen-COPYING.BSD|1543|ee73de74a1980f7f1667f874473393f13bc6a74c87fcee4cc9732bce96bc60cc
+games/go/legal/Eigen-COPYING.MINPACK|assets/games/go/legal/Eigen-COPYING.MINPACK|2244|37f2b8b54e7bbf107954865cc3cf567385930a1b7031b479909a09968d9db670
+games/go/legal/Eigen-COPYING.MPL2|assets/games/go/legal/Eigen-COPYING.MPL2|17099|cde215e5b42363eb28ca2462c4558ff4807b38f383c537624c31e44657ac58f4
+games/go/legal/Eigen-COPYING.README|assets/games/go/legal/Eigen-COPYING.README|797|4db6561ac96c94942817f0c489282a219e5fd8ed374e2dfd58d85f48aff3ebf9
+games/go/legal/KataGo-CONTRIBUTORS.txt|assets/games/go/legal/KataGo-CONTRIBUTORS.txt|4519|32642464ccaa65837b4c2c4489ad437c2f020cdfbcedbb2723a35ed8d51ed689
+games/go/legal/KataGo-LICENSE.txt|assets/games/go/legal/KataGo-LICENSE.txt|2616|ead22455d923920cd152546d89e4f415c94d6b580aa109fda3b57a69c57c32e0
+games/go/legal/KataGo-network-license.html|assets/games/go/legal/KataGo-network-license.html|9605|590837548c66daca592955910aeeea36634daa49c722b1a80f6e24c0b714657e
+games/go/legal/dependency-source.zip|assets/games/go/legal/dependency-source.zip|1627442|2135faa55673f757df0a556a832cdfe2dd5f1698b6a3f95dfdf2d3557bce1211
+games/go/legal/filesystem-LICENSE.txt|assets/games/go/legal/filesystem-LICENSE.txt|1086|1b265537c97cfb422ffb52492c96979943f54fab8746a6dd38d8329953d487cc
+games/go/legal/nlohmann-json-source.hpp|assets/games/go/legal/nlohmann-json-source.hpp|876262|be7bbfbc7c62c35aa6f27dfbdd950384f247dd9f2281b5930bdaa3a6ab95eef7
+games/go/legal/sha2-source.cpp|assets/games/go/legal/sha2-source.cpp|46718|c8ef199e699ccddd6167c647f7b0de3a3636517a88e8d8440f515e6f17c578d1

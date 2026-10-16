@@ -54,6 +54,7 @@ set(
 )
 
 add_library(mocs_pikafish STATIC ${PIKAFISH_SOURCES})
+include(cmake/GoKataGo.cmake)
 target_include_directories(mocs_pikafish PUBLIC "${PIKAFISH_ROOT}")
 if(ANDROID_ABI STREQUAL "x86_64")
     target_sources(
@@ -78,6 +79,12 @@ add_library(
     mocs_engine_core
     STATIC
     src/chinese_chess.cpp
+    src/go.cpp
+    src/go_sgf.cpp
+    games/go/katago-probe/go_katago_runtime.cpp
+    games/go/katago-probe/go_katago_search.cpp
+    games/go/katago-probe/go_katago_position.cpp
+    src/go_search_handle.cpp
     src/health_check.cpp
     src/native_engine_registry.cpp
     games/tiger-goat/tiger_goat_game.cpp
@@ -96,7 +103,7 @@ target_compile_options(
     -Wextra
     -Wpedantic
 )
-target_link_libraries(mocs_engine_core PUBLIC mocs_pikafish)
+target_link_libraries(mocs_engine_core PUBLIC mocs_pikafish mocs_go_katago)
 set_target_properties(
     mocs_engine_core
     PROPERTIES
@@ -108,6 +115,8 @@ add_library(
     SHARED
     src/jni_bridge.cpp
     src/jni_tiger_goat_bridge.cpp
+    src/jni_go_records_bridge.cpp
+    src/jni_go_search_bridge.cpp
 )
 target_link_libraries(
     mocs_engine_native

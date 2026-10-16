@@ -23,3 +23,11 @@ third_party/pikafish/src/external/decompress/huf_decompress_amd64.S text eol=lf
 *.jar binary
 *.nnue binary
 *.webp binary
+
+# Preserve original dependency and legal/model bytes across Windows checkouts.
+third_party/go-katago-upstream/** -text
+app/src/main/assets/games/go/** -text
+engine-native/src/androidTest/assets/games/go/** -text
+config/games/go/katago-app-assets-v1.tsv text eol=lf
+config/games/go/katago-probe-lock.json -text
+config/games/go/katago-distribution-v1.json -text

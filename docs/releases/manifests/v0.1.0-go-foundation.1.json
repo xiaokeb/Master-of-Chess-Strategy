@@ -1,0 +1,2011 @@
+{
+  "schemaVersion": 1,
+  "tag": "v0.1.0-go-foundation.1",
+  "baselineCommit": "c3cc0dfc96dcaace045788476b38f5ff68173279",
+  "verifiedSourceFiles": 1140,
+  "verifiedSourceIdentitySha256": "7f81821c89bc7e63934a4dd77aaed8d30db504962240d2263c39c00f3d266c18",
+  "assemblyManifestSha256": "eca45c55753663d986a742489a3ed9891cfc7d296c7982f01be9ede872eb9dd9",
+  "verificationReceiptSha256": "308fc73c14820ba24b980a819eea0743c7ddb0a42ed47a23f5b084105b8f2e84",
+  "scope": "Go rules, SGF, native bounded CPU search, offline model integrity and legal source distribution. No new Go UI/game-session acceptance or strength claim.",
+  "note": "491 explicit overlays; unlisted files retain baseline blobs. 1140 compiled candidate sources plus four documentation-only release additions. Project text canonical LF; original vendor, models, licenses and frozen distribution JSON preserve original bytes. Native rc-go2 evidence is reusable because the sole rc-go3 source difference is the legal UI instrumentation scroll helper.",
+  "jvmTests": 43,
+  "deviceTests": 25,
+  "nativeExecutables": 9,
+  "lintErrors": 0,
+  "lintWarnings": 1,
+  "visualImages": [
+    {
+      "fontPercent": 100,
+      "width": 3120,
+      "height": 1440,
+      "sha256": "d0d028ab642aabee9870f01ae5e76979f91f156838294dadeac7972a88f07575",
+      "reviewed": true
+    },
+    {
+      "fontPercent": 150,
+      "width": 3120,
+      "height": 1440,
+      "sha256": "23cceac420ca8718fac05a2f5131d5f070533a92c4d144229b56cf144a4c36a3",
+      "reviewed": true
+    }
+  ],
+  "apkIdentities": [
+    {
+      "path": "app/build/outputs/apk/debug/app-debug.apk",
+      "sha256": "cc0793c6695d5a968d2545c0adc33f55bc725da21d4b67282cb24064f2fb0d97"
+    },
+    {
+      "path": "engine-native/build/outputs/apk/androidTest/debug/engine-native-debug-androidTest.apk",
+      "sha256": "d54b6b05e15de6e65e04301df13890a51fe2db843dfe71c1d01b155772fd3535"
+    }
+  ],
+  "apkAttachments": false,
+  "wholeGoAccepted": false,
+  "strengthAccepted": false,
+  "overlays": [
+    {
+      "path": "engine-native/src/main/cpp/CMakeLists.txt",
+      "sha256": "443f668f08501ff8e64bb867c669f1291841b2f446427558d023755f00966e63"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/native_engine_registry.hpp",
+      "sha256": "53721bb85cf429f5469c65d38c7650808bd427e8382e0e70ea751d2900844a1e"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/native_engine_registry.cpp",
+      "sha256": "232399179caea39711b20385f904c4740c31cc872afda4f3f30dbf8691731945"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/jni_bridge.cpp",
+      "sha256": "d9d3598910c1bb666194621da7208f0d24e43ee207def449e77cc42a9b7e3922"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/internal/NativeBindings.kt",
+      "sha256": "651bb19c2cc5d0e612467b3b545822910c96ffdd5e6c7128b6fa3f406e4d3cfb"
+    },
+    {
+      "path": "app/build.gradle.kts",
+      "sha256": "23fbee70ffb0b0afff0b564706bd9b86edebf69cf78e12efa3b030ef5f604226"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/OpenSourceLicensesScreen.kt",
+      "sha256": "9f3d652ab6aeeb22237087579bb30b54a4006b5306d0a49c0563f06d747bfd5e"
+    },
+    {
+      "path": "NOTICE.md",
+      "sha256": "aa0807f488181827b64a27c5a56ba07fbc140decfa7d3f2e067b54a1e34b3347"
+    },
+    {
+      "path": "app/src/main/assets/legal/OPEN-SOURCE-NOTICES.md",
+      "sha256": "aa0807f488181827b64a27c5a56ba07fbc140decfa7d3f2e067b54a1e34b3347"
+    },
+    {
+      "path": "app/src/main/res/values/strings.xml",
+      "sha256": "f8513320b39b7b431d7c075466135c83c82e2d87ffcac242634dcba4e03b77ec"
+    },
+    {
+      "path": ".gitattributes",
+      "sha256": "6159c5716fa438034e37172df660a826c28d9b0e0205012f8b5a02b1367dd1b0"
+    },
+    {
+      "path": "engine-native/src/main/cpp/tests/CMakeLists.txt",
+      "sha256": "77719afd4a1de087ca520889413f87aaac9cf98372ab7a944dba8e41193a0269"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/OpenSourceLicensesKataGoTest.kt",
+      "sha256": "e9a77f108c92f6ed99ed4a48afa6a0f88b21798dedaed48a1ce244cb0141f352"
+    },
+    {
+      "path": "engine-api/src/main/kotlin/com/masterofchessstrategy/engine/Go.kt",
+      "sha256": "742edee444cb54bdde8ea9e54e99e95768db2653371152054ec0656d5b182ae4"
+    },
+    {
+      "path": "engine-api/src/main/kotlin/com/masterofchessstrategy/engine/GoRecordEngine.kt",
+      "sha256": "e07e4143cc0769de35ebf5c7dbc7d7eb3ecaf67a07e238fc921a5efa034a4ceb"
+    },
+    {
+      "path": "engine-api/src/main/kotlin/com/masterofchessstrategy/engine/GoSearchRuntime.kt",
+      "sha256": "79c2184de7ab956691e398f922028aa237ad534a8e6b1d9d209c84f2c5da1e66"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/NativeGoEngine.kt",
+      "sha256": "0d5666a799846bbe6eb6fbc4adc6a85e15b1ebab2c0bdd582aea16bd1219e20d"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/GoSgfTextCodec.kt",
+      "sha256": "7e33ba1dc2e34f0b6c26935622759299827eee6e5527a8c297eb37e1226d63d4"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/GoEventHistoryDecoder.kt",
+      "sha256": "e0be81a7a188b7a242df13ac66fa7f2e3b4b93f326c55d0e0c40ea3f74521925"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/NativeGoSgfImporter.kt",
+      "sha256": "a02c68690e4469000154d375b78202b5468cefb14c4384a3f7f919aa5a743a51"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/games/go/NativeGoSearchRuntime.kt",
+      "sha256": "1c404bbf5f29e4751bbabf9c522ee5abde4db6cf9b49670b5ed4bd0dab6a9a99"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/games/go/GoSearchResultDecoder.kt",
+      "sha256": "d391e555be9633ec7ce5e1e8b483b93cd70b96a397bb56f19bf6198cf89764d1"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/internal/GoSearchBindings.kt",
+      "sha256": "5b0a7fe4dbe7f1a81311ec1fec7ac7f7b678c760274d68a84bf5ba6460485bbb"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiModelFiles.kt",
+      "sha256": "0871072602e627a1c4af13bac2f2985daf3970ba3f9c0ad436f221daa9d58d95"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiModelIntegrity.kt",
+      "sha256": "470b860652f0ad7a6c1df2c3582dca572e3cb923a9ae75105fb9f58790aab19c"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/go.hpp",
+      "sha256": "f45d5d7956bef9d218e2c2a0fa39ccc265fd5d02d0e1e811e70fcbfb2ccfc192"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/go_sgf.hpp",
+      "sha256": "8db35baf8f5c70c5ea372fdb837b4a0f761ff27e825f937c1347e7e7babb1524"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/go_search_handle.hpp",
+      "sha256": "36db5626421d2d55bf91af42b34e22db2f1c4ff6125242f9a3b26011eccc68d3"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/go.cpp",
+      "sha256": "4d87461efe8ce70dd0580cff6164d62783b6f07d971441401b14afb564cf5f52"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/go_sgf.cpp",
+      "sha256": "181edf47c2d5f1284624144e559dde998591f36f8eb9dcd6bd0cdbc11545b188"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/go_search_handle.cpp",
+      "sha256": "e73c1a88589308ae018755fc3ae357d1f7b34746bc9b52d0066a20aab5e730c1"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/jni_go_records_bridge.cpp",
+      "sha256": "3512ea68b7f3fbefe4c37b02c0f01d8650896054b1756dd8564e7d33497842dc"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/jni_go_search_bridge.cpp",
+      "sha256": "b801536f896a6a71bf12827bc5176541c2fefc9dd9d27f268eb50078516399f7"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/go/go_handicap.hpp",
+      "sha256": "fc1495d925a4747ff16cc87bc092844306118cdeb37830f8ebae6b3c24234185"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/go/katago-probe/go_katago_position.hpp",
+      "sha256": "7f994a8e7fb70c9fbb5cfa2ff97980247113db2f4de5314808b9ffbead8e045b"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/go/katago-probe/go_katago_position.cpp",
+      "sha256": "88c4ade49ca170c085220596db2e73def4651e6e8ab70962b635246e14e9e909"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/go/katago-probe/go_katago_runtime.hpp",
+      "sha256": "7540dad1f7ec6dd8d195e46d5bba181a02d3a8b2c98ee58f391e68327f72659b"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/go/katago-probe/go_katago_runtime.cpp",
+      "sha256": "74d296cd5b6d7f691e7dee2d990e9e75dace5d5bccb8644a22de5ae9546e22bf"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/go/katago-probe/go_katago_search.hpp",
+      "sha256": "d9d00b08dc34d720ecf2b12569bd25e02618274097a0c72d0e1b1ef7784172f0"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/go/katago-probe/go_katago_search.cpp",
+      "sha256": "412bf7cb703ec388411ce15356c8514bac9d27d29466b30615907a6ef0c33bd5"
+    },
+    {
+      "path": "engine-native/src/main/cpp/cmake/GoKataGo.cmake",
+      "sha256": "7b025ff466127d316ecd96b5acdaf2af6fb3605822e5540f243a1957a98b2865"
+    },
+    {
+      "path": "engine-api/src/test/kotlin/com/masterofchessstrategy/engine/GoSearchRuntimeContractTest.kt",
+      "sha256": "a09ec6b1cc7db66cf4bb5b2a20c5ede8e77afe1190cf38ebe75191b9bb1a6db6"
+    },
+    {
+      "path": "engine-native/src/test/kotlin/com/masterofchessstrategy/engine/GoSgfTextCodecTest.kt",
+      "sha256": "0e34efff941491b978022a7573de6a2a34533b8feb93085b3d40ebdffc785bff"
+    },
+    {
+      "path": "engine-native/src/test/kotlin/com/masterofchessstrategy/engine/GoEventHistoryDecoderTest.kt",
+      "sha256": "cf4e87a6d4b8fd17f188eb648d3189d1745069ee75f415420cfe0635a8dec8e3"
+    },
+    {
+      "path": "engine-native/src/test/kotlin/com/masterofchessstrategy/engine/games/go/GoSearchResultDecoderTest.kt",
+      "sha256": "9a148562817ac9337e074fba9d7e62c8776fd365c1e792e899cc338495e108ce"
+    },
+    {
+      "path": "engine-native/src/androidTest/kotlin/com/masterofchessstrategy/engine/NativeGoEngineInstrumentedTest.kt",
+      "sha256": "3be1dc682c37cd710924a4e22099cfe9c387faf50d58078424c5345ff4c713bd"
+    },
+    {
+      "path": "engine-native/src/androidTest/kotlin/com/masterofchessstrategy/engine/NativeGoRecordsInstrumentedTest.kt",
+      "sha256": "c5873231cf76ded30f7f9405ac0ff2d07a60c382cbb05570c0b2b5b367b9eebd"
+    },
+    {
+      "path": "engine-native/src/androidTest/kotlin/com/masterofchessstrategy/engine/games/go/NativeGoSearchRuntimeInstrumentedTest.kt",
+      "sha256": "4013aeeb13b398a93672c85659c7af9ad987d1dad913b9575c5989968b391eac"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoAiModelIntegrityTest.kt",
+      "sha256": "c59662388b29ea6742508a3345bd43ab8e51cc7899a50987690a7e8941544346"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoAiModelFilesInstrumentedTest.kt",
+      "sha256": "c9ad94400e1eb484a3186feffdda348c7f738f9355d3b6458807f0d7872ea047"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoFoundationDistributionInstrumentedTest.kt",
+      "sha256": "2f3e35767e675978b132353f0ace57c587dd56e4dc72d0c895a6dccf38db49c5"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/ui/OpenSourceLicensesAssetTest.kt",
+      "sha256": "a70fac2fc1759422d84fbc7afe123286e82fd5e07f920379674fed941c1ac6ff"
+    },
+    {
+      "path": "engine-native/src/main/cpp/tests/go_test.cpp",
+      "sha256": "d3a79dc210ef4e82de235937d462eeda80855de286a5e7fde8b06fb30704827a"
+    },
+    {
+      "path": "engine-native/src/main/cpp/tests/go_sgf_test.cpp",
+      "sha256": "9f332c959ff769e242a8310cc01263ada9b940ef8d64b03c351d94ad18dc71ce"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/go/go_agreement_regression_test.cpp",
+      "sha256": "1d0ca3320de39b019bc520e4068754c1aa7a6236cd497ee90ffbaa38ee9879ba"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/go/go_handicap_test.cpp",
+      "sha256": "3fb63fa098744fb49f17ca0ef2c1efcc1f0c779cd0f412348396c210d6d80fbf"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/go/katago-probe/go_katago_history_test.cpp",
+      "sha256": "bc10d32bda7e7cfbfc390812e2e115ba92dfed2cbe5f02182651001ffc11be19"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/go/katago-probe/go_katago_search_test.cpp",
+      "sha256": "1418e1c6cfdf8d9690e219bda36b9f20c65b727a64e90cb355dc1a3568a6c510"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/go/katago-probe/go_katago_runtime_test.cpp",
+      "sha256": "04b77c37172f00fb5482b3f1b5749b7fca22bcdd0f6372f62c73b897980d6b6c"
+    },
+    {
+      "path": "config/games/go/katago-app-assets-v1.tsv",
+      "sha256": "ba447aa005d92595cb6fb8b6efc28b3d4d9475b658373c47ce133c367de7dc33"
+    },
+    {
+      "path": "config/games/go/katago-probe-lock.json",
+      "sha256": "f7f6da4c213c9da1147c299dffcddd82efd5c9b0cc9d6ee04f216427234bdeff"
+    },
+    {
+      "path": "config/games/go/katago-distribution-v1.json",
+      "sha256": "20fc451e3be9bcdc8e7c1eeebc58675d6b73f4356bfd2f71db6ff728e7f8a960"
+    },
+    {
+      "path": "tools/android/prepare-go-native-dependencies.ps1",
+      "sha256": "e03b4ddeb2fed531be3dade2e6846b8046eab512ee476dbd3ff95e94cf55cea3"
+    },
+    {
+      "path": "tools/games/go/prepare-katago-distribution.ps1",
+      "sha256": "ccce59c683b4b6bebf403ea7e08b5286dfa3be709fb00a9726452d9aee87d490"
+    },
+    {
+      "path": "tools/games/go/test-katago-distribution.ps1",
+      "sha256": "3890b1008a0e95cbdda71f406ee8fc9ff6e0b045647f46fdeef53a0935cd2fb5"
+    },
+    {
+      "path": "docs/interfaces/go-records-v1.md",
+      "sha256": "5ea0be21129580ce66c530c4c7062bc9f8bc657c2f92531a52e4dc28a5436f57"
+    },
+    {
+      "path": "docs/interfaces/go-search-runtime-v1.md",
+      "sha256": "e9ef6bd081d753bd99f98194802c0cc5cb3ce93cb9ccb6f969f3421c3ae48f68"
+    },
+    {
+      "path": "docs/interfaces/go-search-v1.md",
+      "sha256": "dd2facb23cb1e5a1da135fd38a90f806a649f6132a1ee69ae5d83e6e59792d1f"
+    },
+    {
+      "path": "docs/games/go/2026-10-16-foundation-candidate.md",
+      "sha256": "550f8060d5bd3d1784b4335d589c27f672f37be22c7af4175f5bd7d2408de022"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/COPYING.APACHE",
+      "sha256": "a724e50ee0e1de4b62c0540d7877c3ef383aa176f55be806df61420aba9b3de6"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/COPYING.BSD",
+      "sha256": "ee73de74a1980f7f1667f874473393f13bc6a74c87fcee4cc9732bce96bc60cc"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/COPYING.GPL",
+      "sha256": "0b383d5a63da644f628d99c33976ea6487ed89aaa59f0b3257992deac1171e6b"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/COPYING.LGPL",
+      "sha256": "1e7e6bae5a5bde32f1ae5a7c37a082d1ab03cf89354f7f936ac40be9e39a6531"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/COPYING.MINPACK",
+      "sha256": "37f2b8b54e7bbf107954865cc3cf567385930a1b7031b479909a09968d9db670"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/COPYING.MPL2",
+      "sha256": "cde215e5b42363eb28ca2462c4558ff4807b38f383c537624c31e44657ac58f4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/COPYING.README",
+      "sha256": "4db6561ac96c94942817f0c489282a219e5fd8ed374e2dfd58d85f48aff3ebf9"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/Cholesky",
+      "sha256": "fcaca116d63461e2f48e3b37bc954a978ed07edeabd7d16b3655438f568605d1"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/Core",
+      "sha256": "69563cd6963e7a121f210cc00702974f17266baac1abb5faba34a8592f4bc7ba"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/Dense",
+      "sha256": "f3dcee295712304b2d65f259e3b32dfbf7836459fb3dc622a37f22fe33ff3d5c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/Eigenvalues",
+      "sha256": "566dcdc01806289e4dfb536572a237a751c0c292de46938c6eb18ac53fc277bd"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/Geometry",
+      "sha256": "0b8dc57d09d0ff410508e01d309f3c0dff498815a6a9178ee7c203e30a9184be"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/Householder",
+      "sha256": "9689c4dd5ba97b45f5973b3ceca38d35d38a29cd42da1a0880b021d881d03e9a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/Jacobi",
+      "sha256": "0d69416d8c48e6bf421bcbe980ccd4c85618caaeca2f4b7347d39e25ac3a0f36"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/LU",
+      "sha256": "29ab1bd63200cef92c807823fef6a704d2c3a9b4b941855eff0a566dfdfe96f5"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/QR",
+      "sha256": "260e8abfe8f27150c4fefab8e0b9a129fbe292bd04b52267f59a4bc86fa9ff0e"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/SVD",
+      "sha256": "3e8dddd32c2feecab7471521d6c4d874b9b52f0ad1ee9386570b41c67bf4ed94"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Cholesky/LDLT.h",
+      "sha256": "f2bf9a56560ea9a449505d1a92610cd7fa37b22f0f7f72a4d713d255b985b2f2"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Cholesky/LLT.h",
+      "sha256": "b595df6c680faf0a99aa06f82c547cf2c9adc5dccb0d04e32f44e4c7e6d418fc"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/ArithmeticSequence.h",
+      "sha256": "2b21700219b6e9155534bfe5f7767f1427caffd7bd96cf30f3fdf06d88f3a187"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Array.h",
+      "sha256": "6248dfd158ff2d3e3d1803334e4465d4fade57ac826c7bec41c4803b84715300"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/ArrayBase.h",
+      "sha256": "c01edf5ce2e8d95414c9795c6e3cbeb4c03c0bdfd91966da61a76028af8b7fcd"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/ArrayWrapper.h",
+      "sha256": "4fa5925b7524ebff2ee3a991041e98c0628fd4ce2d1083431074ae26dd649064"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Assign.h",
+      "sha256": "5f7fcfa9a4bca9e0ed575189380f5e8f867569fd0f94867c182d7cf5975cbe04"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/AssignEvaluator.h",
+      "sha256": "560a8de1fa39e50a5a20452254920df99dba5206a858a1fc59c902d2312ec13a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/BandMatrix.h",
+      "sha256": "df2480bfd4eda3c7a11c6894e4866ace854f793a0157068c9dfdfb7f82495d89"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Block.h",
+      "sha256": "7e395d21989c8dc773378d173af3e2b6bf87e855ffab1b4c081613572bf6db58"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/BooleanRedux.h",
+      "sha256": "7ec83a50c46149c40d08e345b6f15279f7be7c8f5d5b08fb31cd886ebcae6406"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/CommaInitializer.h",
+      "sha256": "adb1a1ad26ce16cf4643bbd5facb42145cf4a31c6e61c2bd3343319659b57430"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/ConditionEstimator.h",
+      "sha256": "1b3ebfec5bd31b3edfd51823f266e300b601a53ef38b5e242850816c225614df"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/CoreEvaluators.h",
+      "sha256": "05537ce3f23ac85a1cb608095462a74cdb77b4dc5eb7ec5585058054143bce43"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/CoreIterators.h",
+      "sha256": "9afac4b9efc71bba49b72f86e89f76786d7d93c0aba1e72d8c39a8a118527661"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/CwiseBinaryOp.h",
+      "sha256": "19bf5b8aafa653475d25928ca20449e96388b18a3d1a758b4c572487468b92e7"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/CwiseNullaryOp.h",
+      "sha256": "1ebcfb84728e75d44d682d3d1396948d98efcbb55f2c716285ac492dcdb31993"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/CwiseTernaryOp.h",
+      "sha256": "4ba67bee42e696b88cde52e2a8b8ca8d6b76ec713c9354e5cbe390950b27475c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/CwiseUnaryOp.h",
+      "sha256": "50b903d6db82df56c8ab6d58330763364ecba368569020545729c84b778a0dfc"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/CwiseUnaryView.h",
+      "sha256": "2b0be48046217756851fceeac36be5640c30de5a494917e110a0073df35cb5f9"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/DenseBase.h",
+      "sha256": "53a6a12a92daab394c2404dcd48542d30d8f6addb36bc09cdbf3be159aa5adb2"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/DenseCoeffsBase.h",
+      "sha256": "0f29b68e3a2ea4295b9c05a199686b4c8e00cbbdfba1dfe94a6e15f5b85a0886"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/DenseStorage.h",
+      "sha256": "54d70517293e3b8c5c0fa3e4bfb748de429019670a050dbb1b2b0e895ca2fe30"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Diagonal.h",
+      "sha256": "b481089cc45bd462f09ff928bc9771543a30ab86111c1153a81ae687c3ea5eaa"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/DiagonalMatrix.h",
+      "sha256": "960672caaac390bc0298159b730f470518fa8f8bbd00d6358e302af0ab20c6f8"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/DiagonalProduct.h",
+      "sha256": "c60452e66cdd9cad7bf047abc4b877f4009a61a4bb868ff3040b39e33f6e1834"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Dot.h",
+      "sha256": "db46aebdcae6021733929e91051efc7b612fd30906f3404c7ecbe6afe6d79456"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/EigenBase.h",
+      "sha256": "1b1224e588d992382634fb99683783df4b569952c15d13f40d0136286eb575af"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Fuzzy.h",
+      "sha256": "e87719bf6be730d0a88ed9bed73d65397e6c6f0eda7b3971ad940b7c587ea89f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/GeneralProduct.h",
+      "sha256": "633d71d7df509984428be56ce9ff27922d517d97587c127872895278b1b16760"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/GenericPacketMath.h",
+      "sha256": "ebdbe196225168a1b24be0503dd4b6cf9ee2f239ab027db55edbaf958e254d18"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/GlobalFunctions.h",
+      "sha256": "51ffda7e2b7c90a901ebd02f47e5f211c1af2690b9f8aa688a29def7aa115985"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/IO.h",
+      "sha256": "b78158d2d154d0f9e4bb6d670b996c809d952d8067ffeee359425e07e4cce409"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/IndexedView.h",
+      "sha256": "f1a10bde8cbee430f47f8b08df9fdffddf369fb25eed053e6a25575bb7c9d9cf"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Inverse.h",
+      "sha256": "65d899aa6401eda9fa7240fade41ac159dc848223f4347796979ae9fd517ef9d"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Map.h",
+      "sha256": "7273bf02f1b22432573226c182cd0b1e328b70a39d606d046b443d6f4b1a2476"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/MapBase.h",
+      "sha256": "f5bda7bd40b3ab66c560d868f708193728ca7e08e53f0afbe42ff4273923c5c4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/MathFunctions.h",
+      "sha256": "8b05b3cb64b158082deb363f451bd35f000abde33397398de8e20a2acae7202e"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/MathFunctionsImpl.h",
+      "sha256": "aaba3e04b8bfd0440fd6ae4fb0e951d2b94d5fb8c816b76fb41613b22db5edc8"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Matrix.h",
+      "sha256": "3683cb3625dc59a481b1094635a2fab3dd88e2f59acdfea0b801bd7f1524f42a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/MatrixBase.h",
+      "sha256": "5e41d6b628b330e805ae253b26c06c367c7bba8b5ad1f6e8beb95d97321e0d69"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/NestByValue.h",
+      "sha256": "e23ee363296c61db0dee530697a4137fd99bf92fa9949587c5be37784c3442a9"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/NoAlias.h",
+      "sha256": "856787789632539540b6340f7562e31bf01cea49bfd307a18d0632441a24f3de"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/NumTraits.h",
+      "sha256": "3f12f3500ab944522488422e4fe65cbdd181a5710ad834732f59b0fc43f1f525"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/PartialReduxEvaluator.h",
+      "sha256": "48a039e6ad2d107eea5d190ad187870e1818140341ad2344c93654857f54ee39"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/PermutationMatrix.h",
+      "sha256": "b3b1a294b79abcef0ea5b876e70898bc883f9a63bae0f1faf98e26f4f147268f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/PlainObjectBase.h",
+      "sha256": "b9403b339b1cbaa7169c0a826423b2d7d49e34ab69bb8b92d8a39b03d211a332"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Product.h",
+      "sha256": "9b3d06212bd37f7ee0236ab84643836b117cf2a87d81045a08080cc7395ddd1c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/ProductEvaluators.h",
+      "sha256": "84e2678530a3f06a695a1e75f820834ea6cc66641172b3c554170194f6de162d"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Random.h",
+      "sha256": "63750f1e6ab4bf2303c600d0d24aa76888a7dbdd4b4a13647c4d14e7761fe236"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Redux.h",
+      "sha256": "8e0461bf865416bee9a005da67965e4515c9040a640222572c553d4d788c95cc"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Ref.h",
+      "sha256": "22b4ce47b6a0567df7a0e7c589444c43f1b897af09b10c9809f9a4cb9bc53b83"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Replicate.h",
+      "sha256": "6979b77fcda2d13113eadec0cc2ff17c45b67f2d306438cafc7adb53db6adc67"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Reshaped.h",
+      "sha256": "9af55b1f1c6c843f854955406dbf87c56bf685780694155861635483ab986eb5"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/ReturnByValue.h",
+      "sha256": "a4f00b9cb1b1ab492291f92cf7bf09baea4c83b61d737f6eed5fb74f79b3792a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Reverse.h",
+      "sha256": "49aad320fde8ff365283afa0a78a43c4b0ef14519cae4bbf0b21e6085e778376"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Select.h",
+      "sha256": "126d8d9a4e6b191c451a04a213c8d4d35099b6842bf6fe4585513128f00b851c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/SelfAdjointView.h",
+      "sha256": "cbdaeddae1d3e9815a569b83aea9e8ce58553865f4328ece8e0df1ae10712c12"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/SelfCwiseBinaryOp.h",
+      "sha256": "7d0092ce83096c6ea6937380687d8751b9e352e91c994ea86ea375a71677ae0e"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Solve.h",
+      "sha256": "7af75c8c8a8f160e5c34af0ed6840698d287c3767187a7fa52a1749be69423c2"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/SolveTriangular.h",
+      "sha256": "87f7a8ba5bb50100cc8a9d84c731689b3e3b4d3949fd16e1e6cdc771ef22a5bf"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/SolverBase.h",
+      "sha256": "963f9aac2c91f4537a89d68ce149f41e7c51b1ee839a6dec9396f5cb23d1fb1f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/StableNorm.h",
+      "sha256": "4a08c7097020e45958be9aac5bf89aaf940d2dfad9f88d8acd8333e77874f319"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/StlIterators.h",
+      "sha256": "46ff5c9964f22710b32c1a9f0797149c3b9bf85244164bdcfe2af615ea710316"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Stride.h",
+      "sha256": "7657d264b116e5df12caa33a2d50cc4c5292ee42c79c5b82814a42aa5cd21929"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Swap.h",
+      "sha256": "7f22784a5281501c2b257f37120cd2efe3bb9440b584be04e7ac779aa41ba475"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Transpose.h",
+      "sha256": "4cf49d518c670bae88bf88efa0957f5775c13a34d8524f33f238267ecd8a35c6"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Transpositions.h",
+      "sha256": "c2a431509428602bda5e577a39bf80678eb844ce86ef3f1bb8896c543645e3b6"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/TriangularMatrix.h",
+      "sha256": "445f91b1519f3615412236110e1a644426d7f23d850aeff37614a6a05f46f1ef"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/VectorBlock.h",
+      "sha256": "7c2e712150dab75cca7b21005766461aa376e058752f7104829aef2ba2ed9ad6"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/VectorwiseOp.h",
+      "sha256": "c61be3bce6b3a0cbd6e53c70a738531931ab91417acba83255234a11c53a56b7"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/Visitor.h",
+      "sha256": "a723a8c27c07ca8227dc60ea7fc2afb31f5ea6a311e5599b25a267befd766131"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/Default/BFloat16.h",
+      "sha256": "4a0fd1c41f4cf4309f7516ad067700e5fe77fe32a89188feaeb8370137c9ca0d"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/Default/ConjHelper.h",
+      "sha256": "c5fdd06b044e1f6836008a3dc0cd9888e0cbd18ec015c0f7636cacd755c5b9f0"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/Default/GenericPacketMathFunctions.h",
+      "sha256": "2ef6167396aa88081461b75f8e78228f7c05cde0cafaf5f9ff45648b4d6b2ab5"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/Default/GenericPacketMathFunctionsFwd.h",
+      "sha256": "6458d8c06c65cacec2592ac35950517ca38a8f5681832a55efc454804855705c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/Default/Half.h",
+      "sha256": "94f815529785f5cfe45c0be9dc817f6291d2058f099ba5ca7b8da8ecd3c012eb"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/Default/Settings.h",
+      "sha256": "014ab6849b3fc5bda6390436de20c2566b6cabebfadaf50406edc71a49ff95ef"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/Default/TypeCasting.h",
+      "sha256": "9897cd4c8801e0890e1200d13512c094a21115cd27263facdf598f2aaa797705"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/NEON/Complex.h",
+      "sha256": "516e6a277a6676e138b70a5336ca27852496afb2e0fc6d3c6323d87f9ebe76b4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/NEON/GeneralBlockPanelKernel.h",
+      "sha256": "9f7741e9402ff6be20d4efe7781200c2d8a91f1e1a6b78c4164d96c0baaa8161"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/NEON/MathFunctions.h",
+      "sha256": "dc44e6d3a0bad8d41e7d92d2578c9d4e8f178c2c0cbb7a647c8af1f65911daf8"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/NEON/PacketMath.h",
+      "sha256": "5b406f0ada84481800ded814da20d22c437f74eee7cc9187c2127d2b09df46ba"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/NEON/TypeCasting.h",
+      "sha256": "9dd18bb75693ac337442283c6b63131d7391eb912650afe54b0b11fcf5f72ded"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/SSE/Complex.h",
+      "sha256": "a645c118b949f004c44d5096f20d9786c712a98075ab5fe6d378b10dd99b7e60"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/SSE/MathFunctions.h",
+      "sha256": "7722a3cc6a7c3f402b297aeb1e61fe201d86c63c0a2fcf3ca1a5024f0f16b177"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/SSE/PacketMath.h",
+      "sha256": "53f71b5a03ade25c4dceac328f2cd937896022889fe04e0d6de82e8b9c4f4f72"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/arch/SSE/TypeCasting.h",
+      "sha256": "6fcdd746409238598b0c6d34a5545a4e3055448eed7a6846d1a9fbe1e6dd06a6"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/functors/AssignmentFunctors.h",
+      "sha256": "585b20e6bc83d46045826ced50b6f8e4c2a59039986853a5722e91bb50d2b18d"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/functors/BinaryFunctors.h",
+      "sha256": "a02ebbf1e0b06da279d35cc9c2590694154fd28a456b9b842b7ff8d1108d0eec"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/functors/NullaryFunctors.h",
+      "sha256": "2d57592ebc3d61cf8d6ac3a1d073cda6ab8ccd3a6cf5b6b4e0d6188c5652b11f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/functors/StlFunctors.h",
+      "sha256": "fb0ef1d33be321a23fd26d69fa93154bfe637d851c9d88a716d673bee1759c9a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/functors/TernaryFunctors.h",
+      "sha256": "9262e3739c3bb7000d87d3e04b786da9e84cb2790cfdb7cca9e5943f5ee7c305"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/functors/UnaryFunctors.h",
+      "sha256": "b820e0b361739a0d00e69bb75455040425abf1dc7c64bbb497ddbd496cb39664"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/products/GeneralBlockPanelKernel.h",
+      "sha256": "aa97bb0c33394e34e76fcd4a5320c56753128e86de3508e94889b431e98670b2"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/products/GeneralMatrixMatrix.h",
+      "sha256": "3fbd1c65e5968b8125a25f61dde28a2dea50e2e03ae10d54bfaf1a2687dd4a86"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/products/GeneralMatrixMatrixTriangular.h",
+      "sha256": "86a0a2fdea25bb5944497d65c2e9c47e34781b1626a79ae8478962cfca690712"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/products/GeneralMatrixVector.h",
+      "sha256": "14d81c91c4b93565ed7aa7452298b397dd77d4c5358748162c0d610ce955ff5f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/products/Parallelizer.h",
+      "sha256": "8eb307ee912997272e64b0128226f74abc589525752113766e4b4ccd42e96271"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/products/SelfadjointMatrixMatrix.h",
+      "sha256": "639593870c2f5774200c06ea1f211e267d449378ac93de7b33a86c7968e61958"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/products/SelfadjointMatrixVector.h",
+      "sha256": "896e0b7209a826d186a6a59e2cbc5e83e3b24823377e765d2e270421adcd698d"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/products/SelfadjointProduct.h",
+      "sha256": "df5d230b9e8ac35c629ee2754c98810e47e03ff7cd2e7369f71d22c7946b8619"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/products/SelfadjointRank2Update.h",
+      "sha256": "86d6ef575236ebd894d04a0fde001a6c801b17aebef8fe9c1300c307ec99c274"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/products/TriangularMatrixMatrix.h",
+      "sha256": "18353c9585cc5b4d2c186368d111337cd1487f560898f376836413b4638692d9"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/products/TriangularMatrixVector.h",
+      "sha256": "e82ee6a0ceaf2f9fab5f1ee3065e817b4ce4602357f9df788cb9a400c52dc6b2"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/products/TriangularSolverMatrix.h",
+      "sha256": "de1d034735229ff4210f0ab73c1c9a1579704a982aff7645888913a74e8cb27b"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/products/TriangularSolverVector.h",
+      "sha256": "eb3ee70346d6e7fc08693855aa6422182b31cbd608a44503af9a89c8b8d85ad4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/BlasUtil.h",
+      "sha256": "3169b13cfb4017c3f8eab80b5120dece628baea0fd171d48e9c93d326e311619"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/ConfigureVectorization.h",
+      "sha256": "a56efcc77a42accf3b4fbc5b1349e15e0990bd50fc6ac0703dd7c6cfbfe3833c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/Constants.h",
+      "sha256": "b7ae6442c34e283bda966ca308f109b575cbea73aa40fb1d5816de42fee09c22"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/DisableStupidWarnings.h",
+      "sha256": "490cb4f75cb508d67e150315ca87e0b3841c1e4ebc778d218d487ef55ee063d8"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/ForwardDeclarations.h",
+      "sha256": "0af5d54e146b9fcfd9e8dd64b76b706663d793d64ecf1cd65a81cf7585c1ec61"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/IndexedViewHelper.h",
+      "sha256": "5a1f94212f70b43f741dd2a1b75c960cfbf872301fff76e017331b3d5122d7ad"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/IntegralConstant.h",
+      "sha256": "9525afde222683d1d91e3e3e2b5c2ae11be7f88e911762327f80e0086a4c8220"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/MKL_support.h",
+      "sha256": "a94221223dc91fa68d076a84205d7f720adcbd716ecb73b174d24e21a41d55e1"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/Macros.h",
+      "sha256": "77c71921cee8546da61464e240aec7f38f5dd9fc345ccfa01ae42f1454f64d7e"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/Memory.h",
+      "sha256": "96ef3558f517b477b0c000565797ee46fddd13a233526f8766d1205583916d22"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/Meta.h",
+      "sha256": "3f9bf432d9074829ed9cdf29bbae65331b02c600c7ab8f6565b4a4f4ee79197d"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/ReenableStupidWarnings.h",
+      "sha256": "1ba650bde6c6f518381e0a8904f9d32761dc6acbddaa2fb578426bdf9ebbc063"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/ReshapedHelper.h",
+      "sha256": "c9c91188caa223ff349e8f74055d17d423ce12122c146ade8496be452f148ccf"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/StaticAssert.h",
+      "sha256": "3090b3ccafcb9bc90de82e9c773cd8e4eb26ece7f470e0fda2230948716a7994"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/SymbolicIndex.h",
+      "sha256": "4efc7aecf4d3ecc754884b7422cd265de19777f1f3d737e0873f04bc6c6ce8c9"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Core/util/XprHelper.h",
+      "sha256": "9a4599dde107a14aefe0288d2b827ab79be2db663335ebfc2473168e7a6e19bd"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Eigenvalues/ComplexEigenSolver.h",
+      "sha256": "c2d520809a91750f8b71234559ae9f1052202c6ca8760ca953387c3355066450"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Eigenvalues/ComplexSchur.h",
+      "sha256": "dbebf30d4d59ccbd0b7b196485d43742876e1be846d35ef12f9c5f147cc0ab2e"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Eigenvalues/EigenSolver.h",
+      "sha256": "1eaa4034cf2c626bb6833db77a9f9cfc2d5a5849aedeba5217db7a5a65428b70"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Eigenvalues/GeneralizedEigenSolver.h",
+      "sha256": "afbd166178d2e00e7334cc4a66f1fc95d32caee94aa1127a0db2f603d2063c55"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Eigenvalues/GeneralizedSelfAdjointEigenSolver.h",
+      "sha256": "c0de2c84d06cabe9bdcb681c2a02e61524a5e76e6cb860bd5871bab2b2db49c9"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Eigenvalues/HessenbergDecomposition.h",
+      "sha256": "2c89ee8958502861f5f91756540401b2c21be6901d296bd6fe4def7a1cc6959f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h",
+      "sha256": "9fd9b7539d2ff21bbf1430e3b5ccdaabf6fe964f69228a823ce3daad0887e84a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Eigenvalues/RealQZ.h",
+      "sha256": "31c6bc9868dc0acd4efec485f2a11d91ecee4279de1a31e9c5ed0d0b52adea74"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Eigenvalues/RealSchur.h",
+      "sha256": "5454355c0c6f1dcd8d82d70b17c7609cc1172e1cb0deb47f091d09c70bfacc09"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h",
+      "sha256": "a26bc81b2591f82afd384c83ef25ce553a7f651f3e9ad8b849942aa0b0b665c9"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Eigenvalues/Tridiagonalization.h",
+      "sha256": "258764d323bf55d8ce919087a80f102e0d9108624c598c7b1d15eea1f8141972"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/AlignedBox.h",
+      "sha256": "98117f867aae78891856101d8080ec756ba63090f4d95089e4852007dbafa81e"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/AngleAxis.h",
+      "sha256": "a848d2c642fee3c74c7f40ff6729ec4033398008eddd61aa47e026f4329e2080"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/EulerAngles.h",
+      "sha256": "8d4a26fbd934fb095b74560ce54b7a14988569d5f56b17e4d37a55b9f396a034"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/Homogeneous.h",
+      "sha256": "79000dc93ea80aa91241c3d335067d04c489f8f66b69a2e31a60f58a780a54a4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/Hyperplane.h",
+      "sha256": "0f28c90d08b23950dc2719347ffbb7337e527e6779a3ac819c3514028a25601d"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/OrthoMethods.h",
+      "sha256": "a1f45d9e73e2fde3044120bd83399a35ab9b45839bac973387d95090dd826eb0"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/ParametrizedLine.h",
+      "sha256": "6063fafa9435af436b9bea720cae37e5fde27efcb9ca774574f872a9e1cee20f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/Quaternion.h",
+      "sha256": "d0ab849e4e3c8515be1e5e3602f6007cad041661cc0616eec49703cc924110f3"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/Rotation2D.h",
+      "sha256": "93fce18237d983b8c3e2118753f1cca327e8fd399f691bb0017159e7962fe615"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/RotationBase.h",
+      "sha256": "22a78eca43a23d00b99b9fd596df9ab641485e8f7c264c9b6fd89521d52c99d0"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/Scaling.h",
+      "sha256": "8a90082093ccdf36f987c3ad35af871dea5548bfc7d0ad17a0469eaa70af5f64"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/Transform.h",
+      "sha256": "82130159097c024527fefa5bf5a7f29a06c37fe47eea565c9f4432b2ad77292c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/Translation.h",
+      "sha256": "7459f3267cd5b41b29a33d54f2e2f1fbbd416c27b0306f9b1768c2e9fb811de9"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/Umeyama.h",
+      "sha256": "8e52345e40929fe5834f92984c546da3caa875578463b65b14ee49ab7e369c34"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Geometry/arch/Geometry_SIMD.h",
+      "sha256": "7112e40f6e9371f55b5819442020ccf840b7ac38f4343e2bfdb78f5ea408ea27"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Householder/BlockHouseholder.h",
+      "sha256": "7e2bd6a91f1c14925018c300794dced9aa974a81cfe86cbe7cbd36aabee68549"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Householder/Householder.h",
+      "sha256": "b423656a1cab9b111563695f19f905849ce479a777e03c18d4448528686f0496"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Householder/HouseholderSequence.h",
+      "sha256": "3ad91f5072bad91213def73061f26c57f28fd704a2dc354d8207358ef5b2c243"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/Jacobi/Jacobi.h",
+      "sha256": "671bd8e9727f64b9362c4c20dccdf284a6113579436591695c86914191deac7b"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/LU/Determinant.h",
+      "sha256": "8060030dc024b059b13061269828d800be8237e4d4cd2f26adae5151c0d498a3"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/LU/FullPivLU.h",
+      "sha256": "c9f42ff6bee193dc9628204743b48fb269676078c65bdecfa6e44071cc26024d"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/LU/InverseImpl.h",
+      "sha256": "b82451ccb235d795fc7bfb9d4b36a0c06c16e7e6f6ad705931c3049fef6f6c8a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/LU/PartialPivLU.h",
+      "sha256": "bea21f366a4cb3c24b20d1a0e30272b2ba48ae3b60aa96e7b8a012b32928ffb4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/LU/arch/InverseSize4.h",
+      "sha256": "eac258bb9a25424472be80adf43a533298ed5a3b174925bb3513f1c086e79b58"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/QR/ColPivHouseholderQR.h",
+      "sha256": "77454f9b6a6dc88abac9c906849f61131a9e4e9c2b6cad0b1ec29a2fbb228612"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/QR/CompleteOrthogonalDecomposition.h",
+      "sha256": "b4241c503ec97ff37167e76c26ce1f3fa4baac87d4bb44aa62bb2e641a5dc954"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/QR/FullPivHouseholderQR.h",
+      "sha256": "e70d990319a2be5c4595c51cb03375bf4ecebf40d5dfac54742396a4cb43cbd2"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/QR/HouseholderQR.h",
+      "sha256": "053070814aa9bdb703d66dcaa3c0761daf412c45ed0b9f448fca24a05b1a93ab"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/SVD/BDCSVD.h",
+      "sha256": "ad6f77a4320ee56d095d2b7aa4104deb6ea1dc501bc6bd031183177cf618b2ba"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/SVD/JacobiSVD.h",
+      "sha256": "f21489b1fc62d895baf304cbebc3cf75932a2a5651602c41c2df354edfb7753f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/SVD/SVDBase.h",
+      "sha256": "d1acf0d6a8bf0c72b4cb9de4fb9a9be153ca43f58e02b33453f0bcfc2dafd211"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/SVD/UpperBidiagonalization.h",
+      "sha256": "a0b4724894e74499288e0710b3eab8538f1656984c126f65502e4ca022db2679"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/misc/Image.h",
+      "sha256": "b1c819a6d29fac10eba2ecb84af85733bbaf198b6c360aaf2d70ce6a1c731bb6"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/misc/Kernel.h",
+      "sha256": "74dfb9c9c12e520e3e01768c62dab1dc3c2f6ff03a75518d44e0e403cc053a87"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/misc/RealSvd2x2.h",
+      "sha256": "84b74b4c3add9dbf3e399a49df887ec860eef2e835b9068986e19046bf1793a5"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/plugins/ArrayCwiseBinaryOps.h",
+      "sha256": "f0a6255b1dbffb08a814a50fff84f4b7dc0c3c91c2833d162ac4cbac45de4173"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/plugins/ArrayCwiseUnaryOps.h",
+      "sha256": "afe8c25aa276ef9e794fee40007857b90df221b4d55279103da90d91c7c44f42"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/plugins/BlockMethods.h",
+      "sha256": "e5460bb2f642aef1c10cd3f672cb32572a54b2025d34302e4ea5990109316c0a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/plugins/CommonCwiseBinaryOps.h",
+      "sha256": "780988cd7fe447721ff9a86367b59fe61089a32248326eba83bcd092951494cb"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/plugins/CommonCwiseUnaryOps.h",
+      "sha256": "7759ff49d88fdd175451cdb8630f4a01301613bb8244d4a8aeab3cb342a46b8d"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/plugins/IndexedViewMethods.h",
+      "sha256": "c38f9ab12557ccdae0340014e99f36e1bf75280a8c8935f67ae5f1ed72acae54"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/plugins/MatrixCwiseBinaryOps.h",
+      "sha256": "63c4cb5d56f7bd623574bd82576e8749a7b7f57979df1d6dde782ce0ed16057c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/plugins/MatrixCwiseUnaryOps.h",
+      "sha256": "8ea68506b34889c9a26a01d3c7ce557e4f9f91c14d6c58c547e023eda295b963"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/Eigen/src/plugins/ReshapedMethods.h",
+      "sha256": "6c6f54856539301f580245d7979d437b272065c727070bc0a6b0dbd4cdf6ebee"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/Tensor",
+      "sha256": "f3ded80f9ac8677f6feb910342c4e5ca76b452de1dfa714e855dc7079c71912f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h",
+      "sha256": "59b95960dc5dc9ba9527177f20f4af6759dd98067055765fc4fd8856aa2d2fd0"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h",
+      "sha256": "4c31714746040ae11bd9733ca72dd28717223f79a8ebff1ec48c45ce317615f4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h",
+      "sha256": "aaa7ccc7cb9f445abd1531bd678bfe4eac4d5608d1865a00c313ba3ee463d757"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBase.h",
+      "sha256": "707853846b26adffecefe6c09b6cf99d5ca8771e55472ecf1cda339de8cf46a4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBlock.h",
+      "sha256": "024cef2c17cfb9a43c3a37c67f8adf6870a0455fd38238bb7a72d5d9edd1179e"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBroadcasting.h",
+      "sha256": "26e7ce657e1fdb65d4ae8f4fb08950b77a473820ef7c903bc166f543c45c17da"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorChipping.h",
+      "sha256": "9febe638d52908c6bb069c8f1fae109a97a2ac18c2c6a048bb9ac68d38ac455a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConcatenation.h",
+      "sha256": "d7e4e8953905c26cac931ddad46f56f19a8b6eb92674e7152322ae1fb6a20a3f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContraction.h",
+      "sha256": "2578d313873ff1d06a671404240f928b014a5738dbcadab849dcedec36652013"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionBlocking.h",
+      "sha256": "086a9a34e2742f37b9672197d1e8a676d16e816ba9b6ef5b64a18e60c496a9bc"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionGpu.h",
+      "sha256": "d21b1f8eb0dfded266c4144a6a8d991b88fffa746e056376622bcf6a2e2d00c4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionMapper.h",
+      "sha256": "35bac6c0130c35f5dfc43c22f5a2002e23e7a9c3c85874b6ceda6ec28a4ba5a1"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionThreadPool.h",
+      "sha256": "5ee57e2d6fdf22698dc3c7ae2d1d33b07a44a550932ff398a0d564578a433737"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConversion.h",
+      "sha256": "7dda2f07c6a2a4cd5ab868b06eecdc0ad4e5647fafaf05016123aa4ba1ba5be2"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConvolution.h",
+      "sha256": "d113b9376ffac761a08122485f7d20fb1103afd3d5ae616b7ab8def7830737fb"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorCostModel.h",
+      "sha256": "8eef79b9fcab916dbdf06e876029b23089e306578d92ffa6fb0650eff9e117bb"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorCustomOp.h",
+      "sha256": "bb10994e0301f95c8a49dbd227e897d2b8ec63c08e528852c5fb8b3b67e450d6"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDevice.h",
+      "sha256": "81afd3241e60e0ff675544e9432f874d7ba5a0653cf68b0a91b46e356f81f7b0"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceDefault.h",
+      "sha256": "6a4fd0678ff53df2049f52f23bad7272879313625d8bc24699d7d2be44e83928"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceGpu.h",
+      "sha256": "8b97696ed618b315c8fa7873773d144a2d552ca616430235a0a0fdf8bac5e7fa"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceSycl.h",
+      "sha256": "4a8ca82ba87b031da298b68972e67a2aa945c595d6295c00438edf94f8f7b470"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceThreadPool.h",
+      "sha256": "b6eaddb270527d322a81b16c492e72a5024e46962680917e013952621e4b8086"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDimensionList.h",
+      "sha256": "3f2149bad0ab72be2529a9ca05d116db7df1245fac17de48b7d7f87750f3328f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDimensions.h",
+      "sha256": "23ce47bd4e30074e5b4521c5bd5ced8c1258fcb0a0777832f14615e8a5ca4745"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorEvalTo.h",
+      "sha256": "8646f676987b8138510de282241782c167f2024a2c38989746f6bd31c56327ed"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorEvaluator.h",
+      "sha256": "2dd0fee484df8621e11cc98211f9375a3acadaa2253a2f8dedff39512574119f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorExecutor.h",
+      "sha256": "746b004548f5cd07d60a3df7770c03533e45cf953e429f7a599d16f678b9d8fd"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorExpr.h",
+      "sha256": "cea54f10417841f6d970dd6cd1787e4e5e28966956a10e41e81380a8946112c3"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFFT.h",
+      "sha256": "1f2578641cf532d7fa1964ae5fe890c81b1e6c0c858037b64522cfe7b740e135"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFixedSize.h",
+      "sha256": "e6553bec168667b50282472bd48cad47bea4a6ccd6594c84fbabfd6b606c614c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorForcedEval.h",
+      "sha256": "34aed74579ec741810acf11b2924c490a129491f73b07b4d667af42294fd821b"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorForwardDeclarations.h",
+      "sha256": "811afb72ce71983d04d6aa841ed8c6eb514933b16d23acd615b3245cab1c4b88"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFunctors.h",
+      "sha256": "e5516790567b33645be980b63f6bc052c206b285528b0c77d4ab362633e46d71"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorGenerator.h",
+      "sha256": "d3ddba0dd3c6babc32ef8e6ab2b60fee216e343e6a7c737fb7fd7dd18750f980"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorGlobalFunctions.h",
+      "sha256": "1595a1b48bab104541b6afad74bbd1240bfd9d9e8726111c582fa3b509f53b83"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIO.h",
+      "sha256": "f948295efb4d7661333ca6ac790f583c901d702b024ba5209b42915e491d669e"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorImagePatch.h",
+      "sha256": "13603797f60cdf91ac1042e5421ab2df9001c63ac852f935e6f140bbd5faef49"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIndexList.h",
+      "sha256": "2b937fbf431417b425915432fdc1defc3bde5445b431655bf688b82a060ff8d0"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorInflation.h",
+      "sha256": "59d31d7486b7d273a716347877937c6ff270c4e00c868502251209caece3f94d"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorInitializer.h",
+      "sha256": "be66799545403f0e69eb7b81192f9ea796738511cc326ad82f53358bc4b635e0"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIntDiv.h",
+      "sha256": "598126e049f3fb2212e04f8c42749fd8b71137ca605ea27dccf88d9df7bb6ee1"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorLayoutSwap.h",
+      "sha256": "cd7286494d30c623fce9c940e0a1f37c1bcdd71f2aa2c4bcdcad024b3141b6fe"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMacros.h",
+      "sha256": "9b1c245f987c3dc15b1c587b1dfad5105d9ead0a1535fd121bf4a449ce4575d8"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMap.h",
+      "sha256": "904fe924b94b4fbecbae387b18ac03d389bfcac9d2e9fb917b54ebd946f954b6"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMeta.h",
+      "sha256": "017fea9d7640705d701a55ba5cd23f2445ac74389f3b2b4de8bad6f351362f92"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMorphing.h",
+      "sha256": "67accdc17d9e7dc330d74cdf9ddc806315de7fb9722a42a1c254e00889cd2504"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorPadding.h",
+      "sha256": "0ecc29ca97c16234e15859d9f30e773e16db0a59b55f34cf610995a9d6fd26f1"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorPatch.h",
+      "sha256": "0e3ddda4c9e093ef813649f453ea41f975d13b38b36354d56acf1198a98c2de1"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorRandom.h",
+      "sha256": "656e6bd33eed2586b4aa2244b12435a5466abad367dd9c12831539281b72e28e"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReduction.h",
+      "sha256": "a9b1cdcb4048533c399c53d17502062321eed6b7af1af68db4980201e61405f6"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReductionGpu.h",
+      "sha256": "42f7d2abe7623760e8a333c16c134f02b389b3d201569d316e41e21f695e06cc"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorRef.h",
+      "sha256": "97d020eebd1ea38337f4457ddc18f3220a3c30041d810a8c7000d9a4ee1d8aac"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReverse.h",
+      "sha256": "0e33946d78600a7b858b767af200829523566ed9b7665939a9d42393321321f9"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorScan.h",
+      "sha256": "b5256fd7314b9de5be758e791465f4b4ca2eb3b34f796247b99498f2a6fb1bcc"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorShuffling.h",
+      "sha256": "aafda1fbbeaff0b461247b3b5050c025f3d5f61caaaa133774d9f019ddf36deb"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorStorage.h",
+      "sha256": "b8c1e2f8fe65e08a49e6f997b14a1954c7f8aabdb3e9b8d165947cdcb670a408"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorStriding.h",
+      "sha256": "92f4ee49b2462f4f92e2ad4c7b6e2b0a9676c35bb104223bec5280bc49fc2770"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorTrace.h",
+      "sha256": "0fbe962b1e0ecf5ff9ece049b21a1cec125ccd2db15075706cbd8b6beacf14f4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorTraits.h",
+      "sha256": "2354c0478c91c619adf53fe2a5573f8ed00a469eafe40170b974fd21e7260ad6"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorUInt128.h",
+      "sha256": "d0ee3b93c1b50402d48620739a376f84b0cfcbcf8401e9bebb6b7fae379f37cf"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/Tensor/TensorVolumePatch.h",
+      "sha256": "e150e059b3d1fc10991ccc0a5e9f50bcc4746c647012079de81f46ebd7267fa6"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/util/CXX11Meta.h",
+      "sha256": "3b73f6524d2481f87ee634a57cb2235b435aa2f39373e5885580ef0fb519e38c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/util/CXX11Workarounds.h",
+      "sha256": "0b057be84988c10181af4c258a923b11f8ea5b09de136b823f4c5c67a6b367bd"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/util/EmulateArray.h",
+      "sha256": "8b31ed87a750dcf29440165fafed8ad08f054e23807b049049716d996e56d338"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/CXX11/src/util/MaxSizeVector.h",
+      "sha256": "a59179d49145c400cb0fa6479040dcf31de7d804563efb9cf8080b988b2e2b7b"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/SpecialFunctions",
+      "sha256": "9acdf6ee3bf2187a74fad620f36b230110bb60964992aae597dac07c919025ff"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/src/SpecialFunctions/BesselFunctionsArrayAPI.h",
+      "sha256": "3c5d519dbd9d883f6d90f31f3c954ed9e0b89ed5f1cd146327c314bdeaee40b1"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/src/SpecialFunctions/BesselFunctionsBFloat16.h",
+      "sha256": "d37d5e841bfaac78ab0d5b8886130010e786581c21634c75285ba6137fd0dbec"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/src/SpecialFunctions/BesselFunctionsFunctors.h",
+      "sha256": "21f834692d70edd2e6f4c0ff0f8e9d933b454f69916bce9c98145251d18edd95"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/src/SpecialFunctions/BesselFunctionsHalf.h",
+      "sha256": "93289d4c90c88ce54c062a8eb07dabdb46501282b784941dbe8411a2604e5b0c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/src/SpecialFunctions/BesselFunctionsImpl.h",
+      "sha256": "a2a82a2059f3ddfd628aec961c5273dd34f8d4ee519e71c3bd6504922c6c3cd3"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/src/SpecialFunctions/BesselFunctionsPacketMath.h",
+      "sha256": "87e106e9a96878d9b8c5e36ffee3b7866a89323c6a827b2b4333c197a67e9a30"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsArrayAPI.h",
+      "sha256": "9b933e0dbad7ebabe6b32aca63ba2bded61111cbb97afdc09094aeb5f41f4b5c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsBFloat16.h",
+      "sha256": "b25922a9369caaec72c2d347aa0697b355d7dffd37f8f9958e99d914fbcc668a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsFunctors.h",
+      "sha256": "312883e7a434aea8594c3a3eaf7cad1e5959e2516b1dc0a8a579ca934a0825d4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsHalf.h",
+      "sha256": "e2f7c9bede3f57a2b0788db72bdc3605882df8a5b5df877c4eaba4752302d839"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsImpl.h",
+      "sha256": "b33bad4efe6b258ffab84286effbba020b21702f71541ae5eb7a6f7dc1f94a02"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsPacketMath.h",
+      "sha256": "0e020b563ffa44c05460b80ad1c9e43f904c78e0dad26419a6a420cfeaf1a11a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/src/SpecialFunctions/arch/NEON/BesselFunctions.h",
+      "sha256": "16e838db5132ad9b44a3e1e084771b420c65c83cd1ffcbd77bcf8befcc38f8a2"
+    },
+    {
+      "path": "third_party/go-katago-upstream/eigen/unsupported/Eigen/src/SpecialFunctions/arch/NEON/SpecialFunctions.h",
+      "sha256": "57356f550bc3d2f601456f232d9758236d48a45eebb298b9efa40bbcb2730601"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/CONTRIBUTORS",
+      "sha256": "32642464ccaa65837b4c2c4489ad437c2f020cdfbcedbb2723a35ed8d51ed689"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/LICENSE",
+      "sha256": "ead22455d923920cd152546d89e4f415c94d6b580aa109fda3b57a69c57c32e0"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/base64.cpp",
+      "sha256": "d792c4d2057d315f10c4abca23841ba9ba91b339b3fbf1d5f0b4d6399aa0340b"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/base64.h",
+      "sha256": "afef9c2555cd163868b79d0bfdefb490e85088a7753e1803902cadc93179c1ec"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/bsearch.cpp",
+      "sha256": "7011966251e9ce6db7bb60baef26c015ab0ecac0a8cc793cff38bc7410434f28"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/bsearch.h",
+      "sha256": "2818d7d394ba0a806e26947731a96d92206a6d28c7552842ccb529057100ce55"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/commontypes.h",
+      "sha256": "0b26c9b3c710ece7a9b52218b731b5575d53a6772c75f04a0918f9e4c0a5c7e1"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/config_parser.cpp",
+      "sha256": "a8e5b73e270fe54adef4d615816aa6c32483926d5c434e101d8a494d89268702"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/config_parser.h",
+      "sha256": "1dae5ce2507c7c3cb1d5e48a1994c665fda6cfafd633a42c0306b536af84ae3a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/datetime.cpp",
+      "sha256": "49c5d7e60fd80c7359c397e0556fea6a47e08ff1c972033192b4f0008991d3c9"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/datetime.h",
+      "sha256": "78ed626e3322ebb3294e338285f0974c98759acae4317247e15a4e9373f0bcc2"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/fancymath.cpp",
+      "sha256": "0c4668731eb4a252783f6accb70060a4df836b69a16b975fc0d1865515275a5b"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/fancymath.h",
+      "sha256": "e05f709047e5c322ef44118483f2a82fd42106f33430de32540c011ec70e32b3"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/fileutils.cpp",
+      "sha256": "cd6290636e580f296314d65e042fc3f4da437535f750d5ad2508ce0bd1afd131"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/fileutils.h",
+      "sha256": "ac8871ffea0eb4ca6d393cb87bb73f1e79246db8595c1b8c7f27954436b78435"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/global.cpp",
+      "sha256": "cdb36bb20d28d93b1962894eac8a7724b270270f4ffebb5b082101777c2bee4f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/global.h",
+      "sha256": "2e79ec99c68370116e9b5beac1af284fb2a25183299c48a073eabd94e4703a9a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/hash.cpp",
+      "sha256": "4ec88292efe5edacf9f3b7fbf22314317ad90c0bf4cd93a3b25ca2a476743292"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/hash.h",
+      "sha256": "c7f93bff94da4859d6aa5f0c93e8051be2ef4345a288d2fc6f91ae22554bbdf6"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/logger.cpp",
+      "sha256": "d7ec16f14c7f30c67d1a0cc166f6a09810ea6e586f9692044c7e59e865be2fcc"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/logger.h",
+      "sha256": "6bb36e108b5018cc6cfc1cb3b140e5ca3726244b97ded59af225b72a03ad3685"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/makedir.cpp",
+      "sha256": "6c1f34af4ee02e1640bc4af4663a7a8cde9f39b4cf787b34cf389a8e9839659f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/makedir.h",
+      "sha256": "709262c778dc5818a3704a973fcac2157e44ce67d050acf96a75225c1ed67340"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/md5.cpp",
+      "sha256": "5f5f2b51780d808382da8bc1a47326fdda119b5c26d07ea74dd4165c6667d068"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/md5.h",
+      "sha256": "b9c4da3967332c139e4b3f4594a65ca68388cb7fe94aaa5f3e399e0bd2f91fc0"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/multithread.cpp",
+      "sha256": "d99edc7e589e624d33f2571392b9c93c0251661dba0ade4453355c3e829db0fb"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/multithread.h",
+      "sha256": "e4a222bb197a60e6bcd59eb2a7bd29987b27e7633b4d404d9255ba78d2fcba1b"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/os.h",
+      "sha256": "a7e3cac2560e5036886bef56736c4e939b6094620e80910f117fd75d9515508f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/parallel.cpp",
+      "sha256": "309a8bb597f1e312af1a01316f6a54c0497a53e6711eb839328db756726e7b06"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/parallel.h",
+      "sha256": "d2beb179be9aecc6918ec004386915d914475a9e5e39e94dda39497536c25465"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/rand.cpp",
+      "sha256": "51e9eeb5cdcc94cd15614bdb2e8646c8beffa4f37c5c7b48c1bbfc36087d1574"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/rand.h",
+      "sha256": "00c017b9af8178c9c0c0b722cf0b67dbce13c7ab53d704225dbfea545a2d2160"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/rand_helpers.cpp",
+      "sha256": "47d51d7a2563f5ebca279185952021a9748e10aeef8c15028059846e49d6d694"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/rand_helpers.h",
+      "sha256": "52716ba855c09620a015d5cfb1018aebd1953ff1fccbc851f9cd68b9cded67db"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/sha2.cpp",
+      "sha256": "c8ef199e699ccddd6167c647f7b0de3a3636517a88e8d8440f515e6f17c578d1"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/sha2.h",
+      "sha256": "663ed4819ee86b410f7490d05f454299ed68248c3d3bacbda4a0401c2bc735f7"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/simpleallocator.h",
+      "sha256": "0dd14e3d8db88d9116f34af0eb299a051bcae1cb87f89518c785e18606764c30"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/test.h",
+      "sha256": "e5d067f5dd3f14835e81300131a3fd52ea7fd0f32a25fe894c9a9af09e15b13c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/threadsafecounter.cpp",
+      "sha256": "ce35ceaaa7d3aa1013dd64c26d320a8fd085ff7acb13773cbe93f725c9204914"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/threadsafecounter.h",
+      "sha256": "752d49b7c1bd294230eeed29cecabe68a300a5dcc09b749d2a60ac25d9a76f82"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/threadsafequeue.cpp",
+      "sha256": "8c271c19faffe9c09b207dc69141c4f3e5b4f53f7742f06fe718234d23740f24"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/threadsafequeue.h",
+      "sha256": "eeee51255e874bc39eb2c3f9fc337d6f47bb485fc91458fbfda67ccaf67a3a29"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/timer.cpp",
+      "sha256": "f5f7bc595aa093b65cb2d924587d0cbd13dc02207d61ae93c0f948e787a1daf5"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/timer.h",
+      "sha256": "7c82c51965736e05e1ef32a4b00065e11fd4e3bfca5a8258885693df23f0fe7f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/core/using.h",
+      "sha256": "236910922e23986e8927fafbd51c70216901218842150b5260f9a3976fc9016b"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/dataio/files.h",
+      "sha256": "501450034c0c7788c3f04e37a601195b50ca94b36264f10c696258bed21916ea"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/dataio/homedata.cpp",
+      "sha256": "6d234607d0ccb1f1e1135db0aed35ddfa011789880a5652297a582a528dd70ad"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/dataio/homedata.h",
+      "sha256": "2837a7171b175d45fd83017df3d85099b2a6fcb2905b60f8306571b454d9b26d"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/dataio/numpywrite.h",
+      "sha256": "5e142404e09b59e9466f9f39b09f7007a20c4bb0f94b2198d678cd3a8705aad5"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/dataio/sgf.h",
+      "sha256": "f37691e592a361cc97235b1d95aa3a9693db8c608666197ec4c9c32abda16eb8"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/dataio/trainingwrite.h",
+      "sha256": "7f448829f58d2b4a9035cf02ac3bd98262b7892a6dd9c99a37fb1204375c392e"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/external/filesystem-1.5.8/LICENSE",
+      "sha256": "1b265537c97cfb422ffb52492c96979943f54fab8746a6dd38d8329953d487cc"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/external/filesystem-1.5.8/include/ghc/filesystem.hpp",
+      "sha256": "38fe4778959c069da37f222f31a5abb9a29843e51bcba3a71c1fca11b39759ef"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/external/nlohmann_json/json.hpp",
+      "sha256": "be7bbfbc7c62c35aa6f27dfbdd950384f247dd9f2281b5930bdaa3a6ab95eef7"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/game/board.cpp",
+      "sha256": "1f34d6999fab22bbb187bb9177585262da4f71f01190775dcee4e79577b8b3b8"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/game/board.h",
+      "sha256": "b4357217197546531b37baf1cc0f0f3a272ccd02fa8cd08378bde10114658bb1"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/game/boardhistory.cpp",
+      "sha256": "46e5af6ae3749ad61153f87705418aec2d4b85cb2247c31e6484bab16ad6b369"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/game/boardhistory.h",
+      "sha256": "8e66908afae59b462c36906d441a376457524d6dd737577677966a02b512147b"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/game/graphhash.cpp",
+      "sha256": "99e78ffdce4c429eea98b90844062891f2c15104a32ee9d6b7d3fefd8a886410"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/game/graphhash.h",
+      "sha256": "c91ca68075fec3dd3e6b1425d303b31cc9c2c31cee33e9efab64adb122b5889e"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/game/rules.cpp",
+      "sha256": "87cec3456eb5d250102607c41f87f1b253c0985f24acd5bf08abb3132474ca29"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/game/rules.h",
+      "sha256": "3b3e6a1b40adb25b6c3de5953c77ad924352efff74e433455ff31b9a5e1d9661"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/activations.h",
+      "sha256": "624ee5b9fe57666b30fbfef6a5e163a6ac8bc3499af5145b68ed9796ee0b241f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/debugprint.cpp",
+      "sha256": "04d2fd2bdc80ceb096831054fa0b6812f4274bfe00d32ba209d79a45cd0f9aaf"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/debugprint.h",
+      "sha256": "06e04f565f8175d71328c152f5fc865b86c9565076542cd85bb26cb3bfaea1aa"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/desc.cpp",
+      "sha256": "447cf6f0ca28911ba8e33dd1b0b2d8ed8261f95ff99f56aef3aad623aa43e4dd"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/desc.h",
+      "sha256": "4be8a47a26b408ecdf63f8ef274e26cb079248640e86ba73d33a0f1c28ec3979"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/eigenbackend.cpp",
+      "sha256": "3f9ea2f109ba8b936e7eebb320610bd51d0609fa5ea50f7bf1d2ad0dc7289be8"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/modelversion.cpp",
+      "sha256": "98fb9f45ff8cd142a3d0029040800520116eefc3e8ee095af4eb5e26b53cdc29"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/modelversion.h",
+      "sha256": "bdd5e1f50ec62efd54cfd303ef65e863c2cbd19e0f6bb39104a75f08671c7072"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/nneval.cpp",
+      "sha256": "2efe3ef52cf791abdd578eb7e8d4187f8ad14c912859b07c9f603cc684f275e5"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/nneval.h",
+      "sha256": "86e794bd5ebcce6cab522c76a3dd7f9ebaec1b29b2d7c30e3421dce04437604c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/nninputs.cpp",
+      "sha256": "643f6753453996d678ce10550d32d4a39d7a4cf54e3b3fd1074d892c88c077ec"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/nninputs.h",
+      "sha256": "53a18a9e653bb27b7ed7548b0908dd1f5fe3c83375f94cda9388db08eac0c607"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/nninterface.h",
+      "sha256": "0c5fed8e7c4497b95ada2e6b323347652c29a1707fa736bc294ea8601f400b4c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/sgfmetadata.cpp",
+      "sha256": "df072f135a3bb4b39090ab9eb41f098e61a078cbb9f98ccc70711be05c1228f4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/neuralnet/sgfmetadata.h",
+      "sha256": "2a722f4ecc227265e8793695118df2a735fccafcfe4b740ca9c2dcef4a48540c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/program/play.h",
+      "sha256": "1ae911cbe46d18586b3eb11d4751d00838fa23a044d2e72df0371f76fb4aae46"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/program/playsettings.h",
+      "sha256": "842a68ba4d94bc27bfb073fe79767e6098f85615faa512f481a3b88276fe91ed"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/program/playutils.h",
+      "sha256": "a047ce0d63a9e33ae59c616f7a1d967e5a72c5e699daa3bd3382dccc58c22b28"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/analysisdata.cpp",
+      "sha256": "06da173ed14bd1be047f43c5094950d6452750c76211fb2c71428239fafbd778"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/analysisdata.h",
+      "sha256": "f85883b9c3dfc63b6275912ebf9507901a09593aba0222093524de8861297599"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/asyncbot.h",
+      "sha256": "a05406043fbe0b724cdaab182fac8017395adb6ab18ed93d5225ef9d9e3ce0aa"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/distributiontable.cpp",
+      "sha256": "8896ccfc1c0f7aa241b815e7e9fe1eda6d31c1dc382fc5c0d8f4d2217fc107eb"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/distributiontable.h",
+      "sha256": "a031e456e3e287c3e277af79d0bb83eb927635b6a9c539629b2c5752e15b5a1f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/evalcache.cpp",
+      "sha256": "e34e06967c59f668ecc15c87a4235683a2e8f5ae9db74e137fa53344f37bbad0"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/evalcache.h",
+      "sha256": "978197de27e49dca4b31afc6cc62fbb3b255ba2ed8ad400aebf76af58a7f6ad2"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/localpattern.cpp",
+      "sha256": "85d71dd10148128ae133a624641b3460b3d0fc9e3e7f116df3de96a824f6e299"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/localpattern.h",
+      "sha256": "ceb392a9026b43e639cf3d8958263e00c1bff6bb3373d5d9d8b02b8252608447"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/mutexpool.cpp",
+      "sha256": "6cbebe0c1ea828768b47f910cca0bad4f67c0b526cf834315cf273639a575eb4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/mutexpool.h",
+      "sha256": "bdbe5624963de03b16e5487214dad9aa75ff80f71978c156211850f4ecb05c16"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/patternbonustable.cpp",
+      "sha256": "086d189bf867c63f70a6f5ec0c618dd8cbb68bff26caad50bc3a3d71bec0a120"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/patternbonustable.h",
+      "sha256": "e1b97a48466192fc5e4cbbbe6b4045eb686d012d60ce6c8910eadb0a0e70c0e4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/reportedsearchvalues.cpp",
+      "sha256": "cd35376ba3705414dab9e36277a6b3690461214df5185b53216fb1e93dd3a13c"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/reportedsearchvalues.h",
+      "sha256": "9eafb67df634475834246c0ccee5dce6771c294f060fb56dae605bae42a6c359"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/search.cpp",
+      "sha256": "146062129ee8c392a6de9810505b693f39f337eb698f7e2d5ad39da5a06d2468"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/search.h",
+      "sha256": "8cacf9e2052e500940c15f2d92bbfb9c8f146d29216b6a1a0187f28ab07e6de4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchexplorehelpers.cpp",
+      "sha256": "36149915b86a1657f003b6f4cdd98c9aa8cc55dbb78d50b5f558685fba00b560"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchhelpers.cpp",
+      "sha256": "87abb88d3420019450683b96610d0a2a35a71e9cf0f8be834d234e89b3ce2869"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchmirror.cpp",
+      "sha256": "a1c4c48fc4c49195ed28979786756e3ff3aaa9b35538d63244921a27591695ea"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchmultithreadhelpers.cpp",
+      "sha256": "3a8a76979d9259f6933b86bd4408bc08176ffb1618d1f75a2a0bc89ff104bc3d"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchnnhelpers.cpp",
+      "sha256": "82e4098b429e352bb385fca94f19c1f92b47dde95e107cba92e1a73c98ff40b4"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchnode.cpp",
+      "sha256": "c87d6880275dc47ff3875a147391acf5e76a73eac590e9ebbd83292721921f53"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchnode.h",
+      "sha256": "8abe1a607aa01bb634c21a5620534e7a1d00d5b9f5f60811f4cef26883dccfdc"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchnodetable.cpp",
+      "sha256": "1def6ee9f9b2814181811c0ac7fc85feeadfb8e6f5071353ec207335b916b696"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchnodetable.h",
+      "sha256": "4f46c9b5e9ef6351a8fe69c51b5de832d041cf498bffc3fe9381501e52d1e2e9"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchparams.cpp",
+      "sha256": "a534d714220a7e004d03941d8c562c991a5fd426890e2694e79e3e5a0f89845a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchparams.h",
+      "sha256": "a454baa29540a85d11089e0c284801f23582440ea11b051d927189df6686df0e"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchprint.h",
+      "sha256": "59a9c7199f7c8ce3362207b5511fb61afdec60f8414723ec6cb51060f1b4249e"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchresults.cpp",
+      "sha256": "873d5382a9fe617e54be7f2b7d49f262f4c9c606e880d9450eb96783ea74acf2"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchtimehelpers.cpp",
+      "sha256": "649fe84b0e51eefb2c219bbb5c008360b325c8606802b48bcf6624fd9fe612eb"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/searchupdatehelpers.cpp",
+      "sha256": "72634ae67f675393b028cb3c2225a81ac6a6df4312ce07c76c94530c058e11b1"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/subtreevaluebiastable.cpp",
+      "sha256": "880f47f960e73cfb89d53281c6dfd1570ef28daf33b4be64fec46d0dd65f488e"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/subtreevaluebiastable.h",
+      "sha256": "d59e1e542cd1701b48eb57d016ae9e9526c476c607578cb658b2b5ee3087cc6f"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/timecontrols.cpp",
+      "sha256": "771952bfc2dac0e18b12542ceff5a5fa281751817805ed0f128b888f599aad58"
+    },
+    {
+      "path": "third_party/go-katago-upstream/source/cpp/search/timecontrols.h",
+      "sha256": "edbcbdc5cd620deb1335c461fa27011e7bd82a3ba6c8b03fefe9300769cdaf27"
+    },
+    {
+      "path": "third_party/go-katago-upstream/README.md",
+      "sha256": "e2e7b1e722b0e8f52299b311f74f13e1890955cd477eac4ae866b4ac0c6ca263"
+    },
+    {
+      "path": "third_party/go-katago-upstream/manifest.json",
+      "sha256": "081f5e48bdd5979cfe9b342470b1c4ccf11570646d9a0949ab5933239958202a"
+    },
+    {
+      "path": "third_party/go-katago-upstream/selection.json",
+      "sha256": "20fc451e3be9bcdc8e7c1eeebc58675d6b73f4356bfd2f71db6ff728e7f8a960"
+    },
+    {
+      "path": "third_party/go-katago-upstream/probe-lock.json",
+      "sha256": "f7f6da4c213c9da1147c299dffcddd82efd5c9b0cc9d6ee04f216427234bdeff"
+    },
+    {
+      "path": "app/src/main/assets/games/go/ai/kata1-b15c192-s1672170752-d466197061.txt.gz.bin",
+      "sha256": "09456899f1b9155217f4ca059cf8a68f79b7eba22cf6b7c00ffb7f17ce067967"
+    },
+    {
+      "path": "engine-native/src/androidTest/assets/games/go/ai/kata1-b15c192-s1672170752-d466197061.txt.gz.bin",
+      "sha256": "09456899f1b9155217f4ca059cf8a68f79b7eba22cf6b7c00ffb7f17ce067967"
+    },
+    {
+      "path": "app/src/main/assets/games/go/legal/Eigen-COPYING.APACHE",
+      "sha256": "a724e50ee0e1de4b62c0540d7877c3ef383aa176f55be806df61420aba9b3de6"
+    },
+    {
+      "path": "engine-native/src/androidTest/assets/games/go/legal/Eigen-COPYING.APACHE",
+      "sha256": "a724e50ee0e1de4b62c0540d7877c3ef383aa176f55be806df61420aba9b3de6"
+    },
+    {
+      "path": "app/src/main/assets/games/go/legal/Eigen-COPYING.BSD",
+      "sha256": "ee73de74a1980f7f1667f874473393f13bc6a74c87fcee4cc9732bce96bc60cc"
+    },
+    {
+      "path": "engine-native/src/androidTest/assets/games/go/legal/Eigen-COPYING.BSD",
+      "sha256": "ee73de74a1980f7f1667f874473393f13bc6a74c87fcee4cc9732bce96bc60cc"
+    },
+    {
+      "path": "app/src/main/assets/games/go/legal/Eigen-COPYING.MINPACK",
+      "sha256": "37f2b8b54e7bbf107954865cc3cf567385930a1b7031b479909a09968d9db670"
+    },
+    {
+      "path": "engine-native/src/androidTest/assets/games/go/legal/Eigen-COPYING.MINPACK",
+      "sha256": "37f2b8b54e7bbf107954865cc3cf567385930a1b7031b479909a09968d9db670"
+    },
+    {
+      "path": "app/src/main/assets/games/go/legal/Eigen-COPYING.MPL2",
+      "sha256": "cde215e5b42363eb28ca2462c4558ff4807b38f383c537624c31e44657ac58f4"
+    },
+    {
+      "path": "engine-native/src/androidTest/assets/games/go/legal/Eigen-COPYING.MPL2",
+      "sha256": "cde215e5b42363eb28ca2462c4558ff4807b38f383c537624c31e44657ac58f4"
+    },
+    {
+      "path": "app/src/main/assets/games/go/legal/Eigen-COPYING.README",
+      "sha256": "4db6561ac96c94942817f0c489282a219e5fd8ed374e2dfd58d85f48aff3ebf9"
+    },
+    {
+      "path": "engine-native/src/androidTest/assets/games/go/legal/Eigen-COPYING.README",
+      "sha256": "4db6561ac96c94942817f0c489282a219e5fd8ed374e2dfd58d85f48aff3ebf9"
+    },
+    {
+      "path": "app/src/main/assets/games/go/legal/KataGo-CONTRIBUTORS.txt",
+      "sha256": "32642464ccaa65837b4c2c4489ad437c2f020cdfbcedbb2723a35ed8d51ed689"
+    },
+    {
+      "path": "engine-native/src/androidTest/assets/games/go/legal/KataGo-CONTRIBUTORS.txt",
+      "sha256": "32642464ccaa65837b4c2c4489ad437c2f020cdfbcedbb2723a35ed8d51ed689"
+    },
+    {
+      "path": "app/src/main/assets/games/go/legal/KataGo-LICENSE.txt",
+      "sha256": "ead22455d923920cd152546d89e4f415c94d6b580aa109fda3b57a69c57c32e0"
+    },
+    {
+      "path": "engine-native/src/androidTest/assets/games/go/legal/KataGo-LICENSE.txt",
+      "sha256": "ead22455d923920cd152546d89e4f415c94d6b580aa109fda3b57a69c57c32e0"
+    },
+    {
+      "path": "app/src/main/assets/games/go/legal/KataGo-network-license.html",
+      "sha256": "590837548c66daca592955910aeeea36634daa49c722b1a80f6e24c0b714657e"
+    },
+    {
+      "path": "engine-native/src/androidTest/assets/games/go/legal/KataGo-network-license.html",
+      "sha256": "590837548c66daca592955910aeeea36634daa49c722b1a80f6e24c0b714657e"
+    },
+    {
+      "path": "app/src/main/assets/games/go/legal/dependency-source.zip",
+      "sha256": "2135faa55673f757df0a556a832cdfe2dd5f1698b6a3f95dfdf2d3557bce1211"
+    },
+    {
+      "path": "engine-native/src/androidTest/assets/games/go/legal/dependency-source.zip",
+      "sha256": "2135faa55673f757df0a556a832cdfe2dd5f1698b6a3f95dfdf2d3557bce1211"
+    },
+    {
+      "path": "app/src/main/assets/games/go/legal/filesystem-LICENSE.txt",
+      "sha256": "1b265537c97cfb422ffb52492c96979943f54fab8746a6dd38d8329953d487cc"
+    },
+    {
+      "path": "engine-native/src/androidTest/assets/games/go/legal/filesystem-LICENSE.txt",
+      "sha256": "1b265537c97cfb422ffb52492c96979943f54fab8746a6dd38d8329953d487cc"
+    },
+    {
+      "path": "app/src/main/assets/games/go/legal/nlohmann-json-source.hpp",
+      "sha256": "be7bbfbc7c62c35aa6f27dfbdd950384f247dd9f2281b5930bdaa3a6ab95eef7"
+    },
+    {
+      "path": "engine-native/src/androidTest/assets/games/go/legal/nlohmann-json-source.hpp",
+      "sha256": "be7bbfbc7c62c35aa6f27dfbdd950384f247dd9f2281b5930bdaa3a6ab95eef7"
+    },
+    {
+      "path": "app/src/main/assets/games/go/legal/sha2-source.cpp",
+      "sha256": "c8ef199e699ccddd6167c647f7b0de3a3636517a88e8d8440f515e6f17c578d1"
+    },
+    {
+      "path": "engine-native/src/androidTest/assets/games/go/legal/sha2-source.cpp",
+      "sha256": "c8ef199e699ccddd6167c647f7b0de3a3636517a88e8d8440f515e6f17c578d1"
+    }
+  ]
+}

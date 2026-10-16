@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="terminal_save_pending">终局尚未保存，保存成功后才能离开或开始下一局。</string>
     <string name="retry_terminal_save">重试保存终局</string>
     <string name="app_name">棋术大师</string>
@@ -421,4 +421,10 @@
     <string name="background_off">后台挂机已停止。自动演局已暂停；其他对局棋钟不因此暂停。</string>
     <string name="background_notifications_required">请允许对局通知后开启后台挂机；通知中可随时停止，不影响前台下棋。</string>
     <string name="background_unavailable">系统未允许持续后台运行。存档保留，可回到对局后重新开启。</string>
+    <string name="open_source_katago_boundary" tools:ignore="Typos">KataGo kata1 模型适用其独立网络许可；它不是项目原创或 GPL 资产。依赖源码包不等同于整个应用的完整对应源码。</string>
+    <string name="open_source_katago_tab">KataGo 与围棋模型</string>
+    <string name="open_source_katago_source_export">保存 KataGo 依赖源码 ZIP</string>
+    <string name="open_source_katago_source_exporting">正在保存源码包…</string>
+    <string name="open_source_katago_source_exported">KataGo 依赖源码包已保存到所选位置。</string>
+    <string name="open_source_katago_source_export_failed">源码包保存失败；请重新选择可写位置。</string>
 </resources>

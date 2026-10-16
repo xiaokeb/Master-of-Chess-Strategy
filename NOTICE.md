@@ -74,3 +74,26 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
 ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+## KataGo engine and Go neural network
+
+The Go AI links a reviewed CPU subset of KataGo v1.18.1, commit
+92ee95c0a4b25fec214da00951ab69e97e207729. KataGo's main license is MIT;
+its LICENSE also identifies external files with separate notices. The
+bundled notices retain KataGo contributors, filesystem-1.5.8, nlohmann JSON,
+SHA-2, and Eigen terms. Eigen 3.4.0 is compiled with EIGEN_MPL2_ONLY.
+
+The bundled network is the official kata1 model
+kata1-b15c192-s1672170752-d466197061 (48,038,914 bytes, SHA-256
+09456899f1b9155217f4ca059cf8a68f79b7eba22cf6b7c00ffb7f17ce067967).
+It is distributed under the KataGo Neural Network License retained at
+games/go/legal/KataGo-network-license.html. It is not project-authored, GPL,
+CC0, a g170 network, or an externally contributed network.
+
+The application includes games/go/legal/dependency-source.zip containing the
+392 locked KataGo/Eigen source files used by this CPU build. The in-app legal
+page can save that archive. It is a dependency-source convenience copy, not
+the complete corresponding source for the Android application; the complete
+source and build files for an APK must remain available at the repository
+address shown in the application. KataGo and its contributors do not endorse
+this project.

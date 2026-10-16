@@ -36,6 +36,70 @@ val verifyPikafishNetwork = tasks.register("verifyPikafishNetwork") {
     }
 }
 
+val verifyKataGoAppAssets = tasks.register("verifyKataGoAppAssets") {
+    val manifest = rootProject.file("config/games/go/katago-app-assets-v1.tsv")
+    val assetRoot = layout.projectDirectory.dir("src/main/assets").asFile
+    val guardedDirectories = listOf(
+        assetRoot.resolve("games/go/ai"),
+        assetRoot.resolve("games/go/legal"),
+    )
+    inputs.file(manifest)
+    inputs.files(guardedDirectories)
+    doLast {
+        val reviewed = linkedMapOf<String, Pair<Long, String>>()
+        manifest.readLines(Charsets.UTF_8).forEachIndexed { index, raw ->
+            val line = raw.trim()
+            if (line.isEmpty() || line.startsWith('#')) return@forEachIndexed
+            val fields = line.split('|')
+            check(fields.size == 4) { "Invalid KataGo asset manifest row ${index + 1}" }
+            val (target, stagedSource, bytes, sha256) = fields
+            check(
+                target.startsWith("games/go/ai/") || target.startsWith("games/go/legal/"),
+            ) { "KataGo asset is outside the guarded directories: $target" }
+            check(
+                target !in reviewed && ".." !in target && '\\' !in target &&
+                    stagedSource.startsWith("assets/games/go/") && ".." !in stagedSource &&
+                    sha256.matches(Regex("[0-9a-f]{64}")),
+            ) { "Unsafe or duplicate KataGo asset manifest row ${index + 1}" }
+            reviewed[target] = bytes.toLong() to sha256
+        }
+        check(reviewed.size == 13) { "Unexpected reviewed KataGo asset count" }
+
+        val actualPaths = guardedDirectories
+            .filter { it.isDirectory }
+            .flatMap { directory ->
+                directory.walkTopDown().filter { it.isFile }.map {
+                    it.relativeTo(assetRoot).invariantSeparatorsPath
+                }.toList()
+            }
+            .toSet()
+        check(actualPaths == reviewed.keys) {
+            "Production KataGo asset directories differ from the reviewed manifest"
+        }
+        reviewed.forEach { (path, expected) ->
+            val file = assetRoot.resolve(path)
+            check(file.length() == expected.first) {
+                "Bundled KataGo asset has an unexpected size: $path"
+            }
+            val digest = MessageDigest.getInstance("SHA-256")
+            file.inputStream().buffered().use { input ->
+                val buffer = ByteArray(1024 * 1024)
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    digest.update(buffer, 0, count)
+                }
+            }
+            val actual = digest.digest().joinToString("") {
+                "%02x".format(it.toInt() and 0xff)
+            }
+            check(actual == expected.second) {
+                "Bundled KataGo asset failed SHA-256 verification: $path"
+            }
+        }
+    }
+}
+
 val verifyGameSounds = tasks.register("verifyGameSounds") {
     val names = listOf(
         "chess_capture.wav",
@@ -189,6 +253,7 @@ val verifyReleasedGameContent = tasks.register("verifyReleasedGameContent") {
 
 tasks.named("preBuild").configure {
     dependsOn(verifyPikafishNetwork)
+    dependsOn(verifyKataGoAppAssets)
     dependsOn(verifyGameSounds)
     dependsOn(verifyBundledLegalDocuments)
     dependsOn(verifyReleasedGameContent)
