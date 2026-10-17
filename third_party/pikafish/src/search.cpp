@@ -186,6 +186,8 @@ void Search::Worker::start_searching() {
 
     main_manager()->tm.init(limits, rootPos.side_to_move(), rootPos.game_ply(), options,
                             main_manager()->originalTimeAdjust);
+    // MasterofChessStrategy, 2026-10-17: each request owns a fresh polling budget.
+    main_manager()->callsCnt = 0;
     tt.new_search();
     main_manager()->updates.onStart();
 
@@ -931,6 +933,10 @@ Value Search::Worker::search(
 
         undo_null_move(pos);
 
+        // An aborted child returns only a placeholder, not a pruning score.
+        if (threads.stop.load(std::memory_order_relaxed))
+            return VALUE_ZERO;
+
         // Do not return unproven mate
         if (nullValue >= beta && !is_win(nullValue))
         {
@@ -947,6 +953,9 @@ Value Search::Worker::search(
             Value v = search<NonPV>(pos, ss, beta - 1, beta, depth - R, false);
 
             nmpMinPly = 0;
+
+            if (threads.stop.load(std::memory_order_relaxed))
+                return VALUE_ZERO;
 
             if (v >= beta)
                 return nullValue;
@@ -987,11 +996,15 @@ Value Search::Worker::search(
             value = -qsearch<NonPV>(pos, ss + 1, -probCutBeta, -probCutBeta + 1);
 
             // If the qsearch held, perform the regular search
-            if (value >= probCutBeta && probCutDepth > 0)
+            if (!threads.stop.load(std::memory_order_relaxed) && value >= probCutBeta
+                && probCutDepth > 0)
                 value = -search<NonPV>(pos, ss + 1, -probCutBeta, -probCutBeta + 1, probCutDepth,
                                        !cutNode);
 
             undo_move(pos, move);
+
+            if (threads.stop.load(std::memory_order_relaxed))
+                return VALUE_ZERO;
 
             if (value >= probCutBeta)
             {
@@ -1160,6 +1173,9 @@ moves_loop:  // When in check, search starts here
             value = search<NonPV>(pos, ss, singularBeta - 1, singularBeta, singularDepth, cutNode);
             ss->excludedMove = Move::none();
 
+            if (threads.stop.load(std::memory_order_relaxed))
+                return VALUE_ZERO;
+
             if (value < singularBeta)
             {
                 int corrValAdj   = std::abs(correctionValue) / 265717;
@@ -1278,6 +1294,13 @@ moves_loop:  // When in check, search starts here
             value         = -search<NonPV>(pos, ss + 1, -(alpha + 1), -alpha, d, true);
             ss->reduction = 0;
 
+            // Restore the moved position exactly once before propagating abort.
+            if (threads.stop.load(std::memory_order_relaxed))
+            {
+                undo_move(pos, move);
+                return VALUE_ZERO;
+            }
+
             // Do a full-depth search when reduced LMR search fails high
             // (*Scaler) Shallower searches here don't scale well
             if (value > alpha)
@@ -1291,6 +1314,12 @@ moves_loop:  // When in check, search starts here
 
                 if (newDepth > d)
                     value = -search<NonPV>(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode);
+
+                if (threads.stop.load(std::memory_order_relaxed))
+                {
+                    undo_move(pos, move);
+                    return VALUE_ZERO;
+                }
 
                 // Post LMR continuation history updates
                 update_continuation_histories(ss, movedPiece, move.to_sq(), 1525);
@@ -1312,7 +1341,8 @@ moves_loop:  // When in check, search starts here
         // Step 20. For PV nodes only, do a full PV search on the first move
         // or after a fail high, otherwise let the parent node fail low with
         // value <= alpha and try another move.
-        if (PvNode && (moveCount == 1 || value > alpha))
+        if (!threads.stop.load(std::memory_order_relaxed) && PvNode
+            && (moveCount == 1 || value > alpha))
         {
             (ss + 1)->pv = &pv;
             (ss + 1)->pv->clear();
@@ -1580,6 +1610,13 @@ Value Search::Worker::qsearch(Position& pos, Stack* ss, Value alpha, Value beta)
         ss->pv->clear();
     }
 
+    // MasterofChessStrategy, 2026-10-17: tactical recursion must also observe
+    // the existing time/node budget. do_move already counts each child node.
+    if (is_mainthread())
+        main_manager()->check_time(*this);
+    if (threads.stop.load(std::memory_order_relaxed))
+        return VALUE_ZERO;
+
     bestMove    = Move::none();
     ss->inCheck = bool(pos.checkers());
     moveCount   = 0;
@@ -1742,6 +1779,11 @@ Value Search::Worker::qsearch(Position& pos, Stack* ss, Value alpha, Value beta)
 
         value = -qsearch<nodeType>(pos, ss + 1, -beta, -alpha);
         undo_move(pos, move);
+
+        // Never turn an interrupted child's placeholder into a PV, mate or TT
+        // bound. Unwind only after restoring the position and NNUE accumulator.
+        if (threads.stop.load(std::memory_order_relaxed))
+            return VALUE_ZERO;
 
         assert(value > -VALUE_INFINITE && value < VALUE_INFINITE);
 

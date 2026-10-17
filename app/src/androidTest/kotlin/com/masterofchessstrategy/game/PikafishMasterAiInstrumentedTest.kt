@@ -11,8 +11,10 @@ import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessFenCodec
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.GameResult
+import com.masterofchessstrategy.engine.NaturalLimitClaimOutcome
 import com.masterofchessstrategy.engine.RestoreResult
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -103,7 +105,17 @@ class PikafishMasterAiInstrumentedTest {
             assertTrue(selected in engine.legalActions())
             assertTrue(state.contentEquals(engine.serialize()))
             assertEquals(ActionResult.Accepted, engine.apply(selected))
-            assertEquals(GameResult.DRAW, engine.gameResult())
+            // An imported clock is not a complete 120-ply record. Under the
+            // confirmed 2020 claim/review rule it must not auto-adjudicate.
+            assertEquals(GameResult.ONGOING, engine.gameResult())
+            val review = engine.naturalLimitReview(ChineseChessSide.BLACK)
+            assertEquals(120, review.noCapturePlies)
+            assertEquals(2, review.recordedPlies)
+            assertFalse(review.completeRecord)
+            assertFalse(review.eligible)
+            val beforeClaim = engine.serialize()
+            assertEquals(NaturalLimitClaimOutcome.INVALID_STATE, engine.claimNaturalLimit())
+            assertTrue(beforeClaim.contentEquals(engine.serialize()))
         }
     }
 

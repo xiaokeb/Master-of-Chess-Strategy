@@ -117,6 +117,8 @@ class Engine {
     std::string                          thread_binding_information_as_string() const;
 
    private:
+    friend struct Search::BudgetSafetyProbe;
+
     const std::filesystem::path binaryDirectory;
 
     NumaReplicationContext numaContext;

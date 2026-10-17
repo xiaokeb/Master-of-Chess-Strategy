@@ -55,6 +55,21 @@ add_executable(mocs_pikafish_search_history_test pikafish_search_history_test.cp
 target_link_libraries(mocs_pikafish_search_history_test PRIVATE mocs_engine_core)
 target_compile_options(mocs_pikafish_search_history_test PRIVATE -Wall -Wextra -Wpedantic)
 
+# Independent safety checks require an explicit verified NNUE path at runtime.
+# They must never replace a frozen strength-evaluation executable.
+foreach(budget_suite IN ITEMS safety runtime)
+    add_executable(
+        mocs_pikafish_budget_${budget_suite}_test
+        ../games/xiangqi/pikafish_budget_${budget_suite}_test.cpp
+    )
+    target_link_libraries(mocs_pikafish_budget_${budget_suite}_test PRIVATE mocs_pikafish)
+    target_compile_options(
+        mocs_pikafish_budget_${budget_suite}_test
+        PRIVATE -Wall -Wextra -Wpedantic -Werror -UNDEBUG
+    )
+    target_link_options(mocs_pikafish_budget_${budget_suite}_test PRIVATE -static-libstdc++)
+endforeach()
+
 add_executable(
     mocs_engine_registry_test
     native_engine_registry_test.cpp

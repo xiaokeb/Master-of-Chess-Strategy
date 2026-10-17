@@ -59,6 +59,9 @@ class Network;
 
 namespace Search {
 
+// Project-owned native regression probe; no production API or worker layout change.
+struct BudgetSafetyProbe;
+
 // syzygy_extend_pv() may lead to PVs longer than MAX_PLY
 struct RootPVMoves: public std::vector<Move> {
     RootPVMoves() { reserve(MAX_PLY); }
@@ -391,6 +394,7 @@ class Worker {
 
     friend class Stockfish::ThreadPool;
     friend class SearchManager;
+    friend struct BudgetSafetyProbe;
 };
 
 struct ConthistBonus {

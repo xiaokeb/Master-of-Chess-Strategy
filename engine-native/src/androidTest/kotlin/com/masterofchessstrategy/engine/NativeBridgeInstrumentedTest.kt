@@ -37,7 +37,7 @@ class NativeBridgeInstrumentedTest {
 
             val initial = engine.serialize()
             assertEquals('M'.code.toByte(), initial[0])
-            assertEquals(2, initial[4].toInt())
+            assertEquals(3, initial[4].toInt())
             assertEquals(GameType.CHINESE_CHESS.code, initial[5].toInt())
             assertEquals(
                 ActionResult.Accepted,

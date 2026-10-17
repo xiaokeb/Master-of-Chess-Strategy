@@ -23,7 +23,8 @@ compile for Android 32-bit targets.
 
 src/nnue/network.cpp throws a recoverable C++ exception when the required
 network is unavailable instead of terminating the Android application
-process. No search or evaluation logic is changed.
+process. The independent search-budget changes below also apply; evaluation
+weights and evaluation logic are unchanged.
 
 Application-specific FEN conversion, UCI move conversion, time limits, and
 legal-move validation live under engine-native/src/main/cpp.
@@ -66,3 +67,24 @@ This commit identifies license text only. The bundled `zstd.h` reports
 do not claim that it is the license evidence commit. The actual vendored
 code remains traceable to the exact Pikafish commit above. Restoring these
 notices does not grant commercial permission for the separate NNUE network.
+
+## Search budget safety (2026-10-17; verification in progress)
+
+MasterofChessStrategy modifies `src/search.cpp` to poll the existing time/node
+manager during quiescence recursion and propagate stop after restoring each
+move/null move or same-ply search state. Interrupted placeholder values must
+not drive ProbCut, singular extensions, LMR re-search/history, PV or TT bounds.
+Each main-thread search resets its polling countdown. Nodes remain counted by
+the original `do_move`, and only the main thread calls the time manager.
+
+`src/search.h` and `src/engine.h` grant a project-owned native regression probe
+friend access without changing worker layout or the public production API.
+The probe invokes the actual qsearch with real NNUE and checks restored board,
+state pointer, node count, PV and root TT. Original-source baseline failures
+and patched-source results are recorded separately. See
+`docs/games/xiangqi/2026-10-17-search-budget-safety.md` in the project root.
+
+This is a new source identity, not a rerun or replacement of any frozen AI
+evaluation. The previous medium-hard job exited abnormally without a final
+summary; these source risks do not establish its runtime cause. Existing GPL,
+copyright, source-delivery and separate NNUE restrictions remain unchanged.
