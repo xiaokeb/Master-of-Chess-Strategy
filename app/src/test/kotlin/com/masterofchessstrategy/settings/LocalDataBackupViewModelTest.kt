@@ -6,6 +6,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import androidx.compose.runtime.snapshots.Snapshot
+import androidx.lifecycle.ViewModelStore
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -100,6 +101,63 @@ class LocalDataBackupViewModelTest {
         assertArrayEquals(byteArrayOf(1, 2, 3), output.toByteArray())
         assertEquals(BackupFeedback.EXPORTED, viewModel.uiState.feedback)
         assertFalse(viewModel.uiState.isWorking)
+    }
+
+    @Test fun exportWaitsForWritersAndReloadsOnlyAfterTheOutputStreamFinishes() = runTest(dispatcher) {
+        val barrier = CompletableDeferred<Unit>()
+        val repository = FakeBackupRepository()
+        val viewModel = LocalDataBackupViewModel(repository, ioDispatcher = dispatcher)
+        val output = ByteArrayOutputStream()
+        var reloads = 0
+        viewModel.exportWithBarrier({ output }, { barrier.await() }, {
+            assertArrayEquals(byteArrayOf(7), output.toByteArray())
+            reloads++
+        })
+        runCurrent()
+        assertTrue(viewModel.uiState.isWorking)
+        assertEquals(null, repository.exportTimestamp)
+        viewModel.export { error("duplicate export must not start") }
+        barrier.complete(Unit); advanceUntilIdle()
+        assertEquals(1, reloads)
+        assertEquals(BackupFeedback.EXPORTED, viewModel.uiState.feedback)
+        assertFalse(viewModel.uiState.isWorking)
+    }
+
+    @Test fun failedOutputStillReloadsStoppedOwnersAndClearsWorkingState() = runTest(dispatcher) {
+        val viewModel = LocalDataBackupViewModel(FakeBackupRepository(), ioDispatcher = dispatcher)
+        var stopped = false
+        var reloads = 0
+        viewModel.exportWithBarrier({ throw IOException("output unavailable") }, { stopped = true }, { reloads++ })
+        advanceUntilIdle()
+        assertTrue(stopped)
+        assertEquals(1, reloads)
+        assertEquals(BackupFeedback.EXPORT_FAILED, viewModel.uiState.feedback)
+        assertFalse(viewModel.uiState.isWorking)
+    }
+
+    @Test fun cancelledExportReleasesTheWorkingModalAndReloadsWithoutReportingSuccess() = runTest(dispatcher) {
+        val viewModel = LocalDataBackupViewModel(FakeBackupRepository(), ioDispatcher = dispatcher)
+        val store = ViewModelStore().apply { put("backup", viewModel) }
+        var reloads = 0
+        viewModel.exportWithBarrier({ error("must not open") }, { CompletableDeferred<Unit>().await() }, { reloads++ })
+        runCurrent(); assertTrue(viewModel.uiState.isWorking)
+        store.clear(); advanceUntilIdle()
+        assertEquals(1, reloads)
+        assertFalse(viewModel.uiState.isWorking)
+        assertEquals(null, viewModel.uiState.feedback)
+    }
+
+    @Test fun cancelledRestoreAlwaysReloadsStoppedOwnersWithoutSuccessCallback() = runTest(dispatcher) {
+        val viewModel = LocalDataBackupViewModel(FakeBackupRepository(), ioDispatcher = dispatcher)
+        val store = ViewModelStore().apply { put("backup", viewModel) }
+        var reloads = 0
+        viewModel.restore({ error("must not open") }, { error("must not report success") },
+            { CompletableDeferred<Unit>().await() }, { reloads++ })
+        runCurrent(); assertTrue(viewModel.uiState.isWorking)
+        store.clear(); advanceUntilIdle()
+        assertEquals(1, reloads)
+        assertFalse(viewModel.uiState.isWorking)
+        assertEquals(null, viewModel.uiState.feedback)
     }
 
     @Test

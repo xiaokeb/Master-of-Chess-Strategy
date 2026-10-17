@@ -79,6 +79,16 @@ add_library(
     mocs_engine_core
     STATIC
     src/chinese_chess.cpp
+    src/competition_mahjong.cpp
+    src/competition_mahjong_settlement.cpp
+    src/competition_mahjong_shape.cpp
+    games/competition-mahjong/competition_mahjong_fan.cpp
+    games/competition-mahjong/competition_mahjong_round.cpp
+    games/competition-mahjong/competition_mahjong_bot.cpp
+    games/competition-mahjong/competition_mahjong_public_view.cpp
+    src/competition_mahjong_native_session.cpp
+    games/competition-mahjong/fan/vendor/fan_calculator.cpp
+    games/competition-mahjong/fan/vendor/shanten.cpp
     src/go.cpp
     src/go_sgf.cpp
     games/go/katago-probe/go_katago_runtime.cpp
@@ -115,6 +125,7 @@ add_library(
     SHARED
     src/jni_bridge.cpp
     src/jni_tiger_goat_bridge.cpp
+    src/jni_competition_mahjong_bridge.cpp
     src/jni_go_records_bridge.cpp
     src/jni_go_search_bridge.cpp
 )

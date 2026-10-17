@@ -6,6 +6,12 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.masterofchessstrategy.games.go.data.GoLocalSessionEntity
+import com.masterofchessstrategy.games.go.data.GoLocalSessionDao
+import com.masterofchessstrategy.games.go.data.GoRecordSourceEntity
+import com.masterofchessstrategy.games.go.data.GoRecordSourceDao
+import com.masterofchessstrategy.games.go.data.GoProgressEntity
+import com.masterofchessstrategy.games.go.data.GoProgressDao
 
 @Database(
     entities = [
@@ -17,8 +23,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         GameRecordEntity::class,
         EndgameProgressEntity::class,
         CompetitionMahjongMatchEntity::class,
+        GoLocalSessionEntity::class,
+        GoRecordSourceEntity::class,
+        LocalDataMigrationEntity::class,
+        GoProgressEntity::class,
     ],
-    version = 13,
+    version = 15,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -39,6 +49,14 @@ internal abstract class MocsDatabase : RoomDatabase() {
     abstract fun endgameProgressDao(): EndgameProgressDao
 
     abstract fun competitionMahjongMatchDao(): CompetitionMahjongMatchDao
+
+    abstract fun goLocalSessionDao(): GoLocalSessionDao
+
+    abstract fun goRecordSourceDao(): GoRecordSourceDao
+
+    abstract fun localDataMigrationDao(): LocalDataMigrationDao
+
+    abstract fun goProgressDao(): GoProgressDao
 
     companion object {
         internal val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -276,6 +294,56 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Additive only. Legacy files require real admission, not a SQL-side guess.
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS go_local_sessions (
+                        gameTypeCode INTEGER NOT NULL,
+                        envelopeVersion INTEGER NOT NULL,
+                        checkpoint BLOB NOT NULL,
+                        updatedAtEpochMillis INTEGER NOT NULL,
+                        PRIMARY KEY(gameTypeCode)
+                    )
+                """.trimIndent())
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS go_record_sources (
+                        recordId TEXT NOT NULL,
+                        gameTypeCode INTEGER NOT NULL,
+                        sessionId TEXT NOT NULL,
+                        originCode INTEGER NOT NULL,
+                        archiveRevision INTEGER NOT NULL,
+                        PRIMARY KEY(recordId)
+                    )
+                """.trimIndent())
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_go_record_sources_sessionId_archiveRevision " +
+                    "ON go_record_sources (sessionId, archiveRevision)")
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS local_data_migrations (
+                        scope TEXT NOT NULL,
+                        handledVersion INTEGER NOT NULL,
+                        PRIMARY KEY(scope)
+                    )
+                """.trimIndent())
+            }
+        }
+
+        internal val MIGRATION_14_15 = object : Migration(14, 15) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS go_progress (
+                        gameTypeCode INTEGER NOT NULL,
+                        kindCode INTEGER NOT NULL,
+                        formatVersion INTEGER NOT NULL,
+                        contentVersion INTEGER NOT NULL,
+                        payload BLOB NOT NULL,
+                        updatedAtEpochMillis INTEGER NOT NULL,
+                        PRIMARY KEY(gameTypeCode, kindCode)
+                    )
+                """.trimIndent())
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -299,6 +367,8 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_10_11,
                         MIGRATION_11_12,
                         MIGRATION_12_13,
+                        MIGRATION_13_14,
+                        MIGRATION_14_15,
                     )
                     .build()
                     .also { instance = it }

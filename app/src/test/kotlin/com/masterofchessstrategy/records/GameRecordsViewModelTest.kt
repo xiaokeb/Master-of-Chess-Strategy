@@ -10,11 +10,13 @@ import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.test.runCurrent
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -91,6 +93,46 @@ class GameRecordsViewModelTest {
         assertTrue(repository.load("master")!!.isFavorite)
     }
 
+    @Test fun gameFilterCombinesWithFavoritesWithoutChangingTheOtherGamesRecords() = runTest(dispatcher) {
+        val go = goRecord("go")
+        val repository = FakeRepository(mutableListOf(record("chess"), go))
+        val model = GameRecordsViewModel(repository)
+        testScheduler.advanceUntilIdle()
+        model.selectGameType(GameType.GO); testScheduler.advanceUntilIdle()
+        assertEquals(listOf("go"), model.uiState.records.map { it.recordId })
+        model.toggleFavorite("go"); testScheduler.advanceUntilIdle()
+        model.selectCategory(GameRecordCategory.FAVORITES); testScheduler.advanceUntilIdle()
+        assertEquals(GameType.GO, model.uiState.gameType)
+        assertEquals(listOf("go"), model.uiState.records.map { it.recordId })
+        assertFalse(repository.load("chess")!!.isFavorite)
+        model.selectGameType(GameType.CHINESE_CHESS); testScheduler.advanceUntilIdle()
+        assertTrue(model.uiState.records.isEmpty())
+        model.selectCategory(GameRecordCategory.ALL); testScheduler.advanceUntilIdle()
+        assertEquals(listOf("chess"), model.uiState.records.map { it.recordId })
+        model.selectGameType(null); testScheduler.advanceUntilIdle()
+        assertEquals(2, model.uiState.records.size)
+    }
+
+    @Test fun lateOldLoadCannotReplaceTheSelectedGameFilter() = runTest(dispatcher) {
+        val releaseOld = CompletableDeferred<Unit>()
+        var calls = 0
+        val repository = FakeRepository(mutableListOf(record("chess"), goRecord("go"))).apply {
+            beforeList = { if (++calls == 1) releaseOld.await() }
+        }
+        val model = GameRecordsViewModel(repository)
+        runCurrent()
+        model.selectGameType(GameType.GO)
+        runCurrent()
+        assertEquals(listOf("go"), model.uiState.records.map { it.recordId })
+        releaseOld.complete(Unit); testScheduler.advanceUntilIdle()
+        assertEquals(GameType.GO, model.uiState.gameType)
+        assertEquals(listOf("go"), model.uiState.records.map { it.recordId })
+    }
+
+    private fun goRecord(id: String) = GameRecord(id, GameType.GO, StoredGameMode.LOCAL_TWO_PLAYER, null,
+        GameResult.DRAW, byteArrayOf(77, 79, 67, 71, 3, 9, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0), 0,
+        completedAtEpochMillis = 1)
+
     private fun record(id: String, endgame: Boolean = false) =
         GameRecord(
             recordId = id,
@@ -107,6 +149,7 @@ class GameRecordsViewModelTest {
     private class FakeRepository(
         private val records: MutableList<GameRecord> = mutableListOf(),
     ) : GameRecordRepository {
+        var beforeList: suspend () -> Unit = {}
         override suspend fun saveCompleted(record: GameRecord): Boolean {
             if (records.any { it.recordId == record.recordId }) return false
             records += record.defensiveCopy()
@@ -114,6 +157,7 @@ class GameRecordsViewModelTest {
         }
 
         override suspend fun list(category: GameRecordCategory): LoadGameRecordsResult {
+            beforeList()
             val filtered = when (category) {
                 GameRecordCategory.ALL -> records
                 GameRecordCategory.FAVORITES -> records.filter(GameRecord::isFavorite)

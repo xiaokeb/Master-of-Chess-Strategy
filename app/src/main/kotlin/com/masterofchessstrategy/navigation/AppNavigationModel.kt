@@ -64,6 +64,9 @@ internal object AppDestination {
         "chinese-chess/endgames/{$ENDGAME_LEVEL_ARGUMENT}"
     const val CHINESE_CHESS_GAME = "chinese-chess/game"
     const val LANZHOU_TRADITIONAL_MODES = "lanzhou-traditional/modes"
+    const val GO_MODES = "go/modes"
+    const val GO_LOCAL_GAME = "go/local-game"
+    const val GO_TUTORIAL = "go/tutorial"
     const val TIGER_GOAT_LOCAL_GAME = "tiger-goat/local-game"
     const val AI_DIFFICULTY_ARGUMENT = "difficultyCode"
     const val CHINESE_CHESS_AI_GAME =
@@ -75,6 +78,7 @@ internal object AppDestination {
     const val GAME_RECORDS = "records"
     const val GAME_RECORD_ID_ARGUMENT = "recordId"
     const val CHINESE_CHESS_RECORD = "records/{$GAME_RECORD_ID_ARGUMENT}"
+    const val GO_RECORD = "go/records/{$GAME_RECORD_ID_ARGUMENT}"
 
     fun chineseChessAiGame(difficulty: Difficulty): String =
         "chinese-chess/ai-game/" + difficulty.code
@@ -90,6 +94,12 @@ internal object AppDestination {
     fun chineseChessRecord(recordId: String): String {
         require(recordId.isNotBlank() && '/' !in recordId)
         return "records/$recordId"
+    }
+
+    fun goRecord(recordId: String): String {
+        require(recordId.isNotBlank() && recordId.length <= 64)
+        // Legacy Go IDs need not be hashes; preserve valid IDs containing route separators.
+        return "go/records/" + java.net.URLEncoder.encode(recordId, "UTF-8").replace("+", "%20")
     }
 
     fun chineseChessEndgame(levelId: String): String {
@@ -137,7 +147,7 @@ internal enum class HomeGameEntry(
     val isAvailable: Boolean,
 ) {
     CHINESE_CHESS(setOf(GameType.CHINESE_CHESS), true),
-    GO(setOf(GameType.GO), false),
+    GO(setOf(GameType.GO), true),
     STANDARD_MAHJONG(setOf(GameType.STANDARD_MAHJONG), false),
     LANZHOU_MAHJONG(setOf(GameType.LANZHOU_MAHJONG), false),
     LANZHOU_TRADITIONAL(

@@ -71,14 +71,28 @@ internal class GameBackupRegistry(
         return version
     }
 
-    fun prepareRestore(records: List<GameBackupRecord>, containerVersion: Int): List<PreparedGameBackup> =
-        Collections.unmodifiableList(canonicalRecords(records, containerVersion).map { record ->
+    fun prepareRestore(records: List<GameBackupRecord>, containerVersion: Int,
+        coreRecordIds: Set<String> = emptySet(),
+    ): List<PreparedGameBackup> {
+        val coreIds = coreRecordIds.toSet()
+        val prepared = Collections.unmodifiableList(canonicalRecords(records, containerVersion).map { record ->
             val owner = registration(record)
             owner.adapter.prepareRestore(record).also {
                 requireFixedRegistrations()
                 require(it.storageSlot == owner.descriptor.storageSlot) { "Prepared backup belongs to a foreign slot" }
             }
         })
+        val extensionIds = prepared.flatMap { it.completedRecordIds.toList() }
+        require(extensionIds.all { it.isNotBlank() && it.length <= 64 } &&
+            extensionIds.distinct().size == extensionIds.size && extensionIds.none { it in coreIds }) {
+            "Duplicate or invalid completed record identity across backup owners"
+        }
+        registrations.forEach { owner ->
+            (owner.adapter as? GameBackupSnapshotGuard)?.validatePreparedSnapshot(prepared)
+            requireFixedRegistrations()
+        }
+        return prepared
+    }
 
     fun requireSupportedSlots(nonEmptySlots: Set<BackupStorageSlot>) {
         requireFixedRegistrations()

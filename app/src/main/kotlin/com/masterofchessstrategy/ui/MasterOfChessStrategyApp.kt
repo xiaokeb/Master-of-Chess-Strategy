@@ -1,5 +1,9 @@
 package com.masterofchessstrategy.ui
 
+import com.masterofchessstrategy.games.go.data.GoLocalStorage
+import com.masterofchessstrategy.games.go.GoStoredRecordRoute
+import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongBackupAdapter
+
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -137,12 +141,14 @@ fun MasterOfChessStrategyApp() {
 
 /** An isolated database can exercise the complete navigation without touching user saves. */
 @Composable
-internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
+internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride: GoLocalStorage? = null) {
     MocsAppWindow {
         val navController = rememberNavController()
         val context = LocalContext.current
         val gameWriters = remember(database) { LocalDataWriterRegistry.forDatabase(database) }
-        val backupRegistry = remember(database) { GameBackupRegistry(listOf(TigerGoatBackupAdapter())) }
+        val goStorage = remember(database, context.applicationContext, goStorageOverride) {
+            goStorageOverride ?: GoLocalStorage(database, context)
+        }
         val pikafishNetworkProvider = remember(context.applicationContext) {
             PikafishNetworkProvider(context.applicationContext)
         }
@@ -167,13 +173,14 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
         val endgameRepository = remember(database, endgamePack) {
             RoomEndgameProgressRepository(database.endgameProgressDao(), endgamePack)
         }
-        val backupRepository = remember(database, endgamePack, backupRegistry) {
-            RoomLocalDataBackupRepository(
+        val backupRepository = remember(database, endgamePack, goStorage) {
+            goStorage.backupRepository(RoomLocalDataBackupRepository(
                 database = database,
                 endgamePack = endgamePack,
                 validateEngineState = ::isValidChineseChessState,
-                gameBackups = backupRegistry,
-            )
+                gameBackups = GameBackupRegistry(listOf(TigerGoatBackupAdapter(), CompetitionMahjongBackupAdapter()) +
+                    goStorage.backupAdapters()),
+            ))
         }
         val navigationFactory = remember(selectionRepository) {
             AppNavigationViewModel.factory(selectionRepository)
@@ -190,15 +197,6 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
         }
         val backupViewModel: LocalDataBackupViewModel = viewModel(factory = backupFactory)
         var pendingRestoreUri by remember { mutableStateOf<android.net.Uri?>(null) }
-        val createBackupDocument = rememberLauncherForActivityResult(
-            ActivityResultContracts.CreateDocument("application/octet-stream"),
-        ) { uri ->
-            if (uri != null) {
-                backupViewModel.export {
-                    context.contentResolver.openOutputStream(uri, "w")
-                }
-            }
-        }
         val openBackupDocument = rememberLauncherForActivityResult(
             ActivityResultContracts.OpenDocument(),
         ) { uri ->
@@ -239,6 +237,36 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
             statisticsViewModel.loadStatistics()
             gameRecordsViewModel.reload()
             endgameViewModel.refreshAfterCommit(result.endgame)
+        }
+        val stopDataWriters: suspend () -> Unit = {
+            val activeGame = ChineseChessBackgroundController.get(context).game
+            awaitLocalDataWriters(
+                (gameWriters.snapshot() + listOfNotNull(activeGame, settingsViewModel, navigationViewModel,
+                    tutorialViewModel, statisticsViewModel, gameRecordsViewModel, endgameViewModel)).distinct(),
+            ) {
+                activeGame?.retireBackgroundRuntime()
+                navController.navigate(AppDestination.SETTINGS) {
+                    popUpTo(AppDestination.HOME)
+                    launchSingleTop = true
+                }
+            }
+        }
+        val reloadDataOwners: () -> Unit = {
+            settingsViewModel.loadSettings()
+            navigationViewModel.loadChineseChessSelection()
+            tutorialViewModel.loadProgress()
+            statisticsViewModel.loadStatistics()
+            gameRecordsViewModel.reload()
+            endgameViewModel.reload()
+        }
+        val createBackupDocument = rememberLauncherForActivityResult(
+            ActivityResultContracts.CreateDocument("application/octet-stream"),
+        ) { uri ->
+            if (uri != null) backupViewModel.exportWithBarrier(
+                openOutputStream = { context.contentResolver.openOutputStream(uri, "w") },
+                beforeExport = stopDataWriters,
+                onFinished = reloadDataOwners,
+            )
         }
         // A modal also blocks back navigation and settings writes while a document is processed.
         if (backupViewModel.uiState.isWorking) {
@@ -283,6 +311,8 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     onGameSelected = { entry ->
                         if (entry == HomeGameEntry.CHINESE_CHESS) {
                             navController.navigate(AppDestination.CHINESE_CHESS_MODES)
+                        } else if (entry == HomeGameEntry.GO) {
+                            navController.navigate(AppDestination.GO_MODES)
                         } else if (entry == HomeGameEntry.LANZHOU_TRADITIONAL) {
                             navController.navigate(AppDestination.LANZHOU_TRADITIONAL_MODES)
                         }
@@ -405,6 +435,19 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                     )),
                     onBack = navController::popBackStack,
                 )
+            }
+            composable(AppDestination.GO_MODES) {
+                GoNavigationModesScreen(
+                    onBack = navController::popBackStack,
+                    onLocalGame = { navController.navigate(AppDestination.GO_LOCAL_GAME) },
+                    onLearning = { navController.navigate(AppDestination.GO_TUTORIAL) },
+                )
+            }
+            composable(AppDestination.GO_LOCAL_GAME) {
+                GoLocalNavigationRoute(goStorage, gameWriters, navController::popBackStack)
+            }
+            composable(AppDestination.GO_TUTORIAL) {
+                GoLearningNavigationRoute(goStorage, gameWriters, navController::popBackStack)
             }
             composable(AppDestination.TIGER_GOAT_LOCAL_GAME) { entry ->
                 TigerGoatNavigationRoute(database, entry, gameWriters, navController::popBackStack)
@@ -1513,15 +1556,27 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                 )
             }
             composable(AppDestination.GAME_RECORDS) {
+                LaunchedEffect(database) { gameRecordsViewModel.reload() }
                 GameRecordsScreen(
                     state = gameRecordsViewModel.uiState,
                     onBack = navController::popBackStack,
                     onCategorySelected = gameRecordsViewModel::selectCategory,
                     onToggleFavorite = gameRecordsViewModel::toggleFavorite,
+                    onGameTypeSelected = gameRecordsViewModel::selectGameType,
                     onOpenRecord = { recordId ->
-                        navController.navigate(AppDestination.chineseChessRecord(recordId))
+                        when (gameRecordsViewModel.uiState.records.firstOrNull { it.recordId == recordId }?.gameType) {
+                            GameType.GO -> navController.navigate(AppDestination.goRecord(recordId))
+                            GameType.CHINESE_CHESS -> navController.navigate(AppDestination.chineseChessRecord(recordId))
+                            else -> Unit
+                        }
                     },
                 )
+            }
+            composable(AppDestination.GO_RECORD, arguments = listOf(navArgument(AppDestination.GAME_RECORD_ID_ARGUMENT) {
+                type = NavType.StringType
+            })) { entry ->
+                val recordId = checkNotNull(entry.arguments?.getString(AppDestination.GAME_RECORD_ID_ARGUMENT))
+                GoStoredRecordRoute(recordId, database, goStorage.gate, navController::popBackStack)
             }
             composable(AppDestination.PROFILE) {
                 ProfileScreen(
@@ -1619,29 +1674,9 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase) {
                                         openInputStream = {
                                             context.contentResolver.openInputStream(restoreUri)
                                         },
-                                        beforeRestore = {
-                                            val activeGame = ChineseChessBackgroundController.get(context).game
-                                            awaitLocalDataWriters(
-                                                (gameWriters.snapshot() + listOfNotNull(activeGame, settingsViewModel, navigationViewModel,
-                                                    tutorialViewModel, statisticsViewModel, gameRecordsViewModel,
-                                                    endgameViewModel)).distinct(),
-                                            ) {
-                                                activeGame?.retireBackgroundRuntime()
-                                                navController.navigate(AppDestination.SETTINGS) {
-                                                    popUpTo(AppDestination.HOME)
-                                                    launchSingleTop = true
-                                                }
-                                            }
-                                        },
+                                        beforeRestore = stopDataWriters,
                                         // Activity.recreate retains these VMs; explicitly reload each data owner.
-                                        onFinished = {
-                                            settingsViewModel.loadSettings()
-                                            navigationViewModel.loadChineseChessSelection()
-                                            tutorialViewModel.loadProgress()
-                                            statisticsViewModel.loadStatistics()
-                                            gameRecordsViewModel.reload()
-                                            endgameViewModel.reload()
-                                        },
+                                        onFinished = reloadDataOwners,
                                         onRestored = {},
                                     )
                                 },

@@ -3,6 +3,7 @@ package com.masterofchessstrategy.data
 import androidx.room.withTransaction
 import com.masterofchessstrategy.endgame.ChineseChessEndgamePack
 import com.masterofchessstrategy.engine.GameResult
+import com.masterofchessstrategy.engine.GameType
 
 /** One immutable terminal checkpoint; all rewards must agree with this exact game. */
 internal data class CompletedGameSession(
@@ -39,6 +40,10 @@ internal class RoomCompletedGameSessionRepository(
 ) : CompletedGameSessionRepository,
     GameSessionRepository by RoomGameSessionRepository(database.activeGameDao()) {
     override suspend fun complete(game: CompletedGameSession): CompletedGameCommitResult {
+        // Go needs its own session/source transaction; never write MOCG through the MOCX envelope.
+        require(game.record.gameType != GameType.GO) {
+            "Go completion requires the game-specific session repository"
+        }
         val record = game.record.copy(isFavorite = game.record.isFavorite || shouldFavorite(game.record)).toGameRecordEntity()
         val outcome = game.outcome?.toMatchOutcomeEntity()
         return database.withTransaction {

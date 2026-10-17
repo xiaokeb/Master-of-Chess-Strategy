@@ -12,6 +12,7 @@ import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.GameRecordCategory
 import com.masterofchessstrategy.data.GameRecordRepository
 import com.masterofchessstrategy.data.LoadGameRecordsResult
+import com.masterofchessstrategy.engine.GameType
 import kotlinx.coroutines.launch
 
 internal enum class GameRecordsFeedback {
@@ -25,12 +26,14 @@ internal data class GameRecordsUiState(
     val records: List<GameRecord> = emptyList(),
     val isLoading: Boolean = true,
     val feedback: GameRecordsFeedback? = null,
+    val gameType: GameType? = null,
 )
 
 internal class GameRecordsViewModel(
     private val repository: GameRecordRepository,
     private val highlightMaskProvider: () -> Int = { 0 },
 ) : ViewModel() {
+    private var loadGeneration = 0L
     var uiState by mutableStateOf(GameRecordsUiState())
         private set
 
@@ -74,24 +77,35 @@ internal class GameRecordsViewModel(
         }
     }
 
+    fun selectGameType(gameType: GameType?) {
+        if (gameType == uiState.gameType && !uiState.isLoading) return
+        uiState = uiState.copy(gameType = gameType, isLoading = true, feedback = null)
+        reload()
+    }
+
     internal fun reload() {
         val category = uiState.category
         viewModelScope.launch { load(category) }
     }
 
     private suspend fun load(category: GameRecordCategory) {
-        uiState = try {
+        if (category != uiState.category) return
+        val selectedGame = uiState.gameType
+        val request = ++loadGeneration
+        val next = try {
             when (val result = repository.list(category)) {
                 is LoadGameRecordsResult.Loaded -> GameRecordsUiState(
                     category = category,
-                    records = result.records,
+                    records = result.records.filter { selectedGame == null || it.gameType == selectedGame },
                     isLoading = false,
+                    gameType = selectedGame,
                 )
 
                 LoadGameRecordsResult.Incompatible -> GameRecordsUiState(
                     category = category,
                     isLoading = false,
                     feedback = GameRecordsFeedback.LOAD_RECOVERED,
+                    gameType = selectedGame,
                 )
             }
         } catch (_: RuntimeException) {
@@ -99,8 +113,10 @@ internal class GameRecordsViewModel(
                 category = category,
                 isLoading = false,
                 feedback = GameRecordsFeedback.LOAD_RECOVERED,
+                gameType = selectedGame,
             )
         }
+        if (request == loadGeneration && category == uiState.category && selectedGame == uiState.gameType) uiState = next
     }
 
     companion object {

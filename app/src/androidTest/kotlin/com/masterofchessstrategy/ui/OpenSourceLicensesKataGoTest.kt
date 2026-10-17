@@ -34,6 +34,7 @@ class OpenSourceLicensesKataGoTest {
                     notices = "notices",
                     gpl = "gpl",
                     network = "pikafish network",
+                    mahjongMit = "mahjong mit",
                     kataGo = "KataGo v1.18.1\nKataGo Neural Network License",
                 ),
                 onBack = {},

@@ -175,6 +175,8 @@ val verifyBundledLegalDocuments = tasks.register("verifyBundledLegalDocuments") 
             layout.projectDirectory.file("src/main/assets/legal/OPEN-SOURCE-NOTICES.md").asFile,
         rootProject.file("third_party/pikafish-network/UPSTREAM-README.md") to
             layout.projectDirectory.file("src/main/assets/pikafish/NETWORK-LICENSE.md").asFile,
+        rootProject.file("engine-native/src/main/cpp/games/competition-mahjong/fan/vendor/LICENSE") to
+            layout.projectDirectory.file("src/main/assets/legal/MAHJONG-ALGORITHM-MIT.txt").asFile,
     )
     inputs.files(legalCopies.flatMap { listOf(it.first, it.second) })
     doLast {
@@ -259,6 +261,13 @@ tasks.named("preBuild").configure {
     dependsOn(verifyReleasedGameContent)
 }
 
+// Export the current Room schema before instrumented assets are snapshotted/packaged.
+// Otherwise the first build after a version bump can contain only the old schemas.
+tasks.matching { it.name.startsWith("merge") && it.name.endsWith("AndroidTestAssets") }.configureEach {
+    val variant = name.removePrefix("merge").removeSuffix("AndroidTestAssets")
+    dependsOn("ksp${variant}Kotlin")
+}
+
 android {
     namespace = "com.masterofchessstrategy"
     compileSdk {
@@ -288,6 +297,8 @@ android {
     }
 
     compileOptions {
+        // Daily Go challenges use java.time on the supported API 24/25 devices too.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -306,6 +317,7 @@ android {
 }
 
 dependencies {
+    coreLibraryDesugaring(libs.android.desugar.jdk.libs)
     implementation(project(":engine-api"))
     implementation(project(":engine-native"))
 

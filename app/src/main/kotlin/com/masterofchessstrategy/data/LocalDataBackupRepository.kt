@@ -80,7 +80,8 @@ internal class RoomLocalDataBackupRepository(
                     val result = gameRecordRepository.list(GameRecordCategory.ALL)
                 ) {
                     LoadGameRecordsResult.Incompatible -> error("Game records are incompatible")
-                    is LoadGameRecordsResult.Loaded -> result.records
+                    // Go payload/provenance is owned by its registered extension, not Xiangqi RECORD.
+                    is LoadGameRecordsResult.Loaded -> result.records.filter { it.gameType != GameType.GO }
                 },
                 endgameProgress = when (val result = endgameRepository.load()) {
                     LoadEndgameProgressResult.Incompatible -> error("Endgame progress is incompatible")
@@ -90,7 +91,8 @@ internal class RoomLocalDataBackupRepository(
         }
         validateEngineStates(snapshot)
         // Export is subject to the same real engine admission as restore, without writes.
-        gameBackups.prepareRestore(snapshot.gameExtensions, gameBackups.containerVersion(snapshot.gameExtensions))
+        gameBackups.prepareRestore(snapshot.gameExtensions, gameBackups.containerVersion(snapshot.gameExtensions),
+            snapshot.gameRecords.map { it.recordId }.toSet())
         return LocalDataBackupCodec.encode(snapshot, gameBackups)
     }
 
@@ -100,6 +102,7 @@ internal class RoomLocalDataBackupRepository(
         val preparedGames = gameBackups.prepareRestore(
             snapshot.gameExtensions,
             gameBackups.containerVersion(snapshot.gameExtensions),
+            snapshot.gameRecords.map { it.recordId }.toSet(),
         )
         val endgameLevels = snapshot.endgameProgress.associateWith { progress ->
             val level = levelsById[progress.levelId]
@@ -114,6 +117,9 @@ internal class RoomLocalDataBackupRepository(
             // Recheck actual stored slots under the write transaction before clearing anything.
             gameBackups.requireSupportedSlots(BackupStorageInventory.read(database))
             clearAll()
+            // A pre-migration/Go-free backup must not resurrect data from any old disk source.
+            // These tombstones share this transaction and survive only a successful replacement.
+            database.localDataMigrationDao().sealGoLegacySourcesForRestore()
             preparedGames.forEach { it.write(database) }
             snapshot.activeSessions.forEach { sessionRepository.save(it) }
             snapshot.lastSelections.forEach { selectionRepository.save(it) }
@@ -136,9 +142,10 @@ internal class RoomLocalDataBackupRepository(
         }
         return LocalDataRestoreSummary(
             activeSessionCount = snapshot.activeSessions.size +
-                preparedGames.count { it.storageSlot.table == BackupStorageTable.ACTIVE_GAME },
+                preparedGames.count { it.storageSlot.table in setOf(BackupStorageTable.ACTIVE_GAME, BackupStorageTable.GO_LOCAL_SESSION) },
             matchOutcomeCount = snapshot.matchOutcomes.size,
-            gameRecordCount = snapshot.gameRecords.size,
+            gameRecordCount = snapshot.gameRecords.size +
+                preparedGames.sumOf { it.completedRecordIds.size },
             completedEndgameCount = snapshot.endgameProgress.size,
             competitionMatchCount = preparedGames.count { it.storageSlot.table == BackupStorageTable.COMPETITION_MATCH },
         )
@@ -164,6 +171,9 @@ internal class RoomLocalDataBackupRepository(
     }
 
     private suspend fun clearAll() {
+        database.goLocalSessionDao().deleteAll()
+        database.goRecordSourceDao().deleteAll()
+        database.goProgressDao().deleteAll()
         database.competitionMahjongMatchDao().deleteAll()
         database.activeGameDao().deleteAll()
         database.lastSelectionDao().deleteAll()

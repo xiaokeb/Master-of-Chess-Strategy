@@ -228,6 +228,8 @@ private fun OpenSourceLicensesScreenPreview() {
                     "Pikafish 引擎采用 GPL-3.0-or-later。",
                 gpl = "GNU GENERAL PUBLIC LICENSE\nVersion 3, 29 June 2007",
                 network = "Pikafish NNUE 权重仅限合法用途；未经许可不得商用。",
+                mahjongMit = "mahjong-algorithm 采用 MIT 许可；原版权与条款随应用提供。",
+                kataGo = "KataGo 与官方 kata1 网络采用各自随包保留的许可。",
             ),
             onBack = {},
         )

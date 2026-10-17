@@ -72,4 +72,14 @@ internal object NativeBindings {
     /** version, event count, then kind and four arguments per accepted event. */
     external fun goEventHistory(handle: Long): IntArray
 
+    external fun createCompetitionMahjong(seed: Long, dealer: Int, wind: Int, viewer: Int): Long
+    external fun releaseCompetitionMahjong(handle: Long)
+    /** One atomic versioned public frame, including four seats and fan entries. */
+    external fun competitionMahjongSnapshot(handle: Long): IntArray
+    external fun competitionMahjongLegalActions(handle: Long): IntArray
+    external fun applyCompetitionMahjongAction(handle: Long, kind: Int, tile: Int, sequence: Int): IntArray
+    external fun advanceCompetitionMahjongBots(handle: Long, level: Int, seed: Long, budget: Int): Int
+    external fun undoCompetitionMahjong(handle: Long): Boolean
+    external fun serializeCompetitionMahjong(handle: Long): ByteArray
+    external fun restoreCompetitionMahjong(handle: Long, data: ByteArray): Boolean
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mocs/engine/chinese_chess.hpp"
+#include "mocs/engine/competition_mahjong_native_session.hpp"
 #include "mocs/engine/go.hpp"
 #include "mocs/engine/tiger_goat_game.hpp"
 
@@ -38,6 +39,11 @@ public:
     [[nodiscard]] EngineHandle create_tiger_goat();
     [[nodiscard]] std::shared_ptr<TigerGoatHandle> find_tiger_goat(EngineHandle handle) const;
     [[nodiscard]] bool release_tiger_goat(EngineHandle handle);
+    [[nodiscard]] EngineHandle create_competition_mahjong(
+        std::uint64_t seed, std::uint8_t dealer, std::uint8_t round_wind, std::uint8_t viewer);
+    [[nodiscard]] std::shared_ptr<CompetitionMahjongNativeSession> find_competition_mahjong(
+        EngineHandle handle) const;
+    [[nodiscard]] bool release_competition_mahjong(EngineHandle handle);
     [[nodiscard]] EngineHandle register_go_search_runtime(std::shared_ptr<go_ai::KataGoRuntime> runtime);
     [[nodiscard]] EngineHandle register_go_search_request(std::shared_ptr<go_ai::GoSearchRequestHandle> request);
     [[nodiscard]] std::shared_ptr<go_ai::KataGoRuntime> find_go_search_runtime(EngineHandle handle) const;
@@ -55,6 +61,8 @@ private:
         chinese_chess_engines_;
     std::unordered_map<EngineHandle, std::shared_ptr<GoEngine>> go_engines_;
     std::unordered_map<EngineHandle, std::shared_ptr<TigerGoatHandle>> tiger_goat_engines_;
+    std::unordered_map<EngineHandle, std::shared_ptr<CompetitionMahjongNativeSession>>
+        competition_mahjong_engines_;
     std::unordered_map<EngineHandle, std::shared_ptr<go_ai::KataGoRuntime>> go_search_runtimes_;
     std::unordered_map<EngineHandle, std::shared_ptr<go_ai::GoSearchRequestHandle>> go_search_requests_;
 };

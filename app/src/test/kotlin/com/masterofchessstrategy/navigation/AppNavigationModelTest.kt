@@ -36,11 +36,12 @@ class AppNavigationModelTest {
     }
 
     @Test
-    fun onlyPublishedChineseChessAndTigerTraditionalEntryAreAvailable() {
+    fun publishedChineseChessGoAndTigerTraditionalEntryAreAvailable() {
         assertTrue(HomeGameEntry.CHINESE_CHESS.isAvailable)
+        assertTrue(HomeGameEntry.GO.isAvailable)
         assertTrue(HomeGameEntry.LANZHOU_TRADITIONAL.isAvailable)
         HomeGameEntry.entries
-            .filterNot { it == HomeGameEntry.CHINESE_CHESS || it == HomeGameEntry.LANZHOU_TRADITIONAL }
+            .filterNot { it in setOf(HomeGameEntry.CHINESE_CHESS, HomeGameEntry.GO, HomeGameEntry.LANZHOU_TRADITIONAL) }
             .forEach { assertFalse(it.isAvailable) }
     }
 
@@ -48,9 +49,18 @@ class AppNavigationModelTest {
     fun tigerLocalAndTraditionalMenuUseStableSeparateRoutes() {
         assertEquals("lanzhou-traditional/modes", AppDestination.LANZHOU_TRADITIONAL_MODES)
         assertEquals("tiger-goat/local-game", AppDestination.TIGER_GOAT_LOCAL_GAME)
-        assertFalse(HomeGameEntry.GO.isAvailable)
+        assertTrue(HomeGameEntry.GO.isAvailable)
         assertFalse(HomeGameEntry.STANDARD_MAHJONG.isAvailable)
         assertFalse(HomeGameEntry.LANZHOU_MAHJONG.isAvailable)
+    }
+
+    @Test
+    fun goModesAndLocalBoardHaveDistinctStableRoutes() {
+        assertEquals("go/modes", AppDestination.GO_MODES)
+        assertEquals("go/local-game", AppDestination.GO_LOCAL_GAME)
+        assertEquals("go/tutorial", AppDestination.GO_TUTORIAL)
+        assertFalse(AppDestination.GO_TUTORIAL == AppDestination.CHINESE_CHESS_TUTORIAL)
+        assertFalse(AppDestination.GO_LOCAL_GAME == AppDestination.CHINESE_CHESS_GAME)
     }
 
     @Test

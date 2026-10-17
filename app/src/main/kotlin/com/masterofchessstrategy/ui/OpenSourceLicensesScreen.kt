@@ -45,13 +45,15 @@ internal data class LegalDocuments(
     val notices: String,
     val gpl: String,
     val network: String,
-    val kataGo: String = "",
+    val mahjongMit: String,
+    val kataGo: String,
 )
 
 private enum class LegalDocument {
     NOTICES,
     GPL,
     NETWORK,
+    MAHJONG_MIT,
     KATAGO,
 }
 
@@ -95,6 +97,7 @@ internal fun OpenSourceLicensesScreen(
             notices = assets.readUtf8Asset("legal/OPEN-SOURCE-NOTICES.md"),
             gpl = assets.readUtf8Asset("legal/GPL-3.0.txt"),
             network = assets.readUtf8Asset("pikafish/NETWORK-LICENSE.md"),
+            mahjongMit = assets.readUtf8Asset("legal/MAHJONG-ALGORITHM-MIT.txt"),
             kataGo = assets.readKataGoLegalBundle(),
         )
     }
@@ -203,6 +206,7 @@ internal fun OpenSourceLicensesContent(
                     LegalDocument.NOTICES -> documents.notices
                     LegalDocument.GPL -> documents.gpl
                     LegalDocument.NETWORK -> documents.network
+                    LegalDocument.MAHJONG_MIT -> documents.mahjongMit
                     LegalDocument.KATAGO -> documents.kataGo
                 },
                 style = MaterialTheme.typography.bodySmall,
@@ -253,5 +257,6 @@ private fun LegalDocument.titleResource(): Int =
         LegalDocument.NOTICES -> R.string.open_source_notices_tab
         LegalDocument.GPL -> R.string.open_source_gpl_tab
         LegalDocument.NETWORK -> R.string.open_source_network_tab
+        LegalDocument.MAHJONG_MIT -> R.string.open_source_mahjong_mit_tab
         LegalDocument.KATAGO -> R.string.open_source_katago_tab
     }

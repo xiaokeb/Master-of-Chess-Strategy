@@ -3,6 +3,9 @@ package com.masterofchessstrategy.data
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.games.go.data.requireCompletedGoRecord
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal enum class GameRecordCategory {
     ALL,
@@ -22,11 +25,14 @@ internal data class GameRecord(
     val isEndgame: Boolean = false,
     val completedAtEpochMillis: Long,
     val playerIndex: Int = 0,
+    val engineFormatVersion: Int = GameRecordPayloadPolicy.currentVersion(gameType),
 ) {
     init {
         require(recordId.isNotBlank() && recordId.length <= MAX_RECORD_ID_LENGTH)
         require(result != GameResult.ONGOING)
-        require(engineState.size in 1..MAX_ENGINE_STATE_BYTES)
+        require(GameRecordPayloadPolicy.accepts(gameType, engineFormatVersion, engineState)) {
+            "Game record format or payload size is invalid"
+        }
         require(moveCount in 0..MAX_MOVE_COUNT)
         require(completedAtEpochMillis >= 0L)
         require(isEndgame == (mode == StoredGameMode.ENDGAME))
@@ -37,7 +43,8 @@ internal data class GameRecord(
 
     companion object {
         const val MAX_RECORD_ID_LENGTH = 64
-        const val MAX_ENGINE_STATE_BYTES = 64 * 1024
+        // Existing non-Go wire codecs retain this bound; Go has its own native format budget.
+        const val MAX_ENGINE_STATE_BYTES = GameRecordPayloadPolicy.XIANGQI_MAX_BYTES
         const val MAX_MOVE_COUNT = 10_000
     }
 }
@@ -60,13 +67,19 @@ internal interface GameRecordRepository {
 
 internal class RoomGameRecordRepository(
     private val dao: GameRecordDao,
+    private val admitGoRecord: (GameRecord) -> Unit = ::requireCompletedGoRecord,
 ) : GameRecordRepository {
-    override suspend fun saveCompleted(record: GameRecord): Boolean =
-        dao.insert(record.toGameRecordEntity()) != INSERT_IGNORED
+    override suspend fun saveCompleted(record: GameRecord): Boolean {
+        val owned = record.defensiveCopy()
+        admit(owned)
+        return dao.insert(owned.toGameRecordEntity()) != INSERT_IGNORED
+    }
 
     override suspend fun list(category: GameRecordCategory): LoadGameRecordsResult {
         val decoded = dao.listAll().map {
-            it.toGameRecord() ?: return LoadGameRecordsResult.Incompatible
+            val record = it.toGameRecord() ?: return LoadGameRecordsResult.Incompatible
+            if (!canRead(record)) return LoadGameRecordsResult.Incompatible
+            record
         }
         val filtered = when (category) {
             GameRecordCategory.ALL -> decoded
@@ -76,8 +89,23 @@ internal class RoomGameRecordRepository(
         return LoadGameRecordsResult.Loaded(filtered.map(GameRecord::defensiveCopy))
     }
 
-    override suspend fun load(recordId: String): GameRecord? =
-        dao.find(recordId)?.toGameRecord()?.defensiveCopy()
+    override suspend fun load(recordId: String): GameRecord? {
+        val record = dao.find(recordId)?.toGameRecord() ?: return null
+        return if (canRead(record)) record.defensiveCopy() else null
+    }
+
+    private suspend fun admit(record: GameRecord) {
+        if (record.gameType == GameType.GO) {
+            withContext(Dispatchers.Default) { admitGoRecord(record.defensiveCopy()) }
+        }
+    }
+
+    private suspend fun canRead(record: GameRecord): Boolean = try {
+        admit(record)
+        true
+    } catch (_: IllegalArgumentException) {
+        false
+    }
 
     override suspend fun setFavorite(recordId: String, favorite: Boolean): Boolean {
         require(recordId.isNotBlank() && recordId.length <= GameRecord.MAX_RECORD_ID_LENGTH)
@@ -100,7 +128,7 @@ internal fun GameRecord.toGameRecordEntity() = GameRecordEntity(
         GameResult.DRAW -> 3
         GameResult.ONGOING -> error("Ongoing games cannot be recorded")
     },
-    engineFormatVersion = 2,
+    engineFormatVersion = engineFormatVersion,
     engineState = engineState.copyOf(),
     moveCount = moveCount,
     isFavorite = isFavorite,
@@ -110,15 +138,14 @@ internal fun GameRecord.toGameRecordEntity() = GameRecordEntity(
 )
 
 internal fun GameRecordEntity.toGameRecord(): GameRecord? {
+    val gameType = GameType.entries.firstOrNull { it.code == gameTypeCode } ?: return null
     if (
-        engineFormatVersion != 2 ||
-        engineState.size !in 1..GameRecord.MAX_ENGINE_STATE_BYTES ||
+        !GameRecordPayloadPolicy.accepts(gameType, engineFormatVersion, engineState) ||
         moveCount !in 0..GameRecord.MAX_MOVE_COUNT ||
         completedAtEpochMillis < 0L
     ) {
         return null
     }
-    val gameType = GameType.entries.firstOrNull { it.code == gameTypeCode } ?: return null
     val mode = StoredGameMode.entries.firstOrNull { it.code == modeCode } ?: return null
     val difficulty = difficultyCode?.let { code ->
         Difficulty.entries.firstOrNull { it.code == code } ?: return null
@@ -142,6 +169,7 @@ internal fun GameRecordEntity.toGameRecord(): GameRecord? {
             isEndgame = isEndgame,
             completedAtEpochMillis = completedAtEpochMillis,
             playerIndex = playerIndex,
+            engineFormatVersion = engineFormatVersion,
         )
     } catch (_: IllegalArgumentException) {
         null

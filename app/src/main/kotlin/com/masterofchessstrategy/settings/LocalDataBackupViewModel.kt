@@ -43,10 +43,18 @@ internal class LocalDataBackupViewModel(
         private set
 
     fun export(openOutputStream: () -> OutputStream?) {
+        exportWithBarrier(openOutputStream, beforeExport = {}, onFinished = {})
+    }
+
+    fun exportWithBarrier(openOutputStream: () -> OutputStream?, beforeExport: suspend () -> Unit,
+        onFinished: () -> Unit,
+    ) {
         if (uiState.isWorking) return
         uiState = LocalDataBackupUiState(isWorking = true)
         viewModelScope.launch {
-            val succeeded = try {
+            var feedback: BackupFeedback? = null
+            try {
+                beforeExport()
                 withContext(ioDispatcher) {
                     val bytes = repository.export(nowEpochMillis())
                     require(bytes.size <= LocalDataBackupCodec.MAX_BACKUP_BYTES)
@@ -55,18 +63,14 @@ internal class LocalDataBackupViewModel(
                         output.flush()
                     }
                 }
-                true
+                feedback = BackupFeedback.EXPORTED
             } catch (error: Exception) {
                 if (error is CancellationException) throw error
-                false
+                feedback = BackupFeedback.EXPORT_FAILED
+            } finally {
+                uiState = LocalDataBackupUiState(feedback = feedback)
+                onFinished()
             }
-            uiState = LocalDataBackupUiState(
-                feedback = if (succeeded) {
-                    BackupFeedback.EXPORTED
-                } else {
-                    BackupFeedback.EXPORT_FAILED
-                },
-            )
         }
     }
 
@@ -79,28 +83,30 @@ internal class LocalDataBackupViewModel(
         if (uiState.isWorking) return
         uiState = LocalDataBackupUiState(isWorking = true)
         viewModelScope.launch {
-            val summary = try {
+            var summary: LocalDataRestoreSummary? = null
+            var cancelled = false
+            try {
                 // Cancellation alone is insufficient: existing writers must finish before replacement.
                 beforeRestore()
                 withContext(ioDispatcher) {
                     val bytes = checkNotNull(openInputStream()).use { input ->
                         input.readBounded()
                     }
-                    repository.restore(bytes)
+                    summary = repository.restore(bytes)
                 }
             } catch (error: Exception) {
-                if (error is CancellationException) throw error
-                null
+                if (error is CancellationException) { cancelled = true; throw error }
+            } finally {
+                uiState = if (cancelled) LocalDataBackupUiState() else if (summary == null) {
+                    LocalDataBackupUiState(feedback = BackupFeedback.RESTORE_FAILED)
+                } else {
+                    LocalDataBackupUiState(
+                        feedback = BackupFeedback.RESTORED,
+                        restoreSummary = summary,
+                    )
+                }
+                onFinished()
             }
-            uiState = if (summary == null) {
-                LocalDataBackupUiState(feedback = BackupFeedback.RESTORE_FAILED)
-            } else {
-                LocalDataBackupUiState(
-                    feedback = BackupFeedback.RESTORED,
-                    restoreSummary = summary,
-                )
-            }
-            onFinished()
             if (summary != null) onRestored()
         }
     }

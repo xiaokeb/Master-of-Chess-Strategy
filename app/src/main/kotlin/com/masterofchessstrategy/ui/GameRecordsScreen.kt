@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,6 +41,7 @@ import com.masterofchessstrategy.data.GameRecordCategory
 import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
+import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.game.ChineseChessGameUiState
 import com.masterofchessstrategy.records.ChineseChessReplayUiState
 import com.masterofchessstrategy.records.GameRecordExportCodec
@@ -62,6 +64,7 @@ internal fun GameRecordsScreen(
     onToggleFavorite: (String) -> Unit,
     onOpenRecord: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onGameTypeSelected: (GameType?) -> Unit = {},
 ) {
     Surface(modifier = modifier.fillMaxSize().testTag(GAME_RECORDS_SCREEN_TAG)) {
         Column(
@@ -80,6 +83,12 @@ internal fun GameRecordsScreen(
                         onClick = { onCategorySelected(category) },
                         label = { Text(stringResource(category.titleResource())) },
                     )
+                }
+            }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                for ((game, label) in listOf(null to "全部棋种", GameType.CHINESE_CHESS to "中国象棋", GameType.GO to "围棋")) {
+                    FilterChip(selected = state.gameType == game, onClick = { onGameTypeSelected(game) },
+                        label = { Text(label) }, modifier = Modifier.testTag("record_game_${game?.code ?: "all"}"))
                 }
             }
             if (!state.isLoading && state.records.isEmpty()) {
@@ -136,7 +145,7 @@ private fun GameRecordCard(
                     ),
                 )
             }
-            Button(onClick = { onOpenRecord(record.recordId) }) {
+            Button(onClick = { onOpenRecord(record.recordId) }, enabled = record.gameType in setOf(GameType.CHINESE_CHESS, GameType.GO)) {
                 Text(stringResource(R.string.record_replay))
             }
         }
@@ -290,6 +299,12 @@ private fun replayStatus(state: ChineseChessReplayUiState): String =
 
 @Composable
 private fun recordTitle(record: GameRecord): String {
+    if (record.gameType == GameType.GO) return "围棋 · " + when (record.result) {
+        GameResult.FIRST_PLAYER_WIN -> "黑方获胜"
+        GameResult.SECOND_PLAYER_WIN -> "白方获胜"
+        GameResult.DRAW -> "和棋"
+        GameResult.ONGOING -> "进行中"
+    }
     val result = stringResource(R.string.record_title, record.result.displayName())
     return if (record.mode.supportsAiFirst) {
         result + " · " + stringResource(

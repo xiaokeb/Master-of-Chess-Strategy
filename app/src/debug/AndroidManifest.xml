@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <application>
+        <activity
+            android:name=".ui.GoLocalDataCheckActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="adjustResize"
+            tools:ignore="DiscouragedApi" />
         <!-- UUID-owned navigation QA only; not present in release builds. -->
         <activity
             android:name=".ui.TigerGoatNavigationCheckActivity"
