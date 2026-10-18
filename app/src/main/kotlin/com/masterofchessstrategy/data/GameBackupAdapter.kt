@@ -2,7 +2,10 @@ package com.masterofchessstrategy.data
 
 import com.masterofchessstrategy.engine.GameType
 
-internal enum class BackupStorageTable { ACTIVE_GAME, COMPETITION_MATCH, GO_LOCAL_SESSION, GO_RECORD_SOURCE, GO_PROGRESS }
+internal enum class BackupStorageTable {
+    ACTIVE_GAME, COMPETITION_MATCH, GO_LOCAL_SESSION, GO_RECORD_SOURCE, GO_PROGRESS,
+    GO_AI_SESSION, GO_AI_ARCHIVE,
+}
 
 /** A schema-owned row slot; registration cannot introduce or conditionally remove tables. */
 internal data class BackupStorageSlot(val table: BackupStorageTable, val gameType: GameType) {
@@ -10,8 +13,9 @@ internal data class BackupStorageSlot(val table: BackupStorageTable, val gameTyp
         require(table != BackupStorageTable.COMPETITION_MATCH || gameType == GameType.STANDARD_MAHJONG) {
             "The competition match table belongs only to competition mahjong"
         }
-        require(table !in setOf(BackupStorageTable.GO_LOCAL_SESSION, BackupStorageTable.GO_RECORD_SOURCE, BackupStorageTable.GO_PROGRESS) || gameType == GameType.GO) {
-            "Go local storage belongs only to Go"
+        require(table !in setOf(BackupStorageTable.GO_LOCAL_SESSION, BackupStorageTable.GO_RECORD_SOURCE,
+            BackupStorageTable.GO_PROGRESS, BackupStorageTable.GO_AI_SESSION, BackupStorageTable.GO_AI_ARCHIVE) || gameType == GameType.GO) {
+            "Go storage belongs only to Go"
         }
     }
 }

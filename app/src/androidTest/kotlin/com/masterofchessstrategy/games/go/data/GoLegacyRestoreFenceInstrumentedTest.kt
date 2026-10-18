@@ -32,7 +32,12 @@ class GoLegacyRestoreFenceInstrumentedTest {
             val xml = File(directory, "go-learning.xml").apply {
                 writeText("<map><set name=\"completed\"><string>liberties</string></set></map>")
             }
-            val originals = listOf(gos, gep, xml).associateWith { it.readBytes() }
+            val gai = File(directory, "go-ai-match.bin")
+            NativeGoEngine(9).use { engine ->
+                gai.writeBytes(GoAiMatchFileCodec.encode(GoAiSavedMatch(
+                    "legacy-before-restore", GoAiMatchConfig(9), engine.serialize())))
+            }
+            val originals = listOf(gos, gep, xml, gai).associateWith { it.readBytes() }
             val higher = LocalDataMigrationEntity(GoLegacyImportScopes.LEARNING, 2)
             database.localDataMigrationDao().insert(higher)
             repository(database).restore(emptyContainer(version))
@@ -43,9 +48,12 @@ class GoLegacyRestoreFenceInstrumentedTest {
             assertNull(RoomGoSessionRepository(database, GoLocalSessionDiskSource(gos)).load())
             assertTrue(RoomGoLearningProgressRepository(database, GoLearningPreferencesDiskSource(xml)).load().completedLessonIds.isEmpty())
             assertTrue(RoomGoEndgameProgressRepository(database, GoEndgameDiskSource(gep)).load().completedIds.isEmpty())
+            assertNull(GoAiCheckpointRepository(RoomGoAiCheckpointStore(database), GoAiLegacyDiskSource(gai)).load())
             assertNull(database.goLocalSessionDao().find(GameType.GO.code))
             assertNull(database.goProgressDao().find(GameType.GO.code, GoProgressKind.LEARNING.code))
             assertNull(database.goProgressDao().find(GameType.GO.code, GoProgressKind.ENDGAME.code))
+            assertTrue(database.goAiCheckpointDao().listActive().isEmpty())
+            assertTrue(database.goAiCheckpointDao().listArchives().isEmpty())
             originals.forEach { (file, bytes) -> assertArrayEquals(bytes, file.readBytes()) }
         }
     }
@@ -83,6 +91,7 @@ class GoLegacyRestoreFenceInstrumentedTest {
             assertEquals(higher, database.localDataMigrationDao().find(higher.scope))
             assertNull(database.localDataMigrationDao().find(GoLegacyImportScopes.SESSION))
             assertNull(database.localDataMigrationDao().find(GoLegacyImportScopes.ENDGAME))
+            assertNull(database.localDataMigrationDao().find(GoLegacyImportScopes.AI_MATCH))
         }
     }
 

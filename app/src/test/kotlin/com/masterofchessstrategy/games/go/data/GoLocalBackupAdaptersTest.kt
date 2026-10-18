@@ -25,8 +25,12 @@ class GoLocalBackupAdaptersTest {
 
     @Test fun allThreeSlotsAreRegisteredAndUseVersionFiveWithoutChangingCoreRecord() {
         val registry = registry()
-        registry.requireSupportedSlots(BackupStorageTable.entries.filter { it.name.startsWith("GO_") }
+        registry.requireSupportedSlots(listOf(BackupStorageTable.GO_LOCAL_SESSION,
+            BackupStorageTable.GO_RECORD_SOURCE, BackupStorageTable.GO_PROGRESS)
             .map { BackupStorageSlot(it, GameType.GO) }.toSet())
+        for (ai in listOf(BackupStorageTable.GO_AI_SESSION, BackupStorageTable.GO_AI_ARCHIVE)) {
+            rejects { registry.requireSupportedSlots(setOf(BackupStorageSlot(ai, GameType.GO))) }
+        }
         val wire = sessionWire()
         assertEquals(5, registry.containerVersion(listOf(wire)))
         rejects { registry.validate(listOf(wire), 4) }

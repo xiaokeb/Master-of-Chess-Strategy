@@ -75,9 +75,13 @@ internal class GameBackupRegistry(
         coreRecordIds: Set<String> = emptySet(),
     ): List<PreparedGameBackup> {
         val coreIds = coreRecordIds.toSet()
-        val prepared = Collections.unmodifiableList(canonicalRecords(records, containerVersion).map { record ->
+        val ordered = canonicalRecords(records, containerVersion)
+        val context = GameBackupPreparationContext()
+        val prepared = Collections.unmodifiableList(ordered.map { record ->
             val owner = registration(record)
-            owner.adapter.prepareRestore(record).also {
+            val result = (owner.adapter as? GameBackupContextualPreparation)?.prepareRestore(record, context)
+                ?: owner.adapter.prepareRestore(record)
+            result.also {
                 requireFixedRegistrations()
                 require(it.storageSlot == owner.descriptor.storageSlot) { "Prepared backup belongs to a foreign slot" }
             }

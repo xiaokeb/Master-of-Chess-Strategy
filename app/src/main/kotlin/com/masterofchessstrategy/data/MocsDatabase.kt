@@ -12,6 +12,9 @@ import com.masterofchessstrategy.games.go.data.GoRecordSourceEntity
 import com.masterofchessstrategy.games.go.data.GoRecordSourceDao
 import com.masterofchessstrategy.games.go.data.GoProgressEntity
 import com.masterofchessstrategy.games.go.data.GoProgressDao
+import com.masterofchessstrategy.games.go.data.GoAiSessionEntity
+import com.masterofchessstrategy.games.go.data.GoAiArchiveEntity
+import com.masterofchessstrategy.games.go.data.GoAiCheckpointDao
 
 @Database(
     entities = [
@@ -27,8 +30,10 @@ import com.masterofchessstrategy.games.go.data.GoProgressDao
         GoRecordSourceEntity::class,
         LocalDataMigrationEntity::class,
         GoProgressEntity::class,
+        GoAiSessionEntity::class,
+        GoAiArchiveEntity::class,
     ],
-    version = 15,
+    version = 16,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -57,6 +62,8 @@ internal abstract class MocsDatabase : RoomDatabase() {
     abstract fun localDataMigrationDao(): LocalDataMigrationDao
 
     abstract fun goProgressDao(): GoProgressDao
+
+    abstract fun goAiCheckpointDao(): GoAiCheckpointDao
 
     companion object {
         internal val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -344,6 +351,44 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_15_16 = object : Migration(15, 16) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add empty AI tables only. Native legacy admission and permanent
+                // source sealing belong in the later repository transaction.
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS go_ai_archives (
+                        recordId TEXT NOT NULL,
+                        gameTypeCode INTEGER NOT NULL,
+                        envelopeVersion INTEGER NOT NULL,
+                        checkpoint BLOB NOT NULL,
+                        originCode INTEGER NOT NULL,
+                        replacedTerminalRecordId TEXT,
+                        completedAtEpochMillis INTEGER NOT NULL,
+                        PRIMARY KEY(recordId),
+                        FOREIGN KEY(replacedTerminalRecordId) REFERENCES go_ai_archives(recordId)
+                            ON UPDATE NO ACTION ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED
+                    )
+                """.trimIndent())
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_go_ai_archives_replacedTerminalRecordId " +
+                    "ON go_ai_archives (replacedTerminalRecordId)")
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS go_ai_sessions (
+                        gameTypeCode INTEGER NOT NULL,
+                        envelopeVersion INTEGER NOT NULL,
+                        checkpoint BLOB NOT NULL,
+                        originCode INTEGER NOT NULL,
+                        replacedTerminalRecordId TEXT,
+                        updatedAtEpochMillis INTEGER NOT NULL,
+                        PRIMARY KEY(gameTypeCode),
+                        FOREIGN KEY(replacedTerminalRecordId) REFERENCES go_ai_archives(recordId)
+                            ON UPDATE NO ACTION ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED
+                    )
+                """.trimIndent())
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_go_ai_sessions_replacedTerminalRecordId " +
+                    "ON go_ai_sessions (replacedTerminalRecordId)")
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -369,6 +414,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_12_13,
                         MIGRATION_13_14,
                         MIGRATION_14_15,
+                        MIGRATION_15_16,
                     )
                     .build()
                     .also { instance = it }

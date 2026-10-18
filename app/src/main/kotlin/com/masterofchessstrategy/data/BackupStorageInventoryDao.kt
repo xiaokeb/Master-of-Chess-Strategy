@@ -22,4 +22,10 @@ internal interface BackupStorageInventoryDao {
 
     @Query("SELECT gameTypeCode FROM go_progress ORDER BY gameTypeCode,kindCode")
     suspend fun goProgressGameTypeCodes(): List<Int>
+
+    @Query("SELECT gameTypeCode FROM go_ai_sessions ORDER BY gameTypeCode")
+    suspend fun goAiSessionGameTypeCodes(): List<Int>
+
+    @Query("SELECT gameTypeCode FROM go_ai_archives ORDER BY gameTypeCode,recordId")
+    suspend fun goAiArchiveGameTypeCodes(): List<Int>
 }

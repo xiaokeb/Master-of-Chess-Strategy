@@ -25,7 +25,8 @@ internal object GoLegacyImportScopes {
     const val SESSION = "go-legacy-local-session"
     const val LEARNING = "go-legacy-learning-preferences"
     const val ENDGAME = "go-legacy-endgame-progress"
-    val ALL = listOf(SESSION, LEARNING, ENDGAME)
+    const val AI_MATCH = "go-legacy-ai-match"
+    val ALL = listOf(SESSION, LEARNING, ENDGAME, AI_MATCH)
 }
 
 /** Call inside the replacement transaction, even when the incoming backup contains no Go data. */

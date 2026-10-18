@@ -6,6 +6,7 @@ import com.masterofchessstrategy.endgame.ChineseChessEndgamePack
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.custom.ChineseChessHandicapConfig
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.games.go.data.requireGoAiArchiveParents
 
 internal data class LocalDataRestoreSummary(
     val activeSessionCount: Int,
@@ -139,10 +140,12 @@ internal class RoomLocalDataBackupRepository(
                 )
                 check(result.firstCompletion)
             }
+            database.requireGoAiArchiveParents()
         }
         return LocalDataRestoreSummary(
             activeSessionCount = snapshot.activeSessions.size +
-                preparedGames.count { it.storageSlot.table in setOf(BackupStorageTable.ACTIVE_GAME, BackupStorageTable.GO_LOCAL_SESSION) },
+                preparedGames.count { it.storageSlot.table in setOf(BackupStorageTable.ACTIVE_GAME,
+                    BackupStorageTable.GO_LOCAL_SESSION, BackupStorageTable.GO_AI_SESSION) },
             matchOutcomeCount = snapshot.matchOutcomes.size,
             gameRecordCount = snapshot.gameRecords.size +
                 preparedGames.sumOf { it.completedRecordIds.size },
@@ -171,6 +174,10 @@ internal class RoomLocalDataBackupRepository(
     }
 
     private suspend fun clearAll() {
+        // Both tables form one deferred parent graph; clear inside this same
+        // replacement transaction, never orphaning a child in a separate commit.
+        database.goAiCheckpointDao().deleteAllActive()
+        database.goAiCheckpointDao().deleteAllArchives()
         database.goLocalSessionDao().deleteAll()
         database.goRecordSourceDao().deleteAll()
         database.goProgressDao().deleteAll()

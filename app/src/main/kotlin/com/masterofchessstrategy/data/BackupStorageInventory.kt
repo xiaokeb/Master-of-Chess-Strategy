@@ -10,20 +10,26 @@ internal object BackupStorageInventory {
         database.backupStorageInventoryDao().goLocalGameTypeCodes(),
         database.backupStorageInventoryDao().goRecordSourceGameTypeCodes(),
         database.backupStorageInventoryDao().goProgressGameTypeCodes(),
+        database.backupStorageInventoryDao().goAiSessionGameTypeCodes(),
+        database.backupStorageInventoryDao().goAiArchiveGameTypeCodes(),
     )
 
     fun fromCodes(
         activeCodes: List<Int>, competitionCodes: List<Int>,
         goLocalCodes: List<Int> = emptyList(), goRecordSourceCodes: List<Int> = emptyList(),
         goProgressCodes: List<Int> = emptyList(),
+        goAiSessionCodes: List<Int> = emptyList(), goAiArchiveCodes: List<Int> = emptyList(),
     ): Set<BackupStorageSlot> {
         require(activeCodes.distinct().size == activeCodes.size && competitionCodes.distinct().size == competitionCodes.size &&
-            goLocalCodes.distinct().size == goLocalCodes.size)
+            goLocalCodes.distinct().size == goLocalCodes.size &&
+            goAiSessionCodes.distinct().size == goAiSessionCodes.size)
         fun gameType(code: Int) = requireNotNull(GameType.entries.firstOrNull { it.code == code }) { "Unknown stored game code" }
         return activeCodes.map { BackupStorageSlot(BackupStorageTable.ACTIVE_GAME, gameType(it)) }.toSet() +
             competitionCodes.map { BackupStorageSlot(BackupStorageTable.COMPETITION_MATCH, gameType(it)) } +
             goLocalCodes.map { BackupStorageSlot(BackupStorageTable.GO_LOCAL_SESSION, gameType(it)) } +
             goRecordSourceCodes.map { BackupStorageSlot(BackupStorageTable.GO_RECORD_SOURCE, gameType(it)) } +
-            goProgressCodes.map { BackupStorageSlot(BackupStorageTable.GO_PROGRESS, gameType(it)) }
+            goProgressCodes.map { BackupStorageSlot(BackupStorageTable.GO_PROGRESS, gameType(it)) } +
+            goAiSessionCodes.map { BackupStorageSlot(BackupStorageTable.GO_AI_SESSION, gameType(it)) } +
+            goAiArchiveCodes.map { BackupStorageSlot(BackupStorageTable.GO_AI_ARCHIVE, gameType(it)) }
     }
 }
