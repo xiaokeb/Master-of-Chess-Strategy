@@ -102,6 +102,18 @@ target_link_libraries(mocs_tiger_goat_exception_test PRIVATE mocs_engine_core)
 target_compile_options(mocs_tiger_goat_exception_test PRIVATE -Wall -Wextra -Wpedantic -UNDEBUG)
 add_test(NAME mocs_tiger_goat_exception COMMAND mocs_tiger_goat_exception_test)
 
+# Allocation-failure injection stays in this independent executable, never JNI.
+add_executable(
+    mocs_tiger_goat_ai_test
+    ../games/tiger-goat/tiger_goat_ai_test.cpp
+    ../games/tiger-goat/tiger_goat_ai.cpp
+    ../games/tiger-goat/tiger_goat_game.cpp
+)
+target_include_directories(mocs_tiger_goat_ai_test PRIVATE ../include)
+target_compile_options(mocs_tiger_goat_ai_test PRIVATE -Wall -Wextra -Wpedantic -Werror -UNDEBUG)
+target_link_options(mocs_tiger_goat_ai_test PRIVATE -static-libstdc++)
+add_test(NAME mocs_tiger_goat_ai COMMAND mocs_tiger_goat_ai_test)
+
 add_library(mocs_tiger_goat_topology_compile_test OBJECT ../games/tiger-goat/tiger_goat_topology_test.cpp)
 target_link_libraries(mocs_tiger_goat_topology_compile_test PRIVATE mocs_engine_core)
 target_compile_options(mocs_tiger_goat_topology_compile_test PRIVATE -Wall -Wextra -Wpedantic)

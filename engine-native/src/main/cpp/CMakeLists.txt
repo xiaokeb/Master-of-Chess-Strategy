@@ -98,6 +98,7 @@ add_library(
     src/health_check.cpp
     src/native_engine_registry.cpp
     games/tiger-goat/tiger_goat_game.cpp
+    games/tiger-goat/tiger_goat_ai.cpp
     src/pikafish_adapter.cpp
     src/pikafish_difficulty.cpp
 )
@@ -125,6 +126,7 @@ add_library(
     SHARED
     src/jni_bridge.cpp
     src/jni_tiger_goat_bridge.cpp
+    src/jni_tiger_goat_search_bridge.cpp
     src/jni_competition_mahjong_bridge.cpp
     src/jni_go_records_bridge.cpp
     src/jni_go_search_bridge.cpp
