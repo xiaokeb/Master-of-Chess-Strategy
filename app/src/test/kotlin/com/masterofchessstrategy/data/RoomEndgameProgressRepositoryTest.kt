@@ -7,6 +7,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 
 class RoomEndgameProgressRepositoryTest {
     @Test
@@ -79,6 +80,71 @@ class RoomEndgameProgressRepositoryTest {
             assertEquals(2, loaded.progress.totalStars)
             assertEquals(25, loaded.progress.totalScore)
         }
+    }
+
+    @Test
+    fun expandedBundledPackKeepsOldProgressAndAwardsNewLevelsOnce() = runBlocking {
+        val pack = ChineseChessEndgamePackParser.parse(
+            File("src/main/assets/endgames/chinese_chess/endgames-v5.txt").readText(Charsets.UTF_8),
+        )
+        val oldLevel = pack.levels.single { it.id == "xq-easy-001" }
+        val appended = pack.levels.filter { it.id in setOf(
+            "xq-medium-010", "xq-medium-011", "xq-medium-012", "xq-medium-013",
+        ) }
+        assertEquals(4, appended.size)
+        val dao = FakeEndgameProgressDao().apply {
+            entities[oldLevel.id] = EndgameProgressEntity(
+                levelId = oldLevel.id,
+                contentVersion = 4,
+                difficultyCode = oldLevel.difficulty.code,
+                bestPlayerMoves = 1,
+                starsAwarded = oldLevel.starReward,
+                scoreAwarded = oldLevel.scoreReward,
+                completedAtEpochMillis = 1L,
+            )
+        }
+        val repository = RoomEndgameProgressRepository(dao, pack)
+
+        appended.forEachIndexed { index, level ->
+            assertTrue(repository.complete(level, 2, 2L + index).firstCompletion)
+            // Repository recreation must retain the insert-once reward boundary.
+            val reopened = RoomEndgameProgressRepository(dao, pack)
+            val repeated = reopened.complete(level, 2, 10L + index)
+            assertFalse(repeated.firstCompletion)
+            assertEquals(0, repeated.awardedStars)
+            assertEquals(0, repeated.awardedScore)
+        }
+
+        val reloaded = RoomEndgameProgressRepository(dao, pack).load()
+        val progress = (reloaded as LoadEndgameProgressResult.Loaded).progress
+        assertEquals(setOf(oldLevel.id) + appended.map { it.id }, progress.completedById.keys)
+        assertEquals(oldLevel.starReward + appended.sumOf { it.starReward }, progress.totalStars)
+        assertEquals(oldLevel.scoreReward + appended.sumOf { it.scoreReward }, progress.totalScore)
+    }
+
+    @Test
+    fun trimmedLevelsRejectOverLimitCompletionsWithoutWritingRewards() = runBlocking {
+        val pack = ChineseChessEndgamePackParser.parse(
+            File("src/main/assets/endgames/chinese_chess/endgames-v5.txt").readText(Charsets.UTF_8),
+        )
+        val dao = FakeEndgameProgressDao()
+        val repository = RoomEndgameProgressRepository(dao, pack)
+        listOf("xq-medium-012", "xq-medium-013").forEach { levelId ->
+            val level = pack.levels.single { it.id == levelId }
+            assertEquals(2, level.maxPlayerMoves)
+            for (invalidMoves in listOf(0, 3)) {
+                try {
+                    repository.complete(level, invalidMoves, 1L)
+                    org.junit.Assert.fail("$levelId must reject $invalidMoves moves")
+                } catch (expected: IllegalArgumentException) {
+                    assertEquals("Completion exceeds move limit", expected.message)
+                }
+            }
+        }
+        assertTrue(dao.entities.isEmpty())
+        val progress = (repository.load() as LoadEndgameProgressResult.Loaded).progress
+        assertEquals(0, progress.totalStars)
+        assertEquals(0, progress.totalScore)
     }
 
     private class FakeEndgameProgressDao : EndgameProgressDao {

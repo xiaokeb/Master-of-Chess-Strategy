@@ -9,12 +9,13 @@ import com.masterofchessstrategy.engine.BoardMove
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessPiece
 import com.masterofchessstrategy.engine.ChineseChessPieceType
-import com.masterofchessstrategy.engine.ChineseChessRuleEngine
+import com.masterofchessstrategy.engine.ChineseChessAiEngine
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.PlayerId
 import com.masterofchessstrategy.engine.RestoreResult
+import com.masterofchessstrategy.engine.Difficulty
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -83,6 +84,40 @@ class ChineseChessGamePersistenceTest {
         assertEquals(1, engine.resetCalls)
         assertTrue(viewModel.uiState.isInteractionEnabled)
         assertEquals(ChineseChessFeedback.RESTORE_REJECTED, viewModel.uiState.feedback)
+    }
+
+    @Test
+    fun selectingAnotherValidEndgameDoesNotReportCorruptedData() = runTest(dispatcher) {
+        assertExpectedSelectionSwitch(StoredGameMode.ENDGAME, Difficulty.EASY, "xq-easy-017@v5")
+    }
+
+    @Test
+    fun selectingAnotherValidModeDoesNotReportCorruptedData() = runTest(dispatcher) {
+        assertExpectedSelectionSwitch(StoredGameMode.LOCAL_TWO_PLAYER, null, "")
+    }
+
+    private suspend fun kotlinx.coroutines.test.TestScope.assertExpectedSelectionSwitch(
+        storedMode: StoredGameMode, storedDifficulty: Difficulty?, storedVariant: String,
+    ) {
+        val requestedInitial = byteArrayOf(1, 2, 3)
+        val engine = PersistenceFakeEngine()
+        val repository = FakeSessionRepository(LoadGameSessionResult.Loaded(
+            snapshot(byteArrayOf(4, 5, 6)).copy(
+                mode = storedMode, difficulty = storedDifficulty, sessionVariantId = storedVariant,
+            ),
+        ))
+        val viewModel = ChineseChessGameViewModel(
+            sessionRepository = repository, mode = StoredGameMode.ENDGAME,
+            difficulty = Difficulty.EASY, initialPositionState = requestedInitial,
+            sessionVariantId = "xq-easy-018@v5", endgameTitle = "车炮封路", endgameMaxPlayerMoves = 1,
+            clockTickIntervalMillis = null, engineFactory = { engine },
+        )
+        advanceUntilIdle()
+        assertEquals(ChineseChessFeedback.GAME_RESTARTED, viewModel.uiState.feedback)
+        assertTrue(viewModel.uiState.isInteractionEnabled)
+        assertArrayEquals(requestedInitial, engine.restoredBytes)
+        assertEquals("xq-easy-018@v5", requireNotNull(repository.saved).sessionVariantId)
+        assertEquals(1, repository.clearCalls)
     }
 
     @Test
@@ -156,7 +191,7 @@ class ChineseChessGamePersistenceTest {
         }
     }
 
-    private inner class PersistenceFakeEngine : ChineseChessRuleEngine {
+    private inner class PersistenceFakeEngine : ChineseChessAiEngine {
         override val gameType = GameType.CHINESE_CHESS
         private val pieces = mutableMapOf(
             from to ChineseChessPiece(ChineseChessPieceType.CHARIOT, ChineseChessSide.RED),
@@ -192,6 +227,9 @@ class ChineseChessGamePersistenceTest {
         override fun legalActions(): List<BoardMove> = listOf(BoardMove(from, to))
 
         override fun gameResult(): GameResult = GameResult.ONGOING
+
+        override fun chooseMove(difficulty: Difficulty): BoardMove? =
+            error("Persistence-only fixtures must not request an AI reply")
 
         override fun serialize(): ByteArray = serializedBytes.copyOf()
 

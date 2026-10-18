@@ -139,6 +139,7 @@ int main(int argc, char** argv) {
     // mode proves wins against all defenses, rather than a cooperative PV.
     int red_moves = 1, requested = 20, attempts = 20000;
     std::uint32_t seed = 20260925U;
+    const std::string family = argc > 5 ? argv[5] : "classic";
     const auto read = [](const char* value, int& destination, int maximum) {
         const std::string text(value);
         const auto result = std::from_chars(text.data(), text.data() + text.size(), destination);
@@ -150,12 +151,16 @@ int main(int argc, char** argv) {
         const auto result = std::from_chars(text.data(), text.data() + text.size(), destination);
         return result.ec == std::errc{} && result.ptr == text.data() + text.size();
     };
-    if (argc > 5 || (argc > 1 && !read(argv[1], red_moves, 2)) ||
+    if (argc > 6 || (argc > 1 && !read(argv[1], red_moves, 2)) ||
         (argc > 2 && !read(argv[2], requested, 100)) ||
         (argc > 3 && !read(argv[3], attempts, 1000000)) ||
-        (argc > 4 && !read_seed(argv[4], seed))) {
+        (argc > 4 && !read_seed(argv[4], seed)) ||
+        (family != "classic" && family != "rook-horse" &&
+         family != "rook-cannon" && family != "horse-cannon" &&
+         family != "double-rook")) {
         std::cerr << "usage: mocs_generate_xiangqi_mates [red-moves:1..2] "
-                     "[candidates:1..100] [attempts:1..1000000] [seed:uint32]\n";
+                     "[candidates:1..100] [attempts:1..1000000] [seed:uint32] "
+                     "[family:classic|rook-horse|rook-cannon|horse-cannon|double-rook]\n";
         return 2;
     }
     std::mt19937 rng(seed);
@@ -177,15 +182,34 @@ int main(int argc, char** argv) {
     std::unordered_set<std::string> seen;
     int found = 0;
     int exhausted = 0;
+    const auto print_header = [&](const int ordinal, const int attempt, const std::string& fen) {
+        std::cout << "CANDIDATE " << ordinal << " seed=" << seed << " attempt=" << attempt;
+        if (family != "classic") std::cout << " family=" << family;
+        std::cout << " fen=" << fen << '\n';
+    };
     for (int attempt = 0; attempt < attempts && found < requested; ++attempt) {
         std::vector<Placement> pieces;
         bool placed = add_piece(pieces, red_palace, {PieceType::general, Side::red}, rng) &&
             add_piece(pieces, black_palace, {PieceType::general, Side::black}, rng) &&
-            add_piece(pieces, red_soldiers, {PieceType::soldier, Side::red}, rng) &&
-            add_piece(pieces, mobile, {PieceType::chariot, Side::red}, rng) &&
-            add_piece(pieces, mobile, {PieceType::horse, Side::red}, rng);
-        if (rng() % 2 == 0) {
-            placed &= add_piece(pieces, mobile, {PieceType::cannon, Side::red}, rng);
+            add_piece(pieces, red_soldiers, {PieceType::soldier, Side::red}, rng);
+        if (family == "classic" || family == "rook-horse") {
+            placed = placed && add_piece(pieces, mobile, {PieceType::chariot, Side::red}, rng) &&
+                add_piece(pieces, mobile, {PieceType::horse, Side::red}, rng);
+            if (rng() % 2 == 0) {
+                placed &= add_piece(pieces, mobile, {PieceType::cannon, Side::red}, rng);
+            }
+        } else if (family == "rook-cannon") {
+            placed = placed && add_piece(pieces, mobile, {PieceType::chariot, Side::red}, rng) &&
+                add_piece(pieces, mobile, {PieceType::cannon, Side::red}, rng);
+        } else if (family == "horse-cannon") {
+            placed = placed && add_piece(pieces, mobile, {PieceType::horse, Side::red}, rng) &&
+                add_piece(pieces, mobile, {PieceType::cannon, Side::red}, rng);
+            if (rng() % 2 == 0) {
+                placed &= add_piece(pieces, mobile, {PieceType::horse, Side::red}, rng);
+            }
+        } else {
+            placed = placed && add_piece(pieces, mobile, {PieceType::chariot, Side::red}, rng) &&
+                add_piece(pieces, mobile, {PieceType::chariot, Side::red}, rng);
         }
         placed &= add_piece(pieces, black_advisors, {PieceType::advisor, Side::black}, rng);
         if (rng() % 2 == 0) {
@@ -218,8 +242,7 @@ int main(int argc, char** argv) {
             if (proof.status != mocs::authoring::ProofStatus::complete ||
                 proof.winning_lines.size() != 1 || !seen.insert(symmetry_key(pieces)).second) continue;
             ++found;
-            std::cout << "CANDIDATE " << found << " seed=" << seed << " attempt=" << attempt
-                      << " fen=" << initial_fen << '\n';
+            print_header(found, attempt, initial_fen);
             std::cout << "PROOF|red_moves=2|unique_first=true|all_defenses=true|nodes="
                       << proof.visited_nodes << '\n';
             for (const auto& item : pieces) {
@@ -234,6 +257,7 @@ int main(int argc, char** argv) {
             continue;
         }
         int winners = 0;
+        int checking_winners = 0;
         std::array<int, 4> winning_move{};
         for (const auto& action : actions) {
             const auto& [from_x, from_y, to_x, to_y] = action.arguments;
@@ -243,10 +267,14 @@ int main(int argc, char** argv) {
                 std::cerr << "legal action rejected at attempt=" << attempt << '\n';
                 return 2;
             }
-            if (engine.game_result() == GameResult::first_player_win &&
-                engine.is_in_check(Side::black)) {
+            if (engine.game_result() == GameResult::first_player_win) {
                 ++winners;
-                winning_move = action.arguments;
+                // Stalemate also wins in Xiangqi. It invalidates a claim that
+                // the checking move is the unique winning first move.
+                if (engine.is_in_check(Side::black)) {
+                    ++checking_winners;
+                    winning_move = action.arguments;
+                }
             }
             if (!engine.undo() || engine.fen() != initial_fen) {
                 std::cerr << "undo changed candidate at attempt=" << attempt << '\n';
@@ -254,10 +282,10 @@ int main(int argc, char** argv) {
             }
             if (winners > 1) break;
         }
-        if (winners != 1 || !seen.insert(symmetry_key(pieces)).second) continue;
+        if (winners != 1 || checking_winners != 1 ||
+            !seen.insert(symmetry_key(pieces)).second) continue;
         ++found;
-        std::cout << "CANDIDATE " << found << " seed=" << seed << " attempt=" << attempt
-                  << " fen=" << initial_fen << '\n';
+        print_header(found, attempt, initial_fen);
         std::cout << "PROOF|red_moves=1|unique_first=true|immediate_check_win=true\n";
         for (const auto& item : pieces) {
             std::cout << "PIECE|" << item.x << '|' << item.y << '|'

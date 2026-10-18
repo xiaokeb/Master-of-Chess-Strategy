@@ -21,7 +21,7 @@ class ChineseChessEndgamePackInstrumentedTest {
         val assets = InstrumentationRegistry.getInstrumentation().targetContext.assets
         val levels = ChineseChessEndgamePackParser.loadBundled(assets).levels
             .filter { it.theme == "两步强制胜" }
-        assertEquals(2, levels.size)
+        assertEquals(13, levels.size)
         var cooperativeOnlyMoves = 0
         levels.forEach { level ->
             assertEquals(2, level.maxPlayerMoves)
@@ -100,7 +100,7 @@ class ChineseChessEndgamePackInstrumentedTest {
         val pack = ChineseChessEndgamePackParser.loadBundled(assets)
 
         val uniqueLevels = pack.levels.filter { it.theme == "唯一一步杀" }
-        assertEquals(9, uniqueLevels.size)
+        assertEquals(17, uniqueLevels.size)
         uniqueLevels.forEach { level ->
             NativeChineseChessEngine().use { engine ->
                 assertTrue(

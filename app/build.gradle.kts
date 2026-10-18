@@ -261,6 +261,12 @@ tasks.named("preBuild").configure {
     dependsOn(verifyReleasedGameContent)
 }
 
+// Some JVM content tests load the asset by path at runtime; declare it so a
+// revised puzzle pack cannot reuse a stale passing test result.
+tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
+    inputs.file(layout.projectDirectory.file("src/main/assets/endgames/chinese_chess/endgames-v5.txt"))
+}
+
 // Export the current Room schema before instrumented assets are snapshotted/packaged.
 // Otherwise the first build after a version bump can contain only the old schemas.
 tasks.matching { it.name.startsWith("merge") && it.name.endsWith("AndroidTestAssets") }.configureEach {

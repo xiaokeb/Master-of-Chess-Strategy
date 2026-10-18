@@ -61,6 +61,11 @@ target_link_libraries(mocs_xiangqi_forced_win_test PRIVATE mocs_xiangqi_authorin
 target_compile_options(mocs_xiangqi_forced_win_test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME mocs_xiangqi_forced_win COMMAND mocs_xiangqi_forced_win_test)
 
+# Audits the actual release text against native Xiangqi rules on the Android target.
+add_executable(mocs_xiangqi_release_pack_test xiangqi_release_pack_test.cpp)
+target_link_libraries(mocs_xiangqi_release_pack_test PRIVATE mocs_xiangqi_authoring)
+target_compile_options(mocs_xiangqi_release_pack_test PRIVATE -Wall -Wextra -Wpedantic)
+
 add_executable(mocs_generate_xiangqi_mates generate_xiangqi_mates.cpp)
 target_link_libraries(mocs_generate_xiangqi_mates PRIVATE mocs_xiangqi_authoring)
 target_compile_options(

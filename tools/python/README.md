@@ -15,6 +15,12 @@ E:\Backend_Env\Python\miniconda3\envs\MasterofChessStrategy\python.exe tools/pyt
 
 `stage_xiangqi_candidates.py <native-stdout.txt>` 用于暂存原生残局生成器输出：核对批次种子、尝试顺序、FEN/摆子、证明标记和左右镜像去重，并与当前发布包比较；再用独立 Python 浅层规则穷举首着和全部防守应手。它只打印 `staged-not-published` JSON，不修改 APK；主机端通过仍不能代替正式 NDK 规则运行与人工来源审核。生成器默认种子 20260925，亦可将 `uint32` 种子作为第四个位置参数，以准备独立批次。
 
+`audit_xiangqi_material.py <未入包候选流.txt> --require-support CANNON` 在上述暂存核验后逐枚移除未走动的红方辅助子力，重新求解原首着；输出 `necessary`、`dispensable` 或因删子使局面非法/证明超预算而 `unknown`。默认与当前资源去重，因此已从候选流入包的历史批次需提供其入包前冻结的 `--released-pack` 基线才能重审；对应固定夹具已纳入单测。它只筛选可能有战术贡献的候选，不会改正式资源，不能替代人工棋题审美、难度和设备验收。2026-10-03 车炮批次的结论见 `docs/games/xiangqi/2026-10-03-material-quality.md`。
+
+`prepare_xiangqi_endgames.py --base <旧包> --review <逐题编排 JSON> --preview-output .build/xiangqi/<预览包>.txt` 只在仓库 `.build` 生成预览；每题锁定原始流哈希、连续 ID、标题、主题和编排说明，复用暂存器及完整包审计，并返回 `prepared-not-published` 报告。记录格式与限制见 `config/games/xiangqi/reviews/README.md`。该工具不自动更新正式 APK 资源、内容清单或许可证，仍需 Android/NDK 与视觉验收。
+
+审校记录可选 `drop_pieces`，明确列出要删除的原始红方非将帅、非主变化走动子；删后重新证明唯一首着、完整防守应手与两步题无一步捷径。不存在、重复或影响证明的删子会拒绝；旧记录无此字段时维持原局面，不能把原局证明沿用到删后局面。
+
 `verify_xiangqi_forced_win.py [endgames-v5.txt]` 对现有一、两步主题做独立主机端复核；不覆盖循环棋例、自然限着或更深搜索。其范围和结果见 `docs/testing/2026-09-30-chinese-chess-host-oracle.md`。
 
 `audit_xiangqi_ai.py <report.jsonl> [...]` 审核原生 AI 测量报告：配对开局、交换先后手、动作格式、步数上限、胜负分母和耗时样本计数。未完局不计入和棋；无已完成局时得分必须为 null。此工具只审核统计一致性，不证明棋局合法、棋力达标或授权有效。基线和复现方式见 `docs/testing/2026-09-26-chinese-chess-ai-calibration.md`。

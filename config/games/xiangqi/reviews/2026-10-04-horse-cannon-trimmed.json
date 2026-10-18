@@ -1,0 +1,39 @@
+{
+  "format": "MOCS-XQ-REVIEW|1",
+  "base_sha256": "4a352daed89ef6968c14bbb98aea9b71eb6c5dc8353ab94d1bd462ce48164d93",
+  "section_comment": "# Project-generated horse/cannon trimmed review batch. Removals and source hashes remain in config/games/xiangqi/.",
+  "curated": [
+    {
+      "source": "config/games/xiangqi/candidates/xiangqi-horse-cannon-two-move-seed-20261009.txt",
+      "source_sha256": "6410a99e4693f85bc45c6f2555917d50be8afa6f628e4fe1b1b7ee405b5340a9",
+      "ordinal": 23,
+      "id": "xq-medium-012",
+      "difficulty": "medium",
+      "order": 12,
+      "title": "双马夹宫",
+      "theme": "两步强制胜",
+      "stars": 1,
+      "score": 20,
+      "review_status": "curated",
+      "curator": "MOCS project curation (agent-assisted)",
+      "review_note": "原始第 23 题红兵 (7,4) 对原首着无贡献，显式删除后重新证明唯一首着、无一步捷径及黑方全应手；两匹红马与红炮均对原解法必要。入包前仍需设备棋盘和难度复核。",
+      "drop_pieces": [[7, 4, "RED", "SOLDIER"]]
+    },
+    {
+      "source": "config/games/xiangqi/candidates/xiangqi-horse-cannon-two-move-seed-20261009.txt",
+      "source_sha256": "6410a99e4693f85bc45c6f2555917d50be8afa6f628e4fe1b1b7ee405b5340a9",
+      "ordinal": 74,
+      "id": "xq-medium-013",
+      "difficulty": "medium",
+      "order": 13,
+      "title": "双马掩护进炮",
+      "theme": "两步强制胜",
+      "stars": 1,
+      "score": 20,
+      "review_status": "curated",
+      "curator": "MOCS project curation (agent-assisted)",
+      "review_note": "原始第 74 题红兵 (1,1) 对原首着无贡献，显式删除后重新证明唯一首着、无一步捷径及黑方全应手；另一匹红马与红炮均对原解法必要。入包前仍需设备棋盘和难度复核。",
+      "drop_pieces": [[1, 1, "RED", "SOLDIER"]]
+    }
+  ]
+}

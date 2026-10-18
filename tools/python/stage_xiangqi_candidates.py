@@ -18,6 +18,7 @@ from verify_xiangqi_forced_win import principal_variation_wins, prove_red_win
 
 HEADER = re.compile(
     r"CANDIDATE ([1-9][0-9]*) seed=([0-9]+) attempt=([0-9]+) "
+    r"(?:family=(classic|rook-horse|rook-cannon|horse-cannon|double-rook) )?"
     r"fen=(\S+ \S+ \S+ \S+ \S+ \S+)"
 )
 SYMBOLS = {
@@ -98,13 +99,17 @@ def stage_candidates(stream: str, released_pack: str) -> dict[str, object]:
         "MOCS-XQ-ENDGAMES|5", "LICENSE|GPL-3.0-or-later",
         "AUTHOR|Master of Chess Strategy contributors",
     ]
-    seed, previous_attempt = None, -1
+    seed, previous_attempt, batch_family = None, -1, None
     for index, (header, proof, pieces, moves) in enumerate(blocks, 1):
-        ordinal, candidate_seed, attempt, fen = header.groups()
+        ordinal, candidate_seed, attempt, family_tag, fen = header.groups()
         candidate_seed, attempt = int(candidate_seed), int(attempt)
+        family = family_tag or "classic"
         if (int(ordinal) != index or candidate_seed > 0xffffffff or
                 (seed is not None and candidate_seed != seed) or attempt <= previous_attempt):
             raise AuditError("candidate numbering, seed or attempt is inconsistent")
+        if batch_family is not None and family != batch_family:
+            raise AuditError("attack family changes within candidate batch")
+        batch_family = family
         seed, previous_attempt = candidate_seed, attempt
         fields = proof.split("|")
         if fields == ["PROOF", "red_moves=1", "unique_first=true", "immediate_check_win=true"]:
@@ -120,12 +125,27 @@ def stage_candidates(stream: str, released_pack: str) -> dict[str, object]:
         fen_fields = fen.split()
         if (fen_fields[0] != _fen_board(pieces) or fen_fields[1:] != ["w", "-", "-", "0", "1"]):
             raise AuditError("candidate FEN differs from its placement")
+        if family_tag is not None:
+            red_types = [fields[4] for fields in (line.split("|") for line in pieces)
+                         if fields[3] == "RED"]
+            limits = {
+                "classic": ((1, 1), (1, 2), (0, 1)),
+                "rook-horse": ((1, 1), (1, 2), (0, 1)),
+                "rook-cannon": ((1, 1), (0, 0), (1, 1)),
+                "horse-cannon": ((0, 0), (1, 2), (1, 1)),
+                "double-rook": ((2, 2), (0, 0), (0, 0)),
+            }[family]
+            majors = ("CHARIOT", "HORSE", "CANNON")
+            if any(not minimum <= red_types.count(kind) <= maximum
+                   for kind, (minimum, maximum) in zip(majors, limits)):
+                raise AuditError("attack family piece inventory does not match")
         synthetic.extend([
             f"LEVEL|xq-easy-{index:03d}|0|{index}|待审候选|待审|RED|{red_moves}|1|10|{len(pieces)}|"
             + ("MAIN" if index == 1 else "BONUS"),
             *pieces, *moves, "END",
         ])
         staged.append({"ordinal": index, "seed": seed, "attempt": attempt,
+                       "family": family,
                        "fen": fen, "red_moves": red_moves, "proof_marker": proof,
                        "pieces": pieces,
                        "principal_variation": moves})
@@ -153,21 +173,44 @@ def stage_candidates(stream: str, released_pack: str) -> dict[str, object]:
                 proof.winning_first_moves[0] != level.moves[0]):
             raise AuditError("candidate host proof is incomplete or not unique")
         item["host_proof_nodes"] = proof.visited_nodes
-    return {"candidate_count": len(staged), "seed": seed,
+    return {"candidate_count": len(staged), "seed": seed, "family": batch_family,
             "source_sha256": hashlib.sha256(stream.encode("utf-8")).hexdigest(),
             "status": "staged-not-published", "candidates": staged}
+
+
+def stage_candidate_collection(
+    streams: list[tuple[str, str]], released_pack: str
+) -> dict[str, object]:
+    """Audit separate batches together so mirrored duplicates cannot cross files."""
+    if not streams or len({name for name, _ in streams}) != len(streams):
+        raise AuditError("candidate collection has no files or repeats a source name")
+    seen_positions: dict[str, str] = {}
+    batches = []
+    for name, stream in streams:
+        report = stage_candidates(stream, released_pack)
+        for candidate in report["candidates"]:
+            key = candidate["symmetry_sha256"]
+            if key in seen_positions:
+                raise AuditError(f"cross-batch mirrored duplicate: {seen_positions[key]} and {name}")
+            seen_positions[key] = name
+        batches.append({"source": name, "candidate_count": report["candidate_count"],
+                        "family": report["family"], "source_sha256": report["source_sha256"]})
+    return {"status": "staged-not-published", "batch_count": len(batches),
+            "candidate_count": len(seen_positions), "batches": batches}
 
 
 def main() -> int:
     repository = Path(__file__).resolve().parents[2]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("stream", type=Path)
+    parser.add_argument("stream", type=Path, nargs="+")
     parser.add_argument("--released-pack", type=Path, default=
                         repository / "app/src/main/assets/endgames/chinese_chess/endgames-v5.txt")
     args = parser.parse_args()
     try:
-        result = stage_candidates(args.stream.read_text(encoding="utf-8"),
-                                  args.released_pack.read_text(encoding="utf-8"))
+        released_pack = args.released_pack.read_text(encoding="utf-8")
+        streams = [(str(path), path.read_text(encoding="utf-8")) for path in args.stream]
+        result = (stage_candidates(streams[0][1], released_pack) if len(streams) == 1
+                  else stage_candidate_collection(streams, released_pack))
     except (AuditError, OSError, UnicodeDecodeError) as error:
         parser.exit(1, f"candidate staging failed: {error}\n")
     print(json.dumps(result, ensure_ascii=True, indent=2))

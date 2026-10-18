@@ -1,0 +1,37 @@
+{
+  "format": "MOCS-XQ-REVIEW|1",
+  "base_sha256": "523522889b77a27b6d98e809b9da12da2b170cbd294e6f7952fbb63136ed0875",
+  "section_comment": "# Project-generated horse/cannon review batch. Raw seed stream and curation remain in config/games/xiangqi/.",
+  "curated": [
+    {
+      "source": "config/games/xiangqi/candidates/xiangqi-horse-cannon-two-move-seed-20261009.txt",
+      "source_sha256": "6410a99e4693f85bc45c6f2555917d50be8afa6f628e4fe1b1b7ee405b5340a9",
+      "ordinal": 24,
+      "id": "xq-medium-010",
+      "difficulty": "medium",
+      "order": 10,
+      "title": "双马牵将炮击",
+      "theme": "两步强制胜",
+      "stars": 1,
+      "score": 20,
+      "review_status": "curated",
+      "curator": "MOCS project curation (agent-assisted)",
+      "review_note": "原始第 24 题无一步捷径且两步首着唯一；红兵、另一匹红马及红炮对原解法均必要。标题只描述两马与炮的配合；入包前仍需设备棋盘、难度和审美复核。"
+    },
+    {
+      "source": "config/games/xiangqi/candidates/xiangqi-horse-cannon-two-move-seed-20261009.txt",
+      "source_sha256": "6410a99e4693f85bc45c6f2555917d50be8afa6f628e4fe1b1b7ee405b5340a9",
+      "ordinal": 73,
+      "id": "xq-medium-011",
+      "difficulty": "medium",
+      "order": 11,
+      "title": "兵马封宫",
+      "theme": "两步强制胜",
+      "stars": 1,
+      "score": 20,
+      "review_status": "curated",
+      "curator": "MOCS project curation (agent-assisted)",
+      "review_note": "原始第 73 题无一步捷径且两步首着唯一；红马与红炮对原解法均必要。标题不把未走动的炮说成主动进攻；入包前仍需设备棋盘、难度和审美复核。"
+    }
+  ]
+}

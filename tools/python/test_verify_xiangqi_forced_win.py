@@ -35,7 +35,7 @@ class XiangqiShallowOracleTest(unittest.TestCase):
                     self.assertEqual(shallow.status, "complete")
                     self.assertEqual(shallow.winning_first_moves, ())
                 counts[level.theme] += 1
-        self.assertEqual(counts, {"多解胜局": 5, "唯一一步杀": 9, "两步强制胜": 2})
+        self.assertEqual(counts, {"多解胜局": 5, "唯一一步杀": 17, "两步强制胜": 13})
 
     def test_horse_leg_cannon_screen_and_facing_generals(self) -> None:
         board = [0] * 90
@@ -68,8 +68,8 @@ class XiangqiShallowOracleTest(unittest.TestCase):
 
     def test_release_pack_audit_reports_current_scope(self) -> None:
         report = audit_published_pack(PACK.read_text(encoding="utf-8"))
-        self.assertEqual(report["level_count"], 16)
-        self.assertEqual(report["themes"], {"多解胜局": 5, "唯一一步杀": 9, "两步强制胜": 2})
+        self.assertEqual(report["level_count"], 35)
+        self.assertEqual(report["themes"], {"多解胜局": 5, "唯一一步杀": 17, "两步强制胜": 13})
         self.assertGreater(report["visited_nodes"], 0)
 
 

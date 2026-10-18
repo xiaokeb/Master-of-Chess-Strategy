@@ -730,7 +730,8 @@ class ChineseChessGameViewModel internal constructor(
                                     )
                             )
                     ) {
-                        rejectStoredSession(repository)
+                        // A valid checkpoint for another selection is not damaged data.
+                        rejectStoredSession(repository, ChineseChessFeedback.GAME_RESTARTED)
                     } else {
                         restoreEngineState(repository, result.snapshot)
                     }
@@ -847,7 +848,10 @@ class ChineseChessGameViewModel internal constructor(
         }
     }
 
-    private suspend fun rejectStoredSession(repository: GameSessionRepository) {
+    private suspend fun rejectStoredSession(
+        repository: GameSessionRepository,
+        feedback: ChineseChessFeedback = ChineseChessFeedback.RESTORE_REJECTED,
+    ) {
         try {
             repository.clear(GameType.CHINESE_CHESS)
         } catch (_: RuntimeException) {
@@ -859,7 +863,7 @@ class ChineseChessGameViewModel internal constructor(
             resetAssessmentSeriesState()
             resetPosition(activeEngine)
             resetSessionState(resetAutoGameCount = true)
-            refresh(ChineseChessFeedback.RESTORE_REJECTED)
+            refresh(feedback)
             persistCurrentSession()
         }
     }

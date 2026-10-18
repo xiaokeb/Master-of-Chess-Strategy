@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from audit_chinese_chess_endgames import AuditError
-from stage_xiangqi_candidates import stage_candidates
+from stage_xiangqi_candidates import stage_candidate_collection, stage_candidates
 
 
 RELEASED = """MOCS-XQ-ENDGAMES|5
@@ -34,8 +34,26 @@ class CandidateStagingTest(unittest.TestCase):
         report = stage_candidates(STREAM, RELEASED)
         self.assertEqual(report["candidate_count"], 1)
         self.assertEqual(report["seed"], 42)
+        self.assertEqual(report["family"], "classic")
         self.assertEqual(report["status"], "staged-not-published")
         self.assertEqual(len(report["candidates"][0]["symmetry_sha256"]), 64)
+
+    def test_explicit_attack_family_must_match_piece_inventory(self) -> None:
+        tagged = STREAM.replace("attempt=9 fen=", "attempt=9 family=rook-horse fen=")
+        report = stage_candidates(tagged, RELEASED)
+        self.assertEqual(report["family"], "rook-horse")
+        self.assertEqual(report["candidates"][0]["family"], "rook-horse")
+        with self.assertRaisesRegex(AuditError, "attack family piece inventory"):
+            stage_candidates(tagged.replace("family=rook-horse", "family=horse-cannon"), RELEASED)
+        with self.assertRaisesRegex(AuditError, "attack family piece inventory"):
+            stage_candidates(tagged.replace("family=rook-horse", "family=double-rook"), RELEASED)
+
+    def test_attack_family_cannot_change_within_a_batch(self) -> None:
+        first = STREAM.replace("attempt=9 fen=", "attempt=9 family=rook-horse fen=")
+        second = STREAM.replace("CANDIDATE 1 seed=42 attempt=9 fen=",
+                                "CANDIDATE 2 seed=42 attempt=10 family=classic fen=")
+        with self.assertRaisesRegex(AuditError, "attack family changes"):
+            stage_candidates(first + second, RELEASED)
 
     def test_two_move_candidate_is_independently_screened(self) -> None:
         stream = "\n".join((
@@ -50,6 +68,8 @@ class CandidateStagingTest(unittest.TestCase):
         report = stage_candidates(stream, RELEASED)
         self.assertEqual(report["candidates"][0]["red_moves"], 2)
         self.assertGreater(report["candidates"][0]["host_proof_nodes"], 0)
+        with self.assertRaisesRegex(AuditError, "attack family piece inventory"):
+            stage_candidates(stream.replace("attempt=19 fen=", "attempt=19 family=rook-cannon fen="), RELEASED)
 
     def test_missing_proof_or_changed_fen_is_rejected(self) -> None:
         with self.assertRaisesRegex(AuditError, "recognized native proof"):
@@ -89,6 +109,10 @@ class CandidateStagingTest(unittest.TestCase):
         with self.assertRaisesRegex(AuditError, "mirrored duplicate board"):
             stage_candidates(STREAM + mirror, RELEASED)
 
+    def test_separate_batches_cannot_repeat_a_board_or_its_mirror(self) -> None:
+        with self.assertRaisesRegex(AuditError, "cross-batch mirrored duplicate"):
+            stage_candidate_collection([("first.txt", STREAM), ("second.txt", STREAM)], RELEASED)
+
     def test_legacy_ids_cannot_exempt_new_batch_mirrors(self) -> None:
         candidates = []
         for ordinal, x, row in ((1, 0, "R8"), (2, 1, "1R7"),
@@ -102,6 +126,27 @@ class CandidateStagingTest(unittest.TestCase):
             candidates.append(candidate)
         with self.assertRaisesRegex(AuditError, "candidate batch contains a mirrored duplicate"):
             stage_candidates("".join(candidates), RELEASED)
+
+    def test_new_project_batches_were_distinct_before_release_and_now_cannot_republish(self) -> None:
+        root = Path(__file__).resolve().parents[2]
+        source_dir = root / "config/games/xiangqi/candidates"
+        sources = [
+            ("xiangqi-rook-cannon-seed-20261007.txt",
+             "72bf3897d650f7f88f03f6b207f33ac9bd59e6f5d5a7127d3d2395416034f882"),
+            ("xiangqi-horse-cannon-two-move-seed-20261005.txt",
+             "2d9e1a35affce1a42b18c29d7763ec44e1a9f519e3e0991108832d9b7321aa1c"),
+        ]
+        pack = root / "app/src/main/assets/endgames/chinese_chess/endgames-v5.txt"
+        batches = [(name, (source_dir / name).read_text(encoding="utf-8")) for name, _ in sources]
+        released = pack.read_text(encoding="utf-8")
+        previous_pack = released.split("\n# Project-generated rook/cannon and horse/cannon revision.", 1)[0]
+        report = stage_candidate_collection(batches, previous_pack)
+        self.assertEqual("staged-not-published", report["status"])
+        self.assertEqual(102, report["candidate_count"])
+        self.assertEqual([expected for _, expected in sources],
+                         [batch["source_sha256"] for batch in report["batches"]])
+        with self.assertRaisesRegex(AuditError, "candidate duplicates a released board"):
+            stage_candidate_collection(batches, released)
 
 
 if __name__ == "__main__":

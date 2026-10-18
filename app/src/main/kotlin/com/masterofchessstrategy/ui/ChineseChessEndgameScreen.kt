@@ -1,17 +1,23 @@
 package com.masterofchessstrategy.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items as lazyRowItems
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +26,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -33,6 +40,7 @@ import com.masterofchessstrategy.engine.Difficulty
 
 internal const val ENDGAME_SCREEN_TAG = "endgame_screen"
 internal const val ENDGAME_LEVEL_PREFIX = "endgame_level_"
+internal const val ENDGAME_SUMMARY_TAG = "endgame_summary"
 
 @Composable
 internal fun ChineseChessEndgameScreen(
@@ -50,82 +58,132 @@ internal fun ChineseChessEndgameScreen(
             .fillMaxSize()
             .testTag(ENDGAME_SCREEN_TAG),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            PageHeader(
-                title = stringResource(R.string.endgame_catalog_title),
-                subtitle = stringResource(R.string.endgame_catalog_subtitle),
-                onBack = onBack,
-            )
-            SelectionRow(
-                entries = EndgameCatalogMode.entries,
-                selected = state.mode,
-                label = { it.title() },
-                onSelected = onModeSelected,
-            )
-            SelectionRow(
-                entries = Difficulty.entries,
-                selected = state.selectedDifficulty,
-                label = { it.title() },
-                onSelected = onDifficultySelected,
-            )
-            if (state.mode == EndgameCatalogMode.THEME && state.themes.isNotEmpty()) {
-                SelectionRow(
-                    entries = state.themes,
-                    selected = state.selectedTheme,
-                    label = { it },
-                    onSelected = onThemeSelected,
-                )
-            }
-            if (state.mode == EndgameCatalogMode.RANDOM) {
-                OutlinedButton(onClick = onRandomChallenge) {
-                    Text(stringResource(R.string.endgame_random_again))
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val configuration = LocalConfiguration.current
+            val availableWidth = maxWidth
+            if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                Row(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .width(minOf(380.dp, availableWidth * 0.4f))
+                            .fillMaxHeight()
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        EndgameControls(state, onBack, onModeSelected, onDifficultySelected,
+                            onThemeSelected, onRandomChallenge)
+                        EndgameSummary(state)
+                    }
+                    EndgameLevels(state, onLevelSelected, Modifier.weight(1f).fillMaxHeight())
                 }
-            }
-            state.feedback?.let {
-                Text(
-                    text = feedbackText(it),
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
-            if (state.isLoading) {
-                Text(stringResource(R.string.endgame_loading))
             } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(180.dp),
-                    modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    items(state.visibleEntries, key = { it.level.id }) { entry ->
-                        EndgameLevelCard(entry, onLevelSelected)
-                    }
+                    EndgameControls(state, onBack, onModeSelected, onDifficultySelected,
+                        onThemeSelected, onRandomChallenge)
+                    EndgameLevels(state, onLevelSelected, Modifier.weight(1f))
+                    EndgameSummary(state)
                 }
             }
-            Surface(
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                shape = MaterialTheme.shapes.medium,
-            ) {
-                Text(
-                    text = stringResource(
-                        R.string.endgame_progress_summary,
-                        state.completedCount,
-                        state.entries.size,
-                        state.progress.totalStars,
-                        state.progress.totalScore,
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                )
+        }
+    }
+}
+
+@Composable
+private fun EndgameControls(
+    state: ChineseChessEndgameUiState,
+    onBack: () -> Unit,
+    onModeSelected: (EndgameCatalogMode) -> Unit,
+    onDifficultySelected: (Difficulty) -> Unit,
+    onThemeSelected: (String) -> Unit,
+    onRandomChallenge: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        PageHeader(
+            title = stringResource(R.string.endgame_catalog_title),
+            subtitle = stringResource(R.string.endgame_catalog_subtitle),
+            onBack = onBack,
+        )
+        SelectionRow(
+            entries = EndgameCatalogMode.entries,
+            selected = state.mode,
+            label = { it.title() },
+            onSelected = onModeSelected,
+        )
+        SelectionRow(
+            entries = Difficulty.entries,
+            selected = state.selectedDifficulty,
+            label = { it.title() },
+            onSelected = onDifficultySelected,
+        )
+        if (state.mode == EndgameCatalogMode.THEME && state.themes.isNotEmpty()) {
+            SelectionRow(
+                entries = state.themes,
+                selected = state.selectedTheme,
+                label = { it },
+                onSelected = onThemeSelected,
+            )
+        }
+        if (state.mode == EndgameCatalogMode.RANDOM) {
+            OutlinedButton(onClick = onRandomChallenge) {
+                Text(stringResource(R.string.endgame_random_again))
             }
         }
+        state.feedback?.let {
+            Text(
+                text = feedbackText(it),
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
+}
+
+@Composable
+private fun EndgameLevels(
+    state: ChineseChessEndgameUiState,
+    onLevelSelected: (String) -> Unit,
+    modifier: Modifier,
+) {
+    if (state.isLoading) {
+        Text(stringResource(R.string.endgame_loading), modifier = modifier)
+    } else {
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(180.dp),
+            modifier = modifier,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            items(state.visibleEntries, key = { it.level.id }) { entry ->
+                EndgameLevelCard(entry, onLevelSelected)
+            }
+        }
+    }
+}
+
+@Composable
+private fun EndgameSummary(state: ChineseChessEndgameUiState) {
+    Surface(
+        modifier = Modifier.testTag(ENDGAME_SUMMARY_TAG),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        shape = MaterialTheme.shapes.medium,
+    ) {
+        Text(
+            text = stringResource(
+                R.string.endgame_progress_summary,
+                state.completedCount,
+                state.entries.size,
+                state.progress.totalStars,
+                state.progress.totalScore,
+            ),
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
     }
 }
 

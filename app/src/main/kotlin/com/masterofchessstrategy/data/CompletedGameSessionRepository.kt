@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.masterofchessstrategy.endgame.ChineseChessEndgamePack
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.games.xiangqi.validateXiangqiEndgameCompletion
 
 /** One immutable terminal checkpoint; all rewards must agree with this exact game. */
 internal data class CompletedGameSession(
@@ -62,6 +63,7 @@ internal class RoomCompletedGameSessionRepository(
             val reward = if (game.snapshot.mode == StoredGameMode.ENDGAME && game.record.result == GameResult.FIRST_PLAYER_WIN) {
                 val level = pack.levels.singleOrNull { pack.sessionVariantId(it.id) == game.snapshot.sessionVariantId }
                     ?: error("Unknown endgame completion")
+                validateXiangqiEndgameCompletion(game, level)
                 RoomEndgameProgressRepository(database.endgameProgressDao(), pack).complete(
                     level, (record.moveCount + 1) / 2, record.completedAtEpochMillis,
                 )

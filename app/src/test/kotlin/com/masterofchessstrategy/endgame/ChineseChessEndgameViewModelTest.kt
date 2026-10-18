@@ -25,6 +25,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChineseChessEndgameViewModelTest {
@@ -90,6 +91,69 @@ class ChineseChessEndgameViewModelTest {
         assertEquals(1, viewModel.uiState.progress.totalStars)
         assertEquals(10, viewModel.uiState.progress.totalScore)
         assertEquals(EndgameCatalogFeedback.COMPLETED_AGAIN, viewModel.uiState.feedback)
+    }
+
+    @Test
+    fun newMediumBonusLevelsFollowExistingCompletionIds() = runTest(dispatcher) {
+        val bundled = ChineseChessEndgamePackParser.parse(
+            File("src/main/assets/endgames/chinese_chess/endgames-v5.txt").readText(Charsets.UTF_8),
+        )
+        val viewModel = ChineseChessEndgameViewModel(bundled, FakeRepository())
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.entries.entry("xq-medium-003").isUnlocked)
+
+        listOf("xq-easy-001", "xq-easy-002", "xq-medium-001", "xq-medium-002")
+            .forEach { levelId ->
+                viewModel.complete(levelId, 1)
+                advanceUntilIdle()
+            }
+        assertTrue(viewModel.uiState.entries.entry("xq-medium-003").isUnlocked)
+        assertFalse(viewModel.uiState.entries.entry("xq-medium-004").isUnlocked)
+
+        viewModel.selectDifficulty(Difficulty.MEDIUM)
+        assertEquals(
+            (1..13).map { "xq-medium-${it.toString().padStart(3, '0')}" },
+            viewModel.uiState.visibleEntries.map { it.level.id },
+        )
+        viewModel.complete("xq-medium-003", 2)
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.entries.entry("xq-medium-004").isUnlocked)
+        assertFalse(viewModel.uiState.entries.entry("xq-medium-006").isUnlocked)
+        listOf("xq-medium-004", "xq-medium-005", "xq-medium-006").forEach { levelId ->
+            viewModel.complete(levelId, 1)
+            advanceUntilIdle()
+        }
+        assertTrue(viewModel.uiState.entries.entry("xq-medium-007").isUnlocked)
+        assertFalse(viewModel.uiState.entries.entry("xq-medium-008").isUnlocked)
+        listOf("xq-medium-007", "xq-medium-008", "xq-medium-009").forEach { levelId ->
+            assertTrue(viewModel.uiState.entries.entry(levelId).isUnlocked)
+            viewModel.complete(levelId, 2)
+            advanceUntilIdle()
+        }
+        assertTrue(viewModel.uiState.entries.entry("xq-medium-010").isUnlocked)
+        assertFalse(viewModel.uiState.entries.entry("xq-medium-011").isUnlocked)
+
+        val starsBefore = viewModel.uiState.progress.totalStars
+        val scoreBefore = viewModel.uiState.progress.totalScore
+        // Each appended bonus level unlocks only its successor, without double rewards.
+        val appended = (10..13).map { "xq-medium-${it.toString().padStart(3, '0')}" }
+        appended.forEachIndexed { index, levelId ->
+            assertTrue(viewModel.uiState.entries.entry(levelId).isUnlocked)
+            appended.drop(index + 1).forEach { lockedId ->
+                assertFalse(viewModel.uiState.entries.entry(lockedId).isUnlocked)
+            }
+            viewModel.complete(levelId, 2)
+            advanceUntilIdle()
+            assertEquals(EndgameCatalogFeedback.FIRST_COMPLETION, viewModel.uiState.feedback)
+            assertEquals(starsBefore + index + 1, viewModel.uiState.progress.totalStars)
+            assertEquals(scoreBefore + (index + 1) * 20, viewModel.uiState.progress.totalScore)
+
+            viewModel.complete(levelId, 2)
+            advanceUntilIdle()
+            assertEquals(EndgameCatalogFeedback.COMPLETED_AGAIN, viewModel.uiState.feedback)
+            assertEquals(starsBefore + index + 1, viewModel.uiState.progress.totalStars)
+            assertEquals(scoreBefore + (index + 1) * 20, viewModel.uiState.progress.totalScore)
+        }
     }
 
     @Test

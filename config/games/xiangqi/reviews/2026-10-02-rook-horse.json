@@ -1,0 +1,67 @@
+{
+  "format": "MOCS-XQ-REVIEW|1",
+  "base_sha256": "d43cc9c44a6099d0a5e439fc4fb51ea34ba0055b199d1ea26607754d24dccedc",
+  "section_comment": "# Project-generated rook/cannon and horse/cannon revision. Source streams remain in config/games/xiangqi/candidates/.",
+  "curated": [
+    {
+      "source": "config/games/xiangqi/candidates/xiangqi-rook-cannon-seed-20261007.txt",
+      "source_sha256": "72bf3897d650f7f88f03f6b207f33ac9bd59e6f5d5a7127d3d2395416034f882",
+      "ordinal": 43,
+      "id": "xq-easy-017",
+      "difficulty": "easy",
+      "order": 17,
+      "title": "车炮兵锁宫",
+      "theme": "唯一一步杀",
+      "stars": 1,
+      "score": 10,
+      "review_status": "curated",
+      "curator": "MOCS project curation (agent-assisted)",
+      "review_note": "原生唯一胜着和独立主机证明通过；移除红兵或红炮都失去原首着胜法，车炮兵确实配合封宫。"
+    },
+    {
+      "source": "config/games/xiangqi/candidates/xiangqi-rook-cannon-seed-20261007.txt",
+      "source_sha256": "72bf3897d650f7f88f03f6b207f33ac9bd59e6f5d5a7127d3d2395416034f882",
+      "ordinal": 41,
+      "id": "xq-easy-018",
+      "difficulty": "easy",
+      "order": 18,
+      "title": "车炮封路",
+      "theme": "唯一一步杀",
+      "stars": 1,
+      "score": 10,
+      "review_status": "curated",
+      "curator": "MOCS project curation (agent-assisted)",
+      "review_note": "红车横入后红炮对原首着胜法必要；红兵只是背景子力，标题不宣称红兵参与合围。"
+    },
+    {
+      "source": "config/games/xiangqi/candidates/xiangqi-horse-cannon-two-move-seed-20261005.txt",
+      "source_sha256": "2d9e1a35affce1a42b18c29d7763ec44e1a9f519e3e0991108832d9b7321aa1c",
+      "ordinal": 1,
+      "id": "xq-medium-008",
+      "difficulty": "medium",
+      "order": 8,
+      "title": "跃马引炮",
+      "theme": "两步强制胜",
+      "stars": 1,
+      "score": 20,
+      "review_status": "curated",
+      "curator": "MOCS project curation (agent-assisted)",
+      "review_note": "马先行、炮后应的主变化清晰；无一步捷径且全部黑方应手已穷举。"
+    },
+    {
+      "source": "config/games/xiangqi/candidates/xiangqi-horse-cannon-two-move-seed-20261005.txt",
+      "source_sha256": "2d9e1a35affce1a42b18c29d7763ec44e1a9f519e3e0991108832d9b7321aa1c",
+      "ordinal": 2,
+      "id": "xq-medium-009",
+      "difficulty": "medium",
+      "order": 9,
+      "title": "跃马诱士",
+      "theme": "两步强制胜",
+      "stars": 1,
+      "score": 20,
+      "review_status": "curated",
+      "curator": "MOCS project curation (agent-assisted)",
+      "review_note": "主变化先跃马再引士，炮走横线收束；全防守证明通过但未做玩家难度标定。"
+    }
+  ]
+}

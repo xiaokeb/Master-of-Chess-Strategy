@@ -79,13 +79,16 @@ class ChineseChessEndgamePackTest {
 
         assertEquals("GPL-3.0-or-later", pack.license)
         assertEquals(Difficulty.entries.toSet(), pack.levels.map { it.difficulty }.toSet())
-        assertEquals(16, pack.levels.size)
-        assertEquals(9, pack.levels.count { it.theme == "唯一一步杀" })
+        assertEquals(35, pack.levels.size)
+        assertEquals(17, pack.levels.count { it.theme == "唯一一步杀" })
         assertEquals(5, pack.levels.count { it.theme == "多解胜局" })
         assertEquals(5, pack.levels.count { it.track == ChineseChessEndgameTrack.MAIN })
-        assertEquals(11, pack.levels.count { it.track == ChineseChessEndgameTrack.BONUS })
+        assertEquals(30, pack.levels.count { it.track == ChineseChessEndgameTrack.BONUS })
         val twoMoveLevels = pack.levels.filter { it.theme == "两步强制胜" }
-        assertEquals(listOf("xq-easy-009", "xq-easy-010"), twoMoveLevels.map { it.id })
+        assertEquals(
+            listOf("xq-easy-009", "xq-easy-010", "xq-medium-003", "xq-medium-004", "xq-medium-005", "xq-medium-006", "xq-medium-007", "xq-medium-008", "xq-medium-009", "xq-medium-010", "xq-medium-011", "xq-medium-012", "xq-medium-013"),
+            twoMoveLevels.map { it.id },
+        )
         assertTrue(twoMoveLevels.all { it.maxPlayerMoves == 2 && it.principalVariation.size == 3 })
         assertTrue(pack.levels.all { it.principalVariation.isNotEmpty() })
     }

@@ -1,5 +1,6 @@
 package com.masterofchessstrategy.ui
 
+import android.os.ParcelFileDescriptor
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -16,7 +17,9 @@ import com.masterofchessstrategy.endgame.EndgameLevelEntry
 import com.masterofchessstrategy.engine.BoardMove
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.ChineseChessSide
+import com.masterofchessstrategy.engine.ChineseChessPiece
 import com.masterofchessstrategy.engine.Difficulty
+import com.masterofchessstrategy.game.ChineseChessGameUiState
 import org.junit.Rule
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -50,6 +53,134 @@ class ChineseChessEndgameScreenTest {
         ).assertIsDisplayed()
         composeRule.onNodeWithTag(ENDGAME_LEVEL_PREFIX + level.id).performClick()
         composeRule.runOnIdle { assertEquals(level.id, selected) }
+    }
+
+    @Test
+    fun newMediumMixedPieceLevelIsVisibleAndSelectable() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val level = ChineseChessEndgamePackParser.loadBundled(context.assets).levels
+            .single { it.id == "xq-medium-004" }
+        val entry = EndgameLevelEntry(level, true, true, null)
+        var selected: String? = null
+        composeRule.setContent {
+            ChineseChessEndgameScreen(
+                state = ChineseChessEndgameUiState(
+                    selectedDifficulty = Difficulty.MEDIUM,
+                    entries = listOf(entry), visibleEntries = listOf(entry),
+                    themes = listOf(level.theme), isLoading = false,
+                ),
+                onBack = {}, onModeSelected = {}, onDifficultySelected = {},
+                onThemeSelected = {}, onRandomChallenge = {},
+                onLevelSelected = { selected = it },
+            )
+        }
+        composeRule.onNodeWithText(
+            "马跃宫口", substring = true, useUnmergedTree = true,
+        ).assertIsDisplayed()
+        composeRule.onNodeWithText(
+            context.getString(R.string.endgame_goal, 2, 1, 20), useUnmergedTree = true,
+        ).assertIsDisplayed()
+        composeRule.waitForIdle()
+        ParcelFileDescriptor.AutoCloseInputStream(
+            InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
+                "screencap -p /data/local/tmp/mocs-xiangqi-medium-004.png",
+            ),
+        ).use { it.readBytes() }
+        composeRule.onNodeWithTag(ENDGAME_LEVEL_PREFIX + level.id).performClick()
+        composeRule.runOnIdle { assertEquals(level.id, selected) }
+    }
+
+    @Test
+    fun newMediumMixedPiecePositionRendersOnTheGameBoard() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val level = ChineseChessEndgamePackParser.loadBundled(context.assets).levels
+            .single { it.id == "xq-medium-004" }
+        val board = MutableList<ChineseChessPiece?>(90) { null }
+        level.pieces.forEach { positioned ->
+            board[positioned.position.y * 9 + positioned.position.x] = positioned.piece
+        }
+        composeRule.setContent {
+            ChineseChessGameScreen(
+                state = ChineseChessGameUiState(
+                    board = board, isEndgame = true, endgameTitle = level.title,
+                    endgameMaxPlayerMoves = level.maxPlayerMoves,
+                ),
+                onSquareTap = {}, onUndo = {}, onHint = {}, onResign = {},
+                onRestart = {}, onBack = {},
+            )
+        }
+        composeRule.onNodeWithText(
+            context.getString(R.string.endgame_game_title, level.title),
+        ).assertIsDisplayed()
+        composeRule.onNodeWithTag(CHINESE_CHESS_BOARD_TAG).assertIsDisplayed()
+        composeRule.waitForIdle()
+        ParcelFileDescriptor.AutoCloseInputStream(
+            InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
+                "screencap -p /data/local/tmp/mocs-xiangqi-medium-004-board.png",
+            ),
+        ).use { it.readBytes() }
+    }
+
+    @Test
+    fun classicTwoMoveLevelShowsItsGoalAndPlayableBoard() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        val level = ChineseChessEndgamePackParser.loadBundled(context.assets).levels
+            .single { it.id == "xq-medium-007" }
+        val board = MutableList<ChineseChessPiece?>(90) { null }
+        level.pieces.forEach { positioned ->
+            board[positioned.position.y * 9 + positioned.position.x] = positioned.piece
+        }
+        composeRule.setContent {
+            ChineseChessGameScreen(
+                state = ChineseChessGameUiState(
+                    board = board, isEndgame = true, endgameTitle = level.title,
+                    endgameMaxPlayerMoves = level.maxPlayerMoves,
+                ),
+                onSquareTap = {}, onUndo = {}, onHint = {}, onResign = {},
+                onRestart = {}, onBack = {},
+            )
+        }
+        composeRule.onNodeWithText(context.getString(R.string.endgame_game_title, "中车夺士"))
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag(CHINESE_CHESS_BOARD_TAG).assertIsDisplayed()
+        composeRule.waitForIdle()
+        ParcelFileDescriptor.AutoCloseInputStream(
+            instrumentation.uiAutomation.executeShellCommand(
+                "screencap -p /data/local/tmp/mocs-xiangqi-medium-007-board.png",
+            ),
+        ).use { it.readBytes() }
+    }
+
+    @Test
+    fun newHorseCannonTwoMoveLevelRendersItsPlayableBoard() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        val level = ChineseChessEndgamePackParser.loadBundled(context.assets).levels
+            .single { it.id == "xq-medium-009" }
+        val board = MutableList<ChineseChessPiece?>(90) { null }
+        level.pieces.forEach { positioned ->
+            board[positioned.position.y * 9 + positioned.position.x] = positioned.piece
+        }
+        composeRule.setContent {
+            ChineseChessGameScreen(
+                state = ChineseChessGameUiState(
+                    board = board, isEndgame = true, endgameTitle = level.title,
+                    endgameMaxPlayerMoves = level.maxPlayerMoves,
+                ),
+                onSquareTap = {}, onUndo = {}, onHint = {}, onResign = {},
+                onRestart = {}, onBack = {},
+            )
+        }
+        composeRule.onNodeWithText(context.getString(R.string.endgame_game_title, level.title))
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag(CHINESE_CHESS_BOARD_TAG).assertIsDisplayed()
+        composeRule.waitForIdle()
+        ParcelFileDescriptor.AutoCloseInputStream(
+            instrumentation.uiAutomation.executeShellCommand(
+                "screencap -p /data/local/tmp/mocs-xiangqi-medium-009-board.png",
+            ),
+        ).use { it.readBytes() }
     }
 
     @Test
