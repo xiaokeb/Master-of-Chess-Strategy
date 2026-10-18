@@ -58,6 +58,13 @@ struct NaturalLimitReview {
     bool eligible;
 };
 
+enum class CheckingMateProofStatus { proven, refuted, inconclusive };
+
+struct CheckingMateProof {
+    CheckingMateProofStatus status;
+    std::size_t visited_nodes;
+};
+
 // One checking move beyond the claimant's first ten removes one full round.
 [[nodiscard]] inline constexpr std::uint16_t natural_limit_effective_plies(
     const std::uint16_t raw_plies, const std::uint16_t claimant_checks
@@ -100,6 +107,11 @@ public:
     [[nodiscard]] ChineseChessSearchPosition search_position() const;
     [[nodiscard]] NaturalLimitReview natural_limit_review(Side claimant) const noexcept;
     [[nodiscard]] NaturalLimitClaimResult claim_natural_limit() noexcept;
+    // Board-only diagnostic of rule 24.2, independent of the current turn and
+    // saved repetition history; an exhausted bound is never a refutation.
+    [[nodiscard]] CheckingMateProof checking_mate_proof(
+        Side attacker, unsigned checking_move_limit = 4, std::size_t node_limit = 512
+    ) const noexcept;
     // Legacy diagnostic search; production JNI uses Pikafish for all levels.
     [[nodiscard]] std::optional<EngineAction> best_move(
         Difficulty difficulty
@@ -112,6 +124,13 @@ private:
         static_cast<std::size_t>(board_width * board_height);
 
     using Board = std::array<std::optional<Piece>, board_size>;
+
+    struct CheckingMateContext {
+        std::size_t visited_nodes{0};
+        std::size_t node_limit;
+        std::array<const Board*, 17> path_boards{};
+        std::array<Side, 17> path_sides{};
+    };
 
     enum class MoveNature : std::uint8_t {
         idle = 0,
@@ -226,6 +245,14 @@ private:
         const Board& board,
         Side attacker
     ) noexcept;
+    [[nodiscard]] static CheckingMateProof prove_checking_mate(
+        const Board& board, Side attacker, unsigned checking_move_limit,
+        std::size_t node_limit
+    ) noexcept;
+    [[nodiscard]] static CheckingMateProofStatus search_checking_mate(
+        const Board& board, Side attacker, Side turn, unsigned checks_left,
+        std::size_t ply, CheckingMateContext& context
+    ) noexcept;
     [[nodiscard]] static std::int32_t exchange_gain(
         const Board& board,
         Side perspective,
@@ -242,7 +269,8 @@ private:
         const Board& before,
         const Board& after,
         Side mover,
-        PieceType moving_type
+        PieceType moving_type,
+        bool continuous_kill
     ) noexcept;
     [[nodiscard]] static std::array<bool, board_size> unrooted_targets(
         const Board& board,
@@ -297,6 +325,9 @@ private:
     std::vector<PositionState> position_history_;
     std::uint16_t no_capture_plies_{0};
     GameResult adjudicated_result_{GameResult::ongoing};
+    // Old v3 games retain their original judge; a reset starts revision 1.
+    std::uint8_t snapshot_version_{4};
+    std::uint8_t rule_revision_{1};
 };
 
 }  // namespace mocs::engine

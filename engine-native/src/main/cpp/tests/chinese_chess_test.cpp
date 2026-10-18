@@ -349,7 +349,7 @@ void saved_adjudication_is_derived_from_history() {
         }
         auto data = engine.serialize();
         // v2 had no claim events; its derived outcome can be recalculated.
-        data.resize(data.size() - 6);
+        data.resize(data.size() - 6 - (data[4] == 4 ? 1 : 0));
         data[4] = 2;
         data[9] = static_cast<std::uint8_t>(GameResult::draw);
         append_u32(data, crc32(data, data.size()));
@@ -898,13 +898,136 @@ void complete_sixty_round_record_can_be_claimed_but_not_auto_drawn(
     assert(engine.claim_natural_limit() == NaturalLimitClaimResult::draw);
     assert(engine.game_result() == GameResult::draw);
     const auto saved = engine.serialize();
-    assert(saved[4] == 3);
+    assert(saved[4] == 4);
     ChineseChessEngine restored;
     assert(restored.restore(saved).restored);
     assert(restored.serialize() == saved);
     assert(restored.game_result() == GameResult::draw);
     assert(restored.undo());
     assert(restored.game_result() == GameResult::ongoing);
+}
+
+void eleventh_check_requires_an_extra_round_in_real_history() {
+    // Two different quiet rook circuits avoid threefold repetition while
+    // testing the claimant's check deduction against actual legal moves.
+    constexpr std::array<std::array<int, 2>, 12> attacker_path{{
+        {{0, 6}}, {{1, 6}}, {{2, 6}}, {{3, 6}}, {{3, 7}}, {{3, 8}},
+        {{3, 9}}, {{2, 9}}, {{1, 9}}, {{0, 9}}, {{0, 8}}, {{0, 7}},
+    }};
+    constexpr std::array<std::array<int, 2>, 10> defender_path{{
+        {{6, 0}}, {{7, 0}}, {{8, 0}}, {{8, 1}}, {{8, 2}},
+        {{8, 3}}, {{7, 3}}, {{6, 3}}, {{6, 2}}, {{6, 1}},
+    }};
+    for (const auto claimant : {Side::red, Side::black}) {
+        const bool rotated = claimant == Side::black;
+        const auto defender = rotated ? Side::red : Side::black;
+        const auto x = [rotated](int value) { return rotated ? 8 - value : value; };
+        const auto y = [rotated](int value) { return rotated ? 9 - value : value; };
+        ChineseChessEngine engine;
+        assert(engine.restore(custom_position(claimant, {
+            {x(5), y(9), {PieceType::general, claimant}},
+            {x(4), y(0), {PieceType::general, defender}},
+            {x(5), y(4), {PieceType::soldier, claimant}},
+            {x(0), y(6), {PieceType::chariot, claimant}},
+            {x(6), y(0), {PieceType::chariot, defender}},
+        })).restored);
+        const auto move = [&x, &y](int fx, int fy, int tx, int ty) {
+            return make_board_move(x(fx), y(fy), x(tx), y(ty));
+        };
+        int rook_x = 0;
+        int rook_y = 6;
+        std::size_t defender_index = 0;
+        for (const int rank : {6, 7, 8, 9, 5}) {
+            if (rank != rook_y) {
+                assert(engine.apply(move(rook_x, rook_y, rook_x, rank)).accepted);
+                const auto& from = defender_path[defender_index];
+                const auto& to = defender_path[++defender_index];
+                assert(engine.apply(move(from[0], from[1], to[0], to[1])).accepted);
+                rook_y = rank;
+            }
+            assert(engine.apply(move(rook_x, rook_y, 4, rank)).accepted);
+            assert(engine.is_in_check(defender));
+            assert(engine.apply(move(4, 0, 3, 0)).accepted);
+            assert(engine.apply(move(4, rank, 3, rank)).accepted);
+            assert(engine.is_in_check(defender));
+            assert(engine.apply(move(3, 0, 4, 0)).accepted);
+            rook_x = 3;
+        }
+        auto review = engine.natural_limit_review(claimant);
+        assert(review.claimant_checks == 10 && review.no_capture_plies == 28);
+        assert(review.effective_plies == 28 && review.complete_record);
+        assert(engine.apply(move(3, 5, 4, 5)).accepted);
+        assert(engine.is_in_check(defender));
+        assert(engine.apply(move(4, 0, 3, 0)).accepted);
+        review = engine.natural_limit_review(claimant);
+        assert(review.claimant_checks == 11 && review.no_capture_plies == 30);
+        assert(review.effective_plies == 28);
+
+        // Leave the checking region, restore the defender's general to its
+        // quiet file, then reach exactly 120 recorded non-capture plies.
+        assert(engine.apply(move(4, 5, 0, 5)).accepted);
+        assert(engine.apply(move(3, 0, 4, 0)).accepted);
+        assert(engine.apply(move(0, 5, 0, 6)).accepted);
+        assert(engine.apply(move(4, 0, 5, 0)).accepted);
+        constexpr std::size_t quiet_rounds = (120 - 34) / 2;
+        for (std::size_t round = 0; round < quiet_rounds; ++round) {
+            const auto& from = attacker_path[round % attacker_path.size()];
+            const auto& to = attacker_path[(round + 1) % attacker_path.size()];
+            assert(engine.apply(move(from[0], from[1], to[0], to[1])).accepted);
+            const auto& reply_from = defender_path[(4 + round) % defender_path.size()];
+            const auto& reply_to = defender_path[(5 + round) % defender_path.size()];
+            assert(engine.apply(move(reply_from[0], reply_from[1], reply_to[0], reply_to[1])).accepted);
+            assert(engine.game_result() == GameResult::ongoing);
+        }
+        review = engine.natural_limit_review(claimant);
+        assert(review.no_capture_plies == 120 && review.recorded_plies == 120);
+        assert(review.claimant_checks == 11 && review.effective_plies == 118);
+        assert(review.complete_record && !review.eligible);
+        const auto other_review = engine.natural_limit_review(defender);
+        assert(other_review.claimant_checks == 0 && other_review.effective_plies == 120);
+        assert(other_review.eligible); // Only the claimant's checks are excluded.
+        assert(engine.claim_natural_limit() == NaturalLimitClaimResult::first_false_claim);
+        assert(engine.game_result() == GameResult::ongoing);
+
+        ChineseChessEngine restored;
+        const auto saved = engine.serialize();
+        assert(restored.restore(saved).restored);
+        assert(restored.serialize() == saved);
+        assert(restored.natural_limit_review(claimant).effective_plies == 118);
+        auto captured = restored;
+        const auto& current_attacker = attacker_path[quiet_rounds % attacker_path.size()];
+        const auto& current_defender = defender_path[(4 + quiet_rounds) % defender_path.size()];
+        assert(captured.apply(move(current_attacker[0], current_attacker[1], 2, 3)).accepted);
+        assert(captured.apply(move(current_defender[0], current_defender[1], 2, 3)).accepted);
+        const auto new_stage = captured.natural_limit_review(claimant);
+        assert(new_stage.no_capture_plies == 0 && new_stage.recorded_plies == 0);
+        assert(new_stage.claimant_checks == 0 && new_stage.complete_record);
+        assert(captured.claim_natural_limit() == NaturalLimitClaimResult::first_false_claim);
+        assert(captured.game_result() == GameResult::ongoing);
+        const auto& from = attacker_path[quiet_rounds % attacker_path.size()];
+        const auto& to = attacker_path[(quiet_rounds + 1) % attacker_path.size()];
+        assert(restored.apply(move(from[0], from[1], to[0], to[1])).accepted);
+        const auto& reply_from = defender_path[(4 + quiet_rounds) % defender_path.size()];
+        const auto& reply_to = defender_path[(5 + quiet_rounds) % defender_path.size()];
+        const auto last_reply = move(reply_from[0], reply_from[1], reply_to[0], reply_to[1]);
+        assert(restored.apply(last_reply).accepted);
+        review = restored.natural_limit_review(claimant);
+        assert(review.no_capture_plies == 122 && review.claimant_checks == 11);
+        assert(review.effective_plies == 120 && review.eligible);
+        // A later valid request draws; the earlier false request does not
+        // turn it into the second-false-request penalty.
+        assert(restored.claim_natural_limit() == NaturalLimitClaimResult::draw);
+        assert(restored.game_result() == GameResult::draw);
+        assert(engine.restore(restored.serialize()).restored);
+        assert(engine.game_result() == GameResult::draw);
+        assert(engine.undo());
+        assert(engine.game_result() == GameResult::ongoing);
+        assert(engine.natural_limit_review(claimant).effective_plies == 119);
+        assert(engine.apply(last_reply).accepted);
+        assert(engine.claim_natural_limit() == NaturalLimitClaimResult::draw);
+        std::printf("natural-limit eleventh-check claimant=%s raw=122 effective=120 passed\n",
+                    rotated ? "black" : "red");
+    }
 }
 
 void incomplete_history_does_not_create_an_automatic_natural_limit_draw() {
@@ -992,6 +1115,41 @@ void capture_resets_the_natural_limit_counter() {
 
     assert(engine.apply(make_board_move(0, 5, 1, 5)).accepted);
     assert(engine.game_result() == GameResult::ongoing);
+}
+
+void false_claims_are_scoped_to_claimant_and_capture_stage() {
+    const auto initial = custom_position(Side::red, {
+        {5, 9, {PieceType::general, Side::red}},
+        {5, 0, {PieceType::general, Side::black}},
+        {5, 5, {PieceType::soldier, Side::red}},
+        {0, 5, {PieceType::chariot, Side::red}},
+        {0, 4, {PieceType::horse, Side::black}},
+    });
+
+    ChineseChessEngine same_stage;
+    assert(same_stage.restore(initial).restored);
+    assert(same_stage.claim_natural_limit() == NaturalLimitClaimResult::first_false_claim);
+    assert(same_stage.apply(make_board_move(0, 5, 1, 5)).accepted);
+    // Black's first request cannot inherit Red's earlier false request.
+    assert(same_stage.claim_natural_limit() == NaturalLimitClaimResult::first_false_claim);
+    assert(same_stage.apply(make_board_move(5, 0, 4, 0)).accepted);
+    assert(same_stage.claim_natural_limit() == NaturalLimitClaimResult::second_false_claim_loss);
+    assert(same_stage.game_result() == GameResult::second_player_win);
+
+    ChineseChessEngine engine;
+    assert(engine.restore(initial).restored);
+
+    assert(engine.claim_natural_limit() == NaturalLimitClaimResult::first_false_claim);
+    assert(engine.apply(make_board_move(0, 5, 0, 4)).accepted); // Capture begins a new stage.
+    assert(engine.natural_limit_review(Side::black).no_capture_plies == 0);
+    assert(engine.claim_natural_limit() == NaturalLimitClaimResult::first_false_claim);
+    assert(engine.apply(make_board_move(5, 0, 4, 0)).accepted);
+    assert(engine.claim_natural_limit() == NaturalLimitClaimResult::first_false_claim);
+
+    ChineseChessEngine restored;
+    assert(restored.restore(engine.serialize()).restored);
+    assert(restored.claim_natural_limit() == NaturalLimitClaimResult::second_false_claim_loss);
+    assert(restored.game_result() == GameResult::second_player_win);
 }
 
 void easy_ai_returns_legal_move_without_mutating_position() {
@@ -1165,8 +1323,10 @@ int main(const int argc, const char* argv[]) {
     saved_history_cannot_continue_after_repetition_draw();
     legacy_saved_history_cannot_resume_after_old_automatic_limit();
     complete_sixty_round_record_can_be_claimed_but_not_auto_drawn(argc == 2 ? argv[1] : nullptr);
+    eleventh_check_requires_an_extra_round_in_real_history();
     incomplete_history_does_not_create_an_automatic_natural_limit_draw();
     checkmate_on_the_natural_limit_move_still_wins();
     capture_resets_the_natural_limit_counter();
+    false_claims_are_scoped_to_claimant_and_capture_stage();
     easy_ai_returns_legal_move_without_mutating_position();
 }

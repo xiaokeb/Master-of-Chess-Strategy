@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="xiangqi_rule_revision_legacy_title">旧局兼容裁定</string>
+    <string name="xiangqi_rule_revision_legacy_description">本局沿用保存时的循环裁定，不追溯改判。新开对局使用连续杀证明修订。</string>
+    <string name="xiangqi_rule_revision_current_title">连续杀证明修订</string>
+    <string name="xiangqi_rule_revision_current_description">循环分析纳入已证明的连续将军成杀；搜索未完成不作为新增判负依据。</string>
+</resources>

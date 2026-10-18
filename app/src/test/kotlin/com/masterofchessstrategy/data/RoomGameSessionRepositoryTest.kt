@@ -6,6 +6,7 @@ import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.challenge.AssessmentChallengeState
 import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
+import com.masterofchessstrategy.games.xiangqi.MocxRuleRevisionFixtures
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.ChineseChessSide
@@ -18,6 +19,28 @@ import org.junit.Assert.assertSame
 import org.junit.Test
 
 class RoomGameSessionRepositoryTest {
+    @Test
+    fun mocxRuleRevisionsRoundTripAsOpaqueBytesWithoutChangingTheOuterEnvelope() = runBlocking {
+        for (fixture in MocxRuleRevisionFixtures.all()) {
+            val dao = FakeActiveGameDao()
+            val sourceBytes = fixture.engineState.copyOf()
+            RoomGameSessionRepository(dao).save(GameSessionSnapshot(
+                gameType = GameType.CHINESE_CHESS, mode = StoredGameMode.LOCAL_TWO_PLAYER,
+                difficulty = null, engineState = sourceBytes, updatedAtEpochMillis = 1L,
+                sessionId = fixture.id, acceptedMoveCount = 8,
+            ))
+            sourceBytes.fill(0)
+            val reopened = RoomGameSessionRepository(dao)
+            val restored = (reopened.load(GameType.CHINESE_CHESS) as LoadGameSessionResult.Loaded).snapshot
+            assertArrayEquals(fixture.engineState, restored.engineState)
+            assertEquals(8, restored.acceptedMoveCount)
+            assertEquals(2, requireNotNull(dao.entity).engineFormatVersion)
+            restored.engineState.fill(0)
+            val again = (reopened.load(GameType.CHINESE_CHESS) as LoadGameSessionResult.Loaded).snapshot
+            assertArrayEquals(fixture.engineState, again.engineState)
+        }
+    }
+
     @Test
     fun blackIdentityRoundTripsAndInvalidOwnerIsRejected() = runBlocking {
         val dao = FakeActiveGameDao()

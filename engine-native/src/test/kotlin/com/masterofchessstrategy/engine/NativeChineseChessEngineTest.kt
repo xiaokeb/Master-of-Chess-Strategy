@@ -10,6 +10,43 @@ import org.junit.Test
 
 class NativeChineseChessEngineTest {
     @Test
+    fun ruleMetadataIsCachedAndChangesOnlyAfterSuccessfulRestoreOrReset() {
+        val bridge = FakeChineseChessBridge().apply {
+            serializedState = revisionSnapshot(4, 1)
+            resetState = serializedState.copyOf()
+        }
+        val engine = NativeChineseChessEngine(bridge)
+        assertEquals(ChineseChessRuleRevision.CONTINUOUS_CHECKING_MATE, engine.ruleRevision)
+        assertEquals(ChineseChessRuleRevision.CONTINUOUS_CHECKING_MATE, engine.ruleRevision)
+        assertEquals(1, bridge.serializeCalls)
+        assertEquals(ActionResult.Accepted, engine.apply(validMove()))
+        assertTrue(engine.undo())
+        assertEquals(ChineseChessRuleRevision.CONTINUOUS_CHECKING_MATE, engine.ruleRevision)
+        assertEquals(1, bridge.serializeCalls)
+
+        assertEquals(RestoreResult.Restored, engine.restore(revisionSnapshot(3)))
+        assertEquals(ChineseChessRuleRevision.LEGACY_COMPATIBILITY, engine.ruleRevision)
+        assertEquals(2, bridge.serializeCalls)
+        bridge.restoreResult = 4
+        assertEquals(RestoreResult.Rejected(EngineError.UNSUPPORTED), engine.restore(revisionSnapshot(4, 2)))
+        assertEquals(ChineseChessRuleRevision.LEGACY_COMPATIBILITY, engine.ruleRevision)
+        assertEquals(2, bridge.serializeCalls)
+        engine.reset()
+        assertEquals(ChineseChessRuleRevision.CONTINUOUS_CHECKING_MATE, engine.ruleRevision)
+        assertEquals(3, bridge.serializeCalls)
+        engine.close()
+        assertThrows(IllegalStateException::class.java) { engine.ruleRevision }
+    }
+
+    @Test
+    fun malformedNativeRevisionMetadataIsAProtocolFailureNotAFallback() {
+        val bridge = FakeChineseChessBridge().apply { serializedState = revisionSnapshot(4, 255) }
+        NativeChineseChessEngine(bridge).use { engine ->
+            assertThrows(IllegalStateException::class.java) { engine.ruleRevision }
+        }
+    }
+
+    @Test
     fun bridgeValuesMapToTypedGameState() {
         val bridge = FakeChineseChessBridge()
         NativeChineseChessEngine(bridge) { "private/pikafish.nnue" }.use { engine ->
@@ -220,6 +257,9 @@ private class FakeChineseChessBridge : ChineseChessBridge {
     var claimCode = 3
     var lastDifficultyCode: Int? = null
     var lastNetworkPath: String? = null
+    var serializedState = byteArrayOf(1)
+    var resetState: ByteArray? = null
+    var serializeCalls = 0
 
     override fun create(): Long = 42L
 
@@ -230,7 +270,10 @@ private class FakeChineseChessBridge : ChineseChessBridge {
     override fun currentPlayer(handle: Long): Int =
         observe(handle) { currentPlayerCode }
 
-    override fun reset(handle: Long) = observe(handle) { Unit }
+    override fun reset(handle: Long) = observe(handle) {
+        resetState?.let { serializedState = it.copyOf() }
+        Unit
+    }
 
     override fun applyMove(
         handle: Long,
@@ -259,11 +302,12 @@ private class FakeChineseChessBridge : ChineseChessBridge {
     override fun gameResult(handle: Long): Int = observe(handle) { 0 }
 
     override fun serialize(handle: Long): ByteArray =
-        observe(handle) { byteArrayOf(1) }
+        observe(handle) { serializeCalls++; serializedState.copyOf() }
 
     override fun restore(handle: Long, data: ByteArray): Int =
         observe(handle) {
             lastRestore = data.copyOf()
+            if (restoreResult == 0) serializedState = data.copyOf()
             restoreResult
         }
 

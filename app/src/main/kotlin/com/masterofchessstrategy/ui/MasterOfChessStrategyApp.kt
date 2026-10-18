@@ -1,5 +1,6 @@
 package com.masterofchessstrategy.ui
 
+import com.masterofchessstrategy.engine.ChineseChessRuleRevision
 import com.masterofchessstrategy.games.go.data.GoLocalStorage
 import com.masterofchessstrategy.games.go.GoStoredRecordRoute
 import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongBackupAdapter
@@ -2052,6 +2053,30 @@ private fun GameControls(
                 text = stringResource(R.string.game_controls),
                 style = MaterialTheme.typography.titleLarge,
             )
+            state.ruleRevision?.let { revision ->
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.testTag("xiangqi_rule_revision_notice"),
+                ) {
+                    Text(
+                        text = stringResource(
+                            if (revision == ChineseChessRuleRevision.LEGACY_COMPATIBILITY)
+                                R.string.xiangqi_rule_revision_legacy_title
+                            else R.string.xiangqi_rule_revision_current_title,
+                        ),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        text = stringResource(
+                            if (revision == ChineseChessRuleRevision.LEGACY_COMPATIBILITY)
+                                R.string.xiangqi_rule_revision_legacy_description
+                            else R.string.xiangqi_rule_revision_current_description,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
             Text(
                 text = selectionText(state),
                 style = MaterialTheme.typography.bodyLarge,

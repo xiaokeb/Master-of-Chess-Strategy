@@ -38,7 +38,7 @@ class ChineseChessHighlightPolicyTest {
 
     @Test
     fun materialDeficitFollowedByWinQualifiesAsComeback() {
-        for (version in 2..3) {
+        for (version in 2..4) {
             val state = mocxState(
                 finalPieces = listOf(
                 4 to 0x81, // Black general.
@@ -73,6 +73,26 @@ class ChineseChessHighlightPolicyTest {
         assertFalse(ChineseChessHighlightPolicy.matches(corrupt, HighlightCondition.COMEBACK.bit))
     }
 
+    @Test
+    fun unknownOrMalformedV4RuleMarkerDoesNotClaimComeback() {
+        val original = mocxState(listOf(0 to 0x85, 1 to 0x86), listOf(5), version = 4)
+        assertTrue(ChineseChessHighlightPolicy.matches(record(state = original), HighlightCondition.COMEBACK.bit))
+        val current = original.copyOf().apply { this[size - 5] = 1 }
+        reseal(current)
+        assertTrue(ChineseChessHighlightPolicy.matches(record(state = current), HighlightCondition.COMEBACK.bit))
+        listOf(2, 255).forEach { revision ->
+            val unknown = original.copyOf().apply { this[size - 5] = revision.toByte() }
+            reseal(unknown)
+            assertFalse(ChineseChessHighlightPolicy.matches(record(state = unknown), HighlightCondition.COMEBACK.bit))
+        }
+        val missing = original.copyOf(original.size - 1)
+        reseal(missing)
+        assertFalse(ChineseChessHighlightPolicy.matches(record(state = missing), HighlightCondition.COMEBACK.bit))
+        val extra = original.copyOf(original.size + 1)
+        reseal(extra)
+        assertFalse(ChineseChessHighlightPolicy.matches(record(state = extra), HighlightCondition.COMEBACK.bit))
+    }
+
     private fun record(
         difficulty: Difficulty = Difficulty.EASY,
         moveCount: Int = 1,
@@ -94,7 +114,8 @@ class ChineseChessHighlightPolicyTest {
         capturedPieces: List<Int>,
         version: Int = 2,
     ): ByteArray {
-        val data = ByteArray(12 + 90 + 11 * capturedPieces.size + (if (version == 3) 2 else 0) + 4)
+        val data = ByteArray(12 + 90 + 11 * capturedPieces.size +
+            (if (version >= 3) 2 else 0) + (if (version == 4) 1 else 0) + 4)
         "MOCX".encodeToByteArray().copyInto(data)
         data[4] = version.toByte()
         data[10] = capturedPieces.size.toByte()
@@ -102,8 +123,12 @@ class ChineseChessHighlightPolicyTest {
         capturedPieces.forEachIndexed { index, code ->
             data[12 + 90 + 11 * index + 5] = code.toByte()
         }
+        reseal(data)
+        return data
+    }
+
+    private fun reseal(data: ByteArray) {
         val crc = CRC32().apply { update(data, 0, data.size - 4) }.value
         repeat(4) { byte -> data[data.size - 4 + byte] = (crc ushr (8 * byte)).toByte() }
-        return data
     }
 }

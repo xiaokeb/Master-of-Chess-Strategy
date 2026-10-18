@@ -7,11 +7,12 @@ import com.masterofchessstrategy.engine.internal.JniChineseChessBridge
 class NativeChineseChessEngine internal constructor(
     private val bridge: ChineseChessBridge,
     private val networkPathProvider: (() -> String)? = null,
-) : ChineseChessAiEngine, ChineseChessNaturalLimitEngine {
+) : ChineseChessAiEngine, ChineseChessNaturalLimitEngine, ChineseChessRuleRevisionEngine {
     private val lock = Any()
     private var handle = bridge.create().also {
         check(it > 0) { "Native engine could not be created" }
     }
+    private var cachedRuleRevision: ChineseChessRuleRevision? = null
 
     constructor() : this(JniChineseChessBridge)
 
@@ -19,6 +20,15 @@ class NativeChineseChessEngine internal constructor(
         this(JniChineseChessBridge, networkPathProvider)
 
     override val gameType: GameType = GameType.CHINESE_CHESS
+
+    override val ruleRevision: ChineseChessRuleRevision
+        get() = withHandle { ownedHandle ->
+            cachedRuleRevision ?: checkNotNull(
+                ChineseChessRuleRevisionDecoder.decode(bridge.serialize(ownedHandle)),
+            ) { "Native engine returned malformed rule revision" }.also {
+                cachedRuleRevision = it
+            }
+        }
 
     override val currentPlayer: PlayerId
         get() =
@@ -28,7 +38,10 @@ class NativeChineseChessEngine internal constructor(
             }
 
     override fun reset() {
-        withHandle(bridge::reset)
+        withHandle {
+            bridge.reset(it)
+            cachedRuleRevision = null
+        }
     }
 
     override fun apply(action: BoardMove): ActionResult {
@@ -103,7 +116,11 @@ class NativeChineseChessEngine internal constructor(
         withHandle(bridge::serialize).copyOf()
 
     override fun restore(data: ByteArray): RestoreResult {
-        val code = withHandle { bridge.restore(it, data.copyOf()) }
+        val code = withHandle {
+            bridge.restore(it, data.copyOf()).also { result ->
+                if (result == NATIVE_SUCCESS) cachedRuleRevision = null
+            }
+        }
         return if (code == NATIVE_SUCCESS) {
             RestoreResult.Restored
         } else {

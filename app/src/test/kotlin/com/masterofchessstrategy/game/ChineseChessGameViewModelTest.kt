@@ -8,6 +8,8 @@ import com.masterofchessstrategy.engine.ChineseChessPieceType
 import com.masterofchessstrategy.engine.ChineseChessNaturalLimitEngine
 import com.masterofchessstrategy.engine.ChineseChessNaturalLimitReview
 import com.masterofchessstrategy.engine.ChineseChessRuleEngine
+import com.masterofchessstrategy.engine.ChineseChessRuleRevision
+import com.masterofchessstrategy.engine.ChineseChessRuleRevisionEngine
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
@@ -39,6 +41,23 @@ class ChineseChessGameViewModelTest {
         assertEquals(ChineseChessSide.RED, viewModel.uiState.pieceAt(redRook)?.side)
         assertEquals(ChineseChessSide.BLACK, viewModel.uiState.pieceAt(blackRook)?.side)
         assertFalse(viewModel.uiState.canUndo)
+        assertNull(viewModel.uiState.ruleRevision)
+    }
+
+    @Test
+    fun pinnedRuleRevisionSurvivesMovesAndUndoAndChangesOnExplicitRestart() {
+        val engine = FakeChineseChessEngine().apply {
+            ruleRevision = ChineseChessRuleRevision.LEGACY_COMPATIBILITY
+        }
+        val viewModel = ChineseChessGameViewModel { engine }
+        assertEquals(ChineseChessRuleRevision.LEGACY_COMPATIBILITY, viewModel.uiState.ruleRevision)
+        viewModel.onSquareTap(redRook)
+        viewModel.onSquareTap(redRookDestination)
+        assertEquals(ChineseChessRuleRevision.LEGACY_COMPATIBILITY, viewModel.uiState.ruleRevision)
+        viewModel.undo()
+        assertEquals(ChineseChessRuleRevision.LEGACY_COMPATIBILITY, viewModel.uiState.ruleRevision)
+        viewModel.restart()
+        assertEquals(ChineseChessRuleRevision.CONTINUOUS_CHECKING_MATE, viewModel.uiState.ruleRevision)
     }
 
     @Test
@@ -270,7 +289,8 @@ class ChineseChessGameViewModelTest {
 
     private inner class FakeChineseChessEngine(
         private val captureAtDestination: Boolean = false,
-    ) : ChineseChessNaturalLimitEngine {
+    ) : ChineseChessNaturalLimitEngine, ChineseChessRuleRevisionEngine {
+        override var ruleRevision: ChineseChessRuleRevision? = null
         override val gameType = GameType.CHINESE_CHESS
         private val positions = mutableMapOf(
             redRook to ChineseChessPiece(ChineseChessPieceType.CHARIOT, ChineseChessSide.RED),
@@ -297,6 +317,7 @@ class ChineseChessGameViewModelTest {
 
         override fun reset() {
             resetCalls++
+            if (ruleRevision != null) ruleRevision = ChineseChessRuleRevision.CONTINUOUS_CHECKING_MATE
             positions.clear()
             positions[redRook] =
                 ChineseChessPiece(ChineseChessPieceType.CHARIOT, ChineseChessSide.RED)

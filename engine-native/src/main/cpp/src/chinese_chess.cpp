@@ -19,6 +19,7 @@ constexpr std::array<std::uint8_t, 4> position_magic{
     'X',
 };
 constexpr std::uint8_t position_version = 3;
+constexpr std::uint8_t rules_position_version = 4;
 constexpr std::uint8_t legacy_position_version = 2;
 constexpr std::uint8_t position_game_type =
     static_cast<std::uint8_t>(GameType::chinese_chess);
@@ -192,6 +193,9 @@ void ChineseChessEngine::reset() {
     current_side_ = Side::red;
     no_capture_plies_ = 0;
     adjudicated_result_ = GameResult::ongoing;
+
+    snapshot_version_ = rules_position_version;
+    rule_revision_ = 1;
 
     constexpr std::array<PieceType, board_width> back_rank{
         PieceType::chariot,
@@ -543,10 +547,11 @@ std::vector<std::uint8_t> ChineseChessEngine::serialize() const {
     data.reserve(
         position_header_size + board_size +
         history_.size() * move_record_size + 2U +
-        natural_limit_claims_.size() * 3U + checksum_size
+        natural_limit_claims_.size() * 3U +
+        (snapshot_version_ == rules_position_version ? 1U : 0U) + checksum_size
     );
     data.insert(data.end(), position_magic.begin(), position_magic.end());
-    data.push_back(position_version);
+    data.push_back(snapshot_version_);
     data.push_back(position_game_type);
     data.push_back(static_cast<std::uint8_t>(current_side_));
     append_u16(data, no_capture_plies_);
@@ -575,6 +580,9 @@ std::vector<std::uint8_t> ChineseChessEngine::serialize() const {
         append_u16(data, claim.ply_index);
         data.push_back(static_cast<std::uint8_t>(claim.claimant));
     }
+    if (snapshot_version_ == rules_position_version) {
+        data.push_back(rule_revision_);
+    }
     append_u32(data, crc32(data, data.size()));
     return data;
 }
@@ -593,7 +601,8 @@ RestoreResult ChineseChessEngine::restore(
         return RestoreResult{false, EngineError::corrupted_data};
     }
     const bool legacy = data[4] == legacy_position_version;
-    if (!legacy && data[4] != position_version) {
+    const bool versioned_rules = data[4] == rules_position_version;
+    if (!legacy && data[4] != position_version && !versioned_rules) {
         return RestoreResult{false, EngineError::unsupported};
     }
     if (data[5] != position_game_type) {
@@ -614,7 +623,7 @@ RestoreResult ChineseChessEngine::restore(
         static_cast<std::size_t>(history_size) * move_record_size;
     if (history_size > maximum_history_size ||
         (legacy && data.size() != records_end + checksum_size) ||
-        (!legacy && data.size() < records_end + 2U + checksum_size)) {
+        (!legacy && data.size() < records_end + 2U + (versioned_rules ? 1U : 0U) + checksum_size)) {
         return RestoreResult{false, EngineError::corrupted_data};
     }
 
@@ -688,13 +697,21 @@ RestoreResult ChineseChessEngine::restore(
         offset += move_record_size;
     }
 
+    std::uint8_t restored_rule_revision = legacy && history_size == 0 ? 1 : 0;
     std::vector<NaturalLimitClaimRecord> restored_claims;
     if (!legacy) {
         const auto count = read_u16(data, records_end);
+        const auto claims_end = records_end + 2U + static_cast<std::size_t>(count) * 3U;
         if (count > maximum_claim_events ||
-            data.size() != records_end + 2U + static_cast<std::size_t>(count) * 3U + checksum_size) {
+            data.size() != claims_end + (versioned_rules ? 1U : 0U) + checksum_size) {
             return RestoreResult{false, EngineError::corrupted_data};
         }
+        if (versioned_rules && data[claims_end] > 1) {
+            // Never run an unknown rule revision using a compatible-looking
+            // board and claim layout, even when its checksum is correct.
+            return RestoreResult{false, EngineError::unsupported};
+        }
+        if (versioned_rules) restored_rule_revision = data[claims_end];
         restored_claims.reserve(count);
         offset = records_end + 2U;
         for (std::size_t i = 0; i < count; ++i) {
@@ -746,6 +763,9 @@ RestoreResult ChineseChessEngine::restore(
     // not follow a repetition result, even if its saved "previous result"
     // field has been forged back to ongoing with a fresh CRC.
     ChineseChessEngine prefix;
+    prefix.snapshot_version_ = versioned_rules || restored_rule_revision == 1
+        ? rules_position_version : position_version;
+    prefix.rule_revision_ = restored_rule_revision;
     prefix.board_ = restored_positions.front().board;
     prefix.current_side_ = restored_positions.front().side;
     prefix.no_capture_plies_ = expected_no_capture_plies;
@@ -841,7 +861,8 @@ RestoreResult ChineseChessEngine::restore(
         ++claim_cursor;
     }
     // v2 stored a derived auto-draw that is intentionally recalculated under
-    // the new request-only rule. v3 terminal claim events must replay exactly.
+    // the request-only rule. v3/v4 terminal events must replay exactly under
+    // the saved revision; do not retroactively resettle old completed games.
     if (!legacy && static_cast<std::uint8_t>(prefix.adjudicated_result_) != data[9]) {
         return RestoreResult{false, EngineError::corrupted_data};
     }
@@ -1360,7 +1381,8 @@ ChineseChessEngine::analyze_tactical_move(
     const Board& before,
     const Board& after,
     const Side mover,
-    const PieceType moving_type
+    const PieceType moving_type,
+    const bool continuous_kill
 ) noexcept {
     TacticalAnalysis result{};
     result.check = is_in_check(after, opposite(mover));
@@ -1372,9 +1394,19 @@ ChineseChessEngine::analyze_tactical_move(
     if (moving_type == PieceType::general && is_in_check(before, mover)) {
         return result;
     }
+    const bool immediate_mate = has_mating_move(after, mover);
     result.kill =
-        has_mating_move(after, mover) &&
+        immediate_mate &&
         !has_mating_move(before, mover);
+    if (!immediate_mate && continuous_kill) {
+        const auto next = prove_checking_mate(after, mover, 4, 512);
+        if (next.status == CheckingMateProofStatus::proven) {
+            // Unknown is not a refutation: an existing or unresolved threat
+            // must not become a newly invented penalty in a repeated cycle.
+            result.kill = prove_checking_mate(before, mover, 4, 512).status ==
+                CheckingMateProofStatus::refuted;
+        }
+    }
     if (result.kill) {
         return result;
     }
@@ -1729,7 +1761,8 @@ std::optional<GameResult> ChineseChessEngine::adjudicate_2020_cycle(
             position_history_[ply].board,
             position_history_[ply + 1].board,
             move.previous_side,
-            move.moved.type
+            move.moved.type,
+            rule_revision_ == 1
         );
         std::bitset<board_size> direct_targets;
         std::bitset<board_size> joint_targets;

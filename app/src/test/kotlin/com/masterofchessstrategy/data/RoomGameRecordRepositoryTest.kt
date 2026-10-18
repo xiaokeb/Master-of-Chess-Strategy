@@ -3,6 +3,8 @@ package com.masterofchessstrategy.data
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.games.xiangqi.MocxRuleRevisionFixtures
+import org.junit.Assert.assertArrayEquals
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -11,6 +13,31 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RoomGameRecordRepositoryTest {
+    @Test
+    fun mocxRuleRevisionsAndOldVerdictsRemainUnchangedInIdempotentRecords() = runBlocking {
+        val dao = FakeGameRecordDao()
+        val repository = RoomGameRecordRepository(dao)
+        val fixtures = MocxRuleRevisionFixtures.all()
+        for (fixture in fixtures) {
+            val original = fixture.engineState.copyOf()
+            assertTrue(repository.saveCompleted(record(fixture.id).copy(
+                engineState = original, result = fixture.result, moveCount = 8,
+            )))
+            original.fill(0)
+            val loaded = requireNotNull(repository.load(fixture.id))
+            assertArrayEquals(fixture.engineState, loaded.engineState)
+            assertEquals(fixture.result, loaded.result)
+        }
+        val legacy = fixtures.first { it.version == 3 }
+        val current = fixtures.first { it.revision == 1 }
+        assertFalse(repository.saveCompleted(record(legacy.id).copy(
+            engineState = current.engineState, result = current.result, moveCount = 8,
+        )))
+        val kept = requireNotNull(RoomGameRecordRepository(dao).load(legacy.id))
+        assertEquals(GameResult.DRAW, kept.result)
+        assertArrayEquals(legacy.engineState, kept.engineState)
+    }
+
     @Test
     fun blackIdentityRoundTripsAndInvalidOwnerIsRejected() = runBlocking {
         val dao = FakeGameRecordDao()

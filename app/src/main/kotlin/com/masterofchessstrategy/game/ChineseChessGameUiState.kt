@@ -7,6 +7,7 @@ import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.ChineseChessNaturalLimitReview
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
+import com.masterofchessstrategy.engine.ChineseChessRuleRevision
 
 /** User-facing outcomes. Text is resolved by Compose so this state stays resource-free. */
 enum class ChineseChessFeedback {
@@ -71,6 +72,7 @@ data class ChineseChessGameUiState(
     val hintedOrigins: Set<BoardPosition> = emptySet(),
     val hintedDestinations: Set<BoardPosition> = emptySet(),
     val result: GameResult = GameResult.ONGOING,
+    val ruleRevision: ChineseChessRuleRevision? = null,
     val canUndo: Boolean = false,
     val undoRemaining: Int? = null,
     val canRequestHint: Boolean = false,

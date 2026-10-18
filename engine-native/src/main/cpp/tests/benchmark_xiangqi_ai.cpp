@@ -150,6 +150,13 @@ int main(const int argc, const char* argv[]) {
         const bool candidate = !(weak_profile == pikafish_profile(weak)) || !(strong_profile == pikafish_profile(strong));
         if (argc >= 8 && backend != "pikafish") throw std::invalid_argument("profile overrides require Pikafish");
         if (candidate && suite != 1) throw std::invalid_argument("candidate tuning must not use the frozen holdout suite");
+        // This historical entry has no rule-profile field in its reports.
+        // Never silently run its frozen protocols under a newer judge.
+        const auto rule_snapshot = ChineseChessEngine{}.serialize();
+        const bool original_judge = rule_snapshot.at(4) == 3 ||
+            (rule_snapshot.at(4) == 4 && rule_snapshot.at(rule_snapshot.size() - 5) == 0);
+        if (!original_judge)
+            throw std::invalid_argument("historical benchmark requires original rules; use a separately registered versioned entry");
         int wins = 0, losses = 0, draws = 0, unfinished = 0;
         std::vector<double> strong_times, weak_times;
         std::cout << "{\"type\":\"config\",\"suite\":" << suite << ",\"pair\":\"" << pair

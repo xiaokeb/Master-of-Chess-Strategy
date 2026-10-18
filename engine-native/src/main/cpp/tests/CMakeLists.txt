@@ -21,12 +21,36 @@ target_compile_options(
     -Wall
     -Wextra
     -Wpedantic
+    -UNDEBUG
 )
 
 add_test(
     NAME mocs_engine_chinese_chess
     COMMAND mocs_engine_chinese_chess_test
 )
+
+add_executable(
+    mocs_xiangqi_natural_limit_counter_check_test
+    ../games/xiangqi/natural_limit_counter_check_test.cpp
+)
+target_link_libraries(mocs_xiangqi_natural_limit_counter_check_test PRIVATE mocs_engine_core)
+target_compile_options(mocs_xiangqi_natural_limit_counter_check_test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME mocs_xiangqi_natural_limit_counter_check COMMAND mocs_xiangqi_natural_limit_counter_check_test)
+
+add_executable(mocs_xiangqi_checking_mate_test ../games/xiangqi/checking_mate_test.cpp)
+target_link_libraries(mocs_xiangqi_checking_mate_test PRIVATE mocs_engine_core)
+target_compile_options(mocs_xiangqi_checking_mate_test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME mocs_xiangqi_checking_mate COMMAND mocs_xiangqi_checking_mate_test)
+
+add_executable(mocs_xiangqi_snapshot_revision_test ../games/xiangqi/snapshot_revision_test.cpp)
+target_link_libraries(mocs_xiangqi_snapshot_revision_test PRIVATE mocs_engine_core)
+target_compile_options(mocs_xiangqi_snapshot_revision_test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME mocs_xiangqi_snapshot_revision COMMAND mocs_xiangqi_snapshot_revision_test)
+
+add_executable(mocs_xiangqi_checking_mate_cycle_test ../games/xiangqi/checking_mate_cycle_test.cpp)
+target_link_libraries(mocs_xiangqi_checking_mate_cycle_test PRIVATE mocs_engine_core)
+target_compile_options(mocs_xiangqi_checking_mate_cycle_test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME mocs_xiangqi_checking_mate_cycle COMMAND mocs_xiangqi_checking_mate_cycle_test)
 
 add_library(mocs_xiangqi_authoring STATIC xiangqi_forced_win.cpp)
 target_link_libraries(mocs_xiangqi_authoring PUBLIC mocs_engine_core)

@@ -79,6 +79,7 @@ add_library(
     mocs_engine_core
     STATIC
     src/chinese_chess.cpp
+    games/xiangqi/checking_mate_proof.cpp
     src/competition_mahjong.cpp
     src/competition_mahjong_settlement.cpp
     src/competition_mahjong_shape.cpp

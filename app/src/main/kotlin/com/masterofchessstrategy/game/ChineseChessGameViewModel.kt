@@ -34,6 +34,7 @@ import com.masterofchessstrategy.engine.ChineseChessAiEngine
 import com.masterofchessstrategy.engine.ChineseChessBoard
 import com.masterofchessstrategy.engine.ChineseChessNaturalLimitEngine
 import com.masterofchessstrategy.engine.ChineseChessRuleEngine
+import com.masterofchessstrategy.engine.ChineseChessRuleRevisionEngine
 import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.EngineError
@@ -1046,6 +1047,7 @@ class ChineseChessGameViewModel internal constructor(
                 playerSide = playerSide,
                 checkedSide = currentSide.takeIf { activeEngine.isInCheck(it) },
                 result = result,
+                ruleRevision = (activeEngine as? ChineseChessRuleRevisionEngine)?.ruleRevision,
                 canUndo =
                     !isAutoPlay &&
                     acceptedMoveCount >= (if (isHumanControlledAiGame) 2 else 1) &&
