@@ -9,7 +9,8 @@ import com.masterofchessstrategy.games.go.*
 /** Production factories switch all local sources together; callers register each VM as a writer. */
 internal class GoLocalStorage(private val database: MocsDatabase, context: Context) {
     private val application = context.applicationContext
-    val gate = GoStorageEpochGate.forDatabase(database)
+    private val complete = GoCompleteStorageBundle(database, application)
+    val gate = complete.gate
 
     fun sessionRepository() = GatedGoSessionRepository(
         RoomGoSessionRepository(database, GoLocalSessionDiskSource(application)), gate)
@@ -17,10 +18,9 @@ internal class GoLocalStorage(private val database: MocsDatabase, context: Conte
         RoomGoLearningProgressRepository(database, GoLearningPreferencesDiskSource(application)), gate)
     fun endgameRepository() = GatedGoEndgameRepository(
         RoomGoEndgameProgressRepository(database, GoEndgameDiskSource(application)), gate)
-    fun aiRepository() = GatedGoAiMatchRepository(GoAiMatchFileRepository(application), gate)
+    fun aiRepository() = complete.aiRepository()
 
-    fun backupAdapters(): List<GameBackupAdapter> = listOf(GoLocalSessionBackupAdapter(),
-        GoLocalRecordBackupAdapter(), GoProgressBackupAdapter())
-    fun backupRepository(delegate: LocalDataBackupRepository): LocalDataBackupRepository =
-        GatedGoBackupRepository(delegate, gate, GoLocalBackupPreparation(database, application))
+    // The delegate receives all five Go slots from the same bundle as the AI repository.
+    fun backupRepository(createDelegate: (List<GameBackupAdapter>) -> LocalDataBackupRepository): LocalDataBackupRepository =
+        complete.backupRepository(createDelegate)
 }

@@ -175,13 +175,15 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
             RoomEndgameProgressRepository(database.endgameProgressDao(), endgamePack)
         }
         val backupRepository = remember(database, endgamePack, goStorage) {
-            goStorage.backupRepository(RoomLocalDataBackupRepository(
-                database = database,
-                endgamePack = endgamePack,
-                validateEngineState = ::isValidChineseChessState,
-                gameBackups = GameBackupRegistry(listOf(TigerGoatBackupAdapter(), CompetitionMahjongBackupAdapter()) +
-                    goStorage.backupAdapters()),
-            ))
+            goStorage.backupRepository { goAdapters ->
+                RoomLocalDataBackupRepository(
+                    database = database,
+                    endgamePack = endgamePack,
+                    validateEngineState = ::isValidChineseChessState,
+                    gameBackups = GameBackupRegistry(
+                        listOf(TigerGoatBackupAdapter(), CompetitionMahjongBackupAdapter()) + goAdapters),
+                )
+            }
         }
         val navigationFactory = remember(selectionRepository) {
             AppNavigationViewModel.factory(selectionRepository)

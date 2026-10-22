@@ -13,9 +13,16 @@ class GoLegacyRestoreFenceTest {
     @Test fun emptyInstallationSealsEveryFixedSourceWithoutNeedingAnAdapter() = runTest {
         val dao = Markers()
         dao.sealGoLegacySourcesForRestore()
-        assertEquals(GoLegacyImportScopes.ALL.toSet(), dao.rows.keys)
+        val expected = setOf(
+            GoLegacyImportScopes.SESSION,
+            GoLegacyImportScopes.LEARNING,
+            GoLegacyImportScopes.ENDGAME,
+            GoLegacyImportScopes.AI_MATCH,
+        )
+        assertEquals(expected, GoLegacyImportScopes.ALL.toSet())
+        assertEquals(expected, dao.rows.keys)
         assertTrue(dao.rows.values.all { it.handledVersion == 1 })
-        assertEquals(3, dao.insertCalls)
+        assertEquals(4, dao.insertCalls)
     }
 
     @Test fun repeatedRestorePreservesHigherVersionsAndUnrelatedMarkers() = runTest {

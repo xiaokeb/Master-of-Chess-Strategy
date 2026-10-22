@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "tag": "v0.1.0-go-ai-production-storage.1",
+  "baselineCommit": "351d0a2210781c12803a89a4f15bf3c796292f62",
+  "candidate": "gac6",
+  "sourceFiles": 1477,
+  "overlayFiles": 8,
+  "metadataFiles": 4,
+  "sourceManifestSha256": "c02f2b6dd2d99f791306b597d3e52a8c667e5caf73ca010c296c4b594656c218",
+  "sourceIdentitySha256": "c917f084638d1df0fbe85075df5a22d80520254ed3d9fd5b2eea17ecc30930e4",
+  "jvm": { "tests": 126, "classes": 11, "inheritedFrom": "gac4", "instrumentedContextIsolationChanged": true, "productionTrailingNewlineOnly": true, "remainingInputsIdentical": true },
+  "device": { "distinctMethods": 17, "invocations": 19, "api": 37, "abi": "x86_64", "pageSize": 16384, "imagesInspected": 12, "appDataCleared": false, "physicalDeviceTested": false },
+  "lint": { "errors": 0, "warnings": 7 },
+  "debugApkSha256": "3037a28fbf7cf2928db47c0ac52ebbaeb8d17afffa0e90aaf2c4c26bd3884c1f",
+  "instrumentedApkSha256": "53b2b5a8749ed0b12fa30f672c5b8be50f1daf8bcb20889cfc6565541e579dc5",
+  "productionAiRoom": true,
+  "productionAiBackupRegistered": true,
+  "aiNavigationIncluded": false,
+  "completedRecordProjectionIncluded": false,
+  "rankEligibilityGranted": false,
+  "sourceOnly": true,
+  "binaryAssets": []
+}
