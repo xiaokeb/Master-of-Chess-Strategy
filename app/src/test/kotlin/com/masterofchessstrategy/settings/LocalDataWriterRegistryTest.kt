@@ -82,4 +82,69 @@ class LocalDataWriterRegistryTest {
         assertTrue(importStarted)
         assertTrue(registry.snapshot().isEmpty())
     }
+
+    @Test fun completedViewModelScopeDoesNotForgetIndependentCleanup() = runTest(dispatcher) {
+        val owner = RetiringOwner()
+        store.put("game", owner)
+        registry.register(owner)
+        store.clear()
+        advanceUntilIdle()
+        assertTrue(owner.viewModelScope.coroutineContext[kotlinx.coroutines.Job]!!.isCompleted)
+        assertEquals(listOf(owner), registry.snapshot())
+        owner.completion.complete(Unit)
+        assertTrue(registry.snapshot().isEmpty())
+    }
+
+    @Test fun failedIndependentCleanupRemainsVisibleToTheNextRestore() = runTest(dispatcher) {
+        val owner = RetiringOwner()
+        store.put("game", owner)
+        registry.register(owner)
+        store.clear()
+        advanceUntilIdle()
+        owner.completion.completeExceptionally(IllegalStateException("model close failed"))
+        assertEquals(listOf(owner), registry.snapshot())
+        var failed = false
+        try { awaitLocalDataWriters(registry.snapshot()) {} }
+        catch (_: IllegalStateException) { failed = true }
+        assertTrue(failed)
+        assertEquals(listOf(owner), registry.snapshot())
+    }
+
+    @Test fun registrationAfterScopeCompletionStillTracksPendingRetirement() = runTest(dispatcher) {
+        val owner = RetiringOwner()
+        store.put("game", owner)
+        store.clear()
+        advanceUntilIdle()
+        registry.register(owner)
+        registry.register(owner)
+        assertEquals(listOf(owner), registry.snapshot())
+        owner.completion.complete(Unit)
+        assertTrue(registry.snapshot().isEmpty())
+        registry.register(owner)
+        assertTrue(registry.snapshot().isEmpty())
+    }
+
+    @Test fun successfulRetirementStillWaitsForScopeCancellationCleanup() = runTest(dispatcher) {
+        val owner = RetiringOwner()
+        store.put("game", owner)
+        val release = CompletableDeferred<Unit>()
+        owner.viewModelScope.launch {
+            try { awaitCancellation() } finally { withContext(NonCancellable) { release.await() } }
+        }
+        registry.register(owner)
+        advanceUntilIdle()
+        owner.completion.complete(Unit)
+        store.clear()
+        advanceUntilIdle()
+        assertEquals(listOf(owner), registry.snapshot())
+        release.complete(Unit)
+        advanceUntilIdle()
+        assertTrue(registry.snapshot().isEmpty())
+    }
+
+    private class RetiringOwner : ViewModel(), LocalDataWriterRetirement {
+        val completion = CompletableDeferred<Unit>()
+        override val retirementCompletion = completion
+        override fun beginRetirement() = completion
+    }
 }

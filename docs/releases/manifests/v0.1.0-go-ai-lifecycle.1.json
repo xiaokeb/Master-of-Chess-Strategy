@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "tag": "v0.1.0-go-ai-lifecycle.1",
+  "candidate": "gal5",
+  "baselineCommit": "9f0f598f163f3dbf3fbafd6da122da3fa8b0bf78",
+  "sourceFiles": 1467,
+  "overlays": 28,
+  "metadataFiles": 4,
+  "sourceIdentityTsvSha256": "1dca2f2107c2804fd532b724565dd4fa981f440639f8210a1b1487c9a8a101ce",
+  "overlayManifestSha256": "c47e55e18cd26ce2261a00bb47e078c95f90f93be444d5ec9341c02a37b75f39",
+  "verification": {
+    "formalJvmClasses": 15,
+    "formalJvmTests": 156,
+    "privateDebugOnTests": 33,
+    "privateDebugOffTests": 33,
+    "privateModesAreSameTestSet": true,
+    "deviceMethods": 4,
+    "emulator": { "api": 37, "abi": "x86_64", "pageSize": 16384 },
+    "abisBuilt": ["arm64-v8a", "x86_64"],
+    "lintErrors": 0,
+    "lintWarnings": 7,
+    "realNativeRulesAndModel": true,
+    "checkpointRepositoryIsMemoryTestDouble": true,
+    "backupBoundaryIsSentinel": true,
+    "newUiOrResources": false,
+    "appDataCleared": false,
+    "physicalDeviceTested": false
+  },
+  "apkSha256": {
+    "debug": "14854f3f6a51d9ee187f010ba0c15d4044571cbca7a83182f4d33c4b8f5bc12d",
+    "androidTest": "aa6f2188d83a2a5f553bd436ea53715bc64c4b1d05648e3206c1c385a6ce6bac"
+  },
+  "productionAiNavigationEnabled": false,
+  "productionAiRoomCutover": false,
+  "productionAiBackupAdaptersRegistered": false,
+  "completedRecordSinkIntegrated": false,
+  "distribution": { "sourceOnly": true, "prerelease": true, "apkAttached": false, "newCommercialPermission": false },
+  "verificationReport": "docs/games/go/2026-10-22-lifecycle-integration.md",
+  "legalRecord": "docs/legal/go-ai-lifecycle-distribution-v1.md"
+}
