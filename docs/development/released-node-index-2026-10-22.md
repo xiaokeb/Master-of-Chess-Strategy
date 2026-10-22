@@ -4,6 +4,7 @@
 
 | 节点 | 提交 | tag/Release | 实际验证摘要 |
 | --- | --- | --- | --- |
+| 围棋AI生产存储 | `0c4de78481dcb710d506919198de8f3f1be5ceb0` | [v0.1.0-go-ai-production-storage.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-ai-production-storage.1) | 126受影响JVM继承，最终17设备方法/19调用，双字体12图；四源事务及完整备份切换 |
 | 围棋AI生命周期 | `40f290539acfe07aa3ab13ccf28cc308c3529e65` | [v0.1.0-go-ai-lifecycle.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-ai-lifecycle.1) | 156正式JVM、4真实Native设备、双ABI/Lint；多错保真修复 |
 | 象棋35关内容 | `9f0f598f163f3dbf3fbafd6da122da3fa8b0bf78` | [v0.1.0-xiangqi-endgame-content.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-xiangqi-endgame-content.1) | 71JVM、35关两种独立证明、20设备方法＋2大字号复跑、80当前图 |
 | 围棋AI raw来源 | `bffe998e4d2f874404ef69f63a0532ac6d040c25` | [v0.1.0-go-ai-raw-data.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-ai-raw-data.1) | 同生产/JVM输入140继承、最终27设备；schema16与完整GAI/来源图 |
@@ -14,8 +15,8 @@
 
 ## 下一依赖
 
-围棋按生命周期→生产Room与完整备份原子切换→唯一完整棋谱/完成账本→资格与模式导航推进，当前尚未开放生产AI。国标提示v4/公开信息Advisor、虎羊App owner、兰州24倍旧局兼容、象棋预算v2无搜索准入都已分别取得私有或独立原生证据，仍待各自正式集成，不纳入本表已发布范围。
+围棋生命周期、生产Room与完整备份原子切换现均已发布；下一依次为唯一完整棋谱/首次完成事务、可信参赛来源及成长、资格与模式导航，当前尚未开放生产AI。公共象棋完成DTO显式拒绝GO且强制人机outcome，不能直接套用或给混合/遗留局发奖励；后续采用专属无奖励原子投影，再单独版本化可信参赛来源。国标提示v4/公开信息Advisor、虎羊App owner、兰州24倍旧局兼容、象棋预算v2无搜索准入都已分别取得私有或独立原生证据，仍待各自正式集成，不纳入本表已发布范围。
 
-原象棋medium-hard已自行异常退出，无完整汇总；未由统筹停止、未重跑，不用53局前缀宣告梯度。新v2基础不授权搜索或消费新的保留集。兰州炸胡已获用户确认各家24倍底分；新旧规则身份必须保留，不把项目桌规说成地方官方通则。
+原象棋medium-hard已自行异常退出，无完整汇总；未由统筹停止、未重跑，不用53局前缀宣告梯度。新v2基础不授权搜索或消费新的保留集。兰州炸胡已获用户确认各家24倍底分；正式补充规格见 `../requirements/lanzhou-mahjong-false-win-v2.md`，新旧规则身份必须保留，不把项目桌规说成地方官方通则。
 
 尚未证明任一棋种全部规划功能、最终9000+内容量、专业难度、实体设备或完整资源/性能验收。远程源码发布也不扩大Pikafish/NNUE、KataGo等独立权重或第三方许可。
