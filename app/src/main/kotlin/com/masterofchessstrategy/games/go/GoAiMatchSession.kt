@@ -35,11 +35,13 @@ data class GoAiMatchUiState(
     val autoContinueMaxGames: Int = 1,
     val autoContinueGameNumber: Int = 1,
     val matchId: String = "",
+    val completionStored: Boolean = false,
+    val completionPending: Boolean = false,
 ) {
     val humanCanPlay get() = !closed && game.canAct && game.phase == GoPhase.PLAYING && !config.isAi(game.currentPlayer)
     val canReviewScore get() = !closed && game.canAct && game.phase == GoPhase.SCORING
     val canRequestHint get() = humanCanPlay && !hintThinking && hintUsed < config.difficulty.hintLimit
-    val canUndo get() = !closed && game.canOperate && !completionReserved && eventCount > openingEventCount && undoUsed < config.difficulty.undoLimit
+    val canUndo get() = !closed && game.canOperate && !completionReserved && !completionPending && eventCount > openingEventCount && undoUsed < config.difficulty.undoLimit
     val canSwitchMode get() = !closed && game.canAct && game.phase == GoPhase.PLAYING && !completionReserved
     val canConfigureAutoContinue get() = !closed && config.automatic && game.canAct &&
         game.phase == GoPhase.PLAYING && !completionReserved
@@ -59,8 +61,10 @@ class GoAiMatchSession(
     private val worker: CoroutineDispatcher = Dispatchers.Default,
     private val initialOpening: GoAiOpening? = null,
     private val completedSink: GoAiCompletedMatchSink? = null,
+    private val completeHumanImmediately: Boolean = false,
     private val engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
 ) {
+    init { require(!completeHumanImmediately || completedSink != null) { "Immediate completion requires durable storage" } }
     private val lifetime = SupervisorJob(parentScope.coroutineContext[Job])
     private val scope = CoroutineScope(parentScope.coroutineContext + lifetime)
     private val mutex = Mutex()
@@ -118,7 +122,11 @@ class GoAiMatchSession(
                 mutex.withLock {
                     var candidate: GoRecordEngine? = null
                     try {
+                        if (disposed.get() || !lifetime.isActive) return@withLock
                         val saved = repository.load()
+                        // A read already in flight may drain, but it must not create a new
+                        // match or native owner after the page has retired while awaiting it.
+                        if (disposed.get() || !lifetime.isActive) return@withLock
                         durableMatch = saved
                         val config = saved?.config ?: initialConfig
                         val selectedOpening = if (saved != null) saved.copyOpeningBytes()?.let {
@@ -131,22 +139,43 @@ class GoAiMatchSession(
                         check(candidate.boardSize == config.boardSize && candidate.handicapStones == config.handicapStones &&
                             candidate.blackKomiQuarters == if (config.handicapStones == 0) 15 else 0)
                         selectedOpening?.checkContinuation(candidate)
-                        val game = snapshot(candidate)
+                        var game = snapshot(candidate)
                         val eventCount = candidate.eventHistory().size
                         val openingEventCount = selectedOpening?.eventCount ?: 0
                         check(saved?.completionReserved != true || (game.phase == GoPhase.FINISHED && game.result != GameResult.ONGOING))
                         val bytes = candidate.serialize()
                         val id = saved?.matchId ?: matchId
                         val undoUsed = saved?.undoUsed ?: 0
+                        if (disposed.get() || !lifetime.isActive) return@withLock
                         if (saved == null) persistCheckpoint(GoAiSavedMatch(id, config, bytes, undoUsed,
-                            openingBytes = selectedOpening?.copyBytes()))
+                            openingBytes = selectedOpening?.copyBytes()), freshStandard =
+                            config.humanPlayer != null && config.handicapStones == 0 && selectedOpening == null)
+                        var reserved = saved?.completionReserved ?: false
+                        var stored = false
+                        if (completeHumanImmediately && !config.automatic && game.phase == GoPhase.FINISHED &&
+                            !disposed.get() && lifetime.isActive) {
+                            val finished = GoAiSavedMatch(id, config, bytes, undoUsed, saved?.hintUsed ?: 0,
+                                true, saved?.rememberedHuman ?: checkNotNull(config.humanPlayer),
+                                saved?.automaticUsed ?: false, selectedOpening?.copyBytes(),
+                                saved?.autoContinueEnabled ?: false, saved?.autoContinueMaxGames ?: 1,
+                                saved?.autoContinueGameNumber ?: 1)
+                            try {
+                                if (!reserved) { persistCheckpoint(finished); reserved = true }
+                                if (!disposed.get() && lifetime.isActive) {
+                                    checkNotNull(completedSink).storeCompleted(finished)
+                                    stored = true
+                                }
+                            } catch (_: Exception) { game = game.copy(error = HUMAN_COMPLETION_ERROR) }
+                        }
                         if (!disposed.get() && lifetime.isActive) {
                             engine = candidate; candidate = null
                             opening = selectedOpening
                             matchId = id
                             loadedBytes = bytes.copyOf()
                             loadedState = GoAiMatchUiState(config, game, undoUsed = undoUsed, hintUsed = saved?.hintUsed ?: 0,
-                                completionReserved = saved?.completionReserved ?: false, eventCount = eventCount,
+                                completionReserved = reserved, eventCount = eventCount, completionStored = stored,
+                                completionPending = completeHumanImmediately && !config.automatic &&
+                                    game.phase == GoPhase.FINISHED && !stored,
                                 rememberedHuman = saved?.rememberedHuman ?: config.humanPlayer ?: GoPlayer.BLACK,
                                 automaticUsed = saved?.automaticUsed ?: config.automatic,
                                 openingEventCount = openingEventCount, hasSpecifiedOpening = selectedOpening != null,
@@ -213,6 +242,42 @@ class GoAiMatchSession(
         }
     }
 
+    /** Retries only this fixed result; never creates a replacement match. */
+    fun retryCompletion(): Boolean {
+        val previous = mutableState.value
+        if (!completeHumanImmediately || disposed.get() || !lifetime.isActive || previous.config.automatic ||
+            previous.game.phase != GoPhase.FINISHED || !previous.game.canOperate || previous.completionStored) return false
+        val sink = completedSink ?: return false
+        mutableState.value = previous.copy(paused = true, thinking = false,
+            game = previous.game.copy(saving = true, error = null))
+        scope.launch {
+            var reserved = previous.completionReserved
+            var stored = false
+            withContext(worker + NonCancellable) {
+                mutex.withLock {
+                    try {
+                        if (disposed.get() || !lifetime.isActive) return@withLock
+                        val active = checkNotNull(engine)
+                        check(active.phase == GoPhase.FINISHED && active.gameResult() != GameResult.ONGOING)
+                        val finished = GoAiSavedMatch(matchId, previous.config, active.serialize(), previous.undoUsed,
+                            previous.hintUsed, true, previous.rememberedHuman, previous.automaticUsed,
+                            opening?.copyBytes(), previous.autoContinueEnabled, previous.autoContinueMaxGames,
+                            previous.autoContinueGameNumber)
+                        if (!reserved) { persistCheckpoint(finished); reserved = true }
+                        if (disposed.get() || !lifetime.isActive) return@withLock
+                        sink.storeCompleted(finished)
+                        stored = true
+                    } catch (_: Exception) { }
+                }
+            }
+            if (disposed.get()) return@launch
+            mutableState.value = mutableState.value.copy(completionReserved = reserved, completionStored = stored,
+                completionPending = !stored,
+                game = previous.game.copy(error = if (stored) null else HUMAN_COMPLETION_ERROR))
+        }
+        return true
+    }
+
     private fun restartInternal(completedSink: GoAiCompletedMatchSink?, automaticContinuation: Boolean): Boolean {
         val previous = mutableState.value
         if (disposed.get() || !lifetime.isActive || !previous.game.canOperate) return false
@@ -265,7 +330,8 @@ class GoAiMatchSession(
                         val nextBytes = candidate.serialize()
                         persistCheckpoint(GoAiSavedMatch(nextId, config, nextBytes, rememberedHuman = previous.rememberedHuman,
                             openingBytes = opening?.copyBytes(), autoContinueEnabled = nextAutoEnabled,
-                            autoContinueMaxGames = nextAutoMax, autoContinueGameNumber = nextAutoNumber))
+                            autoContinueMaxGames = nextAutoMax, autoContinueGameNumber = nextAutoNumber),
+                            freshStandard = config.humanPlayer != null && config.handicapStones == 0 && opening == null)
                         engine?.close(); engine = null
                         if (!disposed.get() && lifetime.isActive) {
                             engine = candidate; candidate = null
@@ -622,10 +688,13 @@ class GoAiMatchSession(
             var committedUndoUsed = previous.undoUsed
             var committedEventCount = previous.eventCount
             var committedMatchId = previous.matchId
+            var committedReserved = false
+            var completionStored = false
             withContext(worker + NonCancellable) {
                 mutex.withLock {
                     var candidate: GoRecordEngine? = null
                     try {
+                        if (disposed.get() || !lifetime.isActive) return@withLock
                         val active = checkNotNull(engine)
                         candidate = engineFactory(active.boardSize, 15, 0)
                         check(candidate.restore(active.serialize()) == RestoreResult.Restored)
@@ -648,7 +717,10 @@ class GoAiMatchSession(
                         // child as a continuation, not a fresh standard-ranked game.
                         val nextMatchId = if (undo && previous.game.phase == GoPhase.FINISHED)
                             UUID.randomUUID().toString() else matchId
+                        val reserve = completeHumanImmediately && !previous.config.automatic && next.phase == GoPhase.FINISHED
+                        if (disposed.get() || !lifetime.isActive) return@withLock
                         persistCheckpoint(GoAiSavedMatch(nextMatchId, previous.config, bytes, undoUsed, previous.hintUsed,
+                            completionReserved = reserve,
                             rememberedHuman = previous.rememberedHuman, automaticUsed = previous.automaticUsed,
                             openingBytes = opening?.copyBytes(), autoContinueEnabled = previous.autoContinueEnabled,
                             autoContinueMaxGames = previous.autoContinueMaxGames,
@@ -662,6 +734,13 @@ class GoAiMatchSession(
                             committedUndoUsed = undoUsed
                             committedEventCount = nextEventCount
                             committedMatchId = nextMatchId
+                            committedReserved = reserve
+                            if (reserve && !disposed.get() && lifetime.isActive) {
+                                try {
+                                    checkNotNull(completedSink).storeCompleted(checkNotNull(durableMatch))
+                                    completionStored = true
+                                } catch (_: Exception) { committedGame = next.copy(error = HUMAN_COMPLETION_ERROR) }
+                            }
                         }
                     } catch (_: Exception) {
                         if (!disposed.get() && lifetime.isActive) mutableState.value = mutableState.value.copy(
@@ -677,7 +756,9 @@ class GoAiMatchSession(
                 // Preserve a pause/speed change made while the durable write was in flight.
                 if (disposed.get()) return@launch
                 mutableState.value = mutableState.value.copy(game = checkNotNull(committedGame), undoUsed = committedUndoUsed,
-                    eventCount = committedEventCount, thinking = false, matchId = committedMatchId)
+                    eventCount = committedEventCount, thinking = false, matchId = committedMatchId,
+                    completionReserved = committedReserved, completionStored = completionStored,
+                    completionPending = committedReserved && !completionStored)
                 if (mutableState.value.game.phase != GoPhase.PLAYING) {
                     mutableState.value = mutableState.value.copy(paused = true)
                     if (mutableState.value.game.phase == GoPhase.FINISHED) maybeAutoContinue()
@@ -686,9 +767,9 @@ class GoAiMatchSession(
         }
     }
 
-    private suspend fun persistCheckpoint(next: GoAiSavedMatch) {
+    private suspend fun persistCheckpoint(next: GoAiSavedMatch, freshStandard: Boolean = false) {
         try {
-            saveGoAiCheckpoint(repository, durableMatch, next)
+            saveGoAiCheckpoint(repository, durableMatch, next, freshStandard)
             durableMatch = next
         } catch (failure: GoAiCheckpointWriteUncertainException) {
             // Existing operation catches must never resurrect an owner with an unknown disk state.
@@ -699,6 +780,10 @@ class GoAiMatchSession(
             }
             throw failure
         }
+    }
+
+    private companion object {
+        const val HUMAN_COMPLETION_ERROR = "本局结果已固定；完成棋谱保存未完成，请重试保存。"
     }
 
     private fun maybeAutoContinue() {

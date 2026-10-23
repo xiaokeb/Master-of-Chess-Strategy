@@ -31,6 +31,7 @@ class GoAiMatchViewModel(
     private val worker: CoroutineDispatcher = Dispatchers.Default,
     private val completedSink: GoAiCompletedMatchSink? = null,
     private val specifiedOpening: GoAiOpening? = null,
+    private val completeHumanImmediately: Boolean = false,
     private val engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
 ) : ViewModel(), LocalDataWriterRetirement {
     private val disposed = AtomicBoolean(false)
@@ -61,7 +62,7 @@ class GoAiMatchViewModel(
                 if (disposed.get()) return@launch
                 val owned = checkNotNull(candidate)
                 val next = GoAiMatchSession(viewModelScope, repository, config, owned, worker, specifiedOpening,
-                    completedSink, engineFactory)
+                    completedSink, completeHumanImmediately = completeHumanImmediately, engineFactory = engineFactory)
                 engineOwner = owned; candidate = null
                 session = next
                 next.state.collect { match ->
@@ -99,6 +100,7 @@ class GoAiMatchViewModel(
     fun configureAutoContinuation(enabled: Boolean, maxGames: Int = 1) =
         !disposed.get() && (session?.configureAutoContinuation(enabled, maxGames) ?: false)
     fun retryAutoContinuation() = !disposed.get() && (session?.retryAutoContinuation() ?: false)
+    fun retryCompletion() = !disposed.get() && (session?.retryCompletion() ?: false)
     fun pause() { if (!disposed.get()) session?.pause() }
     fun resume() { if (!disposed.get()) session?.resume() }
     fun retrySearch() { if (!disposed.get()) session?.retrySearch() }
