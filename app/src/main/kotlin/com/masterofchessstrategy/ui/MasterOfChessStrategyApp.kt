@@ -163,7 +163,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
             RoomTutorialProgressRepository(database.tutorialProgressDao())
         }
         val statisticsRepository = remember {
-            RoomMatchStatisticsRepository(database.matchOutcomeDao())
+        RoomMatchStatisticsRepository(database)
         }
         val gameRecordRepository = remember {
             RoomGameRecordRepository(database.gameRecordDao())

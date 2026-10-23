@@ -3,6 +3,7 @@ package com.masterofchessstrategy.data
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.games.go.data.qualifiedMatchOutcomeRows
 
 internal data class MatchOutcome(
     val matchId: String,
@@ -91,14 +92,22 @@ internal interface MatchStatisticsRepository {
 
 internal class RoomMatchStatisticsRepository(
     private val dao: MatchOutcomeDao,
+    private val readRows: suspend () -> List<MatchOutcomeEntity> = { dao.listAll() },
+    private val rejectDirectGoWrites: Boolean = false,
 ) : MatchStatisticsRepository {
+    constructor(database: MocsDatabase) : this(database.matchOutcomeDao(),
+        { database.qualifiedMatchOutcomeRows() }, true)
+
     override suspend fun load(): LoadMatchStatisticsResult =
-        decodeStatistics(dao.listAll())?.let(LoadMatchStatisticsResult::Loaded)
+        decodeStatistics(readRows())?.let(LoadMatchStatisticsResult::Loaded)
             ?: LoadMatchStatisticsResult.Incompatible
 
     override suspend fun record(outcome: MatchOutcome): RecordMatchOutcomeResult {
+        require(!rejectDirectGoWrites || outcome.gameType != GameType.GO) {
+            "Go growth must be committed with its formal creation and terminal source"
+        }
         val inserted = dao.insert(outcome.toMatchOutcomeEntity()) != INSERT_IGNORED
-        val statistics = checkNotNull(decodeStatistics(dao.listAll())) {
+        val statistics = checkNotNull(decodeStatistics(readRows())) {
             "Match outcome ledger contains incompatible data"
         }
         return RecordMatchOutcomeResult(

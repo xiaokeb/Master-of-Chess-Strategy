@@ -5,6 +5,7 @@ import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.toGameRecord
 import com.masterofchessstrategy.data.toGameRecordEntity
+import com.masterofchessstrategy.data.toMatchOutcomeEntity
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.GoPhase
 import com.masterofchessstrategy.games.go.GoAiCompletedMatchSink
@@ -16,7 +17,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
-/** Projects already durable terminal sources. Never writes outcomes or grants ranked eligibility. */
+/** Projects durable terminals; only an explicitly persisted formal start can settle growth. */
 internal class RoomGoAiCompletionRepository(
     private val database: MocsDatabase,
     private val gate: GoStorageEpochGate = GoStorageEpochGate.forDatabase(database),
@@ -37,7 +38,10 @@ internal class RoomGoAiCompletionRepository(
             requireTerminalMatch(first, admitted.match())
             requireArchiveChain(first)
             val existing = database.gameRecordDao().find(projection.recordId)
-            if (existing == null) {
+            val settled = database.goRankedDao().settlement(admitted.recordId)
+            val start = database.goRankedDao().start(admitted.recordId)?.toStart()
+            val outcome = start?.let { withContext(worker) { qualifiedGoOutcome(it, first) } }
+            if (existing == null || (outcome != null && settled == null)) {
                 // The caller's reservation flag is not proof: it must already be in the DB.
                 val row = requireNotNull(database.goAiCheckpointDao().findActive(GameType.GO.code)) {
                     "围棋人机首次完成缺少已固定活动状态"
@@ -49,6 +53,15 @@ internal class RoomGoAiCompletionRepository(
                 }
             }
             insertOrVerify(projection)
+            if (outcome != null) {
+                val row = outcome.toMatchOutcomeEntity()
+                database.matchOutcomeDao().insert(row)
+                require(database.matchOutcomeDao().find(row.matchId) == row) {
+                    "围棋正式成长与首次终局账本冲突"
+                }
+                database.goRankedDao().insertSettlement(GoRankedSettlementEntity(row.matchId))
+                require(database.goRankedDao().settlement(row.matchId) == GoRankedSettlementEntity(row.matchId))
+            } else require(settled == null) { "围棋已结算来源不再满足正式条件" }
             finishTransaction()
         }
     }
@@ -94,6 +107,7 @@ internal class RoomGoAiCompletionRepository(
         beforeCommit() // Fault/cancellation seam; production performs no additional side effect.
         database.requireGoAiArchiveParents()
         database.requireGoAiProjectionParents()
+        database.requireGoRankedParents()
         currentCoroutineContext().ensureActive()
     }
 

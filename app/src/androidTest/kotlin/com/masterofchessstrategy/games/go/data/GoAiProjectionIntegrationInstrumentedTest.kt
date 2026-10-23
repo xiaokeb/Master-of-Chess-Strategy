@@ -133,7 +133,7 @@ class GoAiProjectionIntegrationInstrumentedTest {
         ChineseChessEndgamePackParser.loadBundled(InstrumentationRegistry.getInstrumentation().targetContext.assets), { false }, registry)
 
     private fun backup(database: MocsDatabase, bundle: GoCompleteStorageBundle, registry: GameBackupRegistry) =
-        bundle.backupRepository { adapters -> assertEquals(6, adapters.size); delegate(database, registry) }
+        bundle.backupRepository { adapters -> assertEquals(8, adapters.size); delegate(database, registry) }
 
     private suspend fun seed(database: MocsDatabase, bundle: GoCompleteStorageBundle): String {
         val match = NativeGoEngine(9).use { engine ->

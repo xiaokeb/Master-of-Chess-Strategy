@@ -4,7 +4,7 @@ import com.masterofchessstrategy.engine.GameType
 
 internal enum class BackupStorageTable {
     ACTIVE_GAME, COMPETITION_MATCH, GO_LOCAL_SESSION, GO_RECORD_SOURCE, GO_PROGRESS,
-    GO_AI_SESSION, GO_AI_ARCHIVE, GO_AI_PROJECTION,
+    GO_AI_SESSION, GO_AI_ARCHIVE, GO_AI_PROJECTION, GO_RANKED_START, GO_RANKED_SETTLEMENT,
 }
 
 /** A schema-owned row slot; registration cannot introduce or conditionally remove tables. */
@@ -15,7 +15,8 @@ internal data class BackupStorageSlot(val table: BackupStorageTable, val gameTyp
         }
         require(table !in setOf(BackupStorageTable.GO_LOCAL_SESSION, BackupStorageTable.GO_RECORD_SOURCE,
             BackupStorageTable.GO_PROGRESS, BackupStorageTable.GO_AI_SESSION, BackupStorageTable.GO_AI_ARCHIVE,
-            BackupStorageTable.GO_AI_PROJECTION) || gameType == GameType.GO) {
+            BackupStorageTable.GO_AI_PROJECTION, BackupStorageTable.GO_RANKED_START,
+            BackupStorageTable.GO_RANKED_SETTLEMENT) || gameType == GameType.GO) {
             "Go storage belongs only to Go"
         }
     }
@@ -71,4 +72,9 @@ internal interface PreparedGameBackup {
 /** Optional game-owned relationships, checked after every admission and before any replacement. */
 internal interface GameBackupSnapshotGuard {
     fun validatePreparedSnapshot(records: List<PreparedGameBackup>)
+}
+
+/** Cross-owner facts: extensions may verify, but never duplicate or overwrite core outcomes. */
+internal interface GameBackupCoreSnapshotGuard {
+    fun validateCoreSnapshot(records: List<PreparedGameBackup>, outcomes: List<MatchOutcome>)
 }

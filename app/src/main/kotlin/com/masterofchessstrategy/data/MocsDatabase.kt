@@ -17,6 +17,9 @@ import com.masterofchessstrategy.games.go.data.GoAiArchiveEntity
 import com.masterofchessstrategy.games.go.data.GoAiCheckpointDao
 import com.masterofchessstrategy.games.go.data.GoAiProjectionEntity
 import com.masterofchessstrategy.games.go.data.GoAiProjectionDao
+import com.masterofchessstrategy.games.go.data.GoRankedStartEntity
+import com.masterofchessstrategy.games.go.data.GoRankedSettlementEntity
+import com.masterofchessstrategy.games.go.data.GoRankedDao
 
 @Database(
     entities = [
@@ -35,8 +38,10 @@ import com.masterofchessstrategy.games.go.data.GoAiProjectionDao
         GoAiSessionEntity::class,
         GoAiArchiveEntity::class,
         GoAiProjectionEntity::class,
+        GoRankedStartEntity::class,
+        GoRankedSettlementEntity::class,
     ],
-    version = 17,
+    version = 18,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -68,6 +73,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
 
     abstract fun goAiCheckpointDao(): GoAiCheckpointDao
     abstract fun goAiProjectionDao(): GoAiProjectionDao
+    abstract fun goRankedDao(): GoRankedDao
 
     companion object {
         internal val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -410,6 +416,34 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_17_18 = object : Migration(17, 18) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Never upgrade historical AI records or outcomes into formal participation.
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS go_ranked_starts (
+                        recordId TEXT NOT NULL,
+                        formatVersion INTEGER NOT NULL,
+                        initialCheckpoint BLOB NOT NULL,
+                        createdAtEpochMillis INTEGER NOT NULL,
+                        PRIMARY KEY(recordId)
+                    )
+                """.trimIndent())
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS go_ranked_settlements (
+                        recordId TEXT NOT NULL,
+                        formatVersion INTEGER NOT NULL,
+                        PRIMARY KEY(recordId),
+                        FOREIGN KEY(recordId) REFERENCES go_ranked_starts(recordId)
+                            ON UPDATE NO ACTION ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+                        FOREIGN KEY(recordId) REFERENCES go_ai_projections(recordId)
+                            ON UPDATE NO ACTION ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+                        FOREIGN KEY(recordId) REFERENCES match_outcomes(matchId)
+                            ON UPDATE NO ACTION ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED
+                    )
+                """.trimIndent())
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -437,6 +471,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_14_15,
                         MIGRATION_15_16,
                         MIGRATION_16_17,
+                        MIGRATION_17_18,
                     )
                     .build()
                     .also { instance = it }

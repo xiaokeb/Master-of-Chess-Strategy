@@ -5,6 +5,24 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class GoAiBackupInventoryTest {
+    @Test fun formalStartAndSettlementEachRequireTheirOwnRegisteredSlot() {
+        val start = BackupStorageInventory.fromCodes(emptyList(), emptyList(), goRankedStartCodes = listOf(1, 1))
+        val settlement = BackupStorageInventory.fromCodes(emptyList(), emptyList(), goRankedSettlementCodes = listOf(1))
+        assertEquals(setOf(BackupStorageSlot(BackupStorageTable.GO_RANKED_START, GameType.GO)), start)
+        assertEquals(setOf(BackupStorageSlot(BackupStorageTable.GO_RANKED_SETTLEMENT, GameType.GO)), settlement)
+        for (slots in listOf(start, settlement, start + settlement)) {
+            assertThrows(IllegalArgumentException::class.java) { GameBackupRegistry(emptyList()).requireSupportedSlots(slots) }
+        }
+        for (code in listOf(999, GameType.CHINESE_CHESS.code)) {
+            assertThrows(IllegalArgumentException::class.java) {
+                BackupStorageInventory.fromCodes(emptyList(), emptyList(), goRankedStartCodes = listOf(code))
+            }
+            assertThrows(IllegalArgumentException::class.java) {
+                BackupStorageInventory.fromCodes(emptyList(), emptyList(), goRankedSettlementCodes = listOf(code))
+            }
+        }
+    }
+
     @Test fun independentActiveAndArchiveSlotsCannotBeHiddenByMissingDiskFiles() {
         val active = BackupStorageInventory.fromCodes(emptyList(), emptyList(),
             goAiSessionCodes = listOf(GameType.GO.code))

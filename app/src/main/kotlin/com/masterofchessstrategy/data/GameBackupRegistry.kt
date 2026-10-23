@@ -73,8 +73,11 @@ internal class GameBackupRegistry(
 
     fun prepareRestore(records: List<GameBackupRecord>, containerVersion: Int,
         coreRecordIds: Set<String> = emptySet(),
+        coreOutcomes: List<MatchOutcome> = emptyList(),
     ): List<PreparedGameBackup> {
         val coreIds = coreRecordIds.toSet()
+        val outcomes = Collections.unmodifiableList(coreOutcomes.toList())
+        require(outcomes.map { it.matchId }.distinct().size == outcomes.size) { "Duplicate core outcome" }
         val ordered = canonicalRecords(records, containerVersion)
         val context = GameBackupPreparationContext()
         val prepared = Collections.unmodifiableList(ordered.map { record ->
@@ -93,6 +96,7 @@ internal class GameBackupRegistry(
         }
         registrations.forEach { owner ->
             (owner.adapter as? GameBackupSnapshotGuard)?.validatePreparedSnapshot(prepared)
+            (owner.adapter as? GameBackupCoreSnapshotGuard)?.validateCoreSnapshot(prepared, outcomes)
             requireFixedRegistrations()
         }
         return prepared

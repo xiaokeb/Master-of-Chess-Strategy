@@ -5,6 +5,38 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class GameBackupRegistryTest {
+    @Test fun crossOwnerGuardReceivesImmutableCoreOutcomesBeforeAnyWrite() {
+        val outcome = MatchOutcome("one", GameType.GO, StoredGameMode.HUMAN_VS_AI,
+            com.masterofchessstrategy.engine.Difficulty.EASY, 1,
+            com.masterofchessstrategy.engine.GameResult.SECOND_PLAYER_WIN, 1)
+        val caller = mutableListOf(outcome)
+        var calls = 0
+        val owner = object : Adapter(GameBackupDescriptor("TIGER_GOAT_ACTIVE", 5, tigerSlot, 1, 0, 1000)),
+            GameBackupCoreSnapshotGuard {
+            override fun validateCoreSnapshot(records: List<PreparedGameBackup>, outcomes: List<MatchOutcome>) {
+                calls++
+                caller.clear()
+                assertEquals(listOf(outcome), outcomes)
+                assertEquals(1, records.size)
+                assertThrows(UnsupportedOperationException::class.java) { (outcomes as MutableList).clear() }
+            }
+        }
+        GameBackupRegistry(listOf(owner)).prepareRestore(listOf(record()), 5, coreOutcomes = caller)
+        assertEquals(1, calls)
+        assertEquals(0, caller.size)
+    }
+
+    @Test fun duplicateCoreOutcomeIdentityIsRejectedBeforeGameAdmission() {
+        val outcome = MatchOutcome("same", GameType.GO, StoredGameMode.HUMAN_VS_AI,
+            com.masterofchessstrategy.engine.Difficulty.EASY, 1,
+            com.masterofchessstrategy.engine.GameResult.SECOND_PLAYER_WIN, 1)
+        val owner = adapter()
+        assertThrows(IllegalArgumentException::class.java) {
+            GameBackupRegistry(listOf(owner)).prepareRestore(listOf(record()), 5, coreOutcomes = listOf(outcome, outcome))
+        }
+        assertEquals(0, owner.admissionCalls)
+    }
+
     private val tigerSlot = BackupStorageSlot(BackupStorageTable.ACTIVE_GAME, GameType.TIGER_AND_GOAT)
     private val matchSlot = BackupStorageSlot(BackupStorageTable.COMPETITION_MATCH, GameType.STANDARD_MAHJONG)
     private fun record(kind: String = "TIGER_GOAT_ACTIVE", game: GameType = GameType.TIGER_AND_GOAT) =

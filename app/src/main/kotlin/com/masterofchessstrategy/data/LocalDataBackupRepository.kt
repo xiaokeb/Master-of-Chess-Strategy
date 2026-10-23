@@ -8,6 +8,7 @@ import com.masterofchessstrategy.custom.ChineseChessHandicapConfig
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.games.go.data.requireGoAiArchiveParents
 import com.masterofchessstrategy.games.go.data.requireGoAiProjectionParents
+import com.masterofchessstrategy.games.go.data.requireGoRankedParents
 
 internal data class LocalDataRestoreSummary(
     val activeSessionCount: Int,
@@ -94,7 +95,7 @@ internal class RoomLocalDataBackupRepository(
         validateEngineStates(snapshot)
         // Export is subject to the same real engine admission as restore, without writes.
         gameBackups.prepareRestore(snapshot.gameExtensions, gameBackups.containerVersion(snapshot.gameExtensions),
-            snapshot.gameRecords.map { it.recordId }.toSet())
+            snapshot.gameRecords.map { it.recordId }.toSet(), snapshot.matchOutcomes)
         return LocalDataBackupCodec.encode(snapshot, gameBackups)
     }
 
@@ -105,6 +106,7 @@ internal class RoomLocalDataBackupRepository(
             snapshot.gameExtensions,
             gameBackups.containerVersion(snapshot.gameExtensions),
             snapshot.gameRecords.map { it.recordId }.toSet(),
+            snapshot.matchOutcomes,
         )
         val endgameLevels = snapshot.endgameProgress.associateWith { progress ->
             val level = levelsById[progress.levelId]
@@ -143,6 +145,7 @@ internal class RoomLocalDataBackupRepository(
             }
             database.requireGoAiArchiveParents()
             database.requireGoAiProjectionParents()
+            database.requireGoRankedParents()
         }
         return LocalDataRestoreSummary(
             activeSessionCount = snapshot.activeSessions.size +
@@ -178,6 +181,8 @@ internal class RoomLocalDataBackupRepository(
     private suspend fun clearAll() {
         // Both tables form one deferred parent graph; clear inside this same
         // replacement transaction, never orphaning a child in a separate commit.
+        database.goRankedDao().deleteSettlements()
+        database.goRankedDao().deleteStarts()
         database.goAiProjectionDao().deleteAll()
         database.goAiCheckpointDao().deleteAllActive()
         database.goAiCheckpointDao().deleteAllArchives()

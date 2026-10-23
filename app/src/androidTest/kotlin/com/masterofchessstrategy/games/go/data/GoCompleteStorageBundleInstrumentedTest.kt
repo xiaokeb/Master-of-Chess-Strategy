@@ -180,7 +180,8 @@ class GoCompleteStorageBundleInstrumentedTest {
                         throw CancellationException("owned cancelled replacement")
                 }
             }
-            assertEquals(setOf("GO_LOCAL_SESSION", "GO_LOCAL_RECORD", "GO_PROGRESS", "GO_AI_SESSION", "GO_AI_ARCHIVE", "GO_AI_PROJECTION"), suppliedKinds)
+            assertEquals(setOf("GO_LOCAL_SESSION", "GO_LOCAL_RECORD", "GO_PROGRESS", "GO_AI_SESSION", "GO_AI_ARCHIVE",
+                "GO_AI_PROJECTION", "GO_RANKED_START", "GO_RANKED_SETTLEMENT"), suppliedKinds)
             try { cancelled.restore(byteArrayOf(0)); fail("Cancellation hidden") } catch (_: CancellationException) { }
             assertNoMigration(database)
             try { stale.load(); fail("Old owner remained readable") } catch (_: IOException) { }

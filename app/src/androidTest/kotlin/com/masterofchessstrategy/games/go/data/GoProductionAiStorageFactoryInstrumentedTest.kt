@@ -52,7 +52,7 @@ class GoProductionAiStorageFactoryInstrumentedTest {
             lateinit var registry: GameBackupRegistry
             val backup = storage.backupRepository { adapters ->
                 registry = GameBackupRegistry(adapters)
-                assertEquals(6, adapters.size)
+                assertEquals(8, adapters.size)
                 RoomLocalDataBackupRepository(database,
                     ChineseChessEndgamePackParser.loadBundled(context.assets), { true }, registry)
             }

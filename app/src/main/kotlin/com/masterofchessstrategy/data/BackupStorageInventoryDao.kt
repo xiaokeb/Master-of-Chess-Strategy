@@ -31,4 +31,10 @@ internal interface BackupStorageInventoryDao {
 
     @Query("SELECT 1 FROM go_ai_projections ORDER BY recordId")
     suspend fun goAiProjectionGameTypeCodes(): List<Int>
+
+    @Query("SELECT 1 FROM go_ranked_starts ORDER BY recordId")
+    suspend fun goRankedStartGameTypeCodes(): List<Int>
+
+    @Query("SELECT 1 FROM go_ranked_settlements ORDER BY recordId")
+    suspend fun goRankedSettlementGameTypeCodes(): List<Int>
 }
