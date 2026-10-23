@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "tag": "v0.1.0-go-ai-completed-records.1",
+  "baselineCommit": "f42ebbd4c9b6c9ea25fe2159e237829f04904276",
+  "candidate": "gca4",
+  "sourceFiles": 1493,
+  "overlayFiles": 22,
+  "metadataFiles": 4,
+  "sourceManifestSha256": "facc10484fbfcf7ffae237cf6160de009bf2a175757c0e715b4804af0f1a1034",
+  "sourceIdentitySha256": "9696036199cc542542d868790f0b6d3fda544ff2f1629256f2a3de9a1c0dcb81",
+  "roomSchemaVersion": 17,
+  "roomSchemaSha256": "55734fdbac0baed12b1316f3082b5d4102a58333941e567d267ff772fbc1c88a",
+  "jvm": { "tests": 72, "classes": 6, "inheritedFrom": "gca2", "onlyTwoInstrumentedTestFilesChanged": true },
+  "device": { "distinctMethods": 36, "invocations": 40, "api": 37, "abi": "x86_64", "pageSize": 16384, "currentImages": 16, "newImagesInspected": 4, "sameByteImagesInherited": 12, "appDataCleared": false, "physicalDeviceTested": false },
+  "lint": { "errors": 0, "warnings": 7 },
+  "debugApkSha256": "3dc508817df02b6439cd7ffe19333930da648d6e20502a281a9891c3a604af76",
+  "instrumentedApkSha256": "7cb90da5d31e84c0c09cf10e2c96e3242697e29ede222f6d11990cba43ecd7c3",
+  "rankedGrowthGranted": false,
+  "productionAiNavigationIncluded": false,
+  "sourceOnly": true,
+  "binaryAssets": []
+}

@@ -135,7 +135,7 @@ private fun GoStoredRecordContent(
         onBack = onBack,
         extraControls = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(when (archive.origin) {
+                Text(if (archive.aiSource != null) "来源：人机／自动对局原始归档（不授予排名资格）" else when (archive.origin) {
                     GoSessionOrigin.LOCAL -> "来源：本地双人对局"
                     GoSessionOrigin.SGF_IMPORT -> "来源：SGF 导入"
                     GoSessionOrigin.LEGACY_UNKNOWN -> "来源：历史记录（未知）"

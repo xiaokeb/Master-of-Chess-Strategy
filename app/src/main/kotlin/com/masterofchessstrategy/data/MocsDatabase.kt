@@ -15,6 +15,8 @@ import com.masterofchessstrategy.games.go.data.GoProgressDao
 import com.masterofchessstrategy.games.go.data.GoAiSessionEntity
 import com.masterofchessstrategy.games.go.data.GoAiArchiveEntity
 import com.masterofchessstrategy.games.go.data.GoAiCheckpointDao
+import com.masterofchessstrategy.games.go.data.GoAiProjectionEntity
+import com.masterofchessstrategy.games.go.data.GoAiProjectionDao
 
 @Database(
     entities = [
@@ -32,8 +34,9 @@ import com.masterofchessstrategy.games.go.data.GoAiCheckpointDao
         GoProgressEntity::class,
         GoAiSessionEntity::class,
         GoAiArchiveEntity::class,
+        GoAiProjectionEntity::class,
     ],
-    version = 16,
+    version = 17,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -64,6 +67,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
     abstract fun goProgressDao(): GoProgressDao
 
     abstract fun goAiCheckpointDao(): GoAiCheckpointDao
+    abstract fun goAiProjectionDao(): GoAiProjectionDao
 
     companion object {
         internal val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -389,6 +393,23 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_16_17 = object : Migration(16, 17) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Existing records stay unknown; never infer AI provenance during schema migration.
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS go_ai_projections (
+                        recordId TEXT NOT NULL,
+                        projectionVersion INTEGER NOT NULL,
+                        PRIMARY KEY(recordId),
+                        FOREIGN KEY(recordId) REFERENCES game_records(recordId)
+                            ON UPDATE NO ACTION ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+                        FOREIGN KEY(recordId) REFERENCES go_ai_archives(recordId)
+                            ON UPDATE NO ACTION ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED
+                    )
+                """.trimIndent())
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -415,6 +436,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_13_14,
                         MIGRATION_14_15,
                         MIGRATION_15_16,
+                        MIGRATION_16_17,
                     )
                     .build()
                     .also { instance = it }

@@ -12,6 +12,7 @@ internal object BackupStorageInventory {
         database.backupStorageInventoryDao().goProgressGameTypeCodes(),
         database.backupStorageInventoryDao().goAiSessionGameTypeCodes(),
         database.backupStorageInventoryDao().goAiArchiveGameTypeCodes(),
+        database.backupStorageInventoryDao().goAiProjectionGameTypeCodes(),
     )
 
     fun fromCodes(
@@ -19,6 +20,7 @@ internal object BackupStorageInventory {
         goLocalCodes: List<Int> = emptyList(), goRecordSourceCodes: List<Int> = emptyList(),
         goProgressCodes: List<Int> = emptyList(),
         goAiSessionCodes: List<Int> = emptyList(), goAiArchiveCodes: List<Int> = emptyList(),
+        goAiProjectionCodes: List<Int> = emptyList(),
     ): Set<BackupStorageSlot> {
         require(activeCodes.distinct().size == activeCodes.size && competitionCodes.distinct().size == competitionCodes.size &&
             goLocalCodes.distinct().size == goLocalCodes.size &&
@@ -30,6 +32,7 @@ internal object BackupStorageInventory {
             goRecordSourceCodes.map { BackupStorageSlot(BackupStorageTable.GO_RECORD_SOURCE, gameType(it)) } +
             goProgressCodes.map { BackupStorageSlot(BackupStorageTable.GO_PROGRESS, gameType(it)) } +
             goAiSessionCodes.map { BackupStorageSlot(BackupStorageTable.GO_AI_SESSION, gameType(it)) } +
-            goAiArchiveCodes.map { BackupStorageSlot(BackupStorageTable.GO_AI_ARCHIVE, gameType(it)) }
+            goAiArchiveCodes.map { BackupStorageSlot(BackupStorageTable.GO_AI_ARCHIVE, gameType(it)) } +
+            goAiProjectionCodes.map { BackupStorageSlot(BackupStorageTable.GO_AI_PROJECTION, gameType(it)) }
     }
 }

@@ -13,7 +13,7 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 
 /** Immutable, read-only archive snapshot. Missing historical provenance stays unknown. */
-internal class GoStoredRecord(record: GameRecord, val source: GoSessionIdentity?) {
+internal class GoStoredRecord(record: GameRecord, val source: GoSessionIdentity?, val aiSource: GoAiCheckpointArchive? = null) {
     private val owned = record.defensiveCopy()
     val record: GameRecord get() = owned.defensiveCopy()
     val origin: GoSessionOrigin get() = source?.origin ?: GoSessionOrigin.LEGACY_UNKNOWN
@@ -28,7 +28,16 @@ internal class GoStoredRecordLoader(private val database: MocsDatabase) {
         database.withTransaction {
             val record = records.load(recordId) ?: throw IOException("围棋归档不存在或无法读取")
             val source = database.goRecordSourceDao().find(recordId)
-            storedGoRecordSnapshot(record, source)
+            val local = storedGoRecordSnapshot(record, source)
+            val association = database.goAiProjectionDao().find(recordId)
+            if (association == null) local else {
+                require(association.projectionVersion == 1 && source == null) { "围棋棋谱来源关联无效" }
+                val raw = requireNotNull(database.goAiCheckpointDao().findArchive(recordId)) { "围棋人机棋谱缺少原始来源" }
+                    .let(GoAiCheckpointRows::archive)
+                val projection = withContext(Dispatchers.Default) { projectGoAiRecord(raw) }
+                requireSameGoAiRecord(record, projection)
+                GoStoredRecord(record, null, raw)
+            }
         }
     }
 }

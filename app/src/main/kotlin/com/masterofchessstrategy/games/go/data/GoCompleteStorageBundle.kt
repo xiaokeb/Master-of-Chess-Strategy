@@ -25,12 +25,13 @@ internal class GoCompleteStorageBundle(
     private val preparation = GoCompleteBackupPreparation(database, session, learning, endgame, checkpoints)
     private val adapters: List<GameBackupAdapter> = java.util.Collections.unmodifiableList(
         listOf(GoLocalSessionBackupAdapter(), GoLocalRecordBackupAdapter(), GoProgressBackupAdapter()) +
-            createGoAiBackupAdapters())
+            createGoAiBackupAdapters() + GoAiProjectionBackupAdapter())
 
     // Deliberately not cached: a new page after restore must capture the new epoch.
     fun aiRepository(): GoAiMatchRepository = GatedGoAiMatchRepository(checkpoints, gate)
+    fun completedMatchSink() = RoomGoAiCompletionRepository(database, gate)
 
-    /** Supplies the entire five-slot bundle when constructing the host's all-games registry. */
+    /** Supplies all raw, shared and projection-metadata slots as one registration bundle. */
     fun backupRepository(createDelegate: (List<GameBackupAdapter>) -> LocalDataBackupRepository): LocalDataBackupRepository =
         GatedGoBackupRepository(createDelegate(adapters), gate, preparation)
 }

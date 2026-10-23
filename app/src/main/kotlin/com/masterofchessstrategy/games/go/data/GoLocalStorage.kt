@@ -19,6 +19,7 @@ internal class GoLocalStorage(private val database: MocsDatabase, context: Conte
     fun endgameRepository() = GatedGoEndgameRepository(
         RoomGoEndgameProgressRepository(database, GoEndgameDiskSource(application)), gate)
     fun aiRepository() = complete.aiRepository()
+    fun completedMatchSink() = complete.completedMatchSink()
 
     // The delegate receives all five Go slots from the same bundle as the AI repository.
     fun backupRepository(createDelegate: (List<GameBackupAdapter>) -> LocalDataBackupRepository): LocalDataBackupRepository =
