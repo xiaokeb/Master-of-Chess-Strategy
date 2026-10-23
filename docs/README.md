@@ -2,6 +2,8 @@
 
 本目录保存《棋术大师》的正式需求、架构、接口、开发、测试和交付文档。
 
+- [围棋正式新局／首次成长数据验收](games/go/2026-10-23-ranked-growth-release-verification.md)：`8b5f6b0`／`v0.1.0-go-ranked-growth-data.1`／[源码 Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-ranked-growth-data.1)，110 JVM、59不同设备方法／63调用与双字号16图核验；正式AI入口仍待。
+
 - requirements/：原始需求和逐步拆分的规格。
 - architecture/：系统、引擎和数据架构。
 - interfaces/：Kotlin、C++、JNI 和业务接口。
