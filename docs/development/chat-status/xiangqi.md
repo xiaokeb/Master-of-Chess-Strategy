@@ -1,5 +1,7 @@
 # 中国象棋对话状态
 
+2026-10-24 18:49：已发布 `d64deddb83447b4cc0c419604aa440aca49c2fe6`／`v0.1.0-xiangqi-budget-v2-admission.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-xiangqi-budget-v2-admission.1) id422672166。新六源规则＋完整搜索树身份、严格输入桥、读取锁冻结副本构建及独立依赖/命令后验通过；干净xbva2实际71测试、41对象/2库/45命令，最终ELF在API37/x86_64/16KiB模拟器12项（1成功/11拒绝）通过。32份PF的CRLF差异只在新portable规格重审/重编解决，旧规格/结果/异常槽不改。1579完整索引导出、19路径与工作区保护通过，无App/JNI/生产参数修改、无二进制附件；构建阶段不执行ELF，独立设备阶段执行validate-plan但不搜索/加载NNUE。复现、证据与未验收范围见 [新报告](../../games/xiangqi/2026-10-24-budget-v2-admission-verification.md)。下一有限诊断与新完整协议仍待，search_authorized=false/strength_accepted=false；不宣称完整象棋完成。
+
 更新时间：2026-09-30。当前节点：自然限着模拟器定向验收。
 
 - 已实现：教程第二步可切换车、马、炮、相、士、将帅、兵卒七幅只读规则示意；新增选项行测试标签，未改教程存档与规则引擎。

@@ -1,5 +1,7 @@
 # 开发进度
 
+2026-10-24 18:49：象棋预算v2原生准入节点已提交推送 `d64deddb83447b4cc0c419604aa440aca49c2fe6`／tag `v0.1.0-xiangqi-budget-v2-admission.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-xiangqi-budget-v2-admission.1) id422672166，无二进制附件。干净候选xbva2的1575源码＋4元数据、19显式路径、1579完整索引/导出及工作区保护通过；71定向测试、指定NDK30实际41对象/2新库/45命令和最终ELF模拟器12项身份自检通过。工作区32份PF仅换行差异导致xbva1拒绝，另审portable规格并重编，不覆盖历史。无搜索/新比赛/权重加载/清数据，原异常槽不重跑，棋力仍未验收。下一先审有限诊断与新训练/保留集协议，不放宽旧入口。方棋独立Room切片15 JVM通过、7设备方法仅编译，未接生产/备份；其余棋种WIP继续保留，完整目标active。
+
 更新时间：2026-09-30
 
 ## Foundation 节点
