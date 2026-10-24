@@ -2,6 +2,8 @@
 
 本目录保存《棋术大师》的正式需求、架构、接口、开发、测试和交付文档。
 
+- [围棋正式AI入口验收](games/go/2026-10-24-ai-entry-release-verification.md)：`141ed92`／`v0.1.0-go-ai-entry.1`／[源码 Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-ai-entry.1)，141同源JVM、74不同设备方法／107调用、双字号64图核验；真实模型应答与Activity重建已验，强度／内容／实体设备仍待。
+
 - [围棋正式会话事务验收](games/go/2026-10-23-formal-session-release-verification.md)：`5a05da7`／`v0.1.0-go-formal-session.1`／[源码 Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-formal-session.1)，103 JVM、32不同设备方法／34调用与双字号4图核验；正式AI入口与重试界面待集成。
 
 - [围棋正式新局／首次成长数据验收](games/go/2026-10-23-ranked-growth-release-verification.md)：`8b5f6b0`／`v0.1.0-go-ranked-growth-data.1`／[源码 Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-ranked-growth-data.1)，110 JVM、59不同设备方法／63调用与双字号16图核验；正式AI入口仍待。
