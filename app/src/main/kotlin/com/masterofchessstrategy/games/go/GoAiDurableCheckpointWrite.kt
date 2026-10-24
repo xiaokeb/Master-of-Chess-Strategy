@@ -16,8 +16,10 @@ internal suspend fun saveGoAiCheckpoint(repository: GoAiMatchRepository, previou
     val nextBytes = GoAiMatchFileCodec.encode(next)
     val previousBytes = previous?.let(GoAiMatchFileCodec::encode)
     try {
-        if (freshStandard && repository is GoAiFormalMatchRepository) repository.createStandardMatch(next)
-        else repository.save(next)
+        if (freshStandard && repository is GoAiFormalMatchRepository) {
+            if (previous != null && previous.matchId != next.matchId) repository.restartStandardMatch(next, previous)
+            else repository.createStandardMatch(next)
+        } else repository.save(next)
     } catch (failure: Exception) {
         if (failure is CancellationException) throw failure
         val actual = try { repository.load()?.let(GoAiMatchFileCodec::encode) }

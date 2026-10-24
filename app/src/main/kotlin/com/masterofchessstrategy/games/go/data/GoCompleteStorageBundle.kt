@@ -34,6 +34,7 @@ internal class GoCompleteStorageBundle(
     fun completedMatchSink() = RoomGoAiCompletionRepository(database, gate)
     fun rankedMatchCreator() = RoomGoRankedMatchCreator(database, checkpoints, rankedLearning, gate)
     fun formalAiRepository() = RoomGoFormalAiMatchRepository(database, checkpoints, rankedLearning, gate)
+    fun aiEntryRepository() = RoomGoAiEntryRepository(database, checkpoints, rankedLearning, gate)
 
     /** Supplies all raw, shared and projection-metadata slots as one registration bundle. */
     fun backupRepository(createDelegate: (List<GameBackupAdapter>) -> LocalDataBackupRepository): LocalDataBackupRepository =

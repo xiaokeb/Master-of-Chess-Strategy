@@ -66,6 +66,9 @@ internal object AppDestination {
     const val LANZHOU_TRADITIONAL_MODES = "lanzhou-traditional/modes"
     const val GO_MODES = "go/modes"
     const val GO_LOCAL_GAME = "go/local-game"
+    const val GO_AI_SETUP = "go/ai/setup"
+    const val GO_AI_MATCH_ARGUMENT = "goAiMatchId"
+    const val GO_AI_MATCH = "go/ai/match/{$GO_AI_MATCH_ARGUMENT}"
     const val GO_TUTORIAL = "go/tutorial"
     const val TIGER_GOAT_LOCAL_GAME = "tiger-goat/local-game"
     const val AI_DIFFICULTY_ARGUMENT = "difficultyCode"
@@ -100,6 +103,11 @@ internal object AppDestination {
         require(recordId.isNotBlank() && recordId.length <= 64)
         // Legacy Go IDs need not be hashes; preserve valid IDs containing route separators.
         return "go/records/" + java.net.URLEncoder.encode(recordId, "UTF-8").replace("+", "%20")
+    }
+
+    fun goAiMatch(matchId: String): String {
+        require(matchId.isNotBlank() && '\u0000' !in matchId && matchId.toByteArray(Charsets.UTF_8).size <= 128)
+        return "go/ai/match/" + java.net.URLEncoder.encode(matchId, "UTF-8").replace("+", "%20")
     }
 
     fun chineseChessEndgame(levelId: String): String {

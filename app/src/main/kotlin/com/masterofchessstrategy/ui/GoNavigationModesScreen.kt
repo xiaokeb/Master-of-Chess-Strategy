@@ -18,11 +18,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.masterofchessstrategy.R
+import com.masterofchessstrategy.games.go.GoDifficultyProgressPanel
+import com.masterofchessstrategy.games.go.GoDifficultyProgressState
 
 internal const val GO_MODES_TAG = "go_navigation_modes"
 internal const val GO_LOCAL_ENTRY_TAG = "go_navigation_local"
 internal const val GO_LEARNING_ENTRY_TAG = "go_navigation_learning"
 internal const val GO_MODES_BACK_TAG = "go_navigation_back"
+internal const val GO_ENDGAMES_ENTRY_TAG = "go_navigation_endgames"
 
 /** Shared entry orchestration; Go owns its game, rules and session implementation. */
 @Composable
@@ -30,6 +33,10 @@ internal fun GoNavigationModesScreen(
     onBack: () -> Unit,
     onLocalGame: () -> Unit,
     onLearning: () -> Unit,
+    progress: GoDifficultyProgressState? = null,
+    onRetryProgress: () -> Unit = {},
+    onEndgames: (() -> Unit)? = null,
+    onAiGame: (() -> Unit)? = null,
 ) {
     Surface(Modifier.fillMaxSize()) {
         Column(
@@ -48,6 +55,17 @@ internal fun GoNavigationModesScreen(
                 Text(stringResource(R.string.go_navigation_learning))
             }
             Text(stringResource(R.string.go_navigation_learning_note))
+            if (onEndgames != null) {
+                Button(onClick = onEndgames, modifier = Modifier.fillMaxWidth().testTag(GO_ENDGAMES_ENTRY_TAG)) {
+                    Text("围棋残局练习")
+                }
+            }
+            if (onAiGame != null) {
+                Button(onAiGame, modifier = Modifier.fillMaxWidth().testTag("go_navigation_ai")) {
+                    Text("围棋人机／自动演局")
+                }
+            }
+            if (progress != null) GoDifficultyProgressPanel(progress, onRetryProgress)
             Text(stringResource(R.string.go_navigation_future), style = MaterialTheme.typography.bodyMedium)
             OutlinedButton(onClick = onBack, modifier = Modifier.testTag(GO_MODES_BACK_TAG)) {
                 Text(stringResource(R.string.go_navigation_back))

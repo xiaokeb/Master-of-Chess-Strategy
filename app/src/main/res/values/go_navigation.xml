@@ -6,7 +6,7 @@
     <string name="go_navigation_scoring_note">按中国规则数子。点目仅切换展示，双方确认同一死子集合后才结算；争议可恢复行棋。</string>
     <string name="go_navigation_sgf_note">本地对局可交换 SGF；正式完成棋谱可在棋谱库中收藏、回放和导出。</string>
     <string name="go_navigation_learning">入门教程 · 十个知识点与规则练习</string>
-    <string name="go_navigation_learning_note">教程十课详细进度已纳入本地备份；简单 AI 解锁与练习残局链接仍待接入。</string>
-    <string name="go_navigation_future">人机对战、AI 自动演局和残局功能尚未开放。</string>
+    <string name="go_navigation_learning_note">教程十课详细进度纳入本地备份；完课及有效胜场按对应条件解锁 AI 难度。</string>
+    <string name="go_navigation_future">人机与自动演局从独立设置进入；残局、内容与棋力标定按后续节点分别验收。</string>
     <string name="go_navigation_back">返回首页</string>
 </resources>

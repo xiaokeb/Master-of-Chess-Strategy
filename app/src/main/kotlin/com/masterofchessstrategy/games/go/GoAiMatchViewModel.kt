@@ -34,6 +34,12 @@ class GoAiMatchViewModel(
     private val completeHumanImmediately: Boolean = false,
     private val engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
 ) : ViewModel(), LocalDataWriterRetirement {
+    internal var navigationOwnerKey: String? = null
+        private set
+    internal fun bindNavigationOwner(key: String) {
+        check(navigationOwnerKey == null || navigationOwnerKey == key)
+        navigationOwnerKey = key
+    }
     private val disposed = AtomicBoolean(false)
     private val mutableState = MutableStateFlow(GoAiMatchPageState())
     val state: StateFlow<GoAiMatchPageState> = mutableState.asStateFlow()

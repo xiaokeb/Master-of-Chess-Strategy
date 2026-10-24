@@ -20,6 +20,9 @@ internal class RoomGoFormalAiMatchRepository(
     override suspend fun load() = delegate.load()
     override suspend fun save(match: GoAiSavedMatch) = delegate.save(match)
     override suspend fun createStandardMatch(match: GoAiSavedMatch) { creator.create(match) }
+    override suspend fun restartStandardMatch(match: GoAiSavedMatch, expectedActive: GoAiSavedMatch) = gate.access(ownerEpoch) {
+        database.withTransaction { creator.createEntryInTransaction(match, expectedActive, abandonOngoing = true) }
+    }
 
     override suspend fun confirmsStandardCreation(match: GoAiSavedMatch): Boolean = gate.access(ownerEpoch) {
         val expected = withContext(Dispatchers.Default) { admitGoRankedStart(match, 0) }

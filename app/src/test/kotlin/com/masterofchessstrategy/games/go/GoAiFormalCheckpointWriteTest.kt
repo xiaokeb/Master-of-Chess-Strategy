@@ -80,18 +80,44 @@ class GoAiFormalCheckpointWriteTest {
         assertFalse(repo.hasOrigin)
     }
 
+    @Test fun explicitRestartUsesExpectedCheckpointInsteadOfUnconditionalCreation() = runTest {
+        val previous = GoAiSavedMatch("old", next.config, byteArrayOf(2))
+        val repo = Formal().apply { value = previous }
+        saveGoAiCheckpoint(repo, previous, next, freshStandard = true)
+        assertSame(previous, repo.expectedRestart)
+        assertEquals(1, repo.restarts)
+        assertEquals(0, repo.saves)
+        assertTrue(repo.hasOrigin)
+    }
+
+    @Test fun restartLostAcknowledgementStillRequiresTheNewCreationFact() = runTest {
+        val previous = GoAiSavedMatch("old", next.config, byteArrayOf(2))
+        val repo = Formal().apply { value = previous; afterCommit = IOException("lost restart"); mintOrigin = false }
+        try { saveGoAiCheckpoint(repo, previous, next, freshStandard = true); fail("unbound restart accepted") }
+        catch (_: GoAiCheckpointWriteUncertainException) { }
+        assertSame(previous, repo.expectedRestart)
+        assertEquals(1, repo.restarts)
+        assertEquals(1, repo.confirmations)
+    }
+
     private class Formal : GoAiFormalMatchRepository {
         var value: GoAiSavedMatch? = null
         var hasOrigin = false; var mintOrigin = true
         var creates = 0; var saves = 0; var reads = 0; var confirmations = 0
         var beforeCommit: Exception? = null; var afterCommit: Exception? = null; var factFailure: Exception? = null
         var loadGate: CompletableDeferred<Unit>? = null
+        var expectedRestart: GoAiSavedMatch? = null
+        var restarts = 0
         override suspend fun load(): GoAiSavedMatch? { reads++; loadGate?.await(); return value }
         override suspend fun save(match: GoAiSavedMatch) { saves++; value = match }
         override suspend fun createStandardMatch(match: GoAiSavedMatch) {
             creates++; beforeCommit?.let { throw it }
             value = match; hasOrigin = mintOrigin
             afterCommit?.let { throw it }
+        }
+        override suspend fun restartStandardMatch(match: GoAiSavedMatch, expectedActive: GoAiSavedMatch) {
+            restarts++; expectedRestart = expectedActive
+            createStandardMatch(match)
         }
         override suspend fun confirmsStandardCreation(match: GoAiSavedMatch): Boolean {
             confirmations++; factFailure?.let { throw it }

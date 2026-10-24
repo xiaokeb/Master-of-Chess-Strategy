@@ -16,12 +16,15 @@ internal class GoLocalStorage(private val database: MocsDatabase, context: Conte
         RoomGoSessionRepository(database, GoLocalSessionDiskSource(application)), gate)
     fun learningRepository() = GatedGoLearningRepository(
         RoomGoLearningProgressRepository(database, GoLearningPreferencesDiskSource(application)), gate)
+    fun difficultyEligibilityRepository() = RoomGoDifficultyEligibilityRepository(
+        database, GoLearningPreferencesDiskSource(application), gate)
     fun endgameRepository() = GatedGoEndgameRepository(
         RoomGoEndgameProgressRepository(database, GoEndgameDiskSource(application)), gate)
     fun aiRepository() = complete.aiRepository()
     fun completedMatchSink() = complete.completedMatchSink()
     fun rankedMatchCreator() = complete.rankedMatchCreator()
     fun formalAiRepository() = complete.formalAiRepository()
+    fun aiEntryRepository() = complete.aiEntryRepository()
 
     // The delegate receives all five Go slots from the same bundle as the AI repository.
     fun backupRepository(createDelegate: (List<GameBackupAdapter>) -> LocalDataBackupRepository): LocalDataBackupRepository =

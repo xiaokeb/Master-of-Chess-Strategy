@@ -37,6 +37,8 @@ data class GoAiMatchUiState(
     val matchId: String = "",
     val completionStored: Boolean = false,
     val completionPending: Boolean = false,
+    // Transient page policy, not a new GAI field or a claim about ranked participation.
+    val immediateHumanCompletion: Boolean = false,
 ) {
     val humanCanPlay get() = !closed && game.canAct && game.phase == GoPhase.PLAYING && !config.isAi(game.currentPlayer)
     val canReviewScore get() = !closed && game.canAct && game.phase == GoPhase.SCORING
@@ -70,7 +72,8 @@ class GoAiMatchSession(
     private val mutex = Mutex()
     private val disposed = AtomicBoolean(false)
     private val stamp = AtomicReference(GoAiPositionStamp(UUID.randomUUID().toString(), 0))
-    private val mutableState = MutableStateFlow(GoAiMatchUiState(initialConfig))
+    private val mutableState = MutableStateFlow(GoAiMatchUiState(initialConfig,
+        immediateHumanCompletion = completeHumanImmediately))
     val state: StateFlow<GoAiMatchUiState> = mutableState.asStateFlow()
     private val search = GoAiSearchCoordinator(scope, searchEngine, stamp::get, worker)
     private var engine: GoRecordEngine? = null // worker mutex only
@@ -173,6 +176,7 @@ class GoAiMatchSession(
                             matchId = id
                             loadedBytes = bytes.copyOf()
                             loadedState = GoAiMatchUiState(config, game, undoUsed = undoUsed, hintUsed = saved?.hintUsed ?: 0,
+                                immediateHumanCompletion = completeHumanImmediately,
                                 completionReserved = reserved, eventCount = eventCount, completionStored = stored,
                                 completionPending = completeHumanImmediately && !config.automatic &&
                                     game.phase == GoPhase.FINISHED && !stored,
@@ -347,6 +351,7 @@ class GoAiMatchSession(
                 checkpoint = bytes
                 stamp.set(stamp.get().let { it.copy(revision = it.revision + 1) })
                 mutableState.value = GoAiMatchUiState(previous.config, checkNotNull(game),
+                    immediateHumanCompletion = completeHumanImmediately,
                     speed = mutableState.value.speed, rememberedHuman = previous.rememberedHuman,
                     eventCount = previous.openingEventCount,
                     openingEventCount = previous.openingEventCount,
@@ -431,6 +436,7 @@ class GoAiMatchSession(
                 checkpoint = bytes
                 stamp.set(stamp.get().let { it.copy(revision = it.revision + 1) })
                 mutableState.value = GoAiMatchUiState(nextConfig, checkNotNull(game),
+                    immediateHumanCompletion = completeHumanImmediately,
                     speed = mutableState.value.speed, rememberedHuman = previous.rememberedHuman,
                     eventCount = replacement.eventCount, openingEventCount = replacement.eventCount,
                     hasSpecifiedOpening = true, autoContinueEnabled = previous.autoContinueEnabled && nextConfig.automatic,
