@@ -1,5 +1,9 @@
 # 开发进度
 
+2026-10-25 17:21：方棋学习页面已推送 `41d05c3c250d39b71c0a20842caea1d479c67b3f`，附注tag `v0.1.0-lanzhou-fangqi-learning-ui.1`，[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-fangqi-learning-ui.1) id423284267。正式菜单六课/三项真实Native练习、保存确认/失败重试、保留VM和备份后Owner交接已接。最终fqlh2的49JVM、双ABI/Lint0错19警告、双字号14次学习设备调用、36页面PNG核验及2次真实杀进程/3图通过；1681全树导出、16显式路径与工作区保护已验。
+
+旧异常原文视觉缺陷及两次未完成脚本记录保留；未清默认数据，未附APK，不宣称中间练习局面杀进程恢复。下一独立方棋正式人机创建/结算来源与资格、兰州24倍v2生产存储/完整备份、象棋纯耗时分析及未来producer按依赖推进；内容、音效、强度与实体设备继续另验，完整目标active。
+
 2026-10-25 16:30：方棋学习存储已推送 `d1fab2e4f85a3aadfcf88da71ac7222657d6acbb`／`v0.1.0-lanzhou-fangqi-learning-storage.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-fangqi-learning-storage.1) id423253795。schema19只新增独立六课/三练习表，正式97JVM、双ABI/Lint0错18警告、16设备方法及10原PNG视觉通过；截图采集run-as误用保留，只重取图不重跑测试。1668全树导出、23显式路径和工作区保护通过；学习正式页面/资格/成长未纳入，宿主新源继续独立开发。象棋G0亦已推送 `4e03d2f1f8449cb9a58665844a89468d4ce7df5c`／`v0.1.0-xiangqi-budget-v2-g0.1`／Release423236069：21同源Python、413规则检查、12组writer/115567检查、三份原生LF→Python互操作；1651全树/16路径已验，无搜索/新协议/seed或棋力晋升。兰州每家24倍桌规的严格Admission/Gate/Room新切片27私有JVM通过，真实JNI/SQLite/备份尚待；不改旧v1历史。全六棋种目标active。
 
 2026-10-25 11:17：方棋正式本地对局/完整历史节点已提交推送 `f3f92364a2a01a7bd8f7b2c25066b11b14110578`／附注tag `v0.1.0-lanzhou-fangqi-local-session.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-fangqi-local-session.1) id423121486，无二进制附件。最终fqsp3的79JVM、5原生程序、方棋25设备方法＋6大字体调用、共享设置/SAF两方法、2次真实杀进程及23张视觉通过；共享首轮1次截图重绘超时原样保留，仅失败方法同APK复核通过。1633完整索引/干净导出一致、61路径、工作区保护已验；arm64仅编译、实体未验。正式菜单仅本地，学习/提示/音效/四档资格与棋力仍待。象棋G0纯进度验证器21项私有通过、待Root复核，不授权搜索/新评测；兰州炸胡明确每家24倍、总72倍，旧8倍存档按原版本恢复。完整六棋种目标active。

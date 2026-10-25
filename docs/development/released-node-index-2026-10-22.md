@@ -1,5 +1,9 @@
 # 已验证节点与后续集成
 
+## 2026-10-25 17:21最新
+
+方棋学习UI已发布：`41d05c3c250d39b71c0a20842caea1d479c67b3f`，[v0.1.0-lanzhou-fangqi-learning-ui.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-fangqi-learning-ui.1)，Release423284267。正式六课/三练习、49JVM、双字号14次学习调用、36页面PNG核验、两次真实进程恢复及3图、1681完整导出通过；仅源码，无APK。普通本地棋局保持；人机资格/成长/强度、音效、额外题量与实体验收另行推进。见[验收记录](../games/lanzhou-fangqi/2026-10-25-learning-ui-verification.md)。
+
 ## 2026-10-25 16:30最新（优先于下方历史规划）
 
 | 节点 | 提交 | tag/Release | 实际验证摘要 |
