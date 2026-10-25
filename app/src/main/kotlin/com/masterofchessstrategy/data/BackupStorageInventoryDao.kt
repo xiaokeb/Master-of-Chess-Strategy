@@ -37,4 +37,8 @@ internal interface BackupStorageInventoryDao {
 
     @Query("SELECT 1 FROM go_ranked_settlements ORDER BY recordId")
     suspend fun goRankedSettlementGameTypeCodes(): List<Int>
+
+    // Code 4 is Fangqi's persisted game code; the table stores dedicated content keys.
+    @Query("SELECT 4 FROM fangqi_learning_progress ORDER BY contentKey")
+    suspend fun fangqiLearningGameTypeCodes(): List<Int>
 }

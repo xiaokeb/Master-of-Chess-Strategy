@@ -20,6 +20,8 @@ import com.masterofchessstrategy.games.go.data.GoAiProjectionDao
 import com.masterofchessstrategy.games.go.data.GoRankedStartEntity
 import com.masterofchessstrategy.games.go.data.GoRankedSettlementEntity
 import com.masterofchessstrategy.games.go.data.GoRankedDao
+import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiLearningProgressEntity
+import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiLearningProgressDao
 
 @Database(
     entities = [
@@ -40,8 +42,9 @@ import com.masterofchessstrategy.games.go.data.GoRankedDao
         GoAiProjectionEntity::class,
         GoRankedStartEntity::class,
         GoRankedSettlementEntity::class,
+        FangqiLearningProgressEntity::class,
     ],
-    version = 18,
+    version = 19,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -74,6 +77,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
     abstract fun goAiCheckpointDao(): GoAiCheckpointDao
     abstract fun goAiProjectionDao(): GoAiProjectionDao
     abstract fun goRankedDao(): GoRankedDao
+    abstract fun fangqiLearningProgressDao(): FangqiLearningProgressDao
 
     companion object {
         internal val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -444,6 +448,20 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_18_19 = object : Migration(18, 19) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Learning keys are game-owned; never rewrite old tutorials or reward ledgers.
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS fangqi_learning_progress (
+                        contentKey TEXT NOT NULL,
+                        contentVersion INTEGER NOT NULL,
+                        completedAtEpochMillis INTEGER NOT NULL,
+                        PRIMARY KEY(contentKey)
+                    )
+                """.trimIndent())
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -472,6 +490,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_15_16,
                         MIGRATION_16_17,
                         MIGRATION_17_18,
+                        MIGRATION_18_19,
                     )
                     .build()
                     .also { instance = it }

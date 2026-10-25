@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-lanzhou-fangqi-learning-storage.1",
+  "candidate": "fqlp2",
+  "baseline_commit": "4e03d2f1f8449cb9a58665844a89468d4ce7df5c",
+  "source_files": 1664,
+  "overlay_files": 19,
+  "metadata_files": 4,
+  "source_identity_sha256": "fba37f87e3227cf57fd166e6766959cd1ad23379970e7237529ee6e29f3462ca",
+  "overlay_manifest_sha256": "65e08831d314ae23f5271ef945fcae698308f5ae64690c7f1d84c9451cc015cd",
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/MocsDatabase.kt",
+      "sha256": "fea5076262d413aaa50c7049b3eb1c8114222bf6080c2d6596b87400ad1c8caf"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/GameBackupAdapter.kt",
+      "sha256": "73efb5c7eeedda36bde944ce0cdbdb381929bea8f075ac1ad54dd935921ee0e3"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/BackupStorageInventoryDao.kt",
+      "sha256": "c8ad96f873a9c5a4f63f8220fb754c93538716eaac72d0cc0daa57796ad08503"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/BackupStorageInventory.kt",
+      "sha256": "319a656e106770af30055f8bd4b7b7d74a5bd80ed5da1c51293c8a646fda58b6"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/LocalDataBackupRepository.kt",
+      "sha256": "b9b47985c920914aca001422cfb607ee9004b2e9c1be1fcebd9c0219f6861dca"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/ProductionGameBackupFactory.kt",
+      "sha256": "dc2acb6748a4eb21ca626a613520112ee731ff50a4fc58f81bb7b6adddabaa78"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiLearningProgressEntity.kt",
+      "sha256": "8e41aa9e1b35ece34e9e993fbdc3cdfad0ab27f45e62820fcd98cbae782fad46"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiLearningSnapshot.kt",
+      "sha256": "26269ca859acc1a85abbf8d09f4dac7e40ee8a42b38c8d760e6bc6d9ab78575f"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/RoomFangqiLearningStore.kt",
+      "sha256": "6337791e4818291cc29b16090ae0b0da1782d8d8887c00172ea704380fe332c1"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiLearningPracticeAdmission.kt",
+      "sha256": "8861b096777edbce18050903da4fbbe5f5e9f40a5e2dc6ab3d388ef5b8056ff1"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiLearningBackupAdapter.kt",
+      "sha256": "79621cb6b41bee9cf32deb56478cda9810df6f47a2416317598a3d0fd345b641"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/LanzhouFangqiLearningContent.kt",
+      "sha256": "6b0115351dc5c0b49a3fa59eb9736b95c24be8ee7e172194807f652e5b13a620"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiLearningStoreTest.kt",
+      "sha256": "d8754903b203526337896866f7bc3600aec6497f2e7ab743a9022239c9e60ddf"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiLearningPracticeAdmissionTest.kt",
+      "sha256": "871fafa54b0533c91c3fe6e32efa163af76bae10d5c3ccc29e384d22016e9902"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiLearningBackupAdapterTest.kt",
+      "sha256": "8b8598e319ae59c59e416245e51ab45105a9c3c4107303548c9e3867cc0a5f85"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiLearningRoomInstrumentedTest.kt",
+      "sha256": "e0afde94d6a280ef0920dd4d0d44d347c2cb80f01007a7248ae42579b4905e81"
+    },
+    {
+      "path": "docs/games/lanzhou-fangqi/2026-10-25-learning-progress-store.md",
+      "sha256": "e8a1c07fa52c3a42e4f59e982e5d66ef73259bf5638585c00879407b00fe18c8"
+    },
+    {
+      "path": "docs/development/fangqi-learning-storage-integration-2026-10-25.md",
+      "sha256": "55646953878c93ffe63341fa85ce347ed19924c38c2b9fe11625ea16e3574dcf"
+    },
+    {
+      "path": "app/schemas/com.masterofchessstrategy.data.MocsDatabase/19.json",
+      "sha256": "8c3aa57fb71f0654f4e6a8b6a85c5f45725137b642d3a118a439f02607f82400"
+    }
+  ],
+  "room_schema_version": 19,
+  "room_schema_sha256": "8c3aa57fb71f0654f4e6a8b6a85c5f45725137b642d3a118a439f02607f82400",
+  "jvm_tests": 97,
+  "jvm_classes": 9,
+  "lint_errors": 0,
+  "lint_warnings": 18,
+  "compiled_abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "apks": {
+    "app/build/outputs/apk/debug/app-debug.apk": "72d1b7872ba5f48fd9179196a6be6ac5cced472af58c5aece22f4d15b84cf22f",
+    "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "7bdd7f062114c73c5cf35bfac5c0a56749fd21db0c9abb60a1ca5ad4776849e5"
+  },
+  "device_environment": {
+    "page_size": 16384,
+    "abi": "x86_64",
+    "api": 37
+  },
+  "device_methods": 16,
+  "new_learning_device_methods": 6,
+  "shared_regression_device_methods": 10,
+  "images_reviewed": 10,
+  "image_collection_recovered_without_test_rerun": true,
+  "evidence_sha256": {
+    "formal-r1/build-receipt.json": "85b2c5436c9ef94acc8fafc5f261a23595e1d83d3e749ce26d374f7cffc2af46",
+    "formal-r1/gradle.log": "47ec5c7a9ee93e28541eb8f237af14cdda4c9a67e34b426624bad6a6ee635b96",
+    "device-r1/runs.json": "bf5228218afe9ee74af9d39dc417b6ec7dbd38063315b63467a25079cfe4e2d5",
+    "device-r1/device-receipt.json": "df3641c9f90d1ccfe1617194f17472b549108c8b9b6e051476d40d7546f393be",
+    "visual-review.json": "53534bf26b741ec1243e33d65f350f5dfee85ee549f239abb7dc1bc0ad946a00"
+  },
+  "source_only": true,
+  "binary_assets": [],
+  "app_data_cleared": false,
+  "new_learning_page_opened": false,
+  "new_ai_difficulty_entries_opened": false,
+  "growth_awards_added": false,
+  "physical_device_accepted": false,
+  "full_game_accepted": false
+}
