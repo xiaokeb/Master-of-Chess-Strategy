@@ -1,5 +1,17 @@
 # 已验证节点与后续集成
 
+## 2026-10-25最新节点（优先于下方历史规划）
+
+| 节点 | 提交 | tag/Release | 实际验证摘要 |
+| --- | --- | --- | --- |
+| 方棋正式本地对局/完整历史 | `f3f92364a2a01a7bd8f7b2c25066b11b14110578` | [v0.1.0-lanzhou-fangqi-local-session.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-fangqi-local-session.1) | 79JVM、5Native程序、25设备方法＋6大字体调用、共享备份2方法、实际杀进程2次、23图；初轮截图超时保留、失败方法同APK复核通过 |
+| 象棋预算v2准入 | `d64deddb83447b4cc0c419604aa440aca49c2fe6` | [v0.1.0-xiangqi-budget-v2-admission.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-xiangqi-budget-v2-admission.1) | 71测试、41对象/2库/45命令、12设备准入检查；不搜索、不授棋力 |
+| 围棋正式AI入口 | `141ed92c75796735f73ae708cd146f225d292a84` | [v0.1.0-go-ai-entry.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-ai-entry.1) | 141同源JVM、74设备方法/107调用、双字号64图、真实NN与保留VM；完整棋力/内容另验 |
+
+下一按正式依赖推进象棋G0观测契约与未来有限诊断协议，方棋学习持久化/资格，国标v4正式Room/备份，兰州24倍版本兼容与App，虎羊AI宿主。当前不开放方棋新四档入口，不恢复旧象棋异常评测；全六棋种目标保持active。后续发布仍由Root串行冻结/集成/提交，无APK附件。
+
+## 历史节点与当时规划
+
 本索引维护已发布源码节点，不代表完整产品；阶段Release均无APK附件。完整需求与各棋种未验事项继续按PRD/任务分级执行，不设80%跨棋种门槛。
 
 | 节点 | 提交 | tag/Release | 实际验证摘要 |
