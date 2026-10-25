@@ -1,5 +1,14 @@
 # 已验证节点与后续集成
 
+## 2026-10-25 16:30最新（优先于下方历史规划）
+
+| 节点 | 提交 | tag/Release | 实际验证摘要 |
+| --- | --- | --- | --- |
+| 方棋学习存储 | `d1fab2e4f85a3aadfcf88da71ac7222657d6acbb` | [v0.1.0-lanzhou-fangqi-learning-storage.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-fangqi-learning-storage.1) | schema19、97JVM、16设备、10原PNG；学习新UI/资格未开放 |
+| 象棋G0规则/进度 | `4e03d2f1f8449cb9a58665844a89468d4ce7df5c` | [v0.1.0-xiangqi-budget-v2-g0.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-xiangqi-budget-v2-g0.1) | 21同源Python、413规则检查、writer12组/115567检查、三份原生→PythonLF流；无搜索 |
+
+下一优先学习正式宿主/导航/资格，兰州严格存储与完整备份，象棋真实producer和未来有限诊断协议；国标与虎羊专属WIP继续保留。上述节点均为源码预发布，无APK附件，不代表完整棋种或全项目完成。
+
 ## 2026-10-25最新节点（优先于下方历史规划）
 
 | 节点 | 提交 | tag/Release | 实际验证摘要 |

@@ -1,5 +1,7 @@
 # 中国象棋对话状态
 
+2026-10-25 16:01：G0已发布 `4e03d2f1f8449cb9a58665844a89468d4ce7df5c`／`v0.1.0-xiangqi-budget-v2-g0.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-xiangqi-budget-v2-g0.1) id423236069。四固定已曝光位置真实规则准入413检查、原生writer12组/115567检查及三份实际原生LF流经Python外部固定context验证通过，21同源Python结果继承；1651全树/16路径及工作区保护通过。首次主机捕获CRLF被严格拒绝，保留旧流后按设备原始文件SHA拉取，不规范化失败记录。无App/JNI/生产参数修改、无真实choose/NNUE加载、新协议/seed/训练/新保留集或旧异常评测重跑。下一独立真实producer/有限诊断协议仍需审，所有搜索/棋力/下一槽权限false；完整规则棋例、内容、四档梯度继续。
+
 2026-10-24 18:49：已发布 `d64deddb83447b4cc0c419604aa440aca49c2fe6`／`v0.1.0-xiangqi-budget-v2-admission.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-xiangqi-budget-v2-admission.1) id422672166。新六源规则＋完整搜索树身份、严格输入桥、读取锁冻结副本构建及独立依赖/命令后验通过；干净xbva2实际71测试、41对象/2库/45命令，最终ELF在API37/x86_64/16KiB模拟器12项（1成功/11拒绝）通过。32份PF的CRLF差异只在新portable规格重审/重编解决，旧规格/结果/异常槽不改。1579完整索引导出、19路径与工作区保护通过，无App/JNI/生产参数修改、无二进制附件；构建阶段不执行ELF，独立设备阶段执行validate-plan但不搜索/加载NNUE。复现、证据与未验收范围见 [新报告](../../games/xiangqi/2026-10-24-budget-v2-admission-verification.md)。下一有限诊断与新完整协议仍待，search_authorized=false/strength_accepted=false；不宣称完整象棋完成。
 
 更新时间：2026-09-30。当前节点：自然限着模拟器定向验收。
