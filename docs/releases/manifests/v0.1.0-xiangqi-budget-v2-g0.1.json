@@ -1,0 +1,218 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-xiangqi-budget-v2-g0.1",
+  "candidate": "xg0a1",
+  "baseline_commit": "d02bf5ae10550f0f8c04c1f873aa00177403ec10",
+  "source_files": 1647,
+  "overlay_files": 12,
+  "metadata_files": 4,
+  "source_identity_sha256": "1d9fbbaaced0e021a4fb77e78a7c6735cda4bcf850a31218f0e259bad9e5ad60",
+  "overlay_manifest_sha256": "32f772638724b7702c32f46268d145b19521a0dadb57bf3aa00f297d69c841d7",
+  "overlays": [
+    {
+      "path": "tools/games/xiangqi/calibration_v2_progress.py",
+      "sha256": "4e882b3f000309c5b3d2705e2510fe008b936a4429a339066c9ba0a7778d9f5c"
+    },
+    {
+      "path": "tools/games/xiangqi/test_calibration_v2_progress.py",
+      "sha256": "20e8f08369132506a318c439d4529efaf4b3fd2f06cbe05077f6e913c8737fc4"
+    },
+    {
+      "path": "docs/games/xiangqi/2026-10-25-v2-progress-contract.md",
+      "sha256": "14c6ccedca2908b7071c43bda5cdb5d16b5abcb0bc338b2dbb6acbf56a89936c"
+    },
+    {
+      "path": "docs/games/xiangqi/2026-10-24-calibration-v2-next-plan.md",
+      "sha256": "305a914bb4d8c4efbf76b0710a4b506257d4e54a5548365fb19a9ffe5e0725da"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/xiangqi/budget_v2_diagnostic_positions.hpp",
+      "sha256": "8059c2ac23e1bdea76acde2eca65f5122788fd48fc440bc6333b591c16923af1"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/xiangqi/budget_v2_diagnostic_positions.cpp",
+      "sha256": "d7230e48013cbf373efad743db1ef229aafea8c5e8744b5469a6e94e56b0b6c0"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/xiangqi/budget_v2_diagnostic_positions_test.cpp",
+      "sha256": "f08d621bbe89a29f974a64c35cc63f279fa4c1ab5bc050a77fb28ff67d55e3c1"
+    },
+    {
+      "path": "docs/games/xiangqi/2026-10-25-v2-diagnostic-position-admission.md",
+      "sha256": "5b0648508cd239c066d68ca3470f9b1aa5da66e925ce2c19e60c8a71e0173e60"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/xiangqi/budget_v2_progress_writer.hpp",
+      "sha256": "d5a6eb4a2d65937067f2a5fe2286f8d023200df1ae70ebf357802c3582935d79"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/xiangqi/budget_v2_progress_writer.cpp",
+      "sha256": "987bbb9150cece0d0b7d6f00cf20887a54ebb0233a2d1d3a52ca5b45a6d60610"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/xiangqi/budget_v2_progress_writer_test.cpp",
+      "sha256": "4b4e0bf3a3677694c1c8fe40e9346fa76dba133608e84e253a0ac8c3b421c5df"
+    },
+    {
+      "path": "docs/games/xiangqi/2026-10-25-v2-progress-writer.md",
+      "sha256": "a3eb75b82203ca259f8789d28b6f955dc9317e33de403900a1f539f603bdcee4"
+    }
+  ],
+  "inherited_same_source_python_tests": 21,
+  "ndk_revision": "30.0.16138531-beta3",
+  "compiler_sha256": "46f558e3cb379b11c8df34a2d32466d755cf5e19646d5ec9c2b79d95dc82c8be",
+  "target": "x86_64-linux-android24",
+  "device_api": 37,
+  "device_abi": "x86_64",
+  "device_page_size": 16384,
+  "diagnostic_position_checks": 413,
+  "diagnostic_position_legal_roots": [
+    34,
+    38,
+    44,
+    3
+  ],
+  "writer_test_groups": 12,
+  "writer_checks": 115567,
+  "diagnostic_elf_sha256": "30802a68aa97227c54ae9b08a2f47908583c339ce9869d0c7fbf413cbcb142e2",
+  "writer_elf_sha256": "8fe3def8a7303e00e084129b9c65bbe26e54967e7f153657d8ff8f7ac3624c09",
+  "diagnostic_linked_libraries": [
+    {
+      "name": "libmocs_engine_core.a",
+      "sha256": "8ec4927c1432f8cc41a2deded224543663c32b71c9b26bf136a74db43c95d73d"
+    },
+    {
+      "name": "libmocs_pikafish.a",
+      "sha256": "719fb2d6a0d3809a1c7e724512c96c162e581026c27871dd2cad3f6b4974bb95"
+    },
+    {
+      "name": "libmocs_go_katago.a",
+      "sha256": "91e10e303bab8ca452121059a6a95c4e0d11f31308e6f8758c25d8185530bb24"
+    }
+  ],
+  "toy_fixtures": [
+    {
+      "purpose": "diagnostic",
+      "context": {
+        "protocol_id": "calibration-budget-v2-diagnostic-writer-fixture",
+        "protocol_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "purpose": "diagnostic",
+        "pair_id": "diagnostic",
+        "run_id": "toy-run-1",
+        "runtime_identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_games": 1,
+        "maximum_requests_per_game": 2
+      },
+      "observation": {
+        "status": "sidecar-ended",
+        "records": 8,
+        "bytes_observed": 3515,
+        "raw_sha256": "987db0f8593996c589bcbc57498d1b5aeeace8c4b373492dc66555a9b163e674",
+        "games_started": 1,
+        "games_finished": 1,
+        "requests_started": 2,
+        "requests_returned": 2,
+        "elapsed_ns_total": 2,
+        "maximum_elapsed_ns": 1,
+        "pending": null,
+        "sidecar_ended": true,
+        "trailing_bytes": 0,
+        "trailing_sha256": null,
+        "search_authorized": false,
+        "strength_accepted": false,
+        "next_slot_authorized": false
+      }
+    },
+    {
+      "purpose": "training",
+      "context": {
+        "protocol_id": "calibration-budget-v2-training-writer-fixture",
+        "protocol_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "purpose": "training",
+        "pair_id": "M0-hard",
+        "run_id": "toy-run-1",
+        "runtime_identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_games": 12,
+        "maximum_requests_per_game": 600
+      },
+      "observation": {
+        "status": "sidecar-ended",
+        "records": 98,
+        "bytes_observed": 43686,
+        "raw_sha256": "f670e9f0914e3c75d8863b826d2bada7541ec04b266fd6bce584335fcc242b6e",
+        "games_started": 12,
+        "games_finished": 12,
+        "requests_started": 36,
+        "requests_returned": 36,
+        "elapsed_ns_total": 36,
+        "maximum_elapsed_ns": 1,
+        "pending": null,
+        "sidecar_ended": true,
+        "trailing_bytes": 0,
+        "trailing_sha256": null,
+        "search_authorized": false,
+        "strength_accepted": false,
+        "next_slot_authorized": false
+      }
+    },
+    {
+      "purpose": "holdout",
+      "context": {
+        "protocol_id": "calibration-budget-v2-holdout-writer-fixture",
+        "protocol_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "purpose": "holdout",
+        "pair_id": "easy-medium",
+        "run_id": "toy-run-1",
+        "runtime_identity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_games": 96,
+        "maximum_requests_per_game": 600
+      },
+      "observation": {
+        "status": "sidecar-ended",
+        "records": 115394,
+        "bytes_observed": 54125403,
+        "raw_sha256": "b0560c1d119eb224b73ef006a7fd22f1374732f8ca5e7b29b9b864b14c24b44e",
+        "games_started": 96,
+        "games_finished": 96,
+        "requests_started": 57600,
+        "requests_returned": 57600,
+        "elapsed_ns_total": 57600,
+        "maximum_elapsed_ns": 1,
+        "pending": null,
+        "sidecar_ended": true,
+        "trailing_bytes": 0,
+        "trailing_sha256": null,
+        "search_authorized": false,
+        "strength_accepted": false,
+        "next_slot_authorized": false
+      }
+    }
+  ],
+  "initial_crlf_capture_rejected": true,
+  "raw_device_file_transport_verified": true,
+  "evidence_sha256": {
+    ".build/xiangqi-v2-progress-20261025/r1/handoff-freeze.json": "9bd1a4c3dc954b54efaffab67e95c927b29596e888a60d6ff8d31921d84eb1e9",
+    ".build/xiangqi-v2-progress-20261025/r1/receipt.json": "859f09a1493642ab519ff724b42e57fa2b509d61637a48c247eb155f712b577a",
+    ".build/xiangqi-v2-progress-20261025/r1/unittest.log": "285d20d08e1d71bbbbc5c773cee13d743d7b5c29ee237dbf62305b5230f54a64",
+    ".build/xiangqi-v2-diagnostic-positions-20261025/r1/compile-receipt.json": "0d657c79c481a2b1e26fe5bddc3fc8e35caa0e8f42d0feee47a71e7c3f03b44f",
+    ".build/xiangqi-v2-diagnostic-positions-20261025/r1/device-receipt.json": "07f04cc95c4323417390f35d8378fb1a517ac99ae5bbeb65cf182f2fb911a6c9",
+    ".build/xiangqi-v2-diagnostic-positions-20261025/r1/libraries.json": "84beb3795fb56c8e30effa88bd45b6985975c01c384cbb8ffdd0cd804e14afcb",
+    ".build/xiangqi-v2-writer-20261025/r1/compile-receipt.json": "0ebb643280f8d4293292ae9f378c8929a2c7bf541c9909dfd783a98d2735f271",
+    ".build/xiangqi-v2-writer-20261025/r1/device-receipt.json": "9ad5aa9eb6c8075e8f910c1dc9a7f268dfe0dafc36ebb40b7078ecd8b7061ba8",
+    ".build/xiangqi-v2-writer-20261025/raw-fixtures-r2/transport-receipt.json": "071ca6306a835ec10e2d446e4e3c84791944618cc47454fa13ded1f4f6515648",
+    ".build/xiangqi-v2-writer-20261025/raw-fixtures-r2/interop-receipt.json": "0dfe7d756f2250d2a243b24af8442322c301060dc90e1b06db376104fb27408f"
+  },
+  "source_only": true,
+  "binary_assets": [],
+  "app_changed": false,
+  "native_executed": true,
+  "search_authorized": false,
+  "search_performed": false,
+  "network_loaded": false,
+  "g1_executed": false,
+  "original_evaluation_rerun": false,
+  "strength_accepted": false,
+  "next_slot_authorized": false,
+  "app_data_cleared": false,
+  "physical_device_accepted": false
+}
