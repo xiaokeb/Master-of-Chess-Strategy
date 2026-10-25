@@ -428,6 +428,11 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                             { navController.navigate(AppDestination.LANZHOU_FANGQI_GAME) },
                         ),
                         TraditionalGameMenuEntry(
+                            "fangqi_learning", stringResource(R.string.lanzhou_fangqi_learning_entry), LANZHOU_FANGQI_LEARNING_TAG,
+                            { navController.navigate(AppDestination.LANZHOU_FANGQI_LEARNING) },
+                            TraditionalMenuButtonStyle.OUTLINED,
+                        ),
+                        TraditionalGameMenuEntry(
                             "tiger_goat_local", stringResource(R.string.tiger_goat_title), TIGER_GOAT_LOCAL_TAG,
                             { navController.navigate(AppDestination.TIGER_GOAT_LOCAL_GAME) },
                         ),
@@ -465,6 +470,10 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
             }
             composable(AppDestination.LANZHOU_FANGQI_GAME) { entry ->
                 LanzhouFangqiRoute(database, entry, gameWriters, fangqiStorage, navController::popBackStack)
+            }
+            composable(AppDestination.LANZHOU_FANGQI_LEARNING) { entry ->
+                LanzhouFangqiLearningNavigationRoute(database, entry, gameWriters, fangqiStorage,
+                    navController::popBackStack)
             }
             composable(AppDestination.TIGER_GOAT_LOCAL_GAME) { entry ->
                 TigerGoatNavigationRoute(database, entry, gameWriters, navController::popBackStack)

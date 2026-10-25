@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-lanzhou-fangqi-learning-ui.1",
+  "candidate": "fqlh2",
+  "baseline_commit": "3911aca6206f104351a913ceb48759ed71b15f21",
+  "source_files": 1677,
+  "overlay_files": 12,
+  "metadata_files": 4,
+  "full_export_files": 1681,
+  "expected_changed_paths": 16,
+  "source_identity_sha256": "80fa2b536ec025226c6fdef84e6f36293ea899289e48c38310e9e26531159524",
+  "overlay_manifest_sha256": "90738ecaf806fecb42e63d8a965da0f03fa41f4bbc06d543e21990ad98215911",
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiLearningViewModel.kt",
+      "sha256": "98e77fbe2d0e6c9775a8246af3e41d7c65007ca8e226ce1596df9510084e134f"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiLearningRoute.kt",
+      "sha256": "c20b43099135c7b8820ae85f0be4ceb89985bf9ef4932a1514b6c3b392b4dee9"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiLearningReadyScreen.kt",
+      "sha256": "d744270378afce004323de2f48998462493230f2e44ac7f72c78d387dc840af2"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiLearningViewModelTest.kt",
+      "sha256": "6086a7dbbc091d7cdfca1ad3c3b883342b96cfd8b2abde7aa987849275d167a3"
+    },
+    {
+      "path": "docs/games/lanzhou-fangqi/2026-10-25-learning-host.md",
+      "sha256": "af62edfce73d006cbe126f97234958f204af422cc1feaa22cb9766efe27fb19b"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/LanzhouFangqiLearningNavigationRoute.kt",
+      "sha256": "cd8a8af83bfd9135e68a9e093d3070e55f204990d4c6637c1d9f523de4f2b63f"
+    },
+    {
+      "path": "app/src/main/res/values/lanzhou_fangqi_learning_navigation.xml",
+      "sha256": "95ae47d26b0fb88aa1958670420b7f6bc678d7da93db05b50ef2da4fbb5d6d7c"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/FangqiLearningProductionInstrumentedTest.kt",
+      "sha256": "1fb2cd31cf715e2ff91695d3ef6c9882f4eb66fc1681934321855bb660b67e2b"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/FangqiLearningProcessCheckpointInstrumentedTest.kt",
+      "sha256": "b209dcdb9c251247897ee64b30d28e94185139daa90f48e584bd122d8d2fc331"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/MasterOfChessStrategyApp.kt",
+      "sha256": "68d59a37351090af8a36f43c41ceb958f7f78d3cc101228c6da7223b2f117d51"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/TraditionalGameMenuEntry.kt",
+      "sha256": "174ef8ca858d08d81f1619b2bb7a11f80712700f7545a1a06bd2300b4d145fff"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/navigation/AppNavigationModel.kt",
+      "sha256": "70a47e6d43309dd3273f4da08c147eb3da2a45fa5aaf825c4e0617398bbbbeef"
+    }
+  ],
+  "room_schema_version": 19,
+  "room_schema_sha256": "8c3aa57fb71f0654f4e6a8b6a85c5f45725137b642d3a118a439f02607f82400",
+  "build": {
+    "debug_abis": [
+      "arm64-v8a",
+      "x86_64"
+    ],
+    "jvm_tests": 49,
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "c22b7408ffaef269221fe6296323bad7d6c9803cbb6962562cf1fc602c1a14ad",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "51b57cfe351cd7a1bdae7565e9f65ce350e45642b63b6b5cb892981f6934b386"
+    },
+    "jvm_classes": 6,
+    "lint_errors": 0,
+    "lint_warnings": 19
+  },
+  "emulator": {
+    "app_data_cleared": false,
+    "inspection_invocations": 2,
+    "large_font_invocations": 7,
+    "avd": "Pixel_7_Pro",
+    "stable_completion_sha256": "c4150e6ef8b4cd6d8c9d596df1749a82df5777016be498a22161d2a535bf2d4a",
+    "actual_process_deaths": 2,
+    "abi": "x86_64",
+    "page_size": 16384,
+    "ordinary_font_invocations": 7,
+    "learning_methods": 7,
+    "owned_cleanup_invocations": 1,
+    "api": 37
+  },
+  "visual": {
+    "byte_identical_to_previously_viewed": 16,
+    "learning_pngs": 36,
+    "process_pngs_directly_viewed": 3,
+    "new_directly_viewed": 20
+  },
+  "evidence_sha256": {
+    "formal-r1/build-receipt.json": "ae310fd41ca81f8657034016e6c02d0e89774758fb76fed997fe018d2d2512d3",
+    "device-font1.0-a46d4362e8cc4fc29367746c306b7d9b/device-receipt.json": "4481f41c54839e32243a06cfc139107b390e5d145e0cc63e138b828c13a20aa1",
+    "device-font1.5-343757b30a11480087e4d4c740c323a6/device-receipt.json": "a34228ab548ff51cf5966f121be17d782a87810ed870284a320e0dd2ce20e9ba",
+    "learning-process-r1/complete.json": "d6e6bf14561e915e5ab26464c4ddc16b271ea8a811c553387dbca907f1db963f",
+    "learning-process-r1/events.json": "be3b52d2de24f5891f116d89342a57d5f551fe4c8d4248c7bf4e2eda80a0e3f0",
+    "learning-process-r1/first.json": "a8ebb7a23140fdd91ba1407611cec93dd4d5af912a850f41c903a8c631804c91",
+    "learning-process-r1/second.json": "0bd17c17201a54fac80ed6510176f4375a9632d5e9860c714b2207f897095dfd",
+    "visual-review.json": "9e3498d0efbd49b42d135343f84d6087515294fa8d59824d2f24654b6d28f2cf"
+  },
+  "inherited_regression": {
+    "ordinary_local_production_methods": 4,
+    "reason": "Only learning error strings/tests/docs changed afterwards; native/local-session production source unchanged",
+    "candidate": "fqlh1"
+  },
+  "retained_nonpassing": [
+    "fqlh1 visual raw exception text",
+    "fqlh1 process-r1 ADB before fixture",
+    "fqlh1 process-r2 clipped second-lesson tap, incomplete; owned database cleaned"
+  ],
+  "source_only": true,
+  "release_assets": [],
+  "physical_device_accepted": false,
+  "ai_qualification_accepted": false,
+  "unfinished_practice_process_restore_accepted": false,
+  "distribution_record": "docs/legal/lanzhou-fangqi-learning-ui-distribution-v1.md"
+}
