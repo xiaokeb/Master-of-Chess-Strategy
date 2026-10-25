@@ -70,6 +70,7 @@ internal object AppDestination {
     const val GO_AI_MATCH_ARGUMENT = "goAiMatchId"
     const val GO_AI_MATCH = "go/ai/match/{$GO_AI_MATCH_ARGUMENT}"
     const val GO_TUTORIAL = "go/tutorial"
+    const val LANZHOU_FANGQI_GAME = "lanzhou-fangqi/game"
     const val TIGER_GOAT_LOCAL_GAME = "tiger-goat/local-game"
     const val AI_DIFFICULTY_ARGUMENT = "difficultyCode"
     const val CHINESE_CHESS_AI_GAME =

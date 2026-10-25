@@ -3,6 +3,7 @@
 #include "mocs/engine/chinese_chess.hpp"
 #include "mocs/engine/competition_mahjong_native_session.hpp"
 #include "mocs/engine/go.hpp"
+#include "mocs/engine/lanzhou_fangqi.hpp"
 #include "mocs/engine/tiger_goat_game.hpp"
 
 #include <cstdint>
@@ -36,6 +37,11 @@ public:
     // JNI releases are type-scoped: a wrong game's handle must remain alive.
     [[nodiscard]] bool release_chinese_chess(EngineHandle handle);
     [[nodiscard]] bool release_go(EngineHandle handle);
+    [[nodiscard]] EngineHandle create_fangqi();
+    [[nodiscard]] EngineHandle create_fangqi_from_position(
+        const lanzhou_fangqi::Board& board, std::uint8_t to_play);
+    [[nodiscard]] std::shared_ptr<lanzhou_fangqi::Game> find_fangqi(EngineHandle handle) const;
+    [[nodiscard]] bool release_fangqi(EngineHandle handle);
     [[nodiscard]] EngineHandle create_tiger_goat();
     [[nodiscard]] std::shared_ptr<TigerGoatHandle> find_tiger_goat(EngineHandle handle) const;
     [[nodiscard]] bool release_tiger_goat(EngineHandle handle);
@@ -60,6 +66,7 @@ private:
     std::unordered_map<EngineHandle, std::shared_ptr<ChineseChessEngine>>
         chinese_chess_engines_;
     std::unordered_map<EngineHandle, std::shared_ptr<GoEngine>> go_engines_;
+    std::unordered_map<EngineHandle, std::shared_ptr<lanzhou_fangqi::Game>> fangqi_engines_;
     std::unordered_map<EngineHandle, std::shared_ptr<TigerGoatHandle>> tiger_goat_engines_;
     std::unordered_map<EngineHandle, std::shared_ptr<CompetitionMahjongNativeSession>>
         competition_mahjong_engines_;

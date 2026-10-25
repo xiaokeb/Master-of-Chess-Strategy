@@ -1,0 +1,293 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-lanzhou-fangqi-local-session.1",
+  "candidate": "fqsp3",
+  "baseline_commit": "7a8c0956ac03311e0849d6641437b3e59e78c54e",
+  "source_files": 1629,
+  "overlay_files": 57,
+  "metadata_files": 4,
+  "source_identity_sha256": "63ab40ceedb5a151023bceede19a5bd0539c7186d04b86c0d92e98dfa548caa8",
+  "overlay_manifest_sha256": "ed6f9cdcb008f05fb5ff4939211c63a2bd00649abf12100acbe9c90da6d9d80c",
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiGameRoute.kt",
+      "sha256": "4bbb88cffe5b3a61ca3333cefdb5be9e0d897375f3a812c02e1eae3db3c98cde"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiGameViewModel.kt",
+      "sha256": "8b4f5fb0f52359149b3dfe99d6f08af154973a4a9185a63175c50a52195fd03a"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/LanzhouFangqiAutosave.kt",
+      "sha256": "81c852002298e05a043b95cff943f43abc0e60cdd4b0287f84c18f9f6e05dae4"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/LanzhouFangqiBoardGeometry.kt",
+      "sha256": "118c9c6a7abc14423228f9bb6cfb121b2ec15e65d257d35af79dbe14b20434a4"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/LanzhouFangqiInteraction.kt",
+      "sha256": "c3cd4bd78ee04b2be1f2a7ceab4120a0972edc59e492111d82beb7318d67cb73"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/LanzhouFangqiScreen.kt",
+      "sha256": "d4b9ccc3ae31c35da2b7c1860796b1cf3a64b483bcdf68f3369170bb3d0be512"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiBackupAdapter.kt",
+      "sha256": "dcb2ca4320672d74f8bbfadddffa429bf7df4816ab3ba1c872e5d9f318759a28"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiCoordinatedBackupRepository.kt",
+      "sha256": "9e868e4519c772ee0503690ec8c19199c89141056485526dc33d4495b60ea8e6"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiLocalStorage.kt",
+      "sha256": "e7f2e74c64d7fe67cd8ae49eda3099ad4fd44932d701624ac5c2d437475244d8"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiSessionAdmission.kt",
+      "sha256": "a8a6fc885c95972402850583af8be9f6d7f5bcbc70be03193ede2130261cfde8"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiStorageEpochGate.kt",
+      "sha256": "f56b6d2b8af5b3d38ad7234d9c3df4b6dfeb7fc0c59cf35ff7d48333362ff0ae"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/RoomFangqiSessionStore.kt",
+      "sha256": "de6b7974b2594c7818519e4c2dacc5caa6a2997225683837fdcc97c5bd3a1006"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiGameViewModelTest.kt",
+      "sha256": "5e42aea3dc2659a11cab312d51582f184d398fa17f8d2c137805d090f6b097cb"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiInteractionRetirementTest.kt",
+      "sha256": "7492625b3f2b4c11e0e50f7b62867bb83e36bd973486ac959272946943cab613"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/LanzhouFangqiAutosaveTest.kt",
+      "sha256": "9cb5c73925ac3897591d02b412e57aaf500623af4787e87302e4437b800ca557"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/LanzhouFangqiInteractionTest.kt",
+      "sha256": "bfcb0040770c7d14ae060f3b020f7f3cd9b22ba02c169235aba275ae333c97f8"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiBackupAdapterTest.kt",
+      "sha256": "565ef72d982e588424dac5510bd686964fa71d068ea6fcc3b2e5a8bf255d1ec9"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiCoordinatedBackupRepositoryTest.kt",
+      "sha256": "b5fa16ade9381392667ff3a3e97625b5b8a86ecf66eab6ff7466a7240ba4cce0"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiLocalStorageTest.kt",
+      "sha256": "ef16fef8bd8e16ae6cb416911551420c683038d27cc7424b75d0c87159386294"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiSessionAdmissionTest.kt",
+      "sha256": "759932edeeaee07edaf17aaa002af8b784bf0d4b4143e000d2352265b322a6f3"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiStorageEpochGateTest.kt",
+      "sha256": "dd821706df38f987686ac49a4f01b708ab402ad920fbcae0328771b5c0632693"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/RoomFangqiSessionStoreTest.kt",
+      "sha256": "f8d1390644e51b08b6bebddf7197a77aa9bcedca1dde296e5ffaae8559c05b39"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/LanzhouFangqiScreenTest.kt",
+      "sha256": "ce449c4ea997e9c0c193e6f69fe572c437280f6bc5ce1b84908d48bc32073a79"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiBackupAdapterInstrumentedTest.kt",
+      "sha256": "ce84755e27579d57e7bd1e0a4c900db854f761c2d230feb3626b25ab6366677d"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiCompleteBackupInstrumentedTest.kt",
+      "sha256": "5783353cf224dabede1f8a7316a383fcb01b6dbb9a9f66b12c4e0f36ad994498"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/RoomFangqiSessionStoreInstrumentedTest.kt",
+      "sha256": "1a367414d38c5362eaf515a0cd78a6b94babc92d20eb524cfe3382f5da340012"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/games/lanzhou_fangqi/FangqiBridge.kt",
+      "sha256": "4c9c7e6ece3ae26d35932c233ec879e943e001a6ce37dac4062f9f03c2d47e29"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/games/lanzhou_fangqi/FangqiSession.kt",
+      "sha256": "0b0e92a4a79bc69eeffd73c8daf9b52ad1c60c14e74a50038ad23e9edd0febb4"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/games/lanzhou_fangqi/NativeLanzhouFangqiSession.kt",
+      "sha256": "57a167ee21c8ad5ea9fe2b58b57742c8debd8a3c6b361b5f3096ade24f83206f"
+    },
+    {
+      "path": "engine-native/src/test/kotlin/com/masterofchessstrategy/engine/games/lanzhou_fangqi/NativeLanzhouFangqiSessionTest.kt",
+      "sha256": "763fceb5fdb513ea0377053539a81906c7d145d42471052f8625c0d6f2ab7fe9"
+    },
+    {
+      "path": "engine-native/src/androidTest/kotlin/com/masterofchessstrategy/engine/games/lanzhou_fangqi/NativeFangqiRestoreBoundsInstrumentedTest.kt",
+      "sha256": "22cb8b338cb2d23c89b691ea0ff0f71b1ea45367f6b2ec93376ad0de28378091"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-fangqi/lanzhou_fangqi.cpp",
+      "sha256": "fe37dcabc00f1dae7b3327eda645c9a6fd5ce32dd44e60341b654c4527727647"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-fangqi/lanzhou_fangqi_ai.cpp",
+      "sha256": "0a2e08099856db58c9e9e15e4cd72d8f6744e020e7eb97536431c4a816994737"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-fangqi/lanzhou_fangqi_round_test.cpp",
+      "sha256": "bacdc8b982f693245e33ee0894736502fc556997e55bd498b9fb173b20c9a4d6"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-fangqi/lanzhou_fangqi_ai_test.cpp",
+      "sha256": "77733b196241d2f50241c236adfc1fbcf12e86e1e154609feaf92de4e6f5bab0"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-fangqi/fangqi_exception_test.cpp",
+      "sha256": "658be939952673ef89a3b0cc057b95243d64bbd14b09d770656c16876f56e9ba"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-fangqi/fangqi_registry_lifecycle_test.cpp",
+      "sha256": "4505d5a1eea48e109cfebd60d3d16d683b40dd67f48faae85c89f019d849ee4a"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-fangqi/fangqi_history_limit_test.cpp",
+      "sha256": "7e48e3a50e43669f0bbfc4936187d06aacca64259ae37e4ae451afd421a2d09f"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/lanzhou_fangqi.hpp",
+      "sha256": "a817f77d34f5725c3a93310ebdda689ad30a18bf05fed7f7f8a333ca1b16fb00"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/lanzhou_fangqi_ai.hpp",
+      "sha256": "caa586a1739ae85cf2a9b471c30bfa12f71c17161b63b83ff39e3e3a13432bbb"
+    },
+    {
+      "path": "engine-native/src/main/cpp/tests/lanzhou_fangqi_step_test.cpp",
+      "sha256": "af3efdf3650e84dc9976eb74a9e4bd39c766b505e7ffa4dab8737250adbae4c1"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/jni_fangqi_bridge.cpp",
+      "sha256": "7093af18853fecc22b73aeac2b09134dc134b544f726da6b95e63789cc0f760a"
+    },
+    {
+      "path": "engine-native/src/androidTest/kotlin/com/masterofchessstrategy/engine/NativeLanzhouFangqiInstrumentedTest.kt",
+      "sha256": "88a2bc9d76678bd912b29383303ddb04435b19ae81706f99b78955029e733296"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/ProductionGameBackupFactory.kt",
+      "sha256": "fe877718ee621cadd4d25c15c5ee51776f64f67e0346fe9680226ea354ad3820"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/LanzhouFangqiRoute.kt",
+      "sha256": "eac5429ca4f0bb83bab6d7f1d5c6b4aa3c317d175b46a2ed146e86d78b0f7cca"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/FangqiProductionEntryInstrumentedTest.kt",
+      "sha256": "505399f686fadc40e01ada2ad7c1c5ffbfe5a71478d25846fd11d14923640c29"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/FangqiProcessCheckpointInstrumentedTest.kt",
+      "sha256": "0234f1d9fb0dd59e4ee01abeb970c467096a68eb59ee48c26a18640db233de7e"
+    },
+    {
+      "path": "app/src/debug/kotlin/com/masterofchessstrategy/ui/FangqiProcessCheckActivity.kt",
+      "sha256": "7d9d8c1d4b6c2ed8b02e03a89319e26a06340a62d468c030c83f3c62d8cf844d"
+    },
+    {
+      "path": "app/src/main/res/values/lanzhou_fangqi_strings.xml",
+      "sha256": "87138df8136d02df069a7cae338b6524decf1d53954aa364ce5fa1008a1d5602"
+    },
+    {
+      "path": "app/src/main/res/values/lanzhou_fangqi_navigation.xml",
+      "sha256": "62f07672169b52bb0a1eca3132ac1e4b289993c52401b807eb070b09903f27d1"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/MasterOfChessStrategyApp.kt",
+      "sha256": "110e99206edccdf60b4905ebc71d2e3e2764124ff6d8c14bda8b5c72bff3e92c"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/navigation/AppNavigationModel.kt",
+      "sha256": "69b5e42502114c5ee320b32cd11a5dfbd057b4388e9c734df976366bd0b1b1e5"
+    },
+    {
+      "path": "app/src/debug/AndroidManifest.xml",
+      "sha256": "4e38fa94fdea97ddfbd1a98ddb10734827766e13f2d31c5d6dc67e1cf1bb90f5"
+    },
+    {
+      "path": "engine-native/src/main/cpp/CMakeLists.txt",
+      "sha256": "f9e6f9eba746992e1b5af1e26a39ab0b107c4a76d0cc44ee7110a5cc57954377"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/native_engine_registry.hpp",
+      "sha256": "64db837531aa8878f8f5b11f80311d1eec42fdd3fdc0362a785477c3df72595e"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/native_engine_registry.cpp",
+      "sha256": "bb676b137a573c30b7fb0c39887848823b4d5445ffbcfbf9bb930588c188d110"
+    },
+    {
+      "path": "engine-native/src/main/cpp/tests/CMakeLists.txt",
+      "sha256": "6e7994516f81af8715f584c10abbc8ddcad9302e83747e857e39a4969652f741"
+    }
+  ],
+  "jvm_tests": 79,
+  "lint_errors": 0,
+  "lint_warnings": 18,
+  "compiled_abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "apks": {
+    "app/build/outputs/apk/debug/app-debug.apk": "72c6d8b897311dac4e45bbf19080fbad7dba42de7ae654f25c7c9bcd88784fe1",
+    "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "f408631a19f6f6786a9e7d678b2a66b41079f9da3ed317c4d803e0e89b71b7da",
+    "engine-native/build/outputs/apk/androidTest/debug/engine-native-debug-androidTest.apk": "80c3894b9de5b6069826b9ea98544542585c48e93c18f7abf06fecdd7a4cda75"
+  },
+  "device_environment": {
+    "page_size": "16384",
+    "abi": "x86_64",
+    "api": "37"
+  },
+  "fangqi_device_methods": 25,
+  "large_font_ui_invocations": 6,
+  "shared_backup_methods": 2,
+  "shared_initial_capture_timeouts": 1,
+  "shared_failed_method_recheck_passed": true,
+  "process_checkpoint_methods": 1,
+  "process_checkpoint_invocations": 3,
+  "real_process_deaths": 2,
+  "native_programs": 5,
+  "production_history_limit": 16384,
+  "isolated_test_history_limit": 6,
+  "images_reviewed": 23,
+  "release_qa_activity_absent": true,
+  "evidence_sha256": {
+    "formal-r1/build-receipt.json": "798eeef0e4043f5a13cfe0ea2d35800db51f62510442bff2c563b7f4eace51a7",
+    "formal-r1/gradle.log": "72fd8cdc5975c5d7c815a766a74326a58f365d3d84df50db42cee461dcba172b",
+    "native-r1/complete.json": "94afca2a1070084778c383d898ab6733232db42ee4622dda6a30a88671a2152d",
+    "native-r1/device-runs.json": "8ada9b1987ec543d9c967447a0e33d050d38bcdce4629fd088e5a0f1454d2fca",
+    "native-r1/compile-commands.json": "dad984d1266adbd95f26817483390ee26b9a62aba83e1c297e8f3d3fb0cb74e2",
+    "process-r1/complete.json": "c62353f29613188dfe21aa2fde37748ea44ba90e17ae7566a671276a0afdc02e",
+    "process-r1/events.json": "0e792d07fc5caca6c308af9152e0743a2c2e894a119194a761cfbc2241140f66",
+    "process-r1/first.json": "869e8651a04d9808ecefb5b99f0eb7035e704554d1426fe99c8f5b563da489b2",
+    "process-r1/second.json": "f470714dd51234cd7e8718e8f780428e676cea92f7658986e09c6545bccf5d41",
+    "shared-backup-r1/instrumentation.log": "4445b88f28e77328a90a0a308f24f1e94522518bf589b50b4998d5daaa926ff9",
+    "shared-backup-r2/instrumentation.log": "7737b88a06c444c74467c1897136f7adfd81a0f14745278c285d6a937fd3f410",
+    "visual-review.json": "aa21adbad250bf6328b608ad803a1d506fba53d8e320fc9b0526bb2a37ac93bd",
+    "normal_device_receipt": "d8b59d9c3f13ae6d9b652ab20c6b784d1f57c98c85eaf951e082f9957e3b5250",
+    "large_device_receipt": "5e8d9c7b7b892f6f3333d727d4d120d1968874d523ac5d52adc32b7e6633c8de"
+  },
+  "source_only": true,
+  "binary_assets": [],
+  "app_data_cleared": false,
+  "physical_device_accepted": false,
+  "new_ai_difficulty_entries_opened": false,
+  "full_game_accepted": false
+}

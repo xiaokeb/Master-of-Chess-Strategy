@@ -170,3 +170,42 @@ foreach(go_test IN ITEMS history search runtime)
     target_include_directories(mocs_go_katago_${go_test}_test PRIVATE ../games/go/katago-probe)
     target_compile_options(mocs_go_katago_${go_test}_test PRIVATE -Wall -Wextra -Wpedantic -UNDEBUG)
 endforeach()
+
+# Root may append this fragment to the clean candidate tests/CMakeLists.txt.
+# Existing constexpr/round/AI sources are separate fixtures, not replaced here.
+add_library(mocs_lanzhou_fangqi_step_compile_test OBJECT lanzhou_fangqi_step_test.cpp)
+target_link_libraries(mocs_lanzhou_fangqi_step_compile_test PRIVATE mocs_engine_core)
+target_compile_options(mocs_lanzhou_fangqi_step_compile_test PRIVATE -Wall -Wextra -Wpedantic -Werror -UNDEBUG)
+
+foreach(fangqi_suite IN ITEMS lanzhou_fangqi_round lanzhou_fangqi_ai fangqi_registry_lifecycle)
+    add_executable(mocs_${fangqi_suite}_test ../games/lanzhou-fangqi/${fangqi_suite}_test.cpp)
+    target_link_libraries(mocs_${fangqi_suite}_test PRIVATE mocs_engine_core)
+    target_compile_options(mocs_${fangqi_suite}_test PRIVATE -Wall -Wextra -Wpedantic -Werror -UNDEBUG)
+    add_test(NAME mocs_${fangqi_suite} COMMAND mocs_${fangqi_suite}_test)
+endforeach()
+target_compile_options(mocs_fangqi_registry_lifecycle_test PRIVATE -pthread)
+target_link_options(mocs_fangqi_registry_lifecycle_test PRIVATE -pthread)
+
+# Allocation replacement must remain isolated from production JNI and the shared core.
+add_executable(mocs_fangqi_exception_test
+    ../games/lanzhou-fangqi/fangqi_exception_test.cpp
+    ../games/lanzhou-fangqi/lanzhou_fangqi.cpp)
+target_include_directories(mocs_fangqi_exception_test PRIVATE ../include)
+target_compile_options(mocs_fangqi_exception_test PRIVATE -Wall -Wextra -Wpedantic -Werror -UNDEBUG)
+target_link_options(mocs_fangqi_exception_test PRIVATE -static-libstdc++)
+add_test(NAME mocs_fangqi_exception COMMAND mocs_fangqi_exception_test)
+
+# Append only to the Root-owned clean tests/CMakeLists.txt candidate.
+# Do not link the ordinary core/JNI: only this executable receives the reduced write limit.
+add_executable(mocs_fangqi_history_limit_test
+    ../games/lanzhou-fangqi/fangqi_history_limit_test.cpp
+    ../games/lanzhou-fangqi/lanzhou_fangqi.cpp
+    ../games/lanzhou-fangqi/lanzhou_fangqi_ai.cpp)
+target_include_directories(mocs_fangqi_history_limit_test PRIVATE ../include)
+target_compile_definitions(mocs_fangqi_history_limit_test PRIVATE
+    MOCS_FANGQI_HISTORY_LIMIT_TEST_TARGET=1
+    MOCS_FANGQI_TEST_HISTORY_ACTIONS=6)
+target_compile_options(mocs_fangqi_history_limit_test PRIVATE
+    -Wall -Wextra -Wpedantic -Werror -UNDEBUG)
+target_link_options(mocs_fangqi_history_limit_test PRIVATE -static-libstdc++)
+add_test(NAME mocs_fangqi_history_limit COMMAND mocs_fangqi_history_limit_test)

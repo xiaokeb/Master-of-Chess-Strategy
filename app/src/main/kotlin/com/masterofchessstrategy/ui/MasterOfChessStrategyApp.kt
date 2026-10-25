@@ -3,7 +3,6 @@ package com.masterofchessstrategy.ui
 import com.masterofchessstrategy.engine.ChineseChessRuleRevision
 import com.masterofchessstrategy.games.go.data.GoLocalStorage
 import com.masterofchessstrategy.games.go.GoStoredRecordRoute
-import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongBackupAdapter
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -65,15 +64,14 @@ import com.masterofchessstrategy.challenge.AssessmentChallengeStateCodec
 import com.masterofchessstrategy.challenge.StreakChallengeStateCodec
 import com.masterofchessstrategy.challenge.TimedChallengeConfig
 import com.masterofchessstrategy.data.MocsDatabase
-import com.masterofchessstrategy.data.GameBackupRegistry
-import com.masterofchessstrategy.games.tiger_goat.data.TigerGoatBackupAdapter
 import com.masterofchessstrategy.data.RoomAppSettingsRepository
 import com.masterofchessstrategy.data.RoomCompletedGameSessionRepository
 import com.masterofchessstrategy.data.CompletedGameCommitResult
 import com.masterofchessstrategy.data.RoomGameRecordRepository
 import com.masterofchessstrategy.data.RoomEndgameProgressRepository
 import com.masterofchessstrategy.data.RoomLastSelectionRepository
-import com.masterofchessstrategy.data.RoomLocalDataBackupRepository
+import com.masterofchessstrategy.data.createProductionGameBackupRepository
+import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiLocalStorage
 import com.masterofchessstrategy.data.RoomMatchStatisticsRepository
 import com.masterofchessstrategy.data.RoomTutorialProgressRepository
 import com.masterofchessstrategy.data.StoredGameMode
@@ -150,6 +148,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
         val goStorage = remember(database, context.applicationContext, goStorageOverride) {
             goStorageOverride ?: GoLocalStorage(database, context)
         }
+        val fangqiStorage = remember(database) { FangqiLocalStorage.forDatabase(database) }
         val pikafishNetworkProvider = remember(context.applicationContext) {
             PikafishNetworkProvider(context.applicationContext)
         }
@@ -174,16 +173,9 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
         val endgameRepository = remember(database, endgamePack) {
             RoomEndgameProgressRepository(database.endgameProgressDao(), endgamePack)
         }
-        val backupRepository = remember(database, endgamePack, goStorage) {
-            goStorage.backupRepository { goAdapters ->
-                RoomLocalDataBackupRepository(
-                    database = database,
-                    endgamePack = endgamePack,
-                    validateEngineState = ::isValidChineseChessState,
-                    gameBackups = GameBackupRegistry(
-                        listOf(TigerGoatBackupAdapter(), CompetitionMahjongBackupAdapter()) + goAdapters),
-                )
-            }
+        val backupRepository = remember(database, endgamePack, goStorage, fangqiStorage) {
+            createProductionGameBackupRepository(database, endgamePack, goStorage, fangqiStorage,
+                ::isValidChineseChessState)
         }
         val navigationFactory = remember(selectionRepository) {
             AppNavigationViewModel.factory(selectionRepository)
@@ -432,6 +424,10 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                 LanzhouTraditionalModesScreen(
                     menu = TraditionalGameMenu(listOf(
                         TraditionalGameMenuEntry(
+                            "fangqi_local", stringResource(R.string.lanzhou_fangqi_local), LANZHOU_FANGQI_LOCAL_TAG,
+                            { navController.navigate(AppDestination.LANZHOU_FANGQI_GAME) },
+                        ),
+                        TraditionalGameMenuEntry(
                             "tiger_goat_local", stringResource(R.string.tiger_goat_title), TIGER_GOAT_LOCAL_TAG,
                             { navController.navigate(AppDestination.TIGER_GOAT_LOCAL_GAME) },
                         ),
@@ -466,6 +462,9 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
             }
             composable(AppDestination.GO_TUTORIAL) {
                 GoLearningNavigationRoute(goStorage, gameWriters, navController::popBackStack)
+            }
+            composable(AppDestination.LANZHOU_FANGQI_GAME) { entry ->
+                LanzhouFangqiRoute(database, entry, gameWriters, fangqiStorage, navController::popBackStack)
             }
             composable(AppDestination.TIGER_GOAT_LOCAL_GAME) { entry ->
                 TigerGoatNavigationRoute(database, entry, gameWriters, navController::popBackStack)

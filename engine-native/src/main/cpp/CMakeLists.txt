@@ -97,6 +97,8 @@ add_library(
     games/go/katago-probe/go_katago_position.cpp
     src/go_search_handle.cpp
     src/health_check.cpp
+    games/lanzhou-fangqi/lanzhou_fangqi.cpp
+    games/lanzhou-fangqi/lanzhou_fangqi_ai.cpp
     src/native_engine_registry.cpp
     games/tiger-goat/tiger_goat_game.cpp
     games/tiger-goat/tiger_goat_ai.cpp
@@ -126,6 +128,7 @@ add_library(
     mocs_engine_native
     SHARED
     src/jni_bridge.cpp
+    src/jni_fangqi_bridge.cpp
     src/jni_tiger_goat_bridge.cpp
     src/jni_tiger_goat_search_bridge.cpp
     src/jni_competition_mahjong_bridge.cpp

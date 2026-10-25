@@ -1,0 +1,7 @@
+<resources>
+    <string name="lanzhou_fangqi_local">兰州方棋 · 本地双人</string>
+    <string name="lanzhou_fangqi_ai_easy">兰州方棋 · 人机简单</string>
+    <string name="lanzhou_fangqi_ai_medium">兰州方棋 · 人机中等</string>
+    <string name="lanzhou_fangqi_ai_hard">兰州方棋 · 人机困难</string>
+    <string name="lanzhou_fangqi_ai_master">兰州方棋 · 人机大师（棋力待验）</string>
+</resources>

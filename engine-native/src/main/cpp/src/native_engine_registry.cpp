@@ -71,6 +71,47 @@ bool NativeEngineRegistry::release_go(const EngineHandle handle) {
     return go_engines_.erase(handle) == 1;
 }
 
+EngineHandle NativeEngineRegistry::create_fangqi() {
+    auto game = std::make_shared<lanzhou_fangqi::Game>();
+    std::lock_guard lock(mutex_);
+    if (next_handle_ == std::numeric_limits<EngineHandle>::max()) {
+        throw std::overflow_error("Native engine handle space is exhausted");
+    }
+    const auto handle = next_handle_++;
+    fangqi_engines_.emplace(handle, std::move(game));
+    return handle;
+}
+
+EngineHandle NativeEngineRegistry::create_fangqi_from_position(
+    const lanzhou_fangqi::Board& board, const std::uint8_t to_play
+) {
+    auto position = lanzhou_fangqi::Game::from_position(board, to_play);
+    if (!position) throw std::invalid_argument("Invalid Fangqi seed position");
+    auto game = std::make_shared<lanzhou_fangqi::Game>(std::move(*position));
+    std::lock_guard lock(mutex_);
+    if (next_handle_ == std::numeric_limits<EngineHandle>::max()) {
+        throw std::overflow_error("Native engine handle space is exhausted");
+    }
+    const auto handle = next_handle_++;
+    fangqi_engines_.emplace(handle, std::move(game));
+    return handle;
+}
+
+std::shared_ptr<lanzhou_fangqi::Game> NativeEngineRegistry::find_fangqi(
+    const EngineHandle handle
+) const {
+    if (handle <= 0) return {};
+    std::lock_guard lock(mutex_);
+    const auto found = fangqi_engines_.find(handle);
+    return found == fangqi_engines_.end() ? nullptr : found->second;
+}
+
+bool NativeEngineRegistry::release_fangqi(const EngineHandle handle) {
+    if (handle <= 0) return false;
+    std::lock_guard lock(mutex_);
+    return fangqi_engines_.erase(handle) == 1;
+}
+
 EngineHandle NativeEngineRegistry::create_tiger_goat() {
     auto session = std::make_shared<TigerGoatHandle>();
     std::lock_guard lock(mutex_);
@@ -185,7 +226,8 @@ bool NativeEngineRegistry::release(const EngineHandle handle) {
     if (release_go_search_runtime(handle) || release_go_search_request(handle)) return true;
     std::lock_guard lock(mutex_);
     return chinese_chess_engines_.erase(handle) + go_engines_.erase(handle)
-        + tiger_goat_engines_.erase(handle) + competition_mahjong_engines_.erase(handle) == 1;
+        + fangqi_engines_.erase(handle) + tiger_goat_engines_.erase(handle)
+        + competition_mahjong_engines_.erase(handle) == 1;
 }
 
 }  // namespace mocs::engine
