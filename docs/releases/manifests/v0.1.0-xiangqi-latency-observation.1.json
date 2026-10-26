@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-xiangqi-latency-observation.1",
+  "baseline_commit": "f7e3525f6e3ab8d88f513760bdbbe11061e1dd19",
+  "kind": "pure-python-sidecar-latency-observation",
+  "expected_changed_paths": 8,
+  "inputs": [
+    {
+      "sha256": "72a36ece7f930afea57d10a27c9b9a214b160b8bd41489dbed78dff9eea8fbe3",
+      "path": "tools/games/xiangqi/calibration_v2_timing.py"
+    },
+    {
+      "sha256": "7d5355505bb06307cd7a026d78966ad40317495d1f747447b7af4367fb6e8365",
+      "path": "tools/games/xiangqi/test_calibration_v2_timing.py"
+    },
+    {
+      "sha256": "3621446510eb06dcd990b77c9dd48b73ac88f1aaf18476b93cc93099b8673389",
+      "path": "docs/games/xiangqi/2026-10-25-v2-timing-analysis.md"
+    },
+    {
+      "sha256": "95ad4af42130efbf73b2904261fbe237cfc29bf1df40ca0bdc9f640fac411bec",
+      "path": "tools/games/xiangqi/calibration_v2_latency.py"
+    },
+    {
+      "sha256": "40a3ac8a4340e4b0cfcba80608f06578243e235e6973f829f783f4272d5b0747",
+      "path": "tools/games/xiangqi/test_calibration_v2_latency.py"
+    },
+    {
+      "sha256": "1e3fe7c2f42f7a25fcdcb8820f67d16f89d2300c6f7d9518e9cd1ed5c8dc0379",
+      "path": "docs/games/xiangqi/2026-10-26-latency-distribution.md"
+    },
+    {
+      "sha256": "1af6d449cbf9f2ade9a0b5280a52eefadbd4c8f935badb18ad0ecb2925fe1fbb",
+      "path": "docs/releases/v0.1.0-xiangqi-latency-observation.1.md"
+    }
+  ],
+  "direct_python_dependencies": [
+    {
+      "path": "tools/games/xiangqi/calibration_v2_latency.py",
+      "sha256": "95ad4af42130efbf73b2904261fbe237cfc29bf1df40ca0bdc9f640fac411bec"
+    },
+    {
+      "path": "tools/games/xiangqi/calibration_v2_progress.py",
+      "sha256": "4e882b3f000309c5b3d2705e2510fe008b936a4429a339066c9ba0a7778d9f5c"
+    },
+    {
+      "sha256": "72a36ece7f930afea57d10a27c9b9a214b160b8bd41489dbed78dff9eea8fbe3",
+      "path": "tools/games/xiangqi/calibration_v2_timing.py"
+    },
+    {
+      "path": "tools/games/xiangqi/test_calibration_v2_latency.py",
+      "sha256": "40a3ac8a4340e4b0cfcba80608f06578243e235e6973f829f783f4272d5b0747"
+    },
+    {
+      "sha256": "7d5355505bb06307cd7a026d78966ad40317495d1f747447b7af4367fb6e8365",
+      "path": "tools/games/xiangqi/test_calibration_v2_timing.py"
+    }
+  ],
+  "interpreter": {
+    "sha256": "cf81d9b404cc58be49f336b7f8c84667ab0a22430889c15d8a9513cdcd722eb0",
+    "path": "E:/Backend_Env/Python/miniconda3/envs/MasterofChessStrategy/python.exe"
+  },
+  "tests": {
+    "new_log_sha256": "c7ddd1075b1394bca7524cdaddbaf62c44481858ca7ee2baad50f815c307f188",
+    "new_receipt_sha256": "ebb6e15f38f45c4a9963e75aaeb8df94932197069968b05e2a75148c1f59bfd2",
+    "distinct_total": 29,
+    "latency_new": 14,
+    "old_receipt_sha256": "3d88527a0c059328147ee51725c81945cbec075810288226cca671f4fc047ff0",
+    "old_log_sha256": "94a0feea2184dad0014b6afba32bd8ef304668e3d71726f7df3a65fbe98bfef4",
+    "timing_inherited_same_inputs": 15
+  },
+  "quantile_method": "nearest-rank-ceil-0.95-n",
+  "response_target_ns": 2000000000,
+  "sidecar_maximum_bytes": 134217728,
+  "maximum_returned_samples": 57600,
+  "source_only": true,
+  "binary_assets": [],
+  "search_performed": false,
+  "search_authorized": false,
+  "physical_clock_origin_verified": false,
+  "strength_accepted": false,
+  "next_slot_authorized": false,
+  "android_changed": false,
+  "native_changed": false,
+  "production_profiles_changed": false,
+  "android_builds_rerun": false,
+  "emulator_rerun": false,
+  "visual_scope": "none: no UI changes",
+  "remaining": [
+    "Actual diagnostic producer/build and separately approved bounded execution",
+    "Real complete-call timings and physical clock/process provenance",
+    "Training/holdout, product strength criteria and production promotion"
+  ]
+}
