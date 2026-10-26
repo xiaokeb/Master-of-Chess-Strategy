@@ -97,6 +97,10 @@ add_library(
     games/go/katago-probe/go_katago_position.cpp
     src/go_search_handle.cpp
     src/health_check.cpp
+    src/lanzhou_mahjong.cpp
+    games/lanzhou-mahjong/lanzhou_mahjong_game.cpp
+    games/lanzhou-mahjong/lanzhou_mahjong_bot.cpp
+    games/lanzhou-mahjong/lanzhou_mahjong_settlement.cpp
     games/lanzhou-fangqi/lanzhou_fangqi.cpp
     games/lanzhou-fangqi/lanzhou_fangqi_ai.cpp
     src/native_engine_registry.cpp
@@ -129,6 +133,7 @@ add_library(
     SHARED
     src/jni_bridge.cpp
     src/jni_fangqi_bridge.cpp
+    src/jni_lanzhou_mahjong_bridge.cpp
     src/jni_tiger_goat_bridge.cpp
     src/jni_tiger_goat_search_bridge.cpp
     src/jni_competition_mahjong_bridge.cpp

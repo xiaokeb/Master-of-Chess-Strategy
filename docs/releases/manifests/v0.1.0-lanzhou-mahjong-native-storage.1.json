@@ -1,0 +1,320 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-lanzhou-mahjong-native-storage.1",
+  "candidate": "lzsp4",
+  "baseline_commit": "9e4c37691b051a1a1e84c45e7a97ec88dae277c9",
+  "source_files": 1730,
+  "overlay_files": 57,
+  "metadata_files": 4,
+  "full_export_files": 1734,
+  "expected_changed_paths": 60,
+  "source_identity_sha256": "a8b92416702d8b97e111fc4e0d1ab6e6c5340f23d58149fd38c1f40d00e37ad1",
+  "overlay_manifest_sha256": "38d6b048b0d71d177145bd08f0d7ecf221790e4a26d6b52d557a645ccd697d38",
+  "overlays": [
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongCompleteBackupInstrumentedTest.kt",
+      "sha256": "8ef0c0a8291bb898494048fb46ae643b4f656206d6433a25b247b855305814f9"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongOwnedDatabaseFixture.kt",
+      "sha256": "af8ed4c3f6c0a83b46253de00eda4e7577f24e117ae25fdf13f89d38d7bafe98"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/RoomLanzhouMahjongAdmittedSessionStoreInstrumentedTest.kt",
+      "sha256": "635be1fcc8bf4c564d0a48e7028184b0e7c4fd439761916f5a6839ee9feb1792"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/ProductionGameBackupFactory.kt",
+      "sha256": "b6955162fc1c305175eabb480ba9797abf163a1638b5ee3276006fe992c2e57b"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongBackupAdapter.kt",
+      "sha256": "3ed60d1f101a254cead60545a62712e49871b007e652ba27e082b810363a4f8b"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongCoordinatedBackupRepository.kt",
+      "sha256": "af263288ba8c10adcd8bc1281509c5d7ba9377ad83d9340ff43f122b9c3e6485"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongSessionAdmission.kt",
+      "sha256": "9925deae25f67532262c71ee30f17f09b20406f74660a52e63e5a36be69a24a6"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongStorageEpochGate.kt",
+      "sha256": "6b516ade494693623a76506514cf5aef8bc3d2122dc7103405b3763b77ddad9e"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/RoomLanzhouMahjongAdmittedSessionStore.kt",
+      "sha256": "d19248c73d005e2ac00208eac150cd6859b6e92e2fc774fb3718da71b101daa5"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongAssistance.kt",
+      "sha256": "f7f58801e7a488703edee218b868226461167f0e59e9e3dd5458a117e35f2694"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongDecisionHistory.kt",
+      "sha256": "0e9b733bde475cc2c33ece58685abd65adef1160627d9096ef2b989b65bd629a"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongSessionRecord.kt",
+      "sha256": "e5f0346c30744ad31408bccab18486154928de9e8e0a89736401abc8e256cd69"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongBackupAdapterTest.kt",
+      "sha256": "4d96206aaa122b62b0b096e5d90fb6c0bce53347c8213b32a7fed702b0b9a3e7"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongCoordinatedBackupRepositoryTest.kt",
+      "sha256": "800bbd25c2e0bb0d81ef1c1351ae147949a609d3e0236a8e0a3b3152517de868"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongSessionAdmissionTest.kt",
+      "sha256": "fcf829885d36925839f75ea2897d7b2cdcf5b322fcdbbe92a45c1374dfaa5c7d"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongStorageEpochGateTest.kt",
+      "sha256": "75e9704cb5166b5570b2f655f11435493a1d749ed96bdae9cee30d83f2307db4"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/RoomLanzhouMahjongAdmittedSessionStoreTest.kt",
+      "sha256": "87b927dc5c776b8ba8989c7c97d002e80e02022dd599782d77532f0bd81c489f"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongAssistanceTest.kt",
+      "sha256": "f13f031dc95d11ecb4ad9cab84407d9d5706d283103a7e129958c512d14abf83"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongDecisionHistoryTest.kt",
+      "sha256": "284ea6e3f6022d2328995ef6bf22d06baf29fb33a1ebbeedaeba0d40a4f48af2"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongSessionRecordTest.kt",
+      "sha256": "95771d0e8b7228f8cf7c940f4c5a77ce72c90efeb48edeaf1920088549de61ce"
+    },
+    {
+      "path": "docs/development/coordination-decisions-2026-09-30.md",
+      "sha256": "fdd9af21ae461f913108a7495caf6b02eb8ae3777eab179be9df82a4f2bba60d"
+    },
+    {
+      "path": "docs/development/lanzhou-mahjong-storage-integration-2026-10-25.md",
+      "sha256": "e50e3ac6e07d8f68ff682104456a9d6b19d66307e856b9a22502858ab55b586b"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/2026-10-25-admitted-room-store.md",
+      "sha256": "3f659071a8f21e8a55173cbab3ac453ad606f5eff524414f967a7ff769c11aed"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/2026-10-25-complete-backup.md",
+      "sha256": "4bde8c3dee534ed784c02b7fd39aab48eb8c865f73e6d3a1c1154ff04c56f94d"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/2026-10-25-production-storage-instrumentation.md",
+      "sha256": "ff33090f21cc8f2ca2e46ea809a420b4fd383541ca503e026e30b84dad12cb75"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/2026-10-25-session-admission-epoch.md",
+      "sha256": "3981f9017d01535e811e09967eb2f217ef210580d927b843a6c4e62d290da304"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/2026-10-25-v2-production-integration-plan.md",
+      "sha256": "a910568b1310665d5dc2164878adca271a7f1948e62d7214c03d94fe5b132a24"
+    },
+    {
+      "path": "docs/requirements/lanzhou-mahjong-false-win-v2.md",
+      "sha256": "fb256348438b3b2a04b0c97e8fb10eec21a38150c4f2be18f7edfca0d2f4e205"
+    },
+    {
+      "path": "engine-api/src/main/kotlin/com/masterofchessstrategy/engine/LanzhouMahjong.kt",
+      "sha256": "51446cf9507ff43afe6c17300c324c5989ed52622c1dcb9e5394340da4c4cc7b"
+    },
+    {
+      "path": "engine-native/src/androidTest/kotlin/com/masterofchessstrategy/engine/NativeLanzhouMahjongBotInstrumentedTest.kt",
+      "sha256": "e660104736a5dbc9d4ffa4f037fec08473f5ba08e71170d8bfba05000952beb2"
+    },
+    {
+      "path": "engine-native/src/androidTest/kotlin/com/masterofchessstrategy/engine/NativeLanzhouMahjongInstrumentedTest.kt",
+      "sha256": "24015a74ebcf13988636fc912fe3c1f8d0a5c71061fd8ee7fd82736c837b5e0d"
+    },
+    {
+      "path": "engine-native/src/main/cpp/CMakeLists.txt",
+      "sha256": "6adcb7736be0587ef6322f2316cd784d88c3669878f98685cb52d3a8ea6ded92"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-mahjong/lanzhou_mahjong_bot_test.cpp",
+      "sha256": "122ae6a9861b6a260b87a48e785d6f44de2e1c91d6e3172a33dbc1efd84ff69d"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-mahjong/lanzhou_mahjong_bot.cpp",
+      "sha256": "a1b7726e250ec7b0929223fd38a1a21bafe1b7a57cca6106458db998895b06c8"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-mahjong/lanzhou_mahjong_game_test.cpp",
+      "sha256": "68def872cc688e5774d166d5146dd4f9f1a70a21da5083f9d0150f1f2c0ea04d"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-mahjong/lanzhou_mahjong_game.cpp",
+      "sha256": "f3bde793a1527f614bf3ec2b15011ff0651351779d4e1db2c471e6e64495b0f6"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-mahjong/lanzhou_mahjong_settlement_test.cpp",
+      "sha256": "d7b8bc795869eeca1d54c29a962fef84886cc98594430efae6b7e6ddd12c1e3c"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-mahjong/lanzhou_mahjong_settlement.cpp",
+      "sha256": "ebdca183a7a8305c41f5c70cb4d907c634c57d9eed069ceaef1de0b0075ae473"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-mahjong/README.md",
+      "sha256": "96ed60dc9466155128f5b9d8134ffa781e8d61dadf39e71d6f53ff8b501239f7"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/lanzhou_mahjong_bot.hpp",
+      "sha256": "2137213101a6d0ae321c3ddf9ab83669e76c37bb36a4c78c61fc5a88e7e5e1d8"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/lanzhou_mahjong_game.hpp",
+      "sha256": "2546d86c8c7439022deb62f42022f8a12b9971db45a081bcc80a3364d170ddac"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/lanzhou_mahjong_settlement.hpp",
+      "sha256": "7749cfe351f95832d5697aecccd4bc443b915c2d2dacd76a766090518d01763a"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/lanzhou_mahjong.hpp",
+      "sha256": "d7397f35f7f4e705ba9e74bf64957adeed8f37201fbd4e13e77f4b9b330281b0"
+    },
+    {
+      "path": "engine-native/src/main/cpp/include/mocs/engine/native_engine_registry.hpp",
+      "sha256": "61ecac9f063f86fb65835272de5ddf5b755daa94ad4a113e33b2c358049d5f85"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/jni_lanzhou_mahjong_bridge.cpp",
+      "sha256": "bd00f196f78ffd35b00317ddddc63c1d833f1163d23a5338f260b86496587146"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/lanzhou_mahjong.cpp",
+      "sha256": "4168f3c015585a101a8b7aed90d6d8e2153dd26412c3c91ffabc50f0d8d2f787"
+    },
+    {
+      "path": "engine-native/src/main/cpp/src/native_engine_registry.cpp",
+      "sha256": "b13e214c3a78c150db1610f53ef379588010914dc778ede6b83f9b708598be6e"
+    },
+    {
+      "path": "engine-native/src/main/cpp/tests/CMakeLists.txt",
+      "sha256": "a44501697f824336e15fb1dcc8cb7d2c88dbf2787746cfd0f232cf0501bb55b2"
+    },
+    {
+      "path": "engine-native/src/main/cpp/tests/lanzhou_mahjong_test.cpp",
+      "sha256": "2e1f7c2ecc9e4ce9abcdcd0cb25af84b2a9a4504a07343645c654c3149350423"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/internal/NativeBindings.kt",
+      "sha256": "5438a3caf709e0b8ac732f1b77adc2a300b9b245fde9129ac947c18b522aeac4"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/LanzhouMahjongBridgeDecoder.kt",
+      "sha256": "2e014db619a928b518ab36100e3b5884bfd76714f2eda8f4ba2f0d71a2cf2bfd"
+    },
+    {
+      "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/NativeLanzhouMahjongSession.kt",
+      "sha256": "f1e63b99d7ab8cc5d45fc1c65d596e475a070408bc2800917b913507d809c224"
+    },
+    {
+      "path": "engine-native/src/test/kotlin/com/masterofchessstrategy/engine/LanzhouMahjongBridgeDecoderTest.kt",
+      "sha256": "f9953e9d07c2640c52e0074d7c229f29b071ac276871357ef617fb399a905962"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongHintPlanner.kt",
+      "sha256": "0d429f658ef353279aed1569f8ede6a92f2f7ccfcd47ee329f6d34d35418a7fc"
+    },
+    {
+      "path": "engine-native/src/main/cpp/games/lanzhou-mahjong/exception_test.cpp",
+      "sha256": "4a9276a3f01cef57e3e76dd5f2e0c90a2e7a620c246147405cc4e7d3c04538f0"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/2026-10-25-native-exception-safety.md",
+      "sha256": "b1431aeefbe73b8b62f9028ac601dca67177c8808c286465f3e8e7f5accd0425"
+    },
+    {
+      "path": "engine-native/src/androidTest/kotlin/com/masterofchessstrategy/engine/games/lanzhou_mahjong/NativeLanzhouMahjongOwnershipInstrumentedTest.kt",
+      "sha256": "bb823b7d89a47483dcf47f578b55611ae1c218a8fbb4fd6be217a77ff057b604"
+    }
+  ],
+  "room_schema_version": 19,
+  "room_schema_sha256": "8c3aa57fb71f0654f4e6a8b6a85c5f45725137b642d3a118a439f02607f82400",
+  "rule": {
+    "legacy_per_seat_multiplier": 8,
+    "source": "User-confirmed project table rule",
+    "new_false_win_total_multiplier": 72,
+    "new_false_win_per_seat_multiplier": 24,
+    "preserve_prior_kong_payments": true,
+    "legacy_native_version": 1,
+    "new_native_version": 2
+  },
+  "build": {
+    "debug_abis": [
+      "arm64-v8a",
+      "x86_64"
+    ],
+    "jvm_tests": 123,
+    "jvm_origin": {
+      "same_source_files": 471,
+      "rule": "All main/JVM-test Kotlin, Gradle/config and Room-schema identities unchanged; no repeat execution. Final Native validation recorded separately.",
+      "receipt_sha256": "5ede1d30961068a278d1908e7be8b020827c17cdecb63b7da7f9ff16ac0c983e",
+      "candidate": "lzsp2"
+    },
+    "lint_warnings": 19,
+    "lint_errors": 0,
+    "receipt_sha256": "4e39cbf13b9eeb5417c9407f574976c0b4d7980119e82777664719825d2d5775",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "da4efd0944b1e3e4389123ac981bb5481458e5934f89c2109afe562ab038b20c",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "568153b72c4a0b6d6ce6d227583fca9958d837fb305faf09d4efa4cde0cd5524",
+      "engine-native/build/outputs/apk/androidTest/debug/engine-native-debug-androidTest.apk": "1ec04fdbfe0a1322ab8039f79f3a60c8fa30b672f159151cd88540ccf853650f"
+    },
+    "jvm_classes": 12
+  },
+  "emulator": {
+    "inherited_same_source_native_methods": 7,
+    "app_data_cleared": false,
+    "font": "1.0",
+    "final_apk_invocations": 19,
+    "accepted_distinct_methods": 26,
+    "page_size": 16384,
+    "native_executables": 5,
+    "source_origin_for_native_executables": "lzsp3",
+    "api": 37,
+    "abi": "x86_64",
+    "native_receipt_sha256": "7844bfa59ac4593b66d5dde167de501227e4e4724365c76fd1002c591fbb5705",
+    "receipt_sha256": "12acd8d2c8ed92f0c6c0502df5c37ae6c91c8828f50bb6c67a32742c286ecb69"
+  },
+  "allocation_faults": {
+    "cmake_log_sha256": "da8a0d506cb9226e8e3040842aa590398541e8068e088195da46a3e7c1a410a3",
+    "injected": 106,
+    "checks": 6654,
+    "original_negative_expected_exit": 1,
+    "fixed_expected_exit": 0,
+    "bot_batch_atomic": false,
+    "standalone_receipt_sha256": "ee402672a1a0c572eaa38e12183a006276d88dec179915c5ee45ae2b29122527",
+    "injector_linked_to_jni": false
+  },
+  "visual": {
+    "receipt_sha256": "bf7f5b2a441f000cb1fa99b08b21f53e660efee25e128026e6a51dc0345d6511",
+    "scope": "Shared Go Settings/SAF and Fangqi learning restoration only",
+    "directly_viewed_pngs": 8
+  },
+  "retained_nonpassing": [
+    "lzsp1 missing HintPlanner input: JVM test compile failed",
+    "lzsp2 compiled but not released due Native apply/undo exception defect",
+    "exception compile r1 TEMP rename permission failure",
+    "lzsp3 Native target collector assumed tests/ instead of actual Android obj/ path; collected without rebuild",
+    "lzsp3 ownership fixture unsupported Go komi; corrected only test and partial-creation cleanup"
+  ],
+  "source_only": true,
+  "release_assets": [],
+  "lanzhou_table_ui_accepted": false,
+  "tutorial_qualification_accepted": false,
+  "physical_device_accepted": false,
+  "ai_strength_accepted": false,
+  "process_death_accepted": false,
+  "distribution_record": "docs/legal/lanzhou-mahjong-native-storage-distribution-v1.md"
+}

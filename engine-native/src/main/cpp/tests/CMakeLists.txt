@@ -151,6 +151,25 @@ add_library(mocs_tiger_goat_step_compile_test OBJECT tiger_goat_step_test.cpp)
 target_link_libraries(mocs_tiger_goat_step_compile_test PRIVATE mocs_engine_core)
 target_compile_options(mocs_tiger_goat_step_compile_test PRIVATE -Wall -Wextra -Wpedantic)
 
+# Lanzhou rules, versioned penalties and bot journals use assertions in all configurations.
+add_executable(mocs_lanzhou_mahjong_test lanzhou_mahjong_test.cpp)
+target_link_libraries(mocs_lanzhou_mahjong_test PRIVATE mocs_engine_core)
+target_compile_options(mocs_lanzhou_mahjong_test PRIVATE -Wall -Wextra -Wpedantic -UNDEBUG)
+add_test(NAME mocs_lanzhou_mahjong COMMAND mocs_lanzhou_mahjong_test)
+foreach(lanzhou_test IN ITEMS game settlement bot)
+    add_executable(mocs_lanzhou_mahjong_${lanzhou_test}_test
+        ../games/lanzhou-mahjong/lanzhou_mahjong_${lanzhou_test}_test.cpp)
+    target_link_libraries(mocs_lanzhou_mahjong_${lanzhou_test}_test PRIVATE mocs_engine_core)
+    target_compile_options(mocs_lanzhou_mahjong_${lanzhou_test}_test PRIVATE -Wall -Wextra -Wpedantic -UNDEBUG)
+    add_test(NAME mocs_lanzhou_mahjong_${lanzhou_test} COMMAND mocs_lanzhou_mahjong_${lanzhou_test}_test)
+endforeach()
+
+# Global allocation injection is exclusive to this independent executable, never JNI.
+add_executable(mocs_lanzhou_mahjong_exception_test ../games/lanzhou-mahjong/exception_test.cpp)
+target_link_libraries(mocs_lanzhou_mahjong_exception_test PRIVATE mocs_engine_core)
+target_compile_options(mocs_lanzhou_mahjong_exception_test PRIVATE -Wall -Wextra -Wpedantic -Werror -UNDEBUG)
+add_test(NAME mocs_lanzhou_mahjong_exception COMMAND mocs_lanzhou_mahjong_exception_test)
+
 # Go foundation: rules, records, adjudication and real KataGo lifecycle.
 foreach(go_test IN ITEMS go go_sgf)
     add_executable(mocs_${go_test}_test ${go_test}_test.cpp)

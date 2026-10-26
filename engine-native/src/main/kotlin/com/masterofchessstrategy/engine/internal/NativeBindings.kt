@@ -2,6 +2,20 @@ package com.masterofchessstrategy.engine.internal
 
 /** JNI declarations remain internal so callers cannot bypass the safe facade. */
 internal object NativeBindings {
+    external fun createLanzhouMahjong(seed: Long, dealer: Int, base: Long, viewer: Int): Long
+    external fun releaseLanzhouMahjong(handle: Long)
+    /** Phase, current/dealer, wall, pending, outcome and flags; excludes concealed hands. */
+    external fun lanzhouMahjongStatus(handle: Long): IntArray
+    /** Public melds/discards and only the fixed viewer's concealed tiles. */
+    external fun lanzhouMahjongSeatView(handle: Long, seat: Int): IntArray
+    external fun lanzhouMahjongNetScores(handle: Long): LongArray
+    external fun lanzhouMahjongLegalActions(handle: Long): IntArray
+    external fun applyLanzhouMahjongAction(handle: Long, kind: Int, tile: Int): Int
+    external fun undoLanzhouMahjong(handle: Long): Boolean
+    external fun serializeLanzhouMahjong(handle: Long): ByteArray
+    external fun restoreLanzhouMahjong(handle: Long, data: ByteArray): Int
+    external fun advanceLanzhouMahjongOtherSeats(handle: Long, difficulty: Int, seed: Long, stepLimit: Int): IntArray
+
     init {
         System.loadLibrary("mocs_engine_native")
     }

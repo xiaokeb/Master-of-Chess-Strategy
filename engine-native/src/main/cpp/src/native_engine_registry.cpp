@@ -112,6 +112,39 @@ bool NativeEngineRegistry::release_fangqi(const EngineHandle handle) {
     return fangqi_engines_.erase(handle) == 1;
 }
 
+EngineHandle NativeEngineRegistry::create_lanzhou_mahjong(
+    const std::uint64_t seed, const std::uint8_t dealer, const std::int64_t base,
+    const std::uint8_t viewer_seat
+) {
+    if (viewer_seat >= 4) throw std::invalid_argument("Invalid Mahjong viewer seat");
+    auto session = std::make_shared<LanzhouMahjongHandle>();
+    session->game = std::make_shared<LanzhouMahjongGame>(
+        LanzhouMahjongGame::shuffled_wall(seed), dealer, base);
+    session->viewer_seat = viewer_seat;
+    std::lock_guard lock(mutex_);
+    if (next_handle_ == std::numeric_limits<EngineHandle>::max()) {
+        throw std::overflow_error("Native engine handle space is exhausted");
+    }
+    const auto handle = next_handle_++;
+    lanzhou_mahjong_engines_.emplace(handle, std::move(session));
+    return handle;
+}
+
+std::shared_ptr<LanzhouMahjongHandle> NativeEngineRegistry::find_lanzhou_mahjong(
+    const EngineHandle handle
+) const {
+    if (handle <= 0) return {};
+    std::lock_guard lock(mutex_);
+    const auto found = lanzhou_mahjong_engines_.find(handle);
+    return found == lanzhou_mahjong_engines_.end() ? nullptr : found->second;
+}
+
+bool NativeEngineRegistry::release_lanzhou_mahjong(const EngineHandle handle) {
+    if (handle <= 0) return false;
+    std::lock_guard lock(mutex_);
+    return lanzhou_mahjong_engines_.erase(handle) == 1;
+}
+
 EngineHandle NativeEngineRegistry::create_tiger_goat() {
     auto session = std::make_shared<TigerGoatHandle>();
     std::lock_guard lock(mutex_);
@@ -227,6 +260,7 @@ bool NativeEngineRegistry::release(const EngineHandle handle) {
     std::lock_guard lock(mutex_);
     return chinese_chess_engines_.erase(handle) + go_engines_.erase(handle)
         + fangqi_engines_.erase(handle) + tiger_goat_engines_.erase(handle)
+        + lanzhou_mahjong_engines_.erase(handle)
         + competition_mahjong_engines_.erase(handle) == 1;
 }
 

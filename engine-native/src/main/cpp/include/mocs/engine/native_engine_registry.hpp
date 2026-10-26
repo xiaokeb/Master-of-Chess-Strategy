@@ -4,6 +4,7 @@
 #include "mocs/engine/competition_mahjong_native_session.hpp"
 #include "mocs/engine/go.hpp"
 #include "mocs/engine/lanzhou_fangqi.hpp"
+#include "mocs/engine/lanzhou_mahjong_game.hpp"
 #include "mocs/engine/tiger_goat_game.hpp"
 
 #include <cstdint>
@@ -15,6 +16,12 @@ namespace mocs::engine {
 
 using EngineHandle = std::int64_t;
 namespace go_ai { class KataGoRuntime; class GoSearchRequestHandle; }
+
+/** Fixed at creation; public views cannot switch the concealed-hand viewer. */
+struct LanzhouMahjongHandle {
+    std::shared_ptr<LanzhouMahjongGame> game;
+    std::uint8_t viewer_seat{};
+};
 
 /** A lookup retains the session; its mutex makes each native operation atomic. */
 struct TigerGoatHandle {
@@ -42,6 +49,10 @@ public:
         const lanzhou_fangqi::Board& board, std::uint8_t to_play);
     [[nodiscard]] std::shared_ptr<lanzhou_fangqi::Game> find_fangqi(EngineHandle handle) const;
     [[nodiscard]] bool release_fangqi(EngineHandle handle);
+    [[nodiscard]] EngineHandle create_lanzhou_mahjong(
+        std::uint64_t seed, std::uint8_t dealer, std::int64_t base, std::uint8_t viewer_seat);
+    [[nodiscard]] std::shared_ptr<LanzhouMahjongHandle> find_lanzhou_mahjong(EngineHandle handle) const;
+    [[nodiscard]] bool release_lanzhou_mahjong(EngineHandle handle);
     [[nodiscard]] EngineHandle create_tiger_goat();
     [[nodiscard]] std::shared_ptr<TigerGoatHandle> find_tiger_goat(EngineHandle handle) const;
     [[nodiscard]] bool release_tiger_goat(EngineHandle handle);
@@ -67,6 +78,7 @@ private:
         chinese_chess_engines_;
     std::unordered_map<EngineHandle, std::shared_ptr<GoEngine>> go_engines_;
     std::unordered_map<EngineHandle, std::shared_ptr<lanzhou_fangqi::Game>> fangqi_engines_;
+    std::unordered_map<EngineHandle, std::shared_ptr<LanzhouMahjongHandle>> lanzhou_mahjong_engines_;
     std::unordered_map<EngineHandle, std::shared_ptr<TigerGoatHandle>> tiger_goat_engines_;
     std::unordered_map<EngineHandle, std::shared_ptr<CompetitionMahjongNativeSession>>
         competition_mahjong_engines_;
