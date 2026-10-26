@@ -1,5 +1,9 @@
 # 开发进度
 
+2026-10-26 19:47：兰州麻将原生与完整存储节点已推送 `49ec2db2283fdedef9e42fd8bd45b7b176b917e6`，tag `v0.1.0-lanzhou-mahjong-native-storage.1`，[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-native-storage.1) id424183711。新局炸胡每家24倍、旧局8倍原版恢复；正式Native/JNI、严格Room准入/读回、完整备份及写者退休门禁已接。123项同源JVM、双ABI/Lint0错19警告、最终19设备调用加7项同源继承、5个实际原生程序、106次分配失败注入/6654检查与原版负例、8张共享页面视觉通过。1734文件完整导出及60个实际变更路径已核；炸胡规格已在基线，不重复计数。审批额度故障与首次路径计数拒绝均保留，未清默认应用数据，无二进制附件。
+
+下一独立推进兰州牌桌宿主的存储确认、epoch退休、后台释放和bot异常前缀；方棋正式对局身份/首次终局收据及资格；象棋真实诊断producer仅代码实现，搜索和异常终止仍需另审。兰州牌桌、十课持久化与资格、音效/成长/内容和实体设备尚未验收，完整六棋种目标保持active。
+
 2026-10-25 17:21：方棋学习页面已推送 `41d05c3c250d39b71c0a20842caea1d479c67b3f`，附注tag `v0.1.0-lanzhou-fangqi-learning-ui.1`，[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-fangqi-learning-ui.1) id423284267。正式菜单六课/三项真实Native练习、保存确认/失败重试、保留VM和备份后Owner交接已接。最终fqlh2的49JVM、双ABI/Lint0错19警告、双字号14次学习设备调用、36页面PNG核验及2次真实杀进程/3图通过；1681全树导出、16显式路径与工作区保护已验。
 
 旧异常原文视觉缺陷及两次未完成脚本记录保留；未清默认数据，未附APK，不宣称中间练习局面杀进程恢复。下一独立方棋正式人机创建/结算来源与资格、兰州24倍v2生产存储/完整备份、象棋纯耗时分析及未来producer按依赖推进；内容、音效、强度与实体设备继续另验，完整目标active。

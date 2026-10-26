@@ -1,5 +1,11 @@
 # 已验证节点与后续集成
 
+## 2026-10-26 19:47最新
+
+兰州麻将原生与完整存储已发布：`49ec2db2283fdedef9e42fd8bd45b7b176b917e6`，[v0.1.0-lanzhou-mahjong-native-storage.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-native-storage.1)，Release424183711。新24倍/旧8倍规则、Native异常安全、严格Room完整历史与生产备份；123同源JVM、19最终设备方法＋7同源继承、5原生程序、106次分配失败/6654检查及原版负例、8共享视觉通过，1734全树/60实际变更路径核验。仅源码预发布，不包含牌桌、教程资格或二进制附件。详见[验收记录](../games/lanzhou-mahjong/2026-10-25-native-storage-verification.md)。
+
+下一依赖：兰州安全宿主与正式入口，方棋可核验正式人机胜场/资格，象棋真实诊断producer与后续专项批准。完整棋种/内容/强度/音效/实体设备分别跟踪，六棋种目标未完成。
+
 ## 2026-10-25 17:21最新
 
 方棋学习UI已发布：`41d05c3c250d39b71c0a20842caea1d479c67b3f`，[v0.1.0-lanzhou-fangqi-learning-ui.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-fangqi-learning-ui.1)，Release423284267。正式六课/三练习、49JVM、双字号14次学习调用、36页面PNG核验、两次真实进程恢复及3图、1681完整导出通过；仅源码，无APK。普通本地棋局保持；人机资格/成长/强度、音效、额外题量与实体验收另行推进。见[验收记录](../games/lanzhou-fangqi/2026-10-25-learning-ui-verification.md)。
