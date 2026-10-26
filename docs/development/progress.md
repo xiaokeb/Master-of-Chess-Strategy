@@ -1,5 +1,9 @@
 # 开发进度
 
+2026-10-26 20:05：象棋完整调用耗时观察已推送 `0b787dd86c00ec4ce2ca29bd82f19d4650b64d88`，tag `v0.1.0-xiangqi-latency-observation.1`，[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-xiangqi-latency-observation.1) id424199962。不可变原始G0记录→严格校验→真实配对样本/nearest-rank p95/精确均值/超过2秒数量；pending和未LF断尾不填数，纯投影另报在途下界。14新测试＋15同源继承共29，1743全树/8路径核验；无Android/Native/模型或生产参数变更，未搜索。
+
+后续专属源码已推进：象棋真实producer对象与无搜索替身已编译，Root审查修复身份自引用后r4模拟器541边界检查＋11次ELF调用符合，未真实choose/NNUE；兰州安全Host私有88JVM通过，Root补真实工厂/Room测试及牌桌视觉，未启菜单；方棋准入/首终局模型、真实重放适配器及schema20候选行层各自冻结，真实Room/备份/正式入口尚待。国标统一Room桥继续专属实现，虎羊宿主按依赖排队。源码存在或私有编译不作完整棋种交付。
+
 2026-10-26 19:47：兰州麻将原生与完整存储节点已推送 `49ec2db2283fdedef9e42fd8bd45b7b176b917e6`，tag `v0.1.0-lanzhou-mahjong-native-storage.1`，[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-native-storage.1) id424183711。新局炸胡每家24倍、旧局8倍原版恢复；正式Native/JNI、严格Room准入/读回、完整备份及写者退休门禁已接。123项同源JVM、双ABI/Lint0错19警告、最终19设备调用加7项同源继承、5个实际原生程序、106次分配失败注入/6654检查与原版负例、8张共享页面视觉通过。1734文件完整导出及60个实际变更路径已核；炸胡规格已在基线，不重复计数。审批额度故障与首次路径计数拒绝均保留，未清默认应用数据，无二进制附件。
 
 下一独立推进兰州牌桌宿主的存储确认、epoch退休、后台释放和bot异常前缀；方棋正式对局身份/首次终局收据及资格；象棋真实诊断producer仅代码实现，搜索和异常终止仍需另审。兰州牌桌、十课持久化与资格、音效/成长/内容和实体设备尚未验收，完整六棋种目标保持active。

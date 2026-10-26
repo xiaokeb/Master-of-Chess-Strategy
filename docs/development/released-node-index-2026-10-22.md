@@ -1,5 +1,9 @@
 # 已验证节点与后续集成
 
+## 2026-10-26 象棋耗时观察
+
+`0b787dd86c00ec4ce2ca29bd82f19d4650b64d88`，[v0.1.0-xiangqi-latency-observation.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-xiangqi-latency-observation.1)，Release424199962。新14项与15同源继承共29测试，1743全树/8路径证明；纯原始G0分布/p95及聚合在途投影，无搜索/模型/生产参数/Android变化、无二进制。见[验证与范围](../games/xiangqi/2026-10-26-latency-distribution.md)。后续producer无搜索设备验证及兰州Host、方棋正式资格行层仍属未发布开发，不混入本tag。
+
 ## 2026-10-26 19:47最新
 
 兰州麻将原生与完整存储已发布：`49ec2db2283fdedef9e42fd8bd45b7b176b917e6`，[v0.1.0-lanzhou-mahjong-native-storage.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-native-storage.1)，Release424183711。新24倍/旧8倍规则、Native异常安全、严格Room完整历史与生产备份；123同源JVM、19最终设备方法＋7同源继承、5原生程序、106次分配失败/6654检查及原版负例、8共享视觉通过，1734全树/60实际变更路径核验。仅源码预发布，不包含牌桌、教程资格或二进制附件。详见[验收记录](../games/lanzhou-mahjong/2026-10-25-native-storage-verification.md)。
