@@ -1,5 +1,9 @@
 # 已验证节点与后续集成
 
+## 2026-10-29 兰州正式入口与新局资格
+
+`3bf420e1fa0f4db339d385720f56420d83055add`，[v0.1.0-lanzhou-mahjong-entry.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-entry.1)，Release427946886。首页→独立十课→简单创建、显式续局、创建/重开资格重读、坏行保护与固定Owner注册；87同源JVM、双ABI/APK/Manifest/最终Lint0错22警告、18设备方法/21已验调用（15继承+6最终）、26原PNG/18不同画面和1802全树/27路径通过。三份共享文件仅本节点片段，其他WIP保留。仅源码，未清默认数据；可信胜场/更高难度、成长/棋谱、完整内容音效及完整棋种仍待。见[验收记录](../games/lanzhou-mahjong/2026-10-29-entry-verification.md)。
+
 ## 2026-10-29 兰州独立十课学习
 
 `9cd063960a1386b8d405a21e282da2aa8f10a649`，[v0.1.0-lanzhou-mahjong-learning.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-learning.1)，Release427892179。schema20独立进度、精确推进重试、完整生产备份、旧页面退役及安全返回；69JVM、20设备方法/22调用、普通/150%共28原PNG/24不同画面、1785全树/28路径通过，Lint0错21警告。仅源码、未清默认数据；旧四步保留，菜单/可信资格及整棋种完成仍待。见[验收记录](../games/lanzhou-mahjong/2026-10-29-learning-verification.md)。

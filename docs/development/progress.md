@@ -1,5 +1,7 @@
 # 开发进度
 
+2026-10-29：兰州正式首页/十课/简单新局/严格续局已发布 `3bf420e1fa0f4db339d385720f56420d83055add`／tag `v0.1.0-lanzhou-mahjong-entry.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-entry.1) id427946886。新建与重开重读同DB资格，拒绝保留原局；87项同源JVM通过证据、双ABI/APK/Manifest及最终Lint0错22警告、18设备方法/21已验调用（15同源继承+6最终双字号导航）、26原PNG/18不同画面直接核验通过，1802全树/27路径显式提交，其他棋种导航WIP未混入。未清默认数据，字体1.0。可信胜场与更高难度、成长/棋谱、完整内容音效、杀进程/全横屏/实体设备及AI强度仍待，完整目标保持active。
+
 2026-10-29：兰州独立十课学习已发布 `9cd063960a1386b8d405a21e282da2aa8f10a649`／tag `v0.1.0-lanzhou-mahjong-learning.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-learning.1) id427892179。schema20空表迁移保留旧四步，独立精确推进/重试、生产备份、页面退役与安全返回通过；正式69JVM、双ABI/APK/Manifest、Lint0错21警告、20设备方法/22调用及28原PNG/24不同画面直接检查通过，1785文件完整导出和28路径显式提交。字体恢复1.0、未清应用数据。下一接可信难度资格与正式菜单；成长/棋谱、完整内容音效、横屏/杀进程/实体设备及强度继续另验，全项目目标保持active。
 
 2026-10-29：兰州安全宿主与牌桌流程已发布 `4f6c0c50dd94e0732c41efec493c41b17a6d11aa`／tag `v0.1.0-lanzhou-mahjong-host.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-host.1) id427825778。正式35JVM、双ABI/APK/Manifest、Lint0错20警告、13设备方法/24调用通过；12原PNG覆盖8个不同画面已核，1763文件完整导出及20路径显式提交，未清默认数据。下一兰州独立十课持久化/备份与资格，再接正式菜单；成长、棋谱、音效/内容、横屏/杀进程/实体设备及AI强度继续另验。全项目目标未完成，不把宿主节点当整棋种交付。
