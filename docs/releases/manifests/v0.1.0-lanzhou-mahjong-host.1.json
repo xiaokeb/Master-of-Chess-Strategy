@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-lanzhou-mahjong-host.1",
+  "candidate": "lzhp5",
+  "baseline_commit": "cc3bc3d939381566db603341924ae180d542c9da",
+  "frozen_source_files": 1760,
+  "metadata_files": 3,
+  "full_export_files": 1763,
+  "expected_changed_paths": 20,
+  "source_identity_sha256": "fe4c5ea829d409ebeb14bd25a3aff0cabe9b7b44395252029f06fecaebb5fb14",
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameHost.kt",
+      "sha256": "b92b030bb33459ccafecc58a7f1525200c5894c38fb392b4f311867dd04bb8b1"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameViewModel.kt",
+      "sha256": "cb09dde603a55bc71ed12adbd7b1cc50316d2be56a201637d99dc474d0f49605"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameRoute.kt",
+      "sha256": "9808dde0fda3acc7a7c47471e5efbfbd7eedbf3e669d26b55837e199361ee365"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongTableState.kt",
+      "sha256": "74c801fe278a565c5570ed0d4352c995422f396820808f61b54df213e012d0fd"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongTableScreen.kt",
+      "sha256": "85e2f02fe5a7367e11e09dab59580bbaa655b9c7c06b3a1a0a91daced8fa5096"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongProductionHostStorage.kt",
+      "sha256": "e164c8bfa59acd08ab1d3943e9761084d32437a2d379575831308954dff04b8e"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameHostTest.kt",
+      "sha256": "4d18883c696bf82e4db2d864d16df439ab84789321306c5c028c6a485268807a"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameViewModelTest.kt",
+      "sha256": "b5bf8042c6e5f566350965ac49380340531ac843aae7ca8c030d1e69e89984e2"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongProductionHostInstrumentedTest.kt",
+      "sha256": "5dba70f52647664da361317b2d66e596eb03ffa2e8333ed2b889de7ce5bc0b6f"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongProductionHostVisualTest.kt",
+      "sha256": "df5e8b6ba610f44ced1012bf7c82906183055b512c759f24b4144cf5ba7d436b"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongTableScreenTest.kt",
+      "sha256": "a17cc1a8e61d5b77e98c11e1120f80f4ae771a111d16eb86729bc4e7aa7268a3"
+    },
+    {
+      "path": "docs/development/lanzhou-mahjong-host-integration-2026-10-26.md",
+      "sha256": "0c7ee228258bb1d72d3b8610253cd4f5aa96803f3ee68cdc95a0cfc4bfc98afe"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/2026-10-26-host-safety.md",
+      "sha256": "7a45563e4df95826939cd3cd9467b31bdec51d6e5c2c9fc836f4d700191b1ae8"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/freezes/host-safety-20261026.tsv",
+      "sha256": "1456b2e6e27ad8c47248a21f097360f35095b96d846b282c26f533637b1db459"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/freezes/host-safety-20261026.json",
+      "sha256": "7a028bd9f487645bfac9ccd0b219ce89a44bc44e63a76f4eb6e8257e9dc12eb5"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/2026-10-26-host-visual-handoff.md",
+      "sha256": "23a5d005315bb72e07e07b572a491519d11bc22150142d6ecebae7a6088f6cb0"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/freezes/host-visual-20261026.json",
+      "sha256": "6a098484abe9a21a456c4a057c68a6ae1f6f271c1a6b30afdf544105bcb5297d"
+    }
+  ],
+  "portable_text": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameViewModel.kt",
+      "portable_lf_sha256": "cb09dde603a55bc71ed12adbd7b1cc50316d2be56a201637d99dc474d0f49605",
+      "original_sha256": "275ff7306724b88d4e94b50179930568a45e8556ab73c63399a58c8747965e66"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameHostTest.kt",
+      "portable_lf_sha256": "4d18883c696bf82e4db2d864d16df439ab84789321306c5c028c6a485268807a",
+      "original_sha256": "7d47eb9ea651ae99fb84d2a92e34939c0f88c1ff03267405ce82b73fd81f02a1"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameViewModelTest.kt",
+      "portable_lf_sha256": "b5bf8042c6e5f566350965ac49380340531ac843aae7ca8c030d1e69e89984e2",
+      "original_sha256": "b19b14570168e71736438c1c05c218cf5ac383db669d95236c79addf3ac7de71"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongProductionHostVisualTest.kt",
+      "portable_lf_sha256": "df5e8b6ba610f44ced1012bf7c82906183055b512c759f24b4144cf5ba7d436b",
+      "original_sha256": "bcb6f38651614f94bc7a768c69043d8da348c434b2f282d231b047de3889babb"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/2026-10-26-host-safety.md",
+      "portable_lf_sha256": "7a45563e4df95826939cd3cd9467b31bdec51d6e5c2c9fc836f4d700191b1ae8",
+      "original_sha256": "ef4bb0f687785cefc5c82e291129a96473d49aee83736e4b1435cb38c16cfdf4"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/freezes/host-safety-20261026.tsv",
+      "portable_lf_sha256": "1456b2e6e27ad8c47248a21f097360f35095b96d846b282c26f533637b1db459",
+      "original_sha256": "51277d901e6f5fc53f6ca3b39d8b3a66e829381859838165a788677dc63a193f"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/freezes/host-safety-20261026.json",
+      "portable_lf_sha256": "7a028bd9f487645bfac9ccd0b219ce89a44bc44e63a76f4eb6e8257e9dc12eb5",
+      "original_sha256": "9544216869b3da41ca95f430b2fa609855bfdcc682263565c6eb9018c299c9fe"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/2026-10-26-host-visual-handoff.md",
+      "portable_lf_sha256": "23a5d005315bb72e07e07b572a491519d11bc22150142d6ecebae7a6088f6cb0",
+      "original_sha256": "81de2aa55628ad781357f1291f62a674ec9612907e6dd3742f2945d83c6de02d"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/freezes/host-visual-20261026.json",
+      "portable_lf_sha256": "6a098484abe9a21a456c4a057c68a6ae1f6f271c1a6b30afdf544105bcb5297d",
+      "original_sha256": "340cdbf21c28f0a21f62b5eebaab01ee6017c2efa24db97e5307d4a15bf146a3"
+    }
+  ],
+  "post_build_documentation": {
+    "frozen_sha256": "23a5d005315bb72e07e07b572a491519d11bc22150142d6ecebae7a6088f6cb0",
+    "change": "Remove trailing blank line only; executable inputs and products unchanged",
+    "published_sha256": "49944d9fe901a816952f047f1375486ae2f9ab417d6478c865cb8a5e56c7b914",
+    "path": "docs/games/lanzhou-mahjong/2026-10-26-host-visual-handoff.md"
+  },
+  "build": {
+    "jvm_tests": 35,
+    "lint_errors": 0,
+    "receipt_sha256": "1da4295f782c0e9f96fd27bcaa003ecd8e0aa896701590beaa0645053c849e1a",
+    "lint_warnings": 20,
+    "abis": [
+      "arm64-v8a",
+      "x86_64"
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "83a335139a001a0d463e9d42616d706795edbe422f4afe7a3251a067f0ca5d7d",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "652a6b3a1c5a1e47cb6eed049be5fe5bd7eaf7e1d7690de1c7e825c7a03a9185",
+      "engine-native/build/outputs/apk/androidTest/debug/engine-native-debug-androidTest.apk": "33289c0c5d23e94086bc00593d5036f8be9fcfb273d6e8033b624a01176875bc"
+    },
+    "suites": [
+      {
+        "tests": 30,
+        "name": "com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongGameHostTest",
+        "xml_sha256": "4098cb231f9060639710eb2d238de3a9c98961b22d645fba4e5ee574b86dfdec"
+      },
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongGameViewModelTest",
+        "xml_sha256": "be418be268fe5ecfaab65ace891e4ddb4368b92228cb2e72831f1a7fe450a947"
+      }
+    ]
+  },
+  "device": {
+    "app_data_cleared": false,
+    "receipt_sha256": "b11cc8d9ed7dbee87e9e5788bb2122643e2ad4622b993381d5549be75d230fdc",
+    "distinct_methods": 13,
+    "api": "37",
+    "page_size": "16384",
+    "abi": "x86_64",
+    "invocations": 24,
+    "fonts": [
+      "1.0",
+      "1.5"
+    ],
+    "restored_font": "1.0"
+  },
+  "visual": {
+    "unique_pngs": 8,
+    "original_pngs": 12,
+    "images": [
+      {
+        "sha256": "f4197870712b9109bb6aeb1f4b5621675bb3cb17f59af24222ed13b3554348e9",
+        "font": "1.0"
+      },
+      {
+        "sha256": "f4197870712b9109bb6aeb1f4b5621675bb3cb17f59af24222ed13b3554348e9",
+        "font": "1.0"
+      },
+      {
+        "sha256": "7a6d7f4043e8a6c9aa192598bc2b4b01a5764e8821758ab4a7ded505da35c8d3",
+        "font": "1.0"
+      },
+      {
+        "sha256": "023dc29ef2281864eda0e4768a26ca7155846fa418bf19e5de034d16e302fb7b",
+        "font": "1.0"
+      },
+      {
+        "sha256": "d70b0e1f3e040a90a4d348793b64caf8b54ad533955e006f3abab249a65e1037",
+        "font": "1.0"
+      },
+      {
+        "sha256": "7a6d7f4043e8a6c9aa192598bc2b4b01a5764e8821758ab4a7ded505da35c8d3",
+        "font": "1.0"
+      },
+      {
+        "sha256": "2f68bdc86ca61e234d2aacddb6f02bde1c53a9a16f691753f257cfeb7d9b7099",
+        "font": "1.5"
+      },
+      {
+        "sha256": "2f68bdc86ca61e234d2aacddb6f02bde1c53a9a16f691753f257cfeb7d9b7099",
+        "font": "1.5"
+      },
+      {
+        "sha256": "0c539a39802a351668fbffa7cfc1f1a135260a49c7b0d74b2ad5b12278ee405b",
+        "font": "1.5"
+      },
+      {
+        "sha256": "288356260cc7e5f2987f615a4ff4fc044c39fddf22630696e02c930af5b7a80a",
+        "font": "1.5"
+      },
+      {
+        "sha256": "25f68094598c274870dbf9e4ed02cb0a6293e76c35c88453b3762abf98573810",
+        "font": "1.5"
+      },
+      {
+        "sha256": "0c539a39802a351668fbffa7cfc1f1a135260a49c7b0d74b2ad5b12278ee405b",
+        "font": "1.5"
+      }
+    ],
+    "review_sha256": "1df8313573b33b2130fd241289bd2f4235f935edcf9051525fdb01841d7ec173",
+    "directly_viewed_unique_pngs": 8
+  },
+  "retained_history": [
+    "lzhp1 raw capture; no formal tests",
+    "lzhp2/3 portable-text preflight stops; no formal tests",
+    "lzhp4 formal 34/35: worker thread-name assertion incompatible with coroutine debug suffix; fixed by thread object identity"
+  ],
+  "metadata": [
+    {
+      "sha256": "01106bb768735f1faa253b2445c8db7d398206c0acb64ea2d53d6fb4e8b872e5",
+      "path": "docs/games/lanzhou-mahjong/2026-10-29-host-verification.md"
+    },
+    {
+      "sha256": "54fc8e4182f8507a55d3ec3f554f417d1d6e66748c154b99f44b47bc1d2369f3",
+      "path": "docs/releases/v0.1.0-lanzhou-mahjong-host.1.md"
+    }
+  ],
+  "source_only": true,
+  "release_assets": [],
+  "new_third_party_assets": false,
+  "room_schema_version": 19,
+  "main_menu_integrated": false,
+  "tutorial_qualification_accepted": false,
+  "physical_device_accepted": false,
+  "ai_strength_accepted": false,
+  "landscape_accepted": false,
+  "process_death_accepted": false,
+  "remaining": [
+    "Independent tutorial persistence/backup and difficulty qualification, then main-menu integration",
+    "Growth, records, full content and audio",
+    "Landscape, process death, physical devices and AI strength"
+  ]
+}

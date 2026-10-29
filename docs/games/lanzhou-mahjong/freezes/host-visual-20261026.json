@@ -1,0 +1,41 @@
+{
+  "stage": "AndroidTest private compile only",
+  "compiled": true,
+  "ran": false,
+  "testMethods": 4,
+  "ownVisualMethods": 2,
+  "sources": [
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongProductionHostVisualTest.kt",
+      "sha256": "bcb6f38651614f94bc7a768c69043d8da348c434b2f282d231b047de3889babb",
+      "ownership": "this agent"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongProductionHostInstrumentedTest.kt",
+      "sha256": "5dba70f52647664da361317b2d66e596eb03ffa2e8333ed2b889de7ce5bc0b6f",
+      "ownership": "Root read-only"
+    }
+  ],
+  "classesSha256": "4d6732ca5c5c48a2622ef713915f930b4bf241e9b8c087c0fea5ad1a53123459",
+  "inputFiles": 3037,
+  "inputManifestSha256": "45b54981820e4616f85691a53c89c05af675304b4c0d97233a8198a759ddcfbb",
+  "hostR5JarSha256": "1eb6d6c9c650a3a264ba9c5a4971e9c04b9e80f6080cde1adaff79ee9c0e5536",
+  "unchangedOwnedFixtureSha256": "af8ed4c3f6c0a83b46253de00eda4e7577f24e117ae25fdf13f89d38d7bafe98",
+  "compiler": "Kotlin and Compose 2.3.21",
+  "jdk": "17.0.12",
+  "activeProcessors": 1,
+  "heapMiB": 512,
+  "output": "getExternalFilesDir(null)/mocs-visual/<qa-[a-f0-9]{32}>/",
+  "pngNames": [
+    "table-01-initial.png",
+    "table-02-saved.png",
+    "table-03-returned.png",
+    "corrupt-01-error.png",
+    "corrupt-02-preserved.png",
+    "corrupt-03-returned.png"
+  ],
+  "jvm88Rerun": false,
+  "gradleRan": false,
+  "adbRan": false,
+  "defaultDataCleared": false
+}

@@ -1,0 +1,74 @@
+{
+  "frozen": true,
+  "stage": "private compile/JVM only",
+  "ownedSources": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameHost.kt",
+      "sha256": "b92b030bb33459ccafecc58a7f1525200c5894c38fb392b4f311867dd04bb8b1"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameViewModel.kt",
+      "sha256": "275ff7306724b88d4e94b50179930568a45e8556ab73c63399a58c8747965e66"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameRoute.kt",
+      "sha256": "9808dde0fda3acc7a7c47471e5efbfbd7eedbf3e669d26b55837e199361ee365"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongTableScreen.kt",
+      "sha256": "85e2f02fe5a7367e11e09dab59580bbaa655b9c7c06b3a1a0a91daced8fa5096"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongTableState.kt",
+      "sha256": "74c801fe278a565c5570ed0d4352c995422f396820808f61b54df213e012d0fd"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongTableController.kt",
+      "sha256": "8581991e32ddb182cb5be2d24af476ec0c1b453935389d87d866f67049d7cce8"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameHostTest.kt",
+      "sha256": "0bb4ccfcef8d2c5fe34ff4e2e7f4b74ed232f4f01cb7d84d66ef0199e837b649"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameViewModelTest.kt",
+      "sha256": "b19b14570168e71736438c1c05c218cf5ac383db669d95236c79addf3ac7de71"
+    }
+  ],
+  "rootOwnedReadOnlyFactory": {
+    "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongProductionHostStorage.kt",
+    "sha256": "e164c8bfa59acd08ab1d3943e9761084d32437a2d379575831308954dff04b8e"
+  },
+  "androidTestCompileOnly": [
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongAssistanceNativeTest.kt",
+      "sha256": "8ee4910bd792134d4f9fd30414c3fde665f7cdaec762ca68f8983577aae1e8c1",
+      "methods": 2,
+      "ran": false
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongLearningScreenTest.kt",
+      "sha256": "f934cb1a9473fe11062bbd006d3a577ee4c36deb4aec445e8159e25f38894667",
+      "methods": 2,
+      "ran": false
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongTableScreenTest.kt",
+      "sha256": "a17cc1a8e61d5b77e98c11e1120f80f4ae771a111d16eb86729bc4e7aa7268a3",
+      "methods": 9,
+      "ran": false
+    }
+  ],
+  "privateVerification": "../../../../.build/lanzhou-mahjong/host-safety-20261026-r5/verification-receipt.json",
+  "kotlinInputManifest": "host-safety-20261026.tsv",
+  "tests": 88,
+  "ownHostTests": 30,
+  "ownViewModelTests": 5,
+  "publishedGateTests": 6,
+  "sharedIntegrationComplete": false,
+  "navigationEnabled": false,
+  "gradleRan": false,
+  "adbRan": false,
+  "realNativeRan": false,
+  "realRoomRan": false
+}
