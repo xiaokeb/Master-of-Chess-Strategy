@@ -18,7 +18,8 @@ class LanzhouMahjongGameViewModelTest {
         f.store.saved = com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongStoredSession(record, 321)
         lateinit var engine: HostFakeSession
         val vm = LanzhouMahjongGameViewModel(f.storage(), LanzhouMahjongLaunchConfig(Difficulty.HARD, 91),
-            sessionFactory = { HostFakeSession(it).also { created -> engine = created } }, dispatcher = worker)
+            sessionFactory = { HostFakeSession(it).also { created -> engine = created } }, dispatcher = worker,
+            openMode = LanzhouMahjongOpenMode.RESUME)
         try {
             advanceUntilIdle()
             assertEquals(Difficulty.EASY, engine.config.difficulty)

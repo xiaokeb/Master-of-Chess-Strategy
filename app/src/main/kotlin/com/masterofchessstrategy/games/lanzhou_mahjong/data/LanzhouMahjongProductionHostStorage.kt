@@ -8,6 +8,11 @@ internal fun MocsDatabase.createLanzhouMahjongHostStorage(): LanzhouMahjongHostS
     val database = this
     val gate = LanzhouMahjongStorageEpochGate.forDatabase(database)
     return LanzhouMahjongHostStorage(gate) { owner ->
-        RoomLanzhouMahjongAdmittedSessionStore(database, database.activeGameDao(), gate, owner)
+        val store = RoomLanzhouMahjongAdmittedSessionStore(database, database.activeGameDao(), gate, owner)
+        val entry = RoomLanzhouMahjongEntryRepository(database, gate, owner)
+        object : LanzhouMahjongAdmittedSessionStore by store {
+            override suspend fun authorizeNew(difficulty: com.masterofchessstrategy.engine.Difficulty,
+                expectedCurrent: LanzhouMahjongStoredSession?) = entry.authorizeNew(difficulty, expectedCurrent)
+        }
     }
 }

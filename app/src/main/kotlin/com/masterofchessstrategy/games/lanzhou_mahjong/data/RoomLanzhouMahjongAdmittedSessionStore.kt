@@ -5,6 +5,7 @@ import androidx.room.withTransaction
 import com.masterofchessstrategy.data.ActiveGameDao
 import com.masterofchessstrategy.data.ActiveGameEntity
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongSessionRecord
 import java.io.IOException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -25,6 +26,10 @@ internal interface LanzhouMahjongAdmittedSessionStore {
     /** Only a missing game3 row returns null; malformed data and storage errors remain errors. */
     suspend fun load(): LanzhouMahjongStoredSession?
     suspend fun save(snapshot: LanzhouMahjongStoredSession)
+    /** Older/unconfigured stores cannot silently authorize a new production game. */
+    suspend fun authorizeNew(difficulty: Difficulty, expectedCurrent: LanzhouMahjongStoredSession?) {
+        throw LanzhouMahjongEntryDeniedException(LanzhouMahjongEntryDenial.ADMISSION_UNAVAILABLE)
+    }
 }
 
 /** One durable full-history row, guarded by a fixed owner and an exact transactional read-back. */

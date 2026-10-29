@@ -5,6 +5,7 @@ import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.LanzhouMahjongActionKind
 import com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongGameHost
 import com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongLaunchConfig
+import com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongOpenMode
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -17,8 +18,9 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class LanzhouMahjongProductionHostInstrumentedTest {
     @Test fun replacingDataRetiresRealHostAndNewOwnerCanContinueSavedHistory() = withOwnedLanzhouDatabase { fixture ->
+        fixture.db.lanzhouMahjongLearningProgressDao().upsert(LanzhouMahjongLearningProgressEntity(0, 2, 10, 1))
         val storage = fixture.db.createLanzhouMahjongHostStorage()
-        val config = LanzhouMahjongLaunchConfig(Difficulty.MEDIUM, 321)
+        val config = LanzhouMahjongLaunchConfig(Difficulty.EASY, 321)
         val first = LanzhouMahjongGameHost(storage, config, now = { 42 })
         var next: LanzhouMahjongGameHost? = null
         try {
@@ -44,7 +46,7 @@ class LanzhouMahjongProductionHostInstrumentedTest {
             assertEquals(retainedRow, fixture.row())
 
             val newStorage = fixture.db.createLanzhouMahjongHostStorage()
-            val resumed = LanzhouMahjongGameHost(newStorage, config, now = { 200 })
+            val resumed = LanzhouMahjongGameHost(newStorage, config, now = { 200 }, openMode = LanzhouMahjongOpenMode.RESUME)
             next = resumed
             withTimeout(15_000) { resumed.open() }
             assertFalse(resumed.state.value.retired)

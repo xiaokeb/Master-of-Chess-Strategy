@@ -1,0 +1,399 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-lanzhou-mahjong-entry.1",
+  "candidate": "lzep8",
+  "baseline_commit": "3eb667e839e53109034e49dc6bbf72e46955689a",
+  "frozen_source_files": 1798,
+  "metadata_files": 4,
+  "full_export_files": 1802,
+  "expected_changed_paths": 27,
+  "source_identity_sha256": "ceb7a00ccb1a46490be639aa7d2453a754bb0ab68c3179ca3d25e0191bf9a269",
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongEntryRepository.kt",
+      "original_sha256": "ec7dd7294adfd80ec634aca038fa0da0752f3fff11c2a911994d0941066cbeb1",
+      "sha256": "ec7dd7294adfd80ec634aca038fa0da0752f3fff11c2a911994d0941066cbeb1",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/RoomLanzhouMahjongEntryRepository.kt",
+      "original_sha256": "5d7ce828e1bfeb266a5c197280405d7b31b2f9cb26004b39ef0a88ee6de998a6",
+      "sha256": "5d7ce828e1bfeb266a5c197280405d7b31b2f9cb26004b39ef0a88ee6de998a6",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/RoomLanzhouMahjongAdmittedSessionStore.kt",
+      "original_sha256": "fcdeb717010241f67b0ccd29370e7de0fe40606b4d1c8e484850d6f959e8c133",
+      "sha256": "fcdeb717010241f67b0ccd29370e7de0fe40606b4d1c8e484850d6f959e8c133",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongProductionHostStorage.kt",
+      "original_sha256": "4c213d9485367cc0e0718b9d596a70ee548f96c93134ccd14981584d7c2a8aa9",
+      "sha256": "4c213d9485367cc0e0718b9d596a70ee548f96c93134ccd14981584d7c2a8aa9",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameHost.kt",
+      "original_sha256": "da1b6e3b8d38b1b15d1507f4bdb9eef3056cb5998ea6814f5f86d7b0b6b0bd91",
+      "sha256": "da1b6e3b8d38b1b15d1507f4bdb9eef3056cb5998ea6814f5f86d7b0b6b0bd91",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameViewModel.kt",
+      "original_sha256": "449cccc0e35e03d4d828032b98b67d65a905efb8c65e4fc7b931116fb26c474b",
+      "sha256": "6df0bb4d2e8d941a66f7f54826d1eded425cf374ae36e532b7957ba8f1c6ca2b",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongEntryViewModel.kt",
+      "original_sha256": "b6151f74eb2bddf7ee3d07ccc2530081c82732be36eff5f72e64bb6d75e41b2b",
+      "sha256": "b6151f74eb2bddf7ee3d07ccc2530081c82732be36eff5f72e64bb6d75e41b2b",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongEntryScreen.kt",
+      "original_sha256": "0f635ac581a78ad0b222a3cdbf10848a5e15311b9e05610710dea5d7bb773aa7",
+      "sha256": "0f635ac581a78ad0b222a3cdbf10848a5e15311b9e05610710dea5d7bb773aa7",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/LanzhouMahjongNavigationRoutes.kt",
+      "original_sha256": "7f5896d6367e42632f3e26c81c4fbe3e862799129aef198b36e95f9e972ef159",
+      "sha256": "7f5896d6367e42632f3e26c81c4fbe3e862799129aef198b36e95f9e972ef159",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameHostTest.kt",
+      "original_sha256": "3797dcb61469c6a289f32fed2880eda4046ac232adb6b2d3f12aeaaa62e29649",
+      "sha256": "f9e0b211a044f0a57eb40bb455f2615ab47b25f74cd5c7e9ec292b6c3652b8ba",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameViewModelTest.kt",
+      "original_sha256": "77127d0140eb9df42c1508511640e243560c8b691f912f15d3775aa01139ace5",
+      "sha256": "d69dc1beec51300b15cd357f1865d3f574f0aa152e1531202c50512289c46075",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongHostEntryAdmissionTest.kt",
+      "original_sha256": "d5d873c3c1841227659590c75fa7f697d83b8c66c5b0c1d24ba8f33f1b21a21a",
+      "sha256": "d5d873c3c1841227659590c75fa7f697d83b8c66c5b0c1d24ba8f33f1b21a21a",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/RoomLanzhouMahjongEntryRepositoryTest.kt",
+      "original_sha256": "38bbfc5e0bbd344f87ffdcce60171c92dee5eff00d7afd41b7b02bf546b50e89",
+      "sha256": "38bbfc5e0bbd344f87ffdcce60171c92dee5eff00d7afd41b7b02bf546b50e89",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongEntryViewModelTest.kt",
+      "original_sha256": "a30138eb3297ce54c2dff76da886d648ba4a39c42c6698051e1edff66452ef36",
+      "sha256": "a30138eb3297ce54c2dff76da886d648ba4a39c42c6698051e1edff66452ef36",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongProductionHostInstrumentedTest.kt",
+      "original_sha256": "835d4b97e2054dea715ee425b1e58935dcb029efc077e1d52d07876ab6f95bf0",
+      "sha256": "835d4b97e2054dea715ee425b1e58935dcb029efc077e1d52d07876ab6f95bf0",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongProductionHostVisualTest.kt",
+      "original_sha256": "502cfed4474192dc16526f52cbfff28e972a39e23fefa2eeb4ba36ce90990fa5",
+      "sha256": "4afab8290744f26f91fb8e650de5114936d72e7ac751c9c7489f04cd7f602c5f",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongEntryRoomInstrumentedTest.kt",
+      "original_sha256": "477a3d48159891600d3de61dc3021ad78507a481c36d60a896bb60fbd70dd807",
+      "sha256": "477a3d48159891600d3de61dc3021ad78507a481c36d60a896bb60fbd70dd807",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongEntryScreenTest.kt",
+      "original_sha256": "1259479ac8236dcb2da04c0e76e31a13f21f34a576d4a775a20c1e46337ad4a2",
+      "sha256": "1259479ac8236dcb2da04c0e76e31a13f21f34a576d4a775a20c1e46337ad4a2",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/LanzhouMahjongProductionEntryInstrumentedTest.kt",
+      "original_sha256": "a1070ad18679c3318e11a067d333b6c0fa5c1e2254d167fffa3d9aa8327cf79b",
+      "sha256": "a1070ad18679c3318e11a067d333b6c0fa5c1e2254d167fffa3d9aa8327cf79b",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "docs/games/lanzhou-mahjong/2026-10-29-entry-ui.md",
+      "original_sha256": "c44e1e9c9803f8f2da84935d82f2f32a80419d18adb7fc21e610de28bfdab111",
+      "sha256": "c44e1e9c9803f8f2da84935d82f2f32a80419d18adb7fc21e610de28bfdab111",
+      "selection": "complete exclusive file"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/navigation/AppNavigationModel.kt",
+      "original_sha256": "3fc583944eaf4a29076af9803b58babd8f49e0140080c44aafe371f5d15c13ae",
+      "sha256": "5e308d9eb01ace01c623e3de200fd2a131c19a8a951f14bb1d455e87774d51a6",
+      "selection": "baseline + four Lanzhou constants + Lanzhou availability only"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/MasterOfChessStrategyApp.kt",
+      "original_sha256": "55d663390ac29412310645963a217cefa1687489d55dbf457ff1025c2d0b694b",
+      "sha256": "aaab1196be7f1e39555603398f08f382d155d5c30d1f68e309f4e2633df70313",
+      "selection": "baseline + Lanzhou home branch and three owned composables only"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/navigation/AppNavigationModelTest.kt",
+      "original_sha256": "4060634b14122beab39b471ef7e82b202ba928f7208177b2f67b9ed5426abba4",
+      "sha256": "526068a25113690357d9225f57dc57fd21a3329c3ee49853395cdb4090ea74a5",
+      "selection": "baseline + Lanzhou availability assertions only"
+    }
+  ],
+  "build": {
+    "lint_errors": 0,
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "04787234af31045fa342fea7c15a49a759205160f23b6235d64e2ff56c3385b8",
+      "engine-native/build/outputs/apk/androidTest/debug/engine-native-debug-androidTest.apk": "ce82805484393cda8f484e2401ed31da4e6f9dc7e081c36a0c3368ff6c26e9d3",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "75b7046007adc0b99478f8a6c625fd27b28fcc9c8300d8ec6886a1ae5b553054"
+    },
+    "receipt_sha256": "872ab7c723a9e44b1fd0fa364e146bde11ad6070bf06b82b8d9f1f82e9d16e4f",
+    "production_source_and_jvm_inputs_unchanged": true,
+    "abis": [
+      "arm64-v8a",
+      "x86_64"
+    ],
+    "inherited_suites": [
+      {
+        "origin": "lzep6",
+        "tests": 10,
+        "name": "com.masterofchessstrategy.games.lanzhou_mahjong.data.RoomLanzhouMahjongEntryRepositoryTest",
+        "xml_sha256": "d2521f12580ef79dbcf6d99f0ae0498738f69b3c0f251b3c64c001b4940f96a1"
+      },
+      {
+        "origin": "lzep6",
+        "tests": 8,
+        "name": "com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongEntryViewModelTest",
+        "xml_sha256": "28d39e5ef794619a8efc32ecd60cfff44c4eae82425c082b205e934b52206bcb"
+      },
+      {
+        "origin": "lzep6",
+        "tests": 28,
+        "name": "com.masterofchessstrategy.navigation.AppNavigationModelTest",
+        "xml_sha256": "63bb4b32d7bfa1c1f172b572f27e0b30a2367949e7f731653c7313abd525b57b"
+      },
+      {
+        "origin": "lzep5",
+        "tests": 30,
+        "name": "com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongGameHostTest",
+        "xml_sha256": "d26b5d88d37ef74b66262e8bd9c1577d38d2fe9e700f7d62b0ede41df22c8f6b"
+      },
+      {
+        "origin": "lzep5",
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongGameViewModelTest",
+        "xml_sha256": "d66c8236dfdf38e5de68d270d66cf50161d3eb07ac08eced77a9969c5dc2d706"
+      },
+      {
+        "origin": "lzep5",
+        "tests": 6,
+        "name": "com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongHostEntryAdmissionTest",
+        "xml_sha256": "1be086da0b37ae1090fc76bb7e451a4e7dbf638d9deda6af80a6e21ed8af1a35"
+      }
+    ],
+    "current_tasks": [
+      ":app:assembleDebugAndroidTest",
+      ":app:lintDebug"
+    ],
+    "production_build_origin": "lzep6",
+    "main_and_native_test_apks_inherited_from": "lzep6 exact bytes",
+    "current_jvm_executions": 0,
+    "lint_warnings": 22,
+    "jvm_tests": 87
+  },
+  "device": {
+    "receipt_sha256": "6dbbc1b1985a1dc339569eb7cd519b2dd4c55e3c6b385edbd70638c64b3c78ea",
+    "app_data_cleared": false,
+    "distinct_methods": 18,
+    "inherited_runs": [
+      {
+        "name": "entry-room",
+        "expected": 6,
+        "log_sha256": "a6aa1c9b7d6fd16afab5d5a42933c6a2cbe860e7c7378d69ca85df84bb125486"
+      },
+      {
+        "name": "entry-controls",
+        "expected": 7,
+        "log_sha256": "c60ebb1ee88e9b590bc1945da012666c83ed73e5c95b691e2a608c753253d801"
+      },
+      {
+        "name": "shared-host",
+        "expected": 2,
+        "log_sha256": "9dc0414efc9199ab8e16f0b8130f2594df063c310b1d3a915f2d16d975aec317"
+      }
+    ],
+    "abi": "x86_64",
+    "page_size": "16384",
+    "fonts": [
+      "1.0",
+      "1.5"
+    ],
+    "restored_font": "1.0",
+    "inherited_invocations": 15,
+    "accepted_invocations": 21,
+    "final_instrumentation_invocations": 6,
+    "inherited_apks": {
+      "app/build/outputs/apk/debug/app-debug.apk": "04787234af31045fa342fea7c15a49a759205160f23b6235d64e2ff56c3385b8",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "e01cde91d5fbfd98c4987b1b0732ab44861f058910b04094183846ea4aaeb994",
+      "engine-native/build/outputs/apk/androidTest/debug/engine-native-debug-androidTest.apk": "ce82805484393cda8f484e2401ed31da4e6f9dc7e081c36a0c3368ff6c26e9d3"
+    },
+    "api": "37"
+  },
+  "visual": {
+    "original_pngs": 26,
+    "unique_pngs": 18,
+    "directly_viewed_unique_pngs": 18,
+    "images": [
+      {
+        "sha256": "d89b74f7f7d71ed762af49f5abab261952bc249bc86cef8eaf4e50eb2c41c801",
+        "font": "1.0"
+      },
+      {
+        "sha256": "8e53219a283a33e5479e2eb044f422c51d6f616bbe4c5ca7f41e8fd6adb0a2fe",
+        "font": "1.0"
+      },
+      {
+        "sha256": "cc182e9bdcb85cc70d1448e42722a17fdc6dec4f4c6121f44a6d9040513dd94c",
+        "font": "1.0"
+      },
+      {
+        "sha256": "cc182e9bdcb85cc70d1448e42722a17fdc6dec4f4c6121f44a6d9040513dd94c",
+        "font": "1.0"
+      },
+      {
+        "sha256": "299396f829d753529173a8270f6c91f79c7837701c207c4dd670827ccc021c90",
+        "font": "1.0"
+      },
+      {
+        "sha256": "5a033847decc1da36d3e0bd8456f9e0c06c71f1c0afd32d64407683305b44e90",
+        "font": "1.0"
+      },
+      {
+        "sha256": "160717a3803d8a5a1b4d957b1afb39b53120d7d4a07ce010b255bd857bad506f",
+        "font": "1.0"
+      },
+      {
+        "sha256": "cc182e9bdcb85cc70d1448e42722a17fdc6dec4f4c6121f44a6d9040513dd94c",
+        "font": "1.0"
+      },
+      {
+        "sha256": "299396f829d753529173a8270f6c91f79c7837701c207c4dd670827ccc021c90",
+        "font": "1.0"
+      },
+      {
+        "sha256": "298b3e5cf447c61dad523b7fa36cbba8b3e9ca614bc58f0ad3066e65c0694d1d",
+        "font": "1.0"
+      },
+      {
+        "sha256": "b2ed312fc91a416e3f832f32718e5b0c527a673425d56341e8e36cbb7bd097ba",
+        "font": "1.0"
+      },
+      {
+        "sha256": "610eed5c2fb55632b447fcfa137b6b71e199f43f6a2ad6c246138ac51ae4572a",
+        "font": "1.0"
+      },
+      {
+        "sha256": "b2ed312fc91a416e3f832f32718e5b0c527a673425d56341e8e36cbb7bd097ba",
+        "font": "1.0"
+      },
+      {
+        "sha256": "e07429dddc3a02e68de831c58371c55f088621229c485cb7374a386142caa9fe",
+        "font": "1.5"
+      },
+      {
+        "sha256": "1f23e68f5c2040b71d32e1910030f5ac7e5100d910cf535ae4094ececd304596",
+        "font": "1.5"
+      },
+      {
+        "sha256": "a7e4af466856a04db21b1ceac6772d20f7265a1e07635a5320d504cfefdf2fec",
+        "font": "1.5"
+      },
+      {
+        "sha256": "a7e4af466856a04db21b1ceac6772d20f7265a1e07635a5320d504cfefdf2fec",
+        "font": "1.5"
+      },
+      {
+        "sha256": "c2adbab44f808c448fc1bcda179b26ebae5c076048cd5e29c4b749d7bfbc98ff",
+        "font": "1.5"
+      },
+      {
+        "sha256": "9db63bd5a72258a4b0608c100964cec604402726187e87cc3410412362e88503",
+        "font": "1.5"
+      },
+      {
+        "sha256": "d41fbadf7fa0e913685652f0409745869f4c25d58adb872cd8c2fdfb947c8f77",
+        "font": "1.5"
+      },
+      {
+        "sha256": "a7e4af466856a04db21b1ceac6772d20f7265a1e07635a5320d504cfefdf2fec",
+        "font": "1.5"
+      },
+      {
+        "sha256": "c2adbab44f808c448fc1bcda179b26ebae5c076048cd5e29c4b749d7bfbc98ff",
+        "font": "1.5"
+      },
+      {
+        "sha256": "e581d304f7ae3911796dfcde99b44f9e050bcd5dfc5f0923ab2f4838c4d178cf",
+        "font": "1.5"
+      },
+      {
+        "sha256": "07c04cac33a17434445939d0bea4364c52450ba12486a5845c1cb2e7e6d4d78c",
+        "font": "1.5"
+      },
+      {
+        "sha256": "da11b6a3e1328cb0166bf60a7e4ba859f25e277770074c0e56a65e0e6b35b609",
+        "font": "1.5"
+      },
+      {
+        "sha256": "07c04cac33a17434445939d0bea4364c52450ba12486a5845c1cb2e7e6d4d78c",
+        "font": "1.5"
+      }
+    ],
+    "review_sha256": "c0fdc398fdf9b033c4ec2108d1d267d299a691c0fdaef6a72485c8b9ef8e65f9"
+  },
+  "retained_history": [
+    "lzep1-4 private freeze preflight failures; no builds/tests",
+    "lzep5 formal 84/87; coroutine exception reference assertions and stale unavailable-home assertion corrected",
+    "lzep6 formal 87 accepted; device prelude15 passed; production navigation2/3 passed, discard observation timeout",
+    "lzep7 focused hand visibility assertion failed before click",
+    "lzep8 instrument-only outer-page then inner-hand scrolling; all production inputs unchanged; final navigation6 passed"
+  ],
+  "metadata": [
+    {
+      "sha256": "aa3a763aaf42aac3008d94bb9557b5e3f89cd8fb14966f2e0c35f813a81fea67",
+      "path": "docs/games/lanzhou-mahjong/2026-10-29-entry-verification.md"
+    },
+    {
+      "sha256": "c53ff65612f462332d6f31e4e320e4ec99fdf026a643bd4d5b7d80400731bf1f",
+      "path": "docs/games/lanzhou-mahjong/player-guide.md"
+    },
+    {
+      "sha256": "7cd12c07ace1c54519a8b9f45861e38cf543641ef08012b98016f4a73f358174",
+      "path": "docs/releases/v0.1.0-lanzhou-mahjong-entry.1.md"
+    }
+  ],
+  "source_only": true,
+  "release_assets": [],
+  "new_third_party_assets": false,
+  "room_schema_version": 20,
+  "main_menu_integrated": true,
+  "easy_tutorial_qualification_accepted": true,
+  "higher_difficulty_qualified": false,
+  "physical_device_accepted": false,
+  "ai_strength_accepted": false,
+  "process_death_accepted": false,
+  "full_landscape_accepted": false,
+  "remaining": [
+    "Trusted creation, terminal receipts, idempotent settlement and higher-difficulty qualification",
+    "Growth, records, complete content and audio",
+    "Process death, full landscape, physical devices and AI strength"
+  ]
+}

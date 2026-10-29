@@ -23,6 +23,8 @@ internal data class LanzhouMahjongLaunchConfig(
     }
 }
 
+internal enum class LanzhouMahjongOpenMode { NEW, RESUME }
+
 internal data class LanzhouMahjongGameUiState(
     val table: LanzhouMahjongTableState? = null,
     val isLoading: Boolean = true,
@@ -42,8 +44,9 @@ internal class LanzhouMahjongGameViewModel(
     newSeed: () -> Long = { System.nanoTime() and Long.MAX_VALUE },
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
     now: () -> Long = System::currentTimeMillis,
+    openMode: LanzhouMahjongOpenMode = LanzhouMahjongOpenMode.NEW,
 ) : ViewModel(), LocalDataWriterRetirement {
-    private val host = LanzhouMahjongGameHost(storage, launchConfig, sessionFactory, dispatcher, now, newSeed)
+    private val host = LanzhouMahjongGameHost(storage, launchConfig, sessionFactory, dispatcher, now, newSeed, openMode)
     val state: StateFlow<LanzhouMahjongGameUiState> = host.state
     val failures: List<Throwable> get() = host.failures
     private var actionJob: Job? = null

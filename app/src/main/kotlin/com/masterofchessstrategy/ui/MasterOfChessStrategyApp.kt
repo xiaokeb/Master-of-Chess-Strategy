@@ -308,6 +308,8 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                             navController.navigate(AppDestination.CHINESE_CHESS_MODES)
                         } else if (entry == HomeGameEntry.GO) {
                             navController.navigate(AppDestination.GO_MODES)
+                        } else if (entry == HomeGameEntry.LANZHOU_MAHJONG) {
+                            navController.navigate(AppDestination.LANZHOU_MAHJONG_MODES)
                         } else if (entry == HomeGameEntry.LANZHOU_TRADITIONAL) {
                             navController.navigate(AppDestination.LANZHOU_TRADITIONAL_MODES)
                         }
@@ -439,6 +441,22 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                     )),
                     onBack = navController::popBackStack,
                 )
+            }
+            composable(AppDestination.LANZHOU_MAHJONG_MODES) { entry ->
+                LanzhouMahjongEntryNavigationRoute(database, entry, gameWriters,
+                    onLearning = { navController.navigate(AppDestination.LANZHOU_MAHJONG_LEARNING) },
+                    onResume = { navController.navigate("lanzhou-mahjong/game/resume") },
+                    onNewEasy = { navController.navigate("lanzhou-mahjong/game/new") },
+                    onBack = navController::popBackStack)
+            }
+            composable(AppDestination.LANZHOU_MAHJONG_LEARNING) { entry ->
+                LanzhouMahjongLearningNavigationRoute(database, entry, gameWriters, navController::popBackStack)
+            }
+            composable(AppDestination.LANZHOU_MAHJONG_GAME, arguments = listOf(
+                navArgument(AppDestination.LANZHOU_MAHJONG_OPEN_ARGUMENT) { type = NavType.StringType },
+            )) { entry ->
+                LanzhouMahjongPlayNavigationRoute(database, entry, gameWriters,
+                    entry.arguments?.getString(AppDestination.LANZHOU_MAHJONG_OPEN_ARGUMENT), navController::popBackStack)
             }
             composable(AppDestination.GO_MODES) {
                 GoProductionModesNavigationRoute(

@@ -39,9 +39,10 @@ class AppNavigationModelTest {
     fun publishedChineseChessGoAndTigerTraditionalEntryAreAvailable() {
         assertTrue(HomeGameEntry.CHINESE_CHESS.isAvailable)
         assertTrue(HomeGameEntry.GO.isAvailable)
+        assertTrue(HomeGameEntry.LANZHOU_MAHJONG.isAvailable)
         assertTrue(HomeGameEntry.LANZHOU_TRADITIONAL.isAvailable)
         HomeGameEntry.entries
-            .filterNot { it in setOf(HomeGameEntry.CHINESE_CHESS, HomeGameEntry.GO, HomeGameEntry.LANZHOU_TRADITIONAL) }
+            .filterNot { it in setOf(HomeGameEntry.CHINESE_CHESS, HomeGameEntry.GO, HomeGameEntry.LANZHOU_MAHJONG, HomeGameEntry.LANZHOU_TRADITIONAL) }
             .forEach { assertFalse(it.isAvailable) }
     }
 
@@ -51,7 +52,7 @@ class AppNavigationModelTest {
         assertEquals("tiger-goat/local-game", AppDestination.TIGER_GOAT_LOCAL_GAME)
         assertTrue(HomeGameEntry.GO.isAvailable)
         assertFalse(HomeGameEntry.STANDARD_MAHJONG.isAvailable)
-        assertFalse(HomeGameEntry.LANZHOU_MAHJONG.isAvailable)
+        assertTrue(HomeGameEntry.LANZHOU_MAHJONG.isAvailable)
     }
 
     @Test

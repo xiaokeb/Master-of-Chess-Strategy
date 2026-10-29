@@ -465,7 +465,8 @@ class LanzhouMahjongGameHostTest {
             closeFailure = close
             failClose = true
         }
-        val host = LanzhouMahjongGameHost(f.storage(), engine.config, { engine }, f.dispatcher)
+        val host = LanzhouMahjongGameHost(f.storage(), engine.config, { engine }, f.dispatcher,
+            openMode = LanzhouMahjongOpenMode.RESUME)
         host.open()
         try { host.retirementCompletion.await(); fail("cleanup failure hidden") }
         catch (failure: com.masterofchessstrategy.settings.LocalDataWriterFailure) {
@@ -576,7 +577,8 @@ internal class HostFixture(val dispatcher: CoroutineDispatcher, val difficulty: 
                 it.rejectRestore = rejectRestore
                 sessions += it
             }
-        }, dispatcher = dispatcher, now = { clockCalls++; 1000L + clockCalls }, newSeed = { 19 })
+        }, dispatcher = dispatcher, now = { clockCalls++; 1000L + clockCalls }, newSeed = { 19 },
+        openMode = if (store.saved == null) LanzhouMahjongOpenMode.NEW else LanzhouMahjongOpenMode.RESUME)
     fun record() = LanzhouMahjongSessionRecord(difficulty, 0, 7, 0, 1, 7,
         HostFakeSession(LanzhouMahjongLaunchConfig(difficulty, 7)).serialize())
 }
@@ -591,6 +593,8 @@ internal class HostMemoryStore(private val gate: LanzhouMahjongStorageEpochGate)
         return object : LanzhouMahjongAdmittedSessionStore {
             override suspend fun load() = gate.access(value) { loadBody() }
             override suspend fun save(snapshot: LanzhouMahjongStoredSession) = gate.access(value) { saveBody(snapshot) }
+            override suspend fun authorizeNew(difficulty: Difficulty, expectedCurrent: LanzhouMahjongStoredSession?) =
+                gate.access(value) { authorizeBody(expectedCurrent) }
         }
     }
     var saved: LanzhouMahjongStoredSession? = null
@@ -600,6 +604,13 @@ internal class HostMemoryStore(private val gate: LanzhouMahjongStorageEpochGate)
     var loadError: Exception? = null
     var saveError: Exception? = null
     var loads = 0
+    var authorizeError: Exception? = null
+    var authorizations = 0
+    private fun authorizeBody(expected: LanzhouMahjongStoredSession?) {
+        authorizations++
+        authorizeError?.let { throw it }
+        check(saved === expected) { "QA checkpoint changed" }
+    }
     private fun loadBody(): LanzhouMahjongStoredSession? { loads++; loadError?.let { throw it }; return saved }
     private suspend fun saveBody(snapshot: LanzhouMahjongStoredSession) {
         attempts += snapshot

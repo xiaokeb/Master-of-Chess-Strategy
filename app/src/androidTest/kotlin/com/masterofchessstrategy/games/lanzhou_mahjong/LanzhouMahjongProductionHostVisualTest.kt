@@ -157,9 +157,12 @@ class LanzhouMahjongProductionHostVisualTest {
         var returned by mutableStateOf(false)
         try {
             prepare(fixture)
+            io { fixture.db.lanzhouMahjongLearningProgressDao().upsert(
+                com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongLearningProgressEntity(0, 2, 10, 1)) }
+            val mode = if (io { fixture.row() } == null) LanzhouMahjongOpenMode.NEW else LanzhouMahjongOpenMode.RESUME
             val storage = fixture.db.createLanzhouMahjongHostStorage()
             compose.runOnUiThread {
-                page = LanzhouMahjongGameViewModel(storage, LanzhouMahjongLaunchConfig(Difficulty.MEDIUM, 321))
+                page = LanzhouMahjongGameViewModel(storage, LanzhouMahjongLaunchConfig(Difficulty.EASY, 321), openMode = mode)
                 models.put("lanzhou-mahjong-visual", requireNotNull(page))
             }
             val current = requireNotNull(page)

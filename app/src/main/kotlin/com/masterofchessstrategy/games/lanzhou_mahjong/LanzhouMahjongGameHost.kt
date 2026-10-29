@@ -4,6 +4,8 @@ import com.masterofchessstrategy.engine.*
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongAdmittedSessionStore
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongStorageEpochGate
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongStoredSession
+import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongEntryDeniedException
+import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongEntryDenial
 import com.masterofchessstrategy.settings.LocalDataWriterRetirement
 import com.masterofchessstrategy.settings.LocalDataWriterFailure
 import java.io.IOException
@@ -56,6 +58,7 @@ internal class LanzhouMahjongGameHost(
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val now: () -> Long = System::currentTimeMillis,
     private val newSeed: () -> Long = { System.nanoTime() and Long.MAX_VALUE },
+    private val openMode: LanzhouMahjongOpenMode = LanzhouMahjongOpenMode.NEW,
 ) : LocalDataWriterRetirement {
     private val mutex = Mutex()
     private val cleanupScope = CoroutineScope(SupervisorJob() + dispatcher)
@@ -97,6 +100,15 @@ internal class LanzhouMahjongGameHost(
             checkCurrentOwner()
             // Even a requested new game must inspect the existing row before any replacement.
             val saved = storage.store.load()
+            when (openMode) {
+                LanzhouMahjongOpenMode.NEW -> {
+                    if (saved != null) throw LanzhouMahjongEntryDeniedException(LanzhouMahjongEntryDenial.ACTIVE_GAME_CHANGED)
+                    storage.store.authorizeNew(launchConfig.difficulty, null)
+                }
+                LanzhouMahjongOpenMode.RESUME -> if (saved == null) {
+                    throw LanzhouMahjongEntryDeniedException(LanzhouMahjongEntryDenial.ACTIVE_GAME_CHANGED)
+                }
+            }
             acknowledged = saved
             if (retiring || leaving) return@operate
             checkCurrentOwner()
@@ -115,6 +127,8 @@ internal class LanzhouMahjongGameHost(
             }
             opened = true
             advanceAndSave()
+        } catch (denied: LanzhouMahjongEntryDeniedException) {
+            failOpen(denied, checkNotNull(denied.message))
         } catch (cancelled: CancellationException) {
             failOpen(cancelled, "对局恢复已中止，原存档已保留")
             throw cancelled
@@ -193,6 +207,20 @@ internal class LanzhouMahjongGameHost(
 
     suspend fun restart() = operate {
         if (!opened || loadFailed || pending != null || blocked) return@operate
+        try {
+            storage.store.authorizeNew(config.difficulty, acknowledged)
+            checkCurrentOwner()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (denied: LanzhouMahjongEntryDeniedException) {
+            recordFailure(denied)
+            feedback = denied.message
+            return@operate
+        } catch (failure: Exception) {
+            recordFailure(failure)
+            feedback = "新局资格读取失败，当前对局已保留，请稍后重试"
+            return@operate
+        }
         val dealer = checkNotNull(session).snapshot().outcome.nextDealer
         // Release the old handle before opening the next one, including when release fails.
         closeNative()
