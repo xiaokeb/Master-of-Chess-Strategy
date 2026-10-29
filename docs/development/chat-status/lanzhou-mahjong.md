@@ -1,5 +1,11 @@
 # 兰州麻将对话状态
 
+## 2026-10-29 安全宿主与实际牌桌流程已发布
+
+`4f6c0c50dd94e0732c41efec493c41b17a6d11aa`／`v0.1.0-lanzhou-mahjong-host.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-host.1) id427825778。正式35JVM、双ABI/APK/Manifest、Lint0错20警告、真实Room/JNI及两字号13方法/24调用、12原PNG/8不同画面均通过；1763全树/20路径核验，未清默认数据，无二进制附件。线程名断言改线程身份后通过，旧失败保留；发布仅删交接文档末尾空行，未重复构建。见[最终验收](../../games/lanzhou-mahjong/2026-10-29-host-verification.md)。
+
+下一接独立十课存储/完整备份和真实难度资格，再启正式菜单。旧通用四步教程、旧宽松Store及未认证通用胜场不得接入口。成长/棋谱、内容/音效、横屏/真实杀进程/实体设备及四档强度仍未验收；生产Host不依赖旧Controller。
+
 ## 2026-10-26 原生与完整存储节点已发布
 
 提交 `49ec2db2283fdedef9e42fd8bd45b7b176b917e6`，tag `v0.1.0-lanzhou-mahjong-native-storage.1`，[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-native-storage.1) id424183711。以本节和[最终验收记录](../../games/lanzhou-mahjong/2026-10-25-native-storage-verification.md)为准，下方“尚待正式JNI/Room/备份”均为历史。

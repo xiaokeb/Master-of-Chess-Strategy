@@ -1,5 +1,9 @@
 # 已验证节点与后续集成
 
+## 2026-10-29 兰州安全宿主
+
+`4f6c0c50dd94e0732c41efec493c41b17a6d11aa`，[v0.1.0-lanzhou-mahjong-host.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-host.1)，Release427825778。后台Native/保存确认/固定Owner退休和真实牌桌流程；35JVM、13设备方法/24调用、普通及150%共12原PNG/8画面、1763全树/20路径通过，Lint0错20警告。仅源码，未清默认数据。正式菜单、教程资格和完整棋种仍待。见[验收记录](../games/lanzhou-mahjong/2026-10-29-host-verification.md)。
+
 ## 2026-10-26 象棋耗时观察
 
 `0b787dd86c00ec4ce2ca29bd82f19d4650b64d88`，[v0.1.0-xiangqi-latency-observation.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-xiangqi-latency-observation.1)，Release424199962。新14项与15同源继承共29测试，1743全树/8路径证明；纯原始G0分布/p95及聚合在途投影，无搜索/模型/生产参数/Android变化、无二进制。见[验证与范围](../games/xiangqi/2026-10-26-latency-distribution.md)。后续producer无搜索设备验证及兰州Host、方棋正式资格行层仍属未发布开发，不混入本tag。
