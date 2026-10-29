@@ -22,6 +22,8 @@ import com.masterofchessstrategy.games.go.data.GoRankedSettlementEntity
 import com.masterofchessstrategy.games.go.data.GoRankedDao
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiLearningProgressEntity
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiLearningProgressDao
+import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongLearningProgressEntity
+import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongLearningProgressDao
 
 @Database(
     entities = [
@@ -43,8 +45,9 @@ import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiLearningProgres
         GoRankedStartEntity::class,
         GoRankedSettlementEntity::class,
         FangqiLearningProgressEntity::class,
+        LanzhouMahjongLearningProgressEntity::class,
     ],
-    version = 19,
+    version = 20,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -78,6 +81,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
     abstract fun goAiProjectionDao(): GoAiProjectionDao
     abstract fun goRankedDao(): GoRankedDao
     abstract fun fangqiLearningProgressDao(): FangqiLearningProgressDao
+    abstract fun lanzhouMahjongLearningProgressDao(): LanzhouMahjongLearningProgressDao
 
     companion object {
         internal val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -462,6 +466,21 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_19_20 = object : Migration(19, 20) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Generic four-step rows remain historical facts, never ten-lesson completion.
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS lanzhou_mahjong_learning_progress (
+                        singletonId INTEGER NOT NULL,
+                        contentVersion INTEGER NOT NULL,
+                        completedCount INTEGER NOT NULL,
+                        updatedAtEpochMillis INTEGER NOT NULL,
+                        PRIMARY KEY(singletonId)
+                    )
+                """.trimIndent())
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -491,6 +510,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_16_17,
                         MIGRATION_17_18,
                         MIGRATION_18_19,
+                        MIGRATION_19_20,
                     )
                     .build()
                     .also { instance = it }

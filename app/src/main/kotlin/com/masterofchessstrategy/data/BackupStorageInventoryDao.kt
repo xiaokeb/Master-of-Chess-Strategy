@@ -41,4 +41,7 @@ internal interface BackupStorageInventoryDao {
     // Code 4 is Fangqi's persisted game code; the table stores dedicated content keys.
     @Query("SELECT 4 FROM fangqi_learning_progress ORDER BY contentKey")
     suspend fun fangqiLearningGameTypeCodes(): List<Int>
+
+    @Query("SELECT 3 FROM lanzhou_mahjong_learning_progress ORDER BY singletonId")
+    suspend fun lanzhouMahjongLearningGameTypeCodes(): List<Int>
 }

@@ -1,0 +1,382 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-lanzhou-mahjong-learning.1",
+  "candidate": "lzlearn1",
+  "baseline_commit": "2dff46615c058291fea9e90fb8be0a3493a5acd5",
+  "frozen_source_files": 1782,
+  "metadata_files": 3,
+  "full_export_files": 1785,
+  "expected_changed_paths": 28,
+  "source_identity_sha256": "670bf3b4f1046521e26fd3ad0cce435e7351c152036c8dacf39247dbf2eed9bf",
+  "overlays": [
+    {
+      "original_sha256": "7783e5ecabf2ee751465e7055b4ac5c84060e55d51dda19d861e3156a55571bc",
+      "sha256": "7783e5ecabf2ee751465e7055b4ac5c84060e55d51dda19d861e3156a55571bc",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/MocsDatabase.kt"
+    },
+    {
+      "original_sha256": "12b1c59a7136f1c94b1833757487b99c70c9ad1698ba5b7990f26ebac899dbc5",
+      "sha256": "12b1c59a7136f1c94b1833757487b99c70c9ad1698ba5b7990f26ebac899dbc5",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/GameBackupAdapter.kt"
+    },
+    {
+      "original_sha256": "5c36ec24c3854065dc4d4a73939d2b817dc9a6e09f687a07d2768799b070e6b9",
+      "sha256": "5c36ec24c3854065dc4d4a73939d2b817dc9a6e09f687a07d2768799b070e6b9",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/BackupStorageInventory.kt"
+    },
+    {
+      "original_sha256": "33324d3a5f438229d8866e46a5fc35f9dcf6af7a46e21bb2fdc53e7d796c34c1",
+      "sha256": "33324d3a5f438229d8866e46a5fc35f9dcf6af7a46e21bb2fdc53e7d796c34c1",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/BackupStorageInventoryDao.kt"
+    },
+    {
+      "original_sha256": "a9e966102561d6de33ca1a58365a11a13b89c6a338a4f775758b62c95f84d1e5",
+      "sha256": "a9e966102561d6de33ca1a58365a11a13b89c6a338a4f775758b62c95f84d1e5",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/LocalDataBackupRepository.kt"
+    },
+    {
+      "original_sha256": "7e0843c7b02e8cc1f76a62aa7f4ebdf3d1cf3c6d75abd72488391ea3b2114be8",
+      "sha256": "7e0843c7b02e8cc1f76a62aa7f4ebdf3d1cf3c6d75abd72488391ea3b2114be8",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/ProductionGameBackupFactory.kt"
+    },
+    {
+      "original_sha256": "f6ffcc190eae86940137650129bdc37d9fc39511a625edf5e38eb11b19795870",
+      "sha256": "f6ffcc190eae86940137650129bdc37d9fc39511a625edf5e38eb11b19795870",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongLearningSnapshot.kt"
+    },
+    {
+      "original_sha256": "dca7faf6237abe7b93c3b7dee61aa89dca6db2ac3724a2f2e556a9b6ac28557c",
+      "sha256": "dca7faf6237abe7b93c3b7dee61aa89dca6db2ac3724a2f2e556a9b6ac28557c",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongLearningProgressEntity.kt"
+    },
+    {
+      "original_sha256": "abc9123e3b34a1e635308050e22caab198f3a472d3fba02930d435f467cae676",
+      "sha256": "abc9123e3b34a1e635308050e22caab198f3a472d3fba02930d435f467cae676",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/RoomLanzhouMahjongLearningRepository.kt"
+    },
+    {
+      "original_sha256": "da4e192814cd8bfd1c8e0d51d123b12fe0394f0b5aae7cab1dec6f8f58635d40",
+      "sha256": "da4e192814cd8bfd1c8e0d51d123b12fe0394f0b5aae7cab1dec6f8f58635d40",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongLearningBackupAdapter.kt"
+    },
+    {
+      "original_sha256": "7551cf0b0956d8b5a754a5fd3e45097ff29e4a4eacef78be624bfdc33ee60d89",
+      "sha256": "7551cf0b0956d8b5a754a5fd3e45097ff29e4a4eacef78be624bfdc33ee60d89",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongLearningLibrary.kt"
+    },
+    {
+      "original_sha256": "599430d96479be864252411983f7a5d59c06c9766330d659fe1c86e62b347473",
+      "sha256": "599430d96479be864252411983f7a5d59c06c9766330d659fe1c86e62b347473",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongLearningController.kt"
+    },
+    {
+      "original_sha256": "b8e4c81390546b784fff968def185fedaefa810fd5c7d24bb56d5bbfd34d569d",
+      "sha256": "b8e4c81390546b784fff968def185fedaefa810fd5c7d24bb56d5bbfd34d569d",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongLearningViewModel.kt"
+    },
+    {
+      "original_sha256": "f4d80e1b486f437ace0962f605e1060c5058cacbf4ca03bbe3de45f72133bf64",
+      "sha256": "f4d80e1b486f437ace0962f605e1060c5058cacbf4ca03bbe3de45f72133bf64",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongLearningScreen.kt"
+    },
+    {
+      "original_sha256": "c011a9022bad777f387e2bc5d30ac27f2edbece9fd5c957cd9f934a981126e02",
+      "sha256": "c011a9022bad777f387e2bc5d30ac27f2edbece9fd5c957cd9f934a981126e02",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/RoomLanzhouMahjongLearningRepositoryTest.kt"
+    },
+    {
+      "original_sha256": "305982fd89b7fffa245b7ca362414ae3d0d27650e531b1db52ed98fbcbe09b43",
+      "sha256": "305982fd89b7fffa245b7ca362414ae3d0d27650e531b1db52ed98fbcbe09b43",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongLearningBackupAdapterTest.kt"
+    },
+    {
+      "original_sha256": "09177c2f18264f7267bada2c0ba120bf687078cae9d5f0de483e90667a5078c3",
+      "sha256": "09177c2f18264f7267bada2c0ba120bf687078cae9d5f0de483e90667a5078c3",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongLearningControllerTest.kt"
+    },
+    {
+      "original_sha256": "d5f27350288f44155174cad8c30ae66f3634548bc5843bd49a76f6934cfbb69f",
+      "sha256": "d5f27350288f44155174cad8c30ae66f3634548bc5843bd49a76f6934cfbb69f",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongLearningViewModelTest.kt"
+    },
+    {
+      "original_sha256": "dd12f78e7bcb7359f470157e21aeba0a170b7720815374655f6693dc8ecc4b21",
+      "sha256": "dd12f78e7bcb7359f470157e21aeba0a170b7720815374655f6693dc8ecc4b21",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongLearningRoomInstrumentedTest.kt"
+    },
+    {
+      "original_sha256": "84ba02a845f67ed43122665c6fedd74d9e02bbc2071d2a20d5019947256b346b",
+      "sha256": "84ba02a845f67ed43122665c6fedd74d9e02bbc2071d2a20d5019947256b346b",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongLearningScreenTest.kt"
+    },
+    {
+      "original_sha256": "4974898cf392d600da61175b6a21a923b2ffa8a3fc8bc552ea3ee463880c22c1",
+      "sha256": "4974898cf392d600da61175b6a21a923b2ffa8a3fc8bc552ea3ee463880c22c1",
+      "path": "docs/development/lanzhou-mahjong-learning-integration-2026-10-29.md"
+    },
+    {
+      "original_sha256": "2dbcc79618e407531900441e1f869384fc67123f61893c86c249c69f5bfe23c6",
+      "sha256": "2dbcc79618e407531900441e1f869384fc67123f61893c86c249c69f5bfe23c6",
+      "path": "docs/games/lanzhou-mahjong/2026-10-29-learning-ui-host.md"
+    },
+    {
+      "original_sha256": "4b6699a845c58befa8e21a4d3be5152f46a73fe2a8176c2a49878c23de2b5213",
+      "sha256": "4b6699a845c58befa8e21a4d3be5152f46a73fe2a8176c2a49878c23de2b5213",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongLearningProductionInstrumentedTest.kt"
+    },
+    {
+      "original_sha256": "a6821f94f4c428bf14881a2274ba067a9e37813b407d24d3f3d8ae9b70e82e1c",
+      "sha256": "a6821f94f4c428bf14881a2274ba067a9e37813b407d24d3f3d8ae9b70e82e1c",
+      "path": "docs/games/lanzhou-mahjong/2026-10-29-learning-production-tests.md"
+    },
+    {
+      "original_sha256": "a266870ea4c83d54230443eadd6fe66133081786e5139c985b6c748a9e11f4d5",
+      "sha256": "a266870ea4c83d54230443eadd6fe66133081786e5139c985b6c748a9e11f4d5",
+      "path": "app/schemas/com.masterofchessstrategy.data.MocsDatabase/20.json"
+    }
+  ],
+  "portable_text": null,
+  "schema_preparation": {
+    "at": "2026-10-29T21:05:00.6917138+08:00",
+    "schema_sha256": "a266870ea4c83d54230443eadd6fe66133081786e5139c985b6c748a9e11f4d5",
+    "tests_run": false,
+    "schema_path": "app/schemas/com.masterofchessstrategy.data.MocsDatabase/20.json",
+    "source_unchanged": true
+  },
+  "build": {
+    "abis": [
+      "arm64-v8a",
+      "x86_64"
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "a90b96b81b5b74a4b9d9ed6546a1d327ec02a0d5436dc1a13968f66d0d194141",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "9fc58ff91a29e76fe4bda3bc121e136bf878be7045c11659a67368cde3317dff",
+      "engine-native/build/outputs/apk/androidTest/debug/engine-native-debug-androidTest.apk": "926ce48df62b84d87526192bd8dcaabc2700722374e4574b4ed7889cd6031072"
+    },
+    "jvm_tests": 69,
+    "lint_errors": 0,
+    "suites": [
+      {
+        "name": "com.masterofchessstrategy.data.GameBackupRegistryTest",
+        "tests": 23,
+        "xml_sha256": "521e0877c9244cb3f80a157f2af7589403517fcd6609d7eb130be0018ac5c21d"
+      },
+      {
+        "name": "com.masterofchessstrategy.data.LocalDataBackupCodecTest",
+        "tests": 15,
+        "xml_sha256": "a5c340e0fa71c9c80da8fa1a204e909843a839b3c94a27ce54841e4fd0e2aa99"
+      },
+      {
+        "name": "com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongLearningBackupAdapterTest",
+        "tests": 5,
+        "xml_sha256": "810fedc8ad6de02033ea8361217b889b285143b3892675700c56c8be82e3c163"
+      },
+      {
+        "name": "com.masterofchessstrategy.games.lanzhou_mahjong.data.RoomLanzhouMahjongLearningRepositoryTest",
+        "tests": 11,
+        "xml_sha256": "52038b8bf9dcf1b6d6836be05d66cca3cb5f77c4c3d594cfa9586b2ba194e09e"
+      },
+      {
+        "name": "com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongLearningControllerTest",
+        "tests": 10,
+        "xml_sha256": "6ac29b737274fea3ed60f96cb2f66e2cd6a3bda9322a9efaa0a69058a1cc219c"
+      },
+      {
+        "name": "com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongLearningViewModelTest",
+        "tests": 5,
+        "xml_sha256": "8a4d4f5242d2a9ed1dbd2bf2b4878ce2c7851587e203963a70d433bfe90206a1"
+      }
+    ],
+    "receipt_sha256": "cf3367c01a8cf40504275c346ef87c492277d1dae7805b8ae3923842e17dbe95",
+    "lint_warnings": 21
+  },
+  "device": {
+    "distinct_methods": 20,
+    "receipt_sha256": "351024784a5af819163f603fdf906967dc42a82780ff9e9845bbb9f3ffb785d6",
+    "restored_font": "1.0",
+    "api": "37",
+    "fonts": [
+      "1.0",
+      "1.5"
+    ],
+    "page_size": "16384",
+    "abi": "x86_64",
+    "app_data_cleared": false,
+    "invocations": 22
+  },
+  "visual": {
+    "review_sha256": "e2ad9190eafe3c4e22e416c01a4dc7b9aee35dcae8c350ecab8a4ab79e793924",
+    "images": [
+      {
+        "sha256": "2be68fcec8126bab0c77d9b311bf37b3800b9f2a83ee6a937ed61a165976c5c5",
+        "font": "1.0",
+        "kind": "learning"
+      },
+      {
+        "sha256": "dd57760cbd35cb2677dba35a532e5351b2d347398b37a438c0014eb0f1ac9a4a",
+        "font": "1.0",
+        "kind": "learning"
+      },
+      {
+        "sha256": "26e7e969610a8487b428fac81bbb79a7470026b892697729b5802a9e33394eff",
+        "font": "1.0",
+        "kind": "learning"
+      },
+      {
+        "sha256": "f4630cc4493c732dd0f95cc181065d03b25fa79680ee6a428e2757ff6fbb877a",
+        "font": "1.0",
+        "kind": "learning"
+      },
+      {
+        "sha256": "212b5bc83c2974da1af0fae161f29f27f8033031e9df0c902d6107a95071801c",
+        "font": "1.0",
+        "kind": "learning"
+      },
+      {
+        "sha256": "267b174e188a1722c2cd4897906782456aad32d32d3685f4b641f5e117849edd",
+        "font": "1.0",
+        "kind": "learning"
+      },
+      {
+        "sha256": "c7a8ebb020ed68138be9d4497b3f0433a0a57ebacdfaf61ffb758c6acc8708dc",
+        "font": "1.0",
+        "kind": "learning"
+      },
+      {
+        "sha256": "58adf10bf74198f85f0b9e9f175203bb4670485286987978380dd9bd97eb5bb9",
+        "font": "1.0",
+        "kind": "learning"
+      },
+      {
+        "sha256": "25ac40745208a813eff6e621d342a79318c43e88a04301f35438b949d4715f95",
+        "font": "1.0",
+        "kind": "learning"
+      },
+      {
+        "sha256": "26e7e969610a8487b428fac81bbb79a7470026b892697729b5802a9e33394eff",
+        "font": "1.0",
+        "kind": "learning"
+      },
+      {
+        "sha256": "47bea93449a3a70bcdb6242c4bcfff7b534ead9a12257d47f3f5b326278a129d",
+        "font": "1.5",
+        "kind": "learning"
+      },
+      {
+        "sha256": "eae51052fc4c2b59e03bb3f78e9107f42f9d11be8baaeaba56f7837e8a6f3bfe",
+        "font": "1.5",
+        "kind": "learning"
+      },
+      {
+        "sha256": "bf3a80b44922a39de5d67544711b0a883e4fe89c1c9ec50422c33545e4d0a757",
+        "font": "1.5",
+        "kind": "learning"
+      },
+      {
+        "sha256": "da99f28544df0e652474e81cb5e230ec1c2da5910585fa63efb7d026782d504b",
+        "font": "1.5",
+        "kind": "learning"
+      },
+      {
+        "sha256": "3543112b79e4c1c54575338671649d67f3ee85a398eca26347f4655b43785907",
+        "font": "1.5",
+        "kind": "learning"
+      },
+      {
+        "sha256": "1a9be9505f2b862bb6239d3dccfe0f1268e93ab9932f55b8511e564258bb1fe9",
+        "font": "1.5",
+        "kind": "learning"
+      },
+      {
+        "sha256": "ed4e1ca92495edcb6bcb21f99c13182ff2ac9b12618b3cc0c6eaa732bc967665",
+        "font": "1.5",
+        "kind": "learning"
+      },
+      {
+        "sha256": "a3304adce542501a8c1ac3111b50eab5f6488c8f18124a8b3648a8ed35d3500a",
+        "font": "1.5",
+        "kind": "learning"
+      },
+      {
+        "sha256": "044cc66d83a43c267fb36c6d129de443596a81ac1e59125a22e0903e966ad29b",
+        "font": "1.5",
+        "kind": "learning"
+      },
+      {
+        "sha256": "bf3a80b44922a39de5d67544711b0a883e4fe89c1c9ec50422c33545e4d0a757",
+        "font": "1.5",
+        "kind": "learning"
+      },
+      {
+        "sha256": "ac2e6a773e13526b1df0bf7b16d4306dfa393c630ddef0b2106c77c31bfdd7c2",
+        "font": "1.0",
+        "kind": "shared"
+      },
+      {
+        "sha256": "c71974425bc9a40a0859d4ab17df6fd22fea7ab0e25d56ce60c2edbeed988711",
+        "font": "1.0",
+        "kind": "shared"
+      },
+      {
+        "sha256": "651926c6f5693a7b159694eb8e8425b8c4e60c198029e50d5cfcba3ece910a68",
+        "font": "1.0",
+        "kind": "shared"
+      },
+      {
+        "sha256": "ac2e6a773e13526b1df0bf7b16d4306dfa393c630ddef0b2106c77c31bfdd7c2",
+        "font": "1.0",
+        "kind": "shared"
+      },
+      {
+        "sha256": "8daf00218587de7e04878b844b4d87a8c9e82bd004ccf4bd4e1dd5ef25ca7173",
+        "font": "1.0",
+        "kind": "shared"
+      },
+      {
+        "sha256": "651926c6f5693a7b159694eb8e8425b8c4e60c198029e50d5cfcba3ece910a68",
+        "font": "1.0",
+        "kind": "shared"
+      },
+      {
+        "sha256": "cebdc437e510e01c0d2e6db38930d64e4f1505e9602051dbbfea7fa991accf6d",
+        "font": "1.0",
+        "kind": "shared"
+      },
+      {
+        "sha256": "e206804ace5f5c4110b5a2a232e5221835ab781647a5618f236a08e4f35331a9",
+        "font": "1.0",
+        "kind": "shared"
+      }
+    ],
+    "directly_viewed_unique_pngs": 24,
+    "original_pngs": 28,
+    "unique_pngs": 24
+  },
+  "metadata": [
+    {
+      "sha256": "4663097f4832ae79d46e41f5e66fccdf2fdab2fcf235b3cba9ccbd48d7c01ff1",
+      "path": "docs/games/lanzhou-mahjong/2026-10-29-learning-verification.md"
+    },
+    {
+      "sha256": "a8fde5f1521816ea7b7f057b6671caa010515f47cb9cd26768819f50c10a0582",
+      "path": "docs/releases/v0.1.0-lanzhou-mahjong-learning.1.md"
+    }
+  ],
+  "source_only": true,
+  "release_assets": [],
+  "new_third_party_assets": false,
+  "room_schema_version": 20,
+  "learning_content_version": 2,
+  "lesson_count": 10,
+  "main_menu_integrated": false,
+  "tutorial_qualification_accepted": false,
+  "physical_device_accepted": false,
+  "ai_strength_accepted": false,
+  "landscape_accepted": false,
+  "process_death_accepted": false,
+  "remaining": [
+    "Production menu and independent tutorial qualification integration",
+    "Trusted wins, growth, records, full content and audio",
+    "Landscape, process death, physical devices and AI strength"
+  ]
+}

@@ -190,6 +190,7 @@ internal class RoomLocalDataBackupRepository(
         database.goRecordSourceDao().deleteAll()
         database.goProgressDao().deleteAll()
         database.fangqiLearningProgressDao().clearAll()
+        database.lanzhouMahjongLearningProgressDao().deleteAll()
         database.competitionMahjongMatchDao().deleteAll()
         database.activeGameDao().deleteAll()
         database.lastSelectionDao().deleteAll()

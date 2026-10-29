@@ -13,6 +13,7 @@ import com.masterofchessstrategy.games.tiger_goat.data.TigerGoatBackupAdapter
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongBackupAdapter
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongCoordinatedBackupRepository
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongStorageEpochGate
+import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongLearningBackupAdapter
 
 /** The app and integration tests use the same complete adapter/gate composition. */
 internal fun createProductionGameBackupRepository(
@@ -30,7 +31,8 @@ internal fun createProductionGameBackupRepository(
                 RoomLocalDataBackupRepository(
                     database, endgamePack, validateEngineState,
                     GameBackupRegistry(listOf(TigerGoatBackupAdapter(), CompetitionMahjongBackupAdapter(),
-                        FangqiBackupAdapter(), FangqiLearningBackupAdapter(), LanzhouMahjongBackupAdapter()) + goAdapters),
+                        FangqiBackupAdapter(), FangqiLearningBackupAdapter(), LanzhouMahjongBackupAdapter(),
+                        LanzhouMahjongLearningBackupAdapter()) + goAdapters),
                 )
             },
             fangqiStorage.gate,

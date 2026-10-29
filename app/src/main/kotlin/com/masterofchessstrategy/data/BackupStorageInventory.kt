@@ -16,6 +16,7 @@ internal object BackupStorageInventory {
         database.backupStorageInventoryDao().goRankedStartGameTypeCodes(),
         database.backupStorageInventoryDao().goRankedSettlementGameTypeCodes(),
         database.backupStorageInventoryDao().fangqiLearningGameTypeCodes(),
+        database.backupStorageInventoryDao().lanzhouMahjongLearningGameTypeCodes(),
     )
 
     fun fromCodes(
@@ -26,6 +27,7 @@ internal object BackupStorageInventory {
         goAiProjectionCodes: List<Int> = emptyList(),
         goRankedStartCodes: List<Int> = emptyList(), goRankedSettlementCodes: List<Int> = emptyList(),
         fangqiLearningCodes: List<Int> = emptyList(),
+        lanzhouMahjongLearningCodes: List<Int> = emptyList(),
     ): Set<BackupStorageSlot> {
         require(activeCodes.distinct().size == activeCodes.size && competitionCodes.distinct().size == competitionCodes.size &&
             goLocalCodes.distinct().size == goLocalCodes.size &&
@@ -41,6 +43,7 @@ internal object BackupStorageInventory {
             goAiProjectionCodes.map { BackupStorageSlot(BackupStorageTable.GO_AI_PROJECTION, gameType(it)) } +
             goRankedStartCodes.map { BackupStorageSlot(BackupStorageTable.GO_RANKED_START, gameType(it)) } +
             goRankedSettlementCodes.map { BackupStorageSlot(BackupStorageTable.GO_RANKED_SETTLEMENT, gameType(it)) } +
-            fangqiLearningCodes.map { BackupStorageSlot(BackupStorageTable.FANGQI_LEARNING, gameType(it)) }
+            fangqiLearningCodes.map { BackupStorageSlot(BackupStorageTable.FANGQI_LEARNING, gameType(it)) } +
+            lanzhouMahjongLearningCodes.map { BackupStorageSlot(BackupStorageTable.LANZHOU_MAHJONG_LEARNING, gameType(it)) }
     }
 }

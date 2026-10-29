@@ -5,12 +5,15 @@ import com.masterofchessstrategy.engine.GameType
 internal enum class BackupStorageTable {
     ACTIVE_GAME, COMPETITION_MATCH, GO_LOCAL_SESSION, GO_RECORD_SOURCE, GO_PROGRESS,
     GO_AI_SESSION, GO_AI_ARCHIVE, GO_AI_PROJECTION, GO_RANKED_START, GO_RANKED_SETTLEMENT,
-    FANGQI_LEARNING,
+    FANGQI_LEARNING, LANZHOU_MAHJONG_LEARNING,
 }
 
 /** A schema-owned row slot; registration cannot introduce or conditionally remove tables. */
 internal data class BackupStorageSlot(val table: BackupStorageTable, val gameType: GameType) {
     init {
+        require(table != BackupStorageTable.LANZHOU_MAHJONG_LEARNING || gameType == GameType.LANZHOU_MAHJONG) {
+            "Lanzhou learning storage belongs only to Lanzhou mahjong"
+        }
         require(table != BackupStorageTable.FANGQI_LEARNING || gameType == GameType.LANZHOU_SQUARE_CHESS) {
             "Fangqi learning storage belongs only to Fangqi"
         }
