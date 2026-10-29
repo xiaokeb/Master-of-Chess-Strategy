@@ -1,5 +1,9 @@
 # 已验证节点与后续集成
 
+## 2026-10-29 兰州独立十课学习
+
+`9cd063960a1386b8d405a21e282da2aa8f10a649`，[v0.1.0-lanzhou-mahjong-learning.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-learning.1)，Release427892179。schema20独立进度、精确推进重试、完整生产备份、旧页面退役及安全返回；69JVM、20设备方法/22调用、普通/150%共28原PNG/24不同画面、1785全树/28路径通过，Lint0错21警告。仅源码、未清默认数据；旧四步保留，菜单/可信资格及整棋种完成仍待。见[验收记录](../games/lanzhou-mahjong/2026-10-29-learning-verification.md)。
+
 ## 2026-10-29 兰州安全宿主
 
 `4f6c0c50dd94e0732c41efec493c41b17a6d11aa`，[v0.1.0-lanzhou-mahjong-host.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-host.1)，Release427825778。后台Native/保存确认/固定Owner退休和真实牌桌流程；35JVM、13设备方法/24调用、普通及150%共12原PNG/8画面、1763全树/20路径通过，Lint0错20警告。仅源码，未清默认数据。正式菜单、教程资格和完整棋种仍待。见[验收记录](../games/lanzhou-mahjong/2026-10-29-host-verification.md)。

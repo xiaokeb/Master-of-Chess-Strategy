@@ -1,5 +1,7 @@
 # 开发进度
 
+2026-10-29：兰州独立十课学习已发布 `9cd063960a1386b8d405a21e282da2aa8f10a649`／tag `v0.1.0-lanzhou-mahjong-learning.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-learning.1) id427892179。schema20空表迁移保留旧四步，独立精确推进/重试、生产备份、页面退役与安全返回通过；正式69JVM、双ABI/APK/Manifest、Lint0错21警告、20设备方法/22调用及28原PNG/24不同画面直接检查通过，1785文件完整导出和28路径显式提交。字体恢复1.0、未清应用数据。下一接可信难度资格与正式菜单；成长/棋谱、完整内容音效、横屏/杀进程/实体设备及强度继续另验，全项目目标保持active。
+
 2026-10-29：兰州安全宿主与牌桌流程已发布 `4f6c0c50dd94e0732c41efec493c41b17a6d11aa`／tag `v0.1.0-lanzhou-mahjong-host.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-host.1) id427825778。正式35JVM、双ABI/APK/Manifest、Lint0错20警告、13设备方法/24调用通过；12原PNG覆盖8个不同画面已核，1763文件完整导出及20路径显式提交，未清默认数据。下一兰州独立十课持久化/备份与资格，再接正式菜单；成长、棋谱、音效/内容、横屏/杀进程/实体设备及AI强度继续另验。全项目目标未完成，不把宿主节点当整棋种交付。
 
 2026-10-26 20:05：象棋完整调用耗时观察已推送 `0b787dd86c00ec4ce2ca29bd82f19d4650b64d88`，tag `v0.1.0-xiangqi-latency-observation.1`，[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-xiangqi-latency-observation.1) id424199962。不可变原始G0记录→严格校验→真实配对样本/nearest-rank p95/精确均值/超过2秒数量；pending和未LF断尾不填数，纯投影另报在途下界。14新测试＋15同源继承共29，1743全树/8路径核验；无Android/Native/模型或生产参数变更，未搜索。

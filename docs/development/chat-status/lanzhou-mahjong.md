@@ -1,5 +1,11 @@
 # 兰州麻将对话状态
 
+## 2026-10-29 独立十课学习已发布
+
+`9cd063960a1386b8d405a21e282da2aa8f10a649`／`v0.1.0-lanzhou-mahjong-learning.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-learning.1) id427892179。schema20、独立十课/内容版本2、生产备份与精确失败重试、页面退役/安全返回；正式69JVM、双ABI/APK/Manifest、Lint0错21警告、20设备方法/22调用、28原PNG/24不同画面直接核验，1785全树/28路径通过，未清默认数据，字体已恢复1.0。见[最终验收](../../games/lanzhou-mahjong/2026-10-29-learning-verification.md)。
+
+旧四步行保留，不作十课资格；方棋/国标未实施schema预留顺延21/22。下一接可信难度资格与正式菜单，不能使用旧宽松Store或未认证通用胜场；成长/棋谱、完整音效内容、真实杀进程/横屏/实体设备及强度仍待。
+
 ## 2026-10-29 安全宿主与实际牌桌流程已发布
 
 `4f6c0c50dd94e0732c41efec493c41b17a6d11aa`／`v0.1.0-lanzhou-mahjong-host.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-host.1) id427825778。正式35JVM、双ABI/APK/Manifest、Lint0错20警告、真实Room/JNI及两字号13方法/24调用、12原PNG/8不同画面均通过；1763全树/20路径核验，未清默认数据，无二进制附件。线程名断言改线程身份后通过，旧失败保留；发布仅删交接文档末尾空行，未重复构建。见[最终验收](../../games/lanzhou-mahjong/2026-10-29-host-verification.md)。
