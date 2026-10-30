@@ -501,7 +501,11 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                 LanzhouFangqiAiEntryNavigationRoute(database, entry, gameWriters, fangqiStorage,
                     onOpen = { navController.navigate(AppDestination.lanzhouFangqiSavedGame(it.sessionId, it.formal)) },
                     onLearning = { navController.navigate(AppDestination.LANZHOU_FANGQI_LEARNING) },
-                    onBack = navController::popBackStack)
+                    onBack = {
+                        statisticsViewModel.loadStatistics()
+                        gameRecordsViewModel.reload()
+                        navController.popBackStack()
+                    })
             }
             composable(AppDestination.LANZHOU_FANGQI_SAVED_GAME, arguments = listOf(
                 navArgument(AppDestination.LANZHOU_FANGQI_SAVED_ID) { type = NavType.StringType },
@@ -509,7 +513,11 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
             )) { entry ->
                 LanzhouFangqiSavedNavigationRoute(database, entry, gameWriters, fangqiStorage,
                     entry.arguments?.getString(AppDestination.LANZHOU_FANGQI_SAVED_ID),
-                    entry.arguments?.getInt(AppDestination.LANZHOU_FANGQI_FORMAL), navController::popBackStack)
+                    entry.arguments?.getInt(AppDestination.LANZHOU_FANGQI_FORMAL), onBack = {
+                        statisticsViewModel.loadStatistics()
+                        gameRecordsViewModel.reload()
+                        navController.popBackStack()
+                    })
             }
             composable(AppDestination.TIGER_GOAT_LOCAL_GAME) { entry ->
                 TigerGoatNavigationRoute(database, entry, gameWriters, navController::popBackStack)

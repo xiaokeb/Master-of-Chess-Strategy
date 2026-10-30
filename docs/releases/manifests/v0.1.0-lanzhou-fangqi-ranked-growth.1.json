@@ -1,0 +1,301 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-lanzhou-fangqi-ranked-growth.1",
+  "candidate": "fqgr2",
+  "baseline_commit": "5a7c971b1762fe553f98ad36ede125ad94e6d861",
+  "frozen_source_files": 1865,
+  "metadata_files": 7,
+  "full_export_files": 1868,
+  "expected_changed_paths": 14,
+  "source_identity_sha256": "13b5b1d2a497a08a7b7e49fa5a0be794cf0bf9f2add3ab15628472b8b3e8744f",
+  "overlays": [
+    {
+      "sha256": "884d8db09d638aa95d326c6830602a1f2f36074e0bb7b240a36cbca54ff13e9d",
+      "original_sha256": "884d8db09d638aa95d326c6830602a1f2f36074e0bb7b240a36cbca54ff13e9d",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/MatchStatisticsRepository.kt"
+    },
+    {
+      "sha256": "fad0da3629cb871ce10f5e9429bfa6347f717656dd5f52e1a7f04ec263bfc4f3",
+      "original_sha256": "fad0da3629cb871ce10f5e9429bfa6347f717656dd5f52e1a7f04ec263bfc4f3",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiQualifiedGrowth.kt"
+    },
+    {
+      "sha256": "d88f821bf492ec83110f2ed5e918d64e0232e13d1416fd3519329c31da6366a9",
+      "original_sha256": "d88f821bf492ec83110f2ed5e918d64e0232e13d1416fd3519329c31da6366a9",
+      "scope": "whole owned file",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/data/RoomMatchStatisticsRepositoryTest.kt"
+    },
+    {
+      "sha256": "9c4a95cc0d66dbf42dbf019f1ea0a16026da5368aeb01593be7edd8d063556e9",
+      "original_sha256": "9c4a95cc0d66dbf42dbf019f1ea0a16026da5368aeb01593be7edd8d063556e9",
+      "scope": "whole owned file",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiQualifiedGrowthTest.kt"
+    },
+    {
+      "sha256": "d41cda7320867c4baf5188471efb31336233c39d2e1499266da5c5f9d8a6aaf5",
+      "original_sha256": "d41cda7320867c4baf5188471efb31336233c39d2e1499266da5c5f9d8a6aaf5",
+      "scope": "whole owned file",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiQualifiedGrowthInstrumentedTest.kt"
+    },
+    {
+      "sha256": "d010da0fa86a1347d4e52119192d689cf33e4bd3abe03b9f2c8a29c30779752c",
+      "original_sha256": "d010da0fa86a1347d4e52119192d689cf33e4bd3abe03b9f2c8a29c30779752c",
+      "scope": "whole owned file",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/FangqiGrowthProductionInstrumentedTest.kt"
+    },
+    {
+      "sha256": "d674f2294222fe3a0c530f22495b8c6bc893cf00427b8621f784fcf340fdee92",
+      "original_sha256": "d674f2294222fe3a0c530f22495b8c6bc893cf00427b8621f784fcf340fdee92",
+      "scope": "whole owned file",
+      "path": "docs/development/fangqi-growth-integration-2026-10-31.md"
+    },
+    {
+      "sha256": "d7de3b2734ce2f3cf560788f6802b83ccaba952b99a068f3e48b70c3f3ef32be",
+      "original_sha256": "9ab18bb96007523800ef38a39c9fc402481284d63b37f78a8bf074a33738a53d",
+      "scope": "Fangqi entry/saved return refresh only; other WIP excluded",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/MasterOfChessStrategyApp.kt"
+    }
+  ],
+  "build": {
+    "lint_warnings": 23,
+    "unique_jvm_tests": 23,
+    "receipt_sha256": "2272233d2e03b51dded696dc0dc247475f0b28895895d221ce02ad7298e8c75e",
+    "final_jvm_tests": 6,
+    "inherited_jvm_tests": 17,
+    "abis": [
+      "arm64-v8a",
+      "x86_64"
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "a38963f116e1de9e3255ac36fb34ecf101293b4f1ddaa1b4c4757ca39bbba5dd",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "3eb4a3c950b165c38fb8ac3590521c0420b27aedf276a171f9911c35774e2dae"
+    },
+    "jvm_evidence_sha256": "2bef974b5dd993c1162f3d22e1775689dc5daea5397e20191901bcacc4a389fd",
+    "lint_errors": 0,
+    "release_manifest_sha256": "2b473cc2bc8854915ceb2e813e9957c52cb931eb8326f332aed30fcd3c02b80d",
+    "evidence": {
+      "final": [
+        {
+          "tests": 6,
+          "sha256": "378241ddbc1496aa4fbe8e8990b3b14b2f77450010adb25491e653297b057bf6",
+          "name": "com.masterofchessstrategy.data.RoomMatchStatisticsRepositoryTest"
+        }
+      ],
+      "inputs": [
+        {
+          "sha256": "fad0da3629cb871ce10f5e9429bfa6347f717656dd5f52e1a7f04ec263bfc4f3",
+          "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiQualifiedGrowth.kt"
+        },
+        {
+          "sha256": "3b8feb7b8b066a105444d031bf1415deaf2bf6a723e069cf69e2ae8db4fb0d95",
+          "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiRankedSnapshotValidator.kt"
+        },
+        {
+          "sha256": "ee3dd5c13cd86a95cb7d98a30c18651f147a02ae97b39d2085c70b245affc4b1",
+          "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiRankedRowMapping.kt"
+        },
+        {
+          "sha256": "78f176967467f286eee3f6ac35824dc1266bf897c33190f8341c866f208f4781",
+          "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiRankedLedger.kt"
+        },
+        {
+          "sha256": "a8a6fc885c95972402850583af8be9f6d7f5bcbc70be03193ede2130261cfde8",
+          "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiSessionAdmission.kt"
+        },
+        {
+          "sha256": "80c085f5edb864eb7a49d2a58099d0f3b8458e457b067771ad4e35ae12aebc6f",
+          "path": "app/src/main/kotlin/com/masterofchessstrategy/progress/PlayerGrowth.kt"
+        },
+        {
+          "sha256": "5baab30182031dcca15c1c6f5c25d4da420e643d6e4891991cfa05328fd96144",
+          "path": "app/src/main/kotlin/com/masterofchessstrategy/progress/PlayerStatisticsViewModel.kt"
+        },
+        {
+          "sha256": "9c4a95cc0d66dbf42dbf019f1ea0a16026da5368aeb01593be7edd8d063556e9",
+          "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiQualifiedGrowthTest.kt"
+        },
+        {
+          "sha256": "2f7312577fe0d0e922cb8af072de0dfaa802fe760e4ed19d7f62b5014507156e",
+          "path": "app/src/test/kotlin/com/masterofchessstrategy/progress/PlayerGrowthTest.kt"
+        },
+        {
+          "sha256": "ae171a3b1478b6fbda8f9040b69072d560eb39522d627696a73b4037d1a19769",
+          "path": "app/src/test/kotlin/com/masterofchessstrategy/progress/PlayerStatisticsViewModelTest.kt"
+        }
+      ],
+      "source_delta_reviewed": true,
+      "note": "Final production delta only statistics load/record exception boundaries; pure growth selection, growth math and statistics VM tests use unchanged inputs. Initial build succeeded; verification guard rejected absent unpublished fifth selector.",
+      "final_executions": 6,
+      "inherited_tests": 17,
+      "shared_data_models_identical": true,
+      "unique_jvm_tests": 23,
+      "inherited": [
+        {
+          "tests": 13,
+          "xml_sha256": "e137bfead2219804e9f300c64ae6a0771ee398f1fdd484f3f7e6608ec677a040",
+          "name": "com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiQualifiedGrowthTest",
+          "origin": "fqgr1"
+        },
+        {
+          "tests": 3,
+          "xml_sha256": "c0ac953e179eebb1433b23c7dadbf912cd7bb8f425254e6aa6a67b74e5e312f2",
+          "name": "com.masterofchessstrategy.progress.PlayerGrowthTest",
+          "origin": "fqgr1"
+        },
+        {
+          "tests": 1,
+          "xml_sha256": "5cf82cb9b71e1c116d2ae06caca5444f1f6bed904f3cdc8b002618d3339618e9",
+          "name": "com.masterofchessstrategy.progress.PlayerStatisticsViewModelTest",
+          "origin": "fqgr1"
+        }
+      ],
+      "candidate": "fqgr2"
+    }
+  },
+  "device": {
+    "production_ui": 4,
+    "restored_font": "1.0",
+    "receipt_sha256": "93b8a528327b97741c9f86ed2dfc024d857fffc5e890553ce2041e445bc871be",
+    "api": "37",
+    "accepted_invocations": 32,
+    "fonts": [
+      "1.0",
+      "1.5"
+    ],
+    "runs": [
+      {
+        "name": "qualified-growth-room",
+        "passed": true,
+        "transport_exit": 0,
+        "log_sha256": "ab4b223f0df2100a2d48711ee1666c5f79f3ed78c034db67b839445fe0971611",
+        "font": "1.0",
+        "expected": 7,
+        "class": "com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiQualifiedGrowthInstrumentedTest"
+      },
+      {
+        "name": "go-ranked-regression",
+        "passed": true,
+        "transport_exit": 0,
+        "log_sha256": "4bd473c45564a57960d63ae72b74aa4db0bbc6e747cb14993272c5df4c02c929",
+        "font": "1.0",
+        "expected": 15,
+        "class": "com.masterofchessstrategy.games.go.data.GoRankedGrowthInstrumentedTest"
+      },
+      {
+        "name": "go-completion-regression",
+        "passed": true,
+        "transport_exit": 0,
+        "log_sha256": "f0da12022908f8237aa617a262dd55e274bea955079b52f95bbb480bf68c1d4e",
+        "font": "1.0",
+        "expected": 6,
+        "class": "com.masterofchessstrategy.games.go.data.GoFormalSessionCompletionInstrumentedTest"
+      },
+      {
+        "name": "growth-production",
+        "passed": true,
+        "transport_exit": 0,
+        "log_sha256": "1de9ba7d9cd74df3c901bdcc32b62d479e4a834801eeb2c55bc1c7499203c223",
+        "font": "1.0",
+        "expected": 2,
+        "class": "com.masterofchessstrategy.ui.FangqiGrowthProductionInstrumentedTest"
+      },
+      {
+        "name": "growth-font1.5",
+        "passed": true,
+        "transport_exit": 0,
+        "log_sha256": "a2a0c57e504dc6da3341ab582f0ef2bec02baa22777eeada17c2ff87d460a7ee",
+        "font": "1.5",
+        "expected": 2,
+        "class": "com.masterofchessstrategy.ui.FangqiGrowthProductionInstrumentedTest"
+      }
+    ],
+    "app_data_cleared": false,
+    "page_size": "16384",
+    "distinct_methods": 30,
+    "fangqi_room_native": 7,
+    "abi": "x86_64",
+    "go_regression": 21
+  },
+  "visual": {
+    "directly_viewed_unique_pngs": 6,
+    "review_sha256": "9b8aa84213ce01d8b6af520bf290e4cf7afd7747b9a0f23c6376b3958c427988",
+    "unique_pngs": 6,
+    "original_pngs": 8,
+    "full_landscape_accepted": false,
+    "images": [
+      {
+        "sha256": "d846d6d48213d7b850d07d4271d693c08eb5567d097389bc323114c427e027d9"
+      },
+      {
+        "sha256": "922be4df0d271c6224f7b617840f5afc6098f4cdd03ffd16391752de8c0e60b7"
+      },
+      {
+        "sha256": "253c67b2bd3773a1c5f5c104fc0d11c953e22d0fe92c7fe12a00e6bd8c62498c"
+      },
+      {
+        "sha256": "253c67b2bd3773a1c5f5c104fc0d11c953e22d0fe92c7fe12a00e6bd8c62498c"
+      },
+      {
+        "sha256": "5626facc46a3cd8724e1e5099ea781ed4597f626c2c56c584c6f58967d8e34ba"
+      },
+      {
+        "sha256": "ec856d91ec3fc369d8048b227fcd86893de6a23659bb09f2f3bf23520c277843"
+      },
+      {
+        "sha256": "a848fcc287138cba973b474010918f1569efeaf7f7262ff3c315ecf30d24726c"
+      },
+      {
+        "sha256": "a848fcc287138cba973b474010918f1569efeaf7f7262ff3c315ecf30d24726c"
+      }
+    ],
+    "profile_lower_per_game_row_captured": false
+  },
+  "retained_history": [
+    "fqgr1 full build and actual4 suites/21 JVM passed; verification guard rejected absent unpublished fifth selector; no fabricated fifth suite",
+    "Read-only review found malformed BLOB exception and checked refresh exception boundaries; fqgr2 load classification and record runtime wrapping verified in final6 JVM and real Room/Go/UI",
+    "Private inherited-proof script initially omitted data/ in existing Admission source path; stopped before device actions, corrected script only and verified17 inherited tests"
+  ],
+  "metadata": [
+    {
+      "sha256": "1c9e1e317726187945bbeb1888ab7f8c1938ddc04988efd1bc21a9c8a00c08e9",
+      "path": "docs/games/lanzhou-fangqi/2026-10-31-qualified-growth-verification.md"
+    },
+    {
+      "sha256": "222da1f6041db852b63751ba4e043cdfa2542dfe503f7bd33dfb4e2b9e071aa0",
+      "path": "docs/games/lanzhou-fangqi/player-guide.md"
+    },
+    {
+      "sha256": "5cb33aef9e65d0ccea9b3f6c46674ff47a751ee168ae559d49e38fe376ba3e0d",
+      "path": "docs/games/lanzhou-fangqi/README.md"
+    },
+    {
+      "sha256": "0c8f48e76d23a874025268d3b8d97588c1025c1b92da58e6631f575bbca2a1ea",
+      "path": "docs/games/lanzhou-fangqi/feature-checklist.md"
+    },
+    {
+      "sha256": "3e60b3d21e609eccd2cf6eec6477db044f18f2f797eaee44221e849ebe488c58",
+      "path": "docs/development/fangqi-growth-integration-2026-10-31.md"
+    },
+    {
+      "sha256": "4c4565dc36e80fff599810b95259a9fbe3617761e561a10fa448d7bc2fedaa87",
+      "path": "docs/releases/v0.1.0-lanzhou-fangqi-ranked-growth.1.md"
+    }
+  ],
+  "source_only": true,
+  "release_assets": [],
+  "new_third_party_assets": false,
+  "room_schema_version": 21,
+  "trusted_growth_read_accepted": true,
+  "home_profile_refresh_accepted": true,
+  "second_reward_ledger_created": false,
+  "physical_device_accepted": false,
+  "ai_strength_accepted": false,
+  "full_game_accepted": false,
+  "remaining": [
+    "Record browsing and replay",
+    "Difficulty caption, hints/resign/full controls, error presentation",
+    "Full content, automatic play, sound, strength, full landscape and physical devices"
+  ]
+}

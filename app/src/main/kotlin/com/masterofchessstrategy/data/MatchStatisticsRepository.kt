@@ -3,7 +3,8 @@ package com.masterofchessstrategy.data
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
-import com.masterofchessstrategy.games.go.data.qualifiedMatchOutcomeRows
+import com.masterofchessstrategy.games.lanzhou_fangqi.data.qualifiedPlayerGrowthRows
+import java.io.IOException
 
 internal data class MatchOutcome(
     val matchId: String,
@@ -93,21 +94,33 @@ internal interface MatchStatisticsRepository {
 internal class RoomMatchStatisticsRepository(
     private val dao: MatchOutcomeDao,
     private val readRows: suspend () -> List<MatchOutcomeEntity> = { dao.listAll() },
-    private val rejectDirectGoWrites: Boolean = false,
+    private val rejectDirectFormalWrites: Boolean = false,
 ) : MatchStatisticsRepository {
     constructor(database: MocsDatabase) : this(database.matchOutcomeDao(),
-        { database.qualifiedMatchOutcomeRows() }, true)
+        { database.qualifiedPlayerGrowthRows() }, true)
 
     override suspend fun load(): LoadMatchStatisticsResult =
-        decodeStatistics(readRows())?.let(LoadMatchStatisticsResult::Loaded)
-            ?: LoadMatchStatisticsResult.Incompatible
+        try {
+            decodeStatistics(readRows())?.let(LoadMatchStatisticsResult::Loaded)
+                ?: LoadMatchStatisticsResult.Incompatible
+        } catch (_: IOException) {
+            LoadMatchStatisticsResult.Incompatible
+        } catch (_: IllegalArgumentException) {
+            // Room history converters can reject malformed BLOB bounds before domain admission.
+            LoadMatchStatisticsResult.Incompatible
+        }
 
     override suspend fun record(outcome: MatchOutcome): RecordMatchOutcomeResult {
-        require(!rejectDirectGoWrites || outcome.gameType != GameType.GO) {
-            "Go growth must be committed with its formal creation and terminal source"
+        require(!rejectDirectFormalWrites || (outcome.gameType != GameType.GO && outcome.gameType != GameType.LANZHOU_SQUARE_CHESS)) {
+            "Formal growth must be committed with its creation and terminal source"
         }
         val inserted = dao.insert(outcome.toMatchOutcomeEntity()) != INSERT_IGNORED
-        val statistics = checkNotNull(decodeStatistics(readRows())) {
+        val rows = try { readRows() } catch (failure: IOException) {
+            // record() has always reported a failed statistics refresh as a runtime failure.
+            // Keep the durable, idempotent Outcome so a retry cannot award it twice.
+            throw IllegalStateException("Match outcome source is incompatible", failure)
+        }
+        val statistics = checkNotNull(decodeStatistics(rows)) {
             "Match outcome ledger contains incompatible data"
         }
         return RecordMatchOutcomeResult(

@@ -5,4 +5,5 @@
 - [操作说明](player-guide.md)：教程、正式人机准入、续局和保存重试。
 - [功能与验收清单](feature-checklist.md)：逐项已验范围与缺口。
 - [正式入口与进程恢复验收](2026-10-31-formal-entry-verification.md)：本节点证据及限制。
+- [可信成长读取验收](2026-10-31-qualified-growth-verification.md)：排除旧无来源结果，结算后刷新首页/个人中心。
 - [正式存储与备份验收](2026-10-30-ranked-storage-verification.md)：来源、首次结算与兼容边界。
