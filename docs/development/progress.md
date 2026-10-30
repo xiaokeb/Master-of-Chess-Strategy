@@ -1,5 +1,7 @@
 # 开发进度
 
+2026-10-30：方棋正式来源与完整备份已发布 45931de68b364f63d91ba658a370571e5781b898／tag v0.1.0-lanzhou-fangqi-ranked-storage.1／[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-fangqi-ranked-storage.1) id429039786。schema21、正式创建/检查点CAS/首次终局/删除标记和完整Native伴随备份已接生产，旧中文棋谱ID按严格UTF-8保留。250不同JVM（30最终＋220同源继承）、29设备方法/31接受调用（5最终备份＋26未受影响前置/界面）、18PNG/14独特画面直接检查通过；最终双ABI/APK/Manifest/Lint0错22警告。视觉来自fqrk2未改变的UI源码及先前APK，未清应用数据，字体1.0。1841文件完整导出、53路径显式提交，其他WIP未混入。下一按依赖接方棋正式人机入口和保留VM确认链路；国标Room桥仍预留schema22。成长、完整内容、音效/提示、AI强度、完整横屏/正式局杀进程及实体设备另验，全项目目标保持active。象棋旧评测与其他棋种WIP保留，公共文件/构建/ADB/Git继续统筹串行。
+
 2026-10-29：兰州正式首页/十课/简单新局/严格续局已发布 `3bf420e1fa0f4db339d385720f56420d83055add`／tag `v0.1.0-lanzhou-mahjong-entry.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-entry.1) id427946886。新建与重开重读同DB资格，拒绝保留原局；87项同源JVM通过证据、双ABI/APK/Manifest及最终Lint0错22警告、18设备方法/21已验调用（15同源继承+6最终双字号导航）、26原PNG/18不同画面直接核验通过，1802全树/27路径显式提交，其他棋种导航WIP未混入。未清默认数据，字体1.0。可信胜场与更高难度、成长/棋谱、完整内容音效、杀进程/全横屏/实体设备及AI强度仍待，完整目标保持active。
 
 2026-10-29：兰州独立十课学习已发布 `9cd063960a1386b8d405a21e282da2aa8f10a649`／tag `v0.1.0-lanzhou-mahjong-learning.1`／[源码Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-mahjong-learning.1) id427892179。schema20空表迁移保留旧四步，独立精确推进/重试、生产备份、页面退役与安全返回通过；正式69JVM、双ABI/APK/Manifest、Lint0错21警告、20设备方法/22调用及28原PNG/24不同画面直接检查通过，1785文件完整导出和28路径显式提交。字体恢复1.0、未清应用数据。下一接可信难度资格与正式菜单；成长/棋谱、完整内容音效、横屏/杀进程/实体设备及强度继续另验，全项目目标保持active。

@@ -1,5 +1,7 @@
 # 兰州方棋对话状态
 
+2026-10-30 发布身份：45931de68b364f63d91ba658a370571e5781b898／tag v0.1.0-lanzhou-fangqi-ranked-storage.1／[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-fangqi-ranked-storage.1) id429039786。schema21、正式创建/检查点CAS/首次终局/删除标记和完整Native伴随备份已接生产，旧中文棋谱ID按严格UTF-8保留。250不同JVM（30最终＋220同源继承）、29设备方法/31接受调用（5最终备份＋26未受影响前置/界面）、18PNG/14独特画面直接检查通过；最终双ABI/APK/Manifest/Lint0错22警告。视觉来自fqrk2未改变的UI源码及先前APK，未清应用数据，字体1.0。1841文件完整导出、53路径显式提交，其他WIP未混入。下一按依赖接方棋正式人机入口和保留VM确认链路；国标Room桥仍预留schema22。成长、完整内容、音效/提示、AI强度、完整横屏/正式局杀进程及实体设备另验，全项目目标保持active。象棋旧评测与其他棋种WIP保留，公共文件/构建/ADB/Git继续统筹串行。本条优先于下方提交前快照。
+
 2026-10-30 正式来源/备份节点验收通过，待串行提交：schema21、正式创建/检查点CAS/首次终局/显式删除、完整Native聚合校验及生产备份工厂已接。最终fqrk3补旧中文棋谱ID的UTF-8兼容，250项不同JVM（30最终＋220源码一致继承）、29个不同设备方法/31次接受调用（5最终＋26未受影响来源继承）、18PNG/14独特画面直接检查通过，Lint0错22警告、双ABI/APK和Release Manifest通过，未清应用数据。截图来自先前源码一致UI，不冒充最终APK新运行。详见[正式存储验收](../../games/lanzhou-fangqi/2026-10-30-ranked-storage-verification.md)。旧无来源事实（含合法format1）不授资格；残余正式来源缺伴随仍拒绝。下一接正式人机入口和保留VM的确认链路，成长/音效/完整内容/棋力与实体设备另验。以下“尚未接”描述仅为历史证据，不覆盖本条。
 
 2026-10-30 前置证据更新（未发布）：fqrs1真实KSP/schema21、双ABI/APK/Release Manifest及Lint0错22警告通过；70定向JVM加独立Registry23共93项通过，API37/x86_64/16KiB模拟器6项迁移/FK/BLOB/旧写保护/缺适配器备份保留通过，未清应用数据。原70项XML另存，补跑配置失败日志保留。完整聚合验证、正式创建/终局/删除事务和备份适配器尚未接，当前表有行即阻断导出/恢复，不授正式资格；本节点不提前提交发布。见[证据与下一依赖](../../games/lanzhou-fangqi/2026-10-30-ranked-schema-verification.md)。
