@@ -61,7 +61,7 @@ internal fun FangqiGameRoute(model: FangqiGameViewModel, onBack: () -> Unit) {
                 }
                 LanzhouFangqiScreen(session, onBack = leave, modifier = Modifier.weight(1f),
                     aiDifficulty = page.difficulty, interactionOverride = interaction, aiManagedExternally = true,
-                    undoAllowed = page.undoAllowed)
+                    undoAllowed = page.undoAllowed, restartAllowed = page.restartAllowed)
             }
         } else if (!page.leaving) {
             Column(Modifier.align(Alignment.Center).padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

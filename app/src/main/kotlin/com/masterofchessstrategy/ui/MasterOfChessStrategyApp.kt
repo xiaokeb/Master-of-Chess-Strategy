@@ -430,6 +430,10 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                             { navController.navigate(AppDestination.LANZHOU_FANGQI_GAME) },
                         ),
                         TraditionalGameMenuEntry(
+                            "fangqi_ai", "方棋人机对弈", LANZHOU_FANGQI_AI_TAG,
+                            { navController.navigate(AppDestination.LANZHOU_FANGQI_AI_ENTRY) },
+                        ),
+                        TraditionalGameMenuEntry(
                             "fangqi_learning", stringResource(R.string.lanzhou_fangqi_learning_entry), LANZHOU_FANGQI_LEARNING_TAG,
                             { navController.navigate(AppDestination.LANZHOU_FANGQI_LEARNING) },
                             TraditionalMenuButtonStyle.OUTLINED,
@@ -492,6 +496,20 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
             composable(AppDestination.LANZHOU_FANGQI_LEARNING) { entry ->
                 LanzhouFangqiLearningNavigationRoute(database, entry, gameWriters, fangqiStorage,
                     navController::popBackStack)
+            }
+            composable(AppDestination.LANZHOU_FANGQI_AI_ENTRY) { entry ->
+                LanzhouFangqiAiEntryNavigationRoute(database, entry, gameWriters, fangqiStorage,
+                    onOpen = { navController.navigate(AppDestination.lanzhouFangqiSavedGame(it.sessionId, it.formal)) },
+                    onLearning = { navController.navigate(AppDestination.LANZHOU_FANGQI_LEARNING) },
+                    onBack = navController::popBackStack)
+            }
+            composable(AppDestination.LANZHOU_FANGQI_SAVED_GAME, arguments = listOf(
+                navArgument(AppDestination.LANZHOU_FANGQI_SAVED_ID) { type = NavType.StringType },
+                navArgument(AppDestination.LANZHOU_FANGQI_FORMAL) { type = NavType.IntType },
+            )) { entry ->
+                LanzhouFangqiSavedNavigationRoute(database, entry, gameWriters, fangqiStorage,
+                    entry.arguments?.getString(AppDestination.LANZHOU_FANGQI_SAVED_ID),
+                    entry.arguments?.getInt(AppDestination.LANZHOU_FANGQI_FORMAL), navController::popBackStack)
             }
             composable(AppDestination.TIGER_GOAT_LOCAL_GAME) { entry ->
                 TigerGoatNavigationRoute(database, entry, gameWriters, navController::popBackStack)

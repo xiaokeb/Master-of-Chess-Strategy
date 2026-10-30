@@ -1,0 +1,644 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-lanzhou-fangqi-formal-entry.1",
+  "candidate": "fqai3",
+  "baseline_commit": "b088cfb578bee6cea828ccde554e1d3d6c076d6c",
+  "frozen_source_files": 1854,
+  "metadata_files": 7,
+  "full_export_files": 1860,
+  "expected_changed_paths": 32,
+  "source_identity_sha256": "68bdf0afc13ec32843a5c09104652bb6d726bf9b7566b3d3dd680f120babc33e",
+  "overlays": [
+    {
+      "sha256": "71d6da69ffb323eb6cec45bb4377230b355244f0c14ab354b36a96386f74739a",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiAiEntryRepository.kt",
+      "original_sha256": "71d6da69ffb323eb6cec45bb4377230b355244f0c14ab354b36a96386f74739a"
+    },
+    {
+      "sha256": "b74a511bb573497274b9a2cdcb3bd80ce5e3d5d849f2f11a35b5db258ab19390",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiAiEntryViewModel.kt",
+      "original_sha256": "b74a511bb573497274b9a2cdcb3bd80ce5e3d5d849f2f11a35b5db258ab19390"
+    },
+    {
+      "sha256": "acaf82f9cd6b37888e4d94b4cf5970443262fe8d41a4a1810bcd6d1d3775fabf",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiAiEntryScreen.kt",
+      "original_sha256": "acaf82f9cd6b37888e4d94b4cf5970443262fe8d41a4a1810bcd6d1d3775fabf"
+    },
+    {
+      "sha256": "207eb918cb86ccbfe0db475b26ec467c94b923844e52ca3a16dd936c5cb38839",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/RoomFangqiRankedRepository.kt",
+      "original_sha256": "207eb918cb86ccbfe0db475b26ec467c94b923844e52ca3a16dd936c5cb38839"
+    },
+    {
+      "sha256": "696eb2d886ab64e92df1c56b9a425ac36c32cdfe9441cd8e262da2ae23867837",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/RankedFangqiSessionStore.kt",
+      "original_sha256": "696eb2d886ab64e92df1c56b9a425ac36c32cdfe9441cd8e262da2ae23867837"
+    },
+    {
+      "sha256": "d521531c07338fe4398ed556d7eb9d88468be0043dfbfbd7b6981537133fce31",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiLocalStorage.kt",
+      "original_sha256": "d521531c07338fe4398ed556d7eb9d88468be0043dfbfbd7b6981537133fce31"
+    },
+    {
+      "sha256": "356a6e48b848c2ca74b153b842f36623f0d7b0e94da3c57160c0727fe03305a5",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiGameViewModel.kt",
+      "original_sha256": "356a6e48b848c2ca74b153b842f36623f0d7b0e94da3c57160c0727fe03305a5"
+    },
+    {
+      "sha256": "a0b616edd583fd0422f9dc74c09ef45b5b687fe6172b4fdf1c4c2ee573bcd23f",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiGameRoute.kt",
+      "original_sha256": "a0b616edd583fd0422f9dc74c09ef45b5b687fe6172b4fdf1c4c2ee573bcd23f"
+    },
+    {
+      "sha256": "1000ebd2acc77f7ee3cd15fb1b2436f6b096f9701a86754aad649e4ccb61b062",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/LanzhouFangqiInteraction.kt",
+      "original_sha256": "1000ebd2acc77f7ee3cd15fb1b2436f6b096f9701a86754aad649e4ccb61b062"
+    },
+    {
+      "sha256": "0d5dd838c581233a39a4e41665c41965fc88cfc150729d83bce5a235dfa34cf5",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/LanzhouFangqiScreen.kt",
+      "original_sha256": "0d5dd838c581233a39a4e41665c41965fc88cfc150729d83bce5a235dfa34cf5"
+    },
+    {
+      "sha256": "e17bccf6b1af742494544838a55734417b2166b89b378f624a04f18416a8c9e5",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/LanzhouFangqiRoute.kt",
+      "original_sha256": "e17bccf6b1af742494544838a55734417b2166b89b378f624a04f18416a8c9e5"
+    },
+    {
+      "sha256": "c17d25e04d0791fab5db79c632421f3dfa3e22b6e6ca370b7f66e1d1580b1034",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/LanzhouFangqiAiNavigationRoute.kt",
+      "original_sha256": "c17d25e04d0791fab5db79c632421f3dfa3e22b6e6ca370b7f66e1d1580b1034"
+    },
+    {
+      "sha256": "ca33012438cf3dd540f3983a7e13d8f85472262920be6d8e930dbc9f4c85702d",
+      "scope": "whole owned file",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/TraditionalGameMenuEntry.kt",
+      "original_sha256": "ca33012438cf3dd540f3983a7e13d8f85472262920be6d8e930dbc9f4c85702d"
+    },
+    {
+      "sha256": "759565a90917f7e0d2dc84f4c9fe4f29765e822b590c5c2ebefa43b2be70f826",
+      "scope": "whole owned file",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiAiEntryViewModelTest.kt",
+      "original_sha256": "759565a90917f7e0d2dc84f4c9fe4f29765e822b590c5c2ebefa43b2be70f826"
+    },
+    {
+      "sha256": "d9e803b32862c18b86ab5aba152252779d374698a2198b4dd8867e7fae334816",
+      "scope": "whole owned file",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiSavedNavigationTest.kt",
+      "original_sha256": "d9e803b32862c18b86ab5aba152252779d374698a2198b4dd8867e7fae334816"
+    },
+    {
+      "sha256": "ac6eb09213538bae279d33f4719d74326240c31daba64330335906b05ec15cac",
+      "scope": "whole owned file",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiGameViewModelTest.kt",
+      "original_sha256": "ac6eb09213538bae279d33f4719d74326240c31daba64330335906b05ec15cac"
+    },
+    {
+      "sha256": "7f8f090509aede6bd2f049fe8c6a020d4111dc706fd5d5ce177b3c5e30ff6be3",
+      "scope": "whole owned file",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/RankedFangqiSessionStoreTest.kt",
+      "original_sha256": "7f8f090509aede6bd2f049fe8c6a020d4111dc706fd5d5ce177b3c5e30ff6be3"
+    },
+    {
+      "sha256": "2b3acf5a2a20e39148fa9f7b4041a16c12d065bec0545977a86afc044dcac6b9",
+      "scope": "whole owned file",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiLocalStorageTest.kt",
+      "original_sha256": "2b3acf5a2a20e39148fa9f7b4041a16c12d065bec0545977a86afc044dcac6b9"
+    },
+    {
+      "sha256": "fa0ce01b7613dd2cfeee149df0adea9a6df31001bba2c90fc633300b5043577c",
+      "scope": "whole owned file",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/data/FangqiAiEntryRepositoryInstrumentedTest.kt",
+      "original_sha256": "fa0ce01b7613dd2cfeee149df0adea9a6df31001bba2c90fc633300b5043577c"
+    },
+    {
+      "sha256": "111b443dbcbf43fdeb9e97084616c4b3de6ebfb6218e8ff2b1ba3f24aeabe769",
+      "scope": "whole owned file",
+      "path": "docs/development/fangqi-formal-entry-integration-2026-10-30.md",
+      "original_sha256": "111b443dbcbf43fdeb9e97084616c4b3de6ebfb6218e8ff2b1ba3f24aeabe769"
+    },
+    {
+      "sha256": "7224765224ac1b7fd61ceec385773054fbdfdeb40fee64d454ddc805dde1aa35",
+      "scope": "Fangqi entry/saved destinations and canonical saved-ID helper only",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/navigation/AppNavigationModel.kt",
+      "original_sha256": "56644ed984eb416cba2c7548e1b9f51907cb728ddf8baf3a07dd149fc2f554a7"
+    },
+    {
+      "sha256": "d8a4f9852c5e802c4a4faa1e2bc0e118fd5759585f0a47162483de264702d959",
+      "scope": "Fangqi AI menu entry and installed entry/saved routes only; other WIP excluded",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/MasterOfChessStrategyApp.kt",
+      "original_sha256": "fa69ea1e40e549100a9766c8dd732fcff8c70280a756a8e686b113128a22e433"
+    },
+    {
+      "path": "app/src/debug/kotlin/com/masterofchessstrategy/ui/FangqiFormalProcessCheckActivity.kt",
+      "sha256": "18c56fd411e51c5ac39874e3b5eb3c8a23fccd414723d421489f6b4e005cbc19",
+      "scope": "whole owned debug/test process file",
+      "original_sha256": "18c56fd411e51c5ac39874e3b5eb3c8a23fccd414723d421489f6b4e005cbc19"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/FangqiFormalProcessCheckpointInstrumentedTest.kt",
+      "sha256": "767f05ac7ac6143e6a19cecd6c0445eb8334d7b205840ed5457c6be2c3da9576",
+      "scope": "whole owned debug/test process file",
+      "original_sha256": "767f05ac7ac6143e6a19cecd6c0445eb8334d7b205840ed5457c6be2c3da9576"
+    },
+    {
+      "path": "app/src/debug/AndroidManifest.xml",
+      "sha256": "0cddd77f333b68745c975a010f7df7f4dba07005e914b1a3077eb6baec4ba39d",
+      "scope": "only separate Fangqi QA process/task activity; other WIP excluded",
+      "original_sha256": "fc46c58789c317c7b993a0355f7d88b9ab01dc2adfef814254af340d08b5feea"
+    },
+    {
+      "sha256": "5d6a708630b52ea11e2e62e8920b3cb9de8d6dd637ee09f616b276c71084fa4e",
+      "original_sha256": "5d6a708630b52ea11e2e62e8920b3cb9de8d6dd637ee09f616b276c71084fa4e",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/FangqiAiProductionInstrumentedTest.kt",
+      "scope": "whole owned file"
+    }
+  ],
+  "build": {
+    "lint_warnings": 23,
+    "jvm_evidence_sha256": "b3dc3b1cc9b78434c54e7f40eac9e0700e9b8499036d3c87d9fbe283024195c8",
+    "unique_jvm_tests": 81,
+    "inherited_jvm_tests": 67,
+    "abis": [
+      "arm64-v8a",
+      "x86_64"
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "220229bcb6d89a2196313f65a78164328d39555043f94fd3708f9856c776138c",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "0bc4f4a8e697290adfe37520c9ce18827dbd0fdc5a26bde50136b0279eb4da24"
+    },
+    "release_manifest_sha256": "2b473cc2bc8854915ceb2e813e9957c52cb931eb8326f332aed30fcd3c02b80d",
+    "final_jvm_tests": 14,
+    "lint_errors": 0,
+    "suites": {
+      "inherited": [
+        {
+          "xml_sha256": "aea6f41477841f536e951da98262c74c1652a086cc40530ef755c924d2349415",
+          "origin": "fqai1",
+          "tests": 7,
+          "name": "com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiLocalStorageTest"
+        },
+        {
+          "xml_sha256": "81b8c0f346eb38fbda1a692cdbf5c3ce1b2851f5e4d59bc0efe9eef16c698137",
+          "origin": "fqai1",
+          "tests": 9,
+          "name": "com.masterofchessstrategy.games.lanzhou_fangqi.data.RankedFangqiSessionStoreTest"
+        },
+        {
+          "xml_sha256": "bfbb92693283d72c954b18c07de632450d432031d225b1a172d770ef93f71fbe",
+          "origin": "fqai1",
+          "tests": 3,
+          "name": "com.masterofchessstrategy.games.lanzhou_fangqi.FangqiSavedNavigationTest"
+        },
+        {
+          "xml_sha256": "47478cbd1da1867437494f1a0e4a619a969283dbd586b457fcb5ba49225fe124",
+          "origin": "fqai1",
+          "tests": 7,
+          "name": "com.masterofchessstrategy.games.lanzhou_fangqi.LanzhouFangqiInteractionTest"
+        },
+        {
+          "xml_sha256": "fc8ba0acdbf670714ee5fce7eea75e47ca0d17935acce5f1492e2577a7c01dd9",
+          "origin": "fqai2",
+          "tests": 22,
+          "name": "com.masterofchessstrategy.games.lanzhou_fangqi.FangqiGameViewModelTest"
+        },
+        {
+          "xml_sha256": "85fe0e6033a19b9f67d71d8059f0c0575820a883c0a6c9b0cc24f6f613f5375e",
+          "origin": "fqai2",
+          "tests": 19,
+          "name": "com.masterofchessstrategy.games.lanzhou_fangqi.FangqiLearningViewModelTest"
+        }
+      ],
+      "shared_helper_source_identical": true,
+      "final_executions": 14,
+      "note": "fqai2->3 production delta only EntryVM completion flag; inherited suites do not use EntryVM. fqai1 inherited storage/replay/interaction/route-codec inputs and shared helper bodies unchanged.",
+      "at": "2026-10-31T02:24:18.6297294+08:00",
+      "unique_jvm_tests": 81,
+      "inherited_tests": 67,
+      "candidate": "fqai3",
+      "source_delta_reviewed": true,
+      "final": {
+        "sha256": "c4b992e3ed16bacce833464be40638742e9107a36cd43a6239bfc7261a42a972",
+        "name": "com.masterofchessstrategy.games.lanzhou_fangqi.FangqiAiEntryViewModelTest",
+        "tests": 14
+      }
+    },
+    "receipt_sha256": "08573a652ac2b38b7037bdab361c42ae17f4b21bd3c84c2eb1c911382da14a2a"
+  },
+  "device": {
+    "emulator_restarted": false,
+    "exact_qa_process_deaths": 5,
+    "exact_qa_sigkills": [
+      {
+        "native_sha256": "faefb9c2063605eab735303ea1f57863cedfdf8072e7e86d55d708974239fb1f",
+        "at": "2026-10-31T02:23:25.3271651+08:00",
+        "sigkill": 9,
+        "pid_and_process_absent": true,
+        "database": "fangqi-formal-process-qa-7b43c816-4e99-4899-b51a-2f46c15842c7.db",
+        "pid": "8623",
+        "label": "ongoing-first-death",
+        "process": "com.masterofchessstrategy:fangqi_formal_qa"
+      },
+      {
+        "native_sha256": "faefb9c2063605eab735303ea1f57863cedfdf8072e7e86d55d708974239fb1f",
+        "at": "2026-10-31T02:23:36.3783611+08:00",
+        "sigkill": 9,
+        "pid_and_process_absent": true,
+        "database": "fangqi-formal-process-qa-7b43c816-4e99-4899-b51a-2f46c15842c7.db",
+        "pid": "8922",
+        "label": "ongoing-second-death",
+        "process": "com.masterofchessstrategy:fangqi_formal_qa"
+      },
+      {
+        "native_sha256": "3315682d4bd316752faf16dc90aab00c2b036c3b8a722eea8029ed60e9110ab2",
+        "at": "2026-10-31T02:23:52.40232+08:00",
+        "sigkill": 9,
+        "pid_and_process_absent": true,
+        "database": "fangqi-formal-process-qa-21677663-a39a-4a23-ae01-0c54aa44d3e6.db",
+        "pid": "9238",
+        "label": "terminal-first-death",
+        "process": "com.masterofchessstrategy:fangqi_formal_qa"
+      },
+      {
+        "native_sha256": "3315682d4bd316752faf16dc90aab00c2b036c3b8a722eea8029ed60e9110ab2",
+        "at": "2026-10-31T02:24:03.7639552+08:00",
+        "sigkill": 9,
+        "pid_and_process_absent": true,
+        "database": "fangqi-formal-process-qa-21677663-a39a-4a23-ae01-0c54aa44d3e6.db",
+        "pid": "9522",
+        "label": "terminal-second-death",
+        "process": "com.masterofchessstrategy:fangqi_formal_qa"
+      },
+      {
+        "native_sha256": "3315682d4bd316752faf16dc90aab00c2b036c3b8a722eea8029ed60e9110ab2",
+        "at": "2026-10-31T02:24:15.230063+08:00",
+        "sigkill": 9,
+        "pid_and_process_absent": true,
+        "database": "fangqi-formal-process-qa-21677663-a39a-4a23-ae01-0c54aa44d3e6.db",
+        "pid": "9754",
+        "label": "terminal-third-death",
+        "process": "com.masterofchessstrategy:fangqi_formal_qa"
+      }
+    ],
+    "fonts": [
+      "1.0",
+      "1.5"
+    ],
+    "general_runs": [
+      {
+        "class": "com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiAiEntryRepositoryInstrumentedTest",
+        "name": "entry-room",
+        "expected": 6,
+        "passed": true,
+        "font": "1.0",
+        "transport_exit": 0,
+        "log_sha256": "2ede60484bf52d7cd1745b7cf8bffab8cbc943c6ee606b1635e17f4b9e204787"
+      },
+      {
+        "class": "com.masterofchessstrategy.ui.FangqiAiProductionInstrumentedTest",
+        "name": "formal-production",
+        "expected": 6,
+        "passed": true,
+        "font": "1.0",
+        "transport_exit": 0,
+        "log_sha256": "966a75cf30a45e9f6925a0b856820f403d6474431005efd45482522e9a8e3eab"
+      },
+      {
+        "class": "com.masterofchessstrategy.ui.FangqiProductionEntryInstrumentedTest",
+        "name": "ordinary-regression",
+        "expected": 4,
+        "passed": true,
+        "font": "1.0",
+        "transport_exit": 0,
+        "log_sha256": "43910df99ab9eb8f4248f1d609249cda5baf67e6c2e4b9144e63657e35120255"
+      },
+      {
+        "class": "com.masterofchessstrategy.ui.FangqiAiProductionInstrumentedTest#realSixLessonGateCreatesFormalEasyAndKeepsActualAiTurnAcrossRecreationAndReentry,com.masterofchessstrategy.ui.FangqiAiProductionInstrumentedTest#realFinalCaptureWaitsForFirstSettlementAndExplicitNextCreationKeepsOldProvenance,com.masterofchessstrategy.ui.FangqiAiProductionInstrumentedTest#recreationAndRefreshDuringFailedRealCreationKeepTheSameRetryRequestUsable",
+        "name": "formal-font1.5",
+        "expected": 3,
+        "passed": true,
+        "font": "1.5",
+        "transport_exit": 0,
+        "log_sha256": "a1934b52a38262e4c3b387d2fab9b4ab97b978c48a7940944926fee8d566f8f2"
+      }
+    ],
+    "api": "37",
+    "inspector_runs": [
+      {
+        "log_sha256": "1721a9b24383763c611cdb8f849231d9351806da13240d7ad13ca8bc4d634f07",
+        "phase": "seed-ongoing",
+        "log_path": "E:\\SourceCode\\Projects\\AI-project\\MasterofChessStrategy\\.build\\fqai3\\formal-process-c2e4a11e91124b04a64946f647a7bef9\\ongoing-seed-ongoing-instrumentation.log",
+        "database": "fangqi-formal-process-qa-7b43c816-4e99-4899-b51a-2f46c15842c7.db",
+        "passed": true,
+        "class": "com.masterofchessstrategy.ui.FangqiFormalProcessCheckpointInstrumentedTest",
+        "methods": 1,
+        "kind": "ongoing"
+      },
+      {
+        "log_sha256": "d434e8ef6a13e2613697041f350860af8b7636a031410d5a38de21dc3052dd2c",
+        "phase": "after-kill",
+        "log_path": "E:\\SourceCode\\Projects\\AI-project\\MasterofChessStrategy\\.build\\fqai3\\formal-process-c2e4a11e91124b04a64946f647a7bef9\\ongoing-after-kill-instrumentation.log",
+        "database": "fangqi-formal-process-qa-7b43c816-4e99-4899-b51a-2f46c15842c7.db",
+        "passed": true,
+        "class": "com.masterofchessstrategy.ui.FangqiFormalProcessCheckpointInstrumentedTest",
+        "methods": 1,
+        "kind": "ongoing"
+      },
+      {
+        "log_sha256": "f9b68a05f27de2be28c3486a8098502c0393bd63831ba7fd8f147b56c143e3c0",
+        "phase": "after-resume",
+        "log_path": "E:\\SourceCode\\Projects\\AI-project\\MasterofChessStrategy\\.build\\fqai3\\formal-process-c2e4a11e91124b04a64946f647a7bef9\\ongoing-after-resume-instrumentation.log",
+        "database": "fangqi-formal-process-qa-7b43c816-4e99-4899-b51a-2f46c15842c7.db",
+        "passed": true,
+        "class": "com.masterofchessstrategy.ui.FangqiFormalProcessCheckpointInstrumentedTest",
+        "methods": 1,
+        "kind": "ongoing"
+      },
+      {
+        "log_sha256": "0a2b9f2c72623fbe227a4a1ad061f7ddda3ffd3f0e06a4a468d58e7ec7516fdb",
+        "phase": "cleanup",
+        "log_path": "E:\\SourceCode\\Projects\\AI-project\\MasterofChessStrategy\\.build\\fqai3\\formal-process-c2e4a11e91124b04a64946f647a7bef9\\ongoing-cleanup-instrumentation.log",
+        "database": "fangqi-formal-process-qa-7b43c816-4e99-4899-b51a-2f46c15842c7.db",
+        "passed": true,
+        "class": "com.masterofchessstrategy.ui.FangqiFormalProcessCheckpointInstrumentedTest",
+        "methods": 1,
+        "kind": "ongoing"
+      },
+      {
+        "log_sha256": "f47fe65487755483924c4e364b6a36422cfcc1ac94a4751c3ad1de08362a7911",
+        "phase": "seed-terminal",
+        "log_path": "E:\\SourceCode\\Projects\\AI-project\\MasterofChessStrategy\\.build\\fqai3\\formal-process-c2e4a11e91124b04a64946f647a7bef9\\terminal-seed-terminal-instrumentation.log",
+        "database": "fangqi-formal-process-qa-21677663-a39a-4a23-ae01-0c54aa44d3e6.db",
+        "passed": true,
+        "class": "com.masterofchessstrategy.ui.FangqiFormalProcessCheckpointInstrumentedTest",
+        "methods": 1,
+        "kind": "terminal"
+      },
+      {
+        "log_sha256": "f0c643cbaab81f1923d34630f90c6395eb6a8d4c314b7e906568f1be18c5a19f",
+        "phase": "after-kill",
+        "log_path": "E:\\SourceCode\\Projects\\AI-project\\MasterofChessStrategy\\.build\\fqai3\\formal-process-c2e4a11e91124b04a64946f647a7bef9\\terminal-after-kill-instrumentation.log",
+        "database": "fangqi-formal-process-qa-21677663-a39a-4a23-ae01-0c54aa44d3e6.db",
+        "passed": true,
+        "class": "com.masterofchessstrategy.ui.FangqiFormalProcessCheckpointInstrumentedTest",
+        "methods": 1,
+        "kind": "terminal"
+      },
+      {
+        "log_sha256": "1721a9b24383763c611cdb8f849231d9351806da13240d7ad13ca8bc4d634f07",
+        "phase": "after-resume",
+        "log_path": "E:\\SourceCode\\Projects\\AI-project\\MasterofChessStrategy\\.build\\fqai3\\formal-process-c2e4a11e91124b04a64946f647a7bef9\\terminal-after-resume-instrumentation.log",
+        "database": "fangqi-formal-process-qa-21677663-a39a-4a23-ae01-0c54aa44d3e6.db",
+        "passed": true,
+        "class": "com.masterofchessstrategy.ui.FangqiFormalProcessCheckpointInstrumentedTest",
+        "methods": 1,
+        "kind": "terminal"
+      },
+      {
+        "log_sha256": "3c7f78c16be1adc6a2d4229c410c4a1e9056b812536ec4ea20fcd951fcb7e909",
+        "phase": "after-second-resume",
+        "log_path": "E:\\SourceCode\\Projects\\AI-project\\MasterofChessStrategy\\.build\\fqai3\\formal-process-c2e4a11e91124b04a64946f647a7bef9\\terminal-after-second-resume-instrumentation.log",
+        "database": "fangqi-formal-process-qa-21677663-a39a-4a23-ae01-0c54aa44d3e6.db",
+        "passed": true,
+        "class": "com.masterofchessstrategy.ui.FangqiFormalProcessCheckpointInstrumentedTest",
+        "methods": 1,
+        "kind": "terminal"
+      },
+      {
+        "log_sha256": "12c062ea80c3a0e854f0a591ba703a84dbfa0e95b12b1df75ff4c0492f7d5989",
+        "phase": "cleanup",
+        "log_path": "E:\\SourceCode\\Projects\\AI-project\\MasterofChessStrategy\\.build\\fqai3\\formal-process-c2e4a11e91124b04a64946f647a7bef9\\terminal-cleanup-instrumentation.log",
+        "database": "fangqi-formal-process-qa-21677663-a39a-4a23-ae01-0c54aa44d3e6.db",
+        "passed": true,
+        "class": "com.masterofchessstrategy.ui.FangqiFormalProcessCheckpointInstrumentedTest",
+        "methods": 1,
+        "kind": "terminal"
+      }
+    ],
+    "process_receipt_sha256": "6974384f9d99cdff94cacb116ca32e5b14def360c624b7a2139f141eff97d1d0",
+    "general_distinct_methods": 16,
+    "general_receipt_sha256": "d715a0450c31fe9e7b6028ce2b9bbbd74ffdd1981e5bb8c7cf69e37aeff9cca2",
+    "abi": "x86_64",
+    "whole_package_force_stop": false,
+    "page_size": "16384",
+    "process_proofs": [
+      {
+        "sha256": "ebf56d14af5bd82f38d06adc24992182c78001d31293b440920b80b5481c0ebc",
+        "name": "ongoing-seed-ongoing-proof.json"
+      },
+      {
+        "sha256": "90f73b8491391a8f4f32045d26727c9914761a3fefa4f540ec04818f36debe19",
+        "name": "ongoing-after-kill-proof.json"
+      },
+      {
+        "sha256": "a96735c7574e15bdc2e7b828c141ecef6654083f71065889c2dbe9d8571942ba",
+        "name": "ongoing-after-resume-proof.json"
+      },
+      {
+        "sha256": "c37e4ad432485b543a1d61653a1157c69129b20874b792cb94bd9500c334bc58",
+        "name": "terminal-seed-terminal-proof.json"
+      },
+      {
+        "sha256": "3765389de8513b5018faf7d72fd793696ffe4db2ccb44831a638441ff3c6d91d",
+        "name": "terminal-after-kill-proof.json"
+      },
+      {
+        "sha256": "869203d580e34a6d048dc5ae9b880708238f2ea9e41b171d3fa5f683222659f4",
+        "name": "terminal-after-resume-proof.json"
+      },
+      {
+        "sha256": "257ab253ff2b2df177b72766d969b6a595e9ac59528a6208c012c754254857f6",
+        "name": "terminal-after-second-resume-proof.json"
+      }
+    ],
+    "restored_font": "1.0",
+    "cold_resumes": 3,
+    "accepted_invocations": 28,
+    "distinct_methods": 17,
+    "inspector_invocations": 9,
+    "app_data_cleared": false,
+    "general_invocations": 19,
+    "cases": [
+      {
+        "source_pid": 8623,
+        "actions": 2,
+        "database": "fangqi-formal-process-qa-7b43c816-4e99-4899-b51a-2f46c15842c7.db",
+        "kind": "ongoing",
+        "resumed_pid": 8922,
+        "native_sha256": "faefb9c2063605eab735303ea1f57863cedfdf8072e7e86d55d708974239fb1f",
+        "settled_at": -1,
+        "source_sha256": "30dee98bcb18379e0156502d9a144e60a2f34fd6bf3af31323f3e1db03e06be1",
+        "database_removed": true
+      },
+      {
+        "source_pid": 9238,
+        "actions": 50,
+        "database": "fangqi-formal-process-qa-21677663-a39a-4a23-ae01-0c54aa44d3e6.db",
+        "kind": "terminal",
+        "resumed_pid": 9522,
+        "native_sha256": "3315682d4bd316752faf16dc90aab00c2b036c3b8a722eea8029ed60e9110ab2",
+        "settled_at": 1793384642132,
+        "source_sha256": "e9b4abaffa0ac60e4b905808b7d28439ed4ca2ea2eeacb80216da985440aed6f",
+        "database_removed": true
+      }
+    ],
+    "distinct_inspector_methods": 1
+  },
+  "visual": {
+    "original_pngs": 27,
+    "origin": "fqai3 final APK; general UI 1.0/1.5 plus independent process UI",
+    "review_sha256": "a22eb5f22c9e024c491b3a0f73d91f7cd4438ee8e9eced371d74e958379003f0",
+    "full_landscape_accepted": false,
+    "images": [
+      {
+        "sha256": "0b206ed4ba1bd4c7130507e082751a2ab4046c0b37385d5cd1aa5ca511262292"
+      },
+      {
+        "sha256": "79a4c01a123d07d6a7959a916c368ce5431a6362d3ed97fca69df0481de26d2a"
+      },
+      {
+        "sha256": "c8f526e6dfcbed260c10e8b8e0455261737d1452ea1ddd7e824095f574fd5a6e"
+      },
+      {
+        "sha256": "c8f526e6dfcbed260c10e8b8e0455261737d1452ea1ddd7e824095f574fd5a6e"
+      },
+      {
+        "sha256": "a4bd4f6a69713f3a30e6dab5286980c4ed98d33931ea48edb1558e282cf41d99"
+      },
+      {
+        "sha256": "30fd40ce64f1ed2fb59f0eb553e74ed016414d1017324490c33ebb64118ef7b0"
+      },
+      {
+        "sha256": "c762ea76074ee56fc7ee6824008e90884f751d79aa55382a4225716b1aa9d95a"
+      },
+      {
+        "sha256": "a4bd4f6a69713f3a30e6dab5286980c4ed98d33931ea48edb1558e282cf41d99"
+      },
+      {
+        "sha256": "6458a19ccbc50e9fe1ec90b6511d0cefe2901c8e5d377f27705897b931f7351b"
+      },
+      {
+        "sha256": "b00f51064ee99d12edb9d17bcc7fe6214ddbf49c1828cb945ed5cc497d08bfe1"
+      },
+      {
+        "sha256": "a4bd4f6a69713f3a30e6dab5286980c4ed98d33931ea48edb1558e282cf41d99"
+      },
+      {
+        "sha256": "0d3ac2bb878e10f9ba5554d83bd0d8f519d2da8fdebca52c50d77ee3d98c93b7"
+      },
+      {
+        "sha256": "26018a767fa6a98c92e51073daa8227a41dc51170d429b80f68088b966f42e7b"
+      },
+      {
+        "sha256": "69087d107699394c4b9367fcbfb0ec74abea0a98cf97587e2d5b6608efec0260"
+      },
+      {
+        "sha256": "22e92baf910dfb9d64a47d056bcdc40afc202b7596aea1d72e7d3893c8c66110"
+      },
+      {
+        "sha256": "f92fef718abebeb3968010c29066a5870bd1a41e14bd546defe8c94338eb5ef7"
+      },
+      {
+        "sha256": "f92fef718abebeb3968010c29066a5870bd1a41e14bd546defe8c94338eb5ef7"
+      },
+      {
+        "sha256": "e27d3aedf64f58fca8d5bfd996c1200fd85edfe584f46aca526c13b1c62c46b6"
+      },
+      {
+        "sha256": "eec9375d2a02e0f8209e1ede5056fbb948d5c29595d30ae00ca005d83c17919b"
+      },
+      {
+        "sha256": "e40561532a72ad5f9c5312bf5ef4a59a70750a56daa7118156f8c21b309188d5"
+      },
+      {
+        "sha256": "36c1614c90b9d024e48aead6b504d8ad2b45accd2e25b3a8342b7304d663e637"
+      },
+      {
+        "sha256": "eec9375d2a02e0f8209e1ede5056fbb948d5c29595d30ae00ca005d83c17919b"
+      },
+      {
+        "sha256": "7553bfe1e592a7871813d2794604f49fdd9e0d748495a897077991eb230e87e9"
+      },
+      {
+        "sha256": "b2cf888bb67a5201ccac8d16e82cd1f938bd190b87aa7dd16ec1142709d19190"
+      },
+      {
+        "sha256": "25166e597b52df64574980eb774b074e05778fa2d389ca32a89b6dc44e73c6e7"
+      },
+      {
+        "sha256": "ed90f590d58d4d68ebe0e0666a7571be0ad49d63f61bc82b76c5cf4d8d28cc57"
+      },
+      {
+        "sha256": "ed90f590d58d4d68ebe0e0666a7571be0ad49d63f61bc82b76c5cf4d8d28cc57"
+      }
+    ],
+    "unique_pngs": 21,
+    "directly_viewed_unique_pngs": 21
+  },
+  "retained_history": [
+    "fqai1 formal78 JVM passed; fqai2 opening/clock guards and formal54 affected JVM passed; final unique total uses source-matched suites only",
+    "Read-only review found queued refresh could keep creating busy after failure; fqai3 production fix and final14 JVM passed",
+    "First cold-process host run failed before action because exec-out missing-file text was parsed as JSON; failed evidence and precise owned-fixture cleanup preserved",
+    "Host-only shell-v2 missing-probe read fix; second cold run accepted without App rebuild or general test repetition"
+  ],
+  "failed_process_attempt": {
+    "excluded_manual_qa_deaths": 1,
+    "manual_abort_sha256": "ced96b08bdbf0608801f66d7472d2425f0e6eac6b1e00512f91c93a25247a041",
+    "failure_sha256": "b03d2b5c5cb30e70bda72731302de2f565befc7553fbc613e000a99f90adc38a",
+    "name": "formal-process-3a6618336e36484ca7f174408ea31d73",
+    "excluded_seed_and_cleanup_invocations": 2
+  },
+  "host_script_sha256": "070689ef4f90f82c54b1b8a1e6410d0ef3e4d9b8c2b2dad7ccbe3f7d40b76ecd",
+  "metadata": [
+    {
+      "sha256": "80731177745e64b7ea51ec6d64895772d281bf8dafc74673df67df36e204bb7c",
+      "path": "docs/games/lanzhou-fangqi/2026-10-31-formal-entry-verification.md"
+    },
+    {
+      "sha256": "9448dd0ff5cd67f924083f282c58892531bcc94c97546cc1e91159e25104312e",
+      "path": "docs/games/lanzhou-fangqi/player-guide.md"
+    },
+    {
+      "sha256": "c03d714585524c86d9c98b41e9a7a1e075d8512edd97e1b66809e988d7a5d7b8",
+      "path": "docs/games/lanzhou-fangqi/README.md"
+    },
+    {
+      "sha256": "f6f7a324344c192af0ba0952f00dc0d03417bf82ea28c107f58c9a22d1de8d8f",
+      "path": "docs/games/lanzhou-fangqi/feature-checklist.md"
+    },
+    {
+      "sha256": "80f9ecfaa33aefc401ca920a98f4c34ea024a32f5822eea6f6895e59afafb796",
+      "path": "docs/development/fangqi-formal-entry-integration-2026-10-30.md"
+    },
+    {
+      "sha256": "d321950ba9a4c0ff393e1a626d79f5a443d11923227bad0c816164018e4d7bda",
+      "path": "docs/releases/v0.1.0-lanzhou-fangqi-formal-entry.1.md"
+    }
+  ],
+  "room_schema_version": 21,
+  "source_only": true,
+  "release_assets": [],
+  "new_third_party_assets": false,
+  "formal_ai_navigation_accepted": true,
+  "ranked_process_death_accepted": true,
+  "physical_device_accepted": false,
+  "ai_strength_accepted": false,
+  "growth_projection_accepted": false,
+  "remaining": [
+    "Growth projection and record browsing",
+    "Difficulty top caption, hints, resign, full controls and explicit unfinished-game abandonment",
+    "Full content, auto-play/speed, sound, AI strength, full landscape and physical devices"
+  ]
+}

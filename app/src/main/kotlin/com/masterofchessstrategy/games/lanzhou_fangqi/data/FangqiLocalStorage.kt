@@ -20,6 +20,7 @@ internal class FangqiLocalStorage internal constructor(
     val gate: FangqiStorageEpochGate,
     private val createStore: (FangqiStorageEpochGate.Owner) -> FangqiSessionStore,
     private val writerDispatcher: CoroutineDispatcher,
+    private val createRankedStore: ((FangqiStorageEpochGate.Owner, String) -> FangqiSessionStore)? = null,
 ) {
     val epoch: StateFlow<Long> get() = gate.epoch
     private val opening = Mutex()
@@ -28,6 +29,7 @@ internal class FangqiLocalStorage internal constructor(
 
     private class Writer(
         val epoch: Long,
+        val rankedSessionId: String?,
         store: FangqiSessionStore,
         dispatcher: CoroutineDispatcher,
     ) {
@@ -40,18 +42,28 @@ internal class FangqiLocalStorage internal constructor(
     }
 
     /** One Native owner at a time. Old cleanup failure remains a real acquisition error. */
-    suspend fun acquire(): FangqiStorageLease = opening.withLock {
+    suspend fun acquire(): FangqiStorageLease = acquireBound(null)
+
+    suspend fun acquireRanked(sessionId: String): FangqiStorageLease {
+        require(sessionId.isNotBlank() && sessionId.length <= 64)
+        check(createRankedStore != null) { "Formal Fangqi store is not installed" }
+        return acquireBound(sessionId)
+    }
+
+    private suspend fun acquireBound(sessionId: String?): FangqiStorageLease = opening.withLock {
         previousLease?.released?.await()
         val currentEpoch = gate.epoch.value
         var current = writer
-        if (current != null && (current.epoch != currentEpoch || current.queue.progress.value.closed)) {
+        if (current != null && (current.epoch != currentEpoch || current.queue.progress.value.closed ||
+            current.rankedSessionId != sessionId)) {
             current.closeAndJoin()
             writer = null
             current = null
         }
         if (current == null) {
             val owner = gate.captureOwner()
-            current = Writer(owner.epoch, createStore(owner), writerDispatcher)
+            val store = if (sessionId == null) createStore(owner) else checkNotNull(createRankedStore)(owner, sessionId)
+            current = Writer(owner.epoch, sessionId, store, writerDispatcher)
             writer = current
         }
         FangqiStorageLease(current.queue, current.epoch, current::closeAndJoin).also { previousLease = it }
@@ -63,7 +75,8 @@ internal class FangqiLocalStorage internal constructor(
         @Synchronized fun forDatabase(database: MocsDatabase): FangqiLocalStorage {
             val gate = FangqiStorageEpochGate.forDatabase(database)
             return owners[gate]?.get() ?: FangqiLocalStorage(gate,
-                { owner -> RoomFangqiSessionStore(database, gate, owner) }, Dispatchers.IO).also {
+                { owner -> RoomFangqiSessionStore(database, gate, owner) }, Dispatchers.IO,
+                { owner, id -> RankedFangqiSessionStore(RoomFangqiRankedRepository(database, gate, owner), id) }).also {
                 owners[gate] = WeakReference(it)
             }
         }

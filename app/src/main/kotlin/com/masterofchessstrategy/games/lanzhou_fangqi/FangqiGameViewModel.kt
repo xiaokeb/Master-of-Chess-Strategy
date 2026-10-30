@@ -36,6 +36,7 @@ internal data class FangqiGamePageState(
     val undoAllowed: Boolean = true,
     val historyLimited: Boolean = false,
     val aiBlocked: Boolean = false,
+    val restartAllowed: Boolean = true,
 )
 
 /** Native and AI survive configuration changes; only real committed snapshots unlock play. */
@@ -46,7 +47,10 @@ internal class FangqiGameViewModel(
     private val worker: CoroutineDispatcher = Dispatchers.Default,
     private val now: () -> Long = System::currentTimeMillis,
     private val newId: () -> String = { UUID.randomUUID().toString() },
+    private val expectedSessionId: String? = null,
+    private val formal: Boolean = false,
 ) : ViewModel(), LocalDataWriterRetirement {
+    init { require(!formal || expectedSessionId != null) }
     private val mutableState = MutableStateFlow(FangqiGamePageState())
     val state: StateFlow<FangqiGamePageState> = mutableState.asStateFlow()
     private var lease: FangqiStorageLease? = null
@@ -98,7 +102,8 @@ internal class FangqiGameViewModel(
         opening = viewModelScope.launch(start = CoroutineStart.LAZY) {
             var candidate: FangqiSession? = null
             try {
-                val currentLease = lease ?: storage.acquire().also { acquired ->
+                val currentLease = lease ?: (if (formal) storage.acquireRanked(checkNotNull(expectedSessionId))
+                    else storage.acquire()).also { acquired ->
                     lease = acquired
                     epochWatcher = viewModelScope.launch {
                         storage.epoch.collect { if (it != acquired.epoch) beginRetirement() }
@@ -106,6 +111,12 @@ internal class FangqiGameViewModel(
                 }
                 val saved = currentLease.autosave.loadAfterPendingWrites()
                 if (retired || leaving) return@launch
+                if (expectedSessionId != null && saved?.sessionId != expectedSessionId) {
+                    throw IOException("指定方棋对局已改变，请返回后重新选择")
+                }
+                if (saved == null && (formal || requestedDifficulty != null)) {
+                    throw IOException("请从人机入口确认难度并创建正式对局")
+                }
                 withContext(worker) {
                     candidate = sessionFactory()
                     if (saved != null) {
@@ -183,10 +194,11 @@ internal class FangqiGameViewModel(
                 hintUses = 0
                 mutableState.value = state.value.copy(undoAllowed = canUndo(), historyLimited = false, aiBlocked = false, error = null)
             },
+            restartAllowed = { !formal },
         )
         interaction = controller
         mutableState.value = FangqiGamePageState(loading = false, session = engine, interaction = controller,
-            mode = saved.mode, difficulty = saved.difficulty, undoAllowed = canUndo())
+            mode = saved.mode, difficulty = saved.difficulty, undoAllowed = canUndo(), restartAllowed = !formal)
         observer = viewModelScope.launch { controller.state.collect { startAiIfNeeded() } }
     }
 
@@ -204,7 +216,8 @@ internal class FangqiGameViewModel(
                 val previous = checkNotNull(metadata)
                 // This is remaining history length, not lifetime actions or ranked participation.
                 val count = FangqiSessionAdmission.inspectHistory(bytes)
-                val saved = FangqiStoredSession(previous.mode, previous.difficulty, bytes, sessionId, now(),
+                val saved = FangqiStoredSession(previous.mode, previous.difficulty, bytes, sessionId,
+                    maxOf(now(), previous.updatedAtEpochMillis),
                     count, undoUses, hintUses)
                 val next = Pending(saved, currentLease.autosave.enqueue(saved), done)
                 pending = next
@@ -217,6 +230,7 @@ internal class FangqiGameViewModel(
     }
 
     private fun canUndo(): Boolean {
+        if (retired || leaving || formal && session?.snapshot()?.result != GameResult.ONGOING) return false
         val saved = metadata ?: return false
         if (saved.mode == FangqiStoredMode.LOCAL_TWO_PLAYER) return true
         return when (saved.difficulty) {
@@ -255,7 +269,7 @@ internal class FangqiGameViewModel(
             request.done?.invoke(true)
             if (!leaving) {
                 mutableState.value = state.value.copy(loading = false, error = null, retrySave = false,
-                    historyLimited = false, aiBlocked = false)
+                    historyLimited = false, aiBlocked = false, undoAllowed = canUndo())
                 if (interaction == null) showReady()
             }
         } else {

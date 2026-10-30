@@ -40,6 +40,7 @@ internal class LanzhouFangqiInteraction(
     private val undoAllowed: () -> Boolean = { true },
     private val onUndoAccepted: (() -> Unit)? = null,
     private val onRestartAccepted: (() -> Unit)? = null,
+    private val restartAllowed: () -> Boolean = { true },
 ) {
     private var retired = false
     private var pendingCheckpoint: Pair<FangqiSnapshot, ByteArray>? = null
@@ -89,7 +90,7 @@ internal class LanzhouFangqiInteraction(
     }
 
     fun reset() {
-        if (retired) return
+        if (retired || !restartAllowed()) return
         if (mutableState.value.let { it.aiThinking || it.savePending || it.saveFailed }) return
         session.reset()
         beginCheckpoint()

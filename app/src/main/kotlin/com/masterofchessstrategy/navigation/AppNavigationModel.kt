@@ -76,6 +76,10 @@ internal object AppDestination {
     const val GO_TUTORIAL = "go/tutorial"
     const val LANZHOU_FANGQI_GAME = "lanzhou-fangqi/game"
     const val LANZHOU_FANGQI_LEARNING = "lanzhou-fangqi/learning"
+    const val LANZHOU_FANGQI_AI_ENTRY = "lanzhou-fangqi/ai-entry"
+    const val LANZHOU_FANGQI_SAVED_ID = "fangqiSavedIdHex"
+    const val LANZHOU_FANGQI_FORMAL = "fangqiFormal"
+    const val LANZHOU_FANGQI_SAVED_GAME = "lanzhou-fangqi/saved/{$LANZHOU_FANGQI_SAVED_ID}/{$LANZHOU_FANGQI_FORMAL}"
     const val TIGER_GOAT_LOCAL_GAME = "tiger-goat/local-game"
     const val AI_DIFFICULTY_ARGUMENT = "difficultyCode"
     const val CHINESE_CHESS_AI_GAME =
@@ -91,6 +95,16 @@ internal object AppDestination {
 
     fun chineseChessAiGame(difficulty: Difficulty): String =
         "chinese-chess/ai-game/" + difficulty.code
+
+    fun lanzhouFangqiSavedGame(sessionId: String, formal: Boolean): String {
+        val bytes = sessionId.toByteArray(Charsets.UTF_8)
+        require(sessionId.isNotBlank() && sessionId.length <= 64 && bytes.toString(Charsets.UTF_8) == sessionId)
+        val hex = "0123456789abcdef"
+        val encoded = buildString(bytes.size * 2) {
+            bytes.forEach { append(hex[(it.toInt() ushr 4) and 15]); append(hex[it.toInt() and 15]) }
+        }
+        return "lanzhou-fangqi/saved/$encoded/${if (formal) 1 else 0}"
+    }
 
     fun chineseChessHandicapGame(difficulty: Difficulty, variant: String): String {
         ChineseChessHandicapConfig.initialState(variant)

@@ -9,6 +9,14 @@
             android:screenOrientation="landscape"
             tools:ignore="DiscouragedApi" />
         <activity
+            android:name=".ui.FangqiFormalProcessCheckActivity"
+            android:exported="true"
+            android:permission="android.permission.DUMP"
+            android:process=":fangqi_formal_qa"
+            android:taskAffinity="com.masterofchessstrategy.fangqi.formal.qa"
+            android:screenOrientation="landscape"
+            tools:ignore="DiscouragedApi" />
+        <activity
             android:name=".ui.GoLocalDataCheckActivity"
             android:exported="false"
             android:screenOrientation="landscape"

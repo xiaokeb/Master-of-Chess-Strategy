@@ -12,6 +12,47 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FangqiLocalStorageTest {
+    @Test fun formalWriterSwitchWaitsForReleaseAndCannotReuseTheOrdinaryQueue() = runTest {
+        val ordinary = FangqiOwnerTestStore()
+        val formal = FangqiOwnerTestStore()
+        val ids = mutableListOf<String>()
+        val storage = FangqiLocalStorage(FangqiStorageEpochGate(), { ordinary }, StandardTestDispatcher(testScheduler),
+            { _, id -> ids += id; formal })
+        val first = storage.acquire()
+        val opening = async { storage.acquireRanked("formal") }
+        runCurrent()
+        assertFalse(opening.isCompleted)
+        first.release()
+        val ranked = opening.await()
+        assertTrue(first.autosave.progress.value.writerStopped)
+        assertNotSame(first.autosave, ranked.autosave)
+        assertEquals(listOf("formal"), ids)
+        ranked.release()
+        val back = storage.acquire()
+        assertTrue(ranked.autosave.progress.value.writerStopped)
+        assertNotSame(ranked.autosave, back.autosave)
+        back.retireWriter(); back.release()
+    }
+
+    @Test fun formalReentryKeepsOnlyTheSameSessionAndEpochBinding() = runTest {
+        val gate = FangqiStorageEpochGate()
+        val bindings = mutableListOf<Pair<Long, String>>()
+        val storage = FangqiLocalStorage(gate, { FangqiOwnerTestStore() }, StandardTestDispatcher(testScheduler),
+            { owner, id -> bindings += owner.epoch to id; FangqiOwnerTestStore() })
+        val first = storage.acquireRanked("first"); first.release()
+        val same = storage.acquireRanked("first")
+        assertSame(first.autosave, same.autosave)
+        same.release()
+        val second = storage.acquireRanked("second")
+        assertTrue(first.autosave.progress.value.writerStopped)
+        second.release()
+        gate.exclusive(true) { }
+        val fresh = storage.acquireRanked("second")
+        assertTrue(second.autosave.progress.value.writerStopped)
+        assertEquals(listOf(0L to "first", 0L to "second", 1L to "second"), bindings)
+        fresh.retireWriter(); fresh.release()
+    }
+
     @Test fun normalReentryKeepsTheSameIdleApplicationQueue() = runTest {
         val store = FangqiOwnerTestStore()
         val storage = FangqiLocalStorage(FangqiStorageEpochGate(), { store }, StandardTestDispatcher(testScheduler))

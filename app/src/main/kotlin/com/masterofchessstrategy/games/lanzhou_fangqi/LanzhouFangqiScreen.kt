@@ -57,6 +57,7 @@ internal fun LanzhouFangqiScreen(
     interactionOverride: LanzhouFangqiInteraction? = null,
     aiManagedExternally: Boolean = false,
     undoAllowed: Boolean = true,
+    restartAllowed: Boolean = true,
 ) {
     val checkpointWriter by rememberUpdatedState(onPositionChanged)
     val interaction = interactionOverride ?: remember(session, aiDifficulty != null, onPositionChanged != null) {
@@ -121,15 +122,18 @@ internal fun LanzhouFangqiScreen(
             if (ui.savePending) Text("正在保存对局")
             if (ui.saveFailed) {
                 Text("保存失败，请重试后继续", color = MaterialTheme.colorScheme.error)
-                Button(onClick = interaction::retrySave) { Text("重试保存") }
+                Button(onClick = interaction::retrySave, modifier = Modifier.testTag("lanzhou_fangqi_retry_save")) { Text("重试保存") }
             }
-            OutlinedButton(onClick = interaction::undo, enabled = undoAllowed && !ui.aiThinking && !ui.savePending && !ui.saveFailed && snapshot.canUndo) {
+            OutlinedButton(onClick = interaction::undo, enabled = undoAllowed && !ui.aiThinking && !ui.savePending && !ui.saveFailed && snapshot.canUndo,
+                modifier = Modifier.testTag("lanzhou_fangqi_undo")) {
                 Text(stringResource(R.string.lanzhou_fangqi_undo))
             }
-            OutlinedButton(onClick = interaction::reset, enabled = !ui.aiThinking && !ui.savePending && !ui.saveFailed) {
+            OutlinedButton(onClick = interaction::reset, enabled = restartAllowed && !ui.aiThinking && !ui.savePending && !ui.saveFailed,
+                modifier = Modifier.testTag("lanzhou_fangqi_restart")) {
                 Text(stringResource(R.string.lanzhou_fangqi_restart))
             }
-            Button(onClick = onBack) { Text(stringResource(R.string.lanzhou_fangqi_back)) }
+            if (!restartAllowed) Text("开始下一局请返回人机入口")
+            Button(onClick = onBack, modifier = Modifier.testTag("lanzhou_fangqi_back")) { Text(stringResource(R.string.lanzhou_fangqi_back)) }
         }
     }
 }

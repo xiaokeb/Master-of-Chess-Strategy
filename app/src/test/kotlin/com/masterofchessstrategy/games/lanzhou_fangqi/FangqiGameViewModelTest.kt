@@ -16,6 +16,66 @@ import org.junit.Test
 /** Explicit rule/store doubles: these tests verify ownership and saves, not Native legality or SQLite. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class FangqiGameViewModelTest {
+    @Test fun requestedAiCannotCreateAnUnqualifiedGameThroughTheGenericStore() = runTest(dispatcher) {
+        val store = FangqiOwnerTestStore()
+        val session = FangqiOwnerTestSession()
+        val vm = model(storage(store), session, Difficulty.EASY)
+        runCurrent()
+        assertTrue(vm.state.value.retryLoad)
+        assertNull(vm.state.value.interaction)
+        assertTrue(store.attempts.isEmpty())
+        assertEquals(0, session.closeCalls)
+        assertTrue(vm.leave())
+    }
+
+    @Test fun formalRouteRequiresAnExistingBoundSaveAndNeverAllocatesItsOwnIdentity() = runTest(dispatcher) {
+        val store = FangqiOwnerTestStore()
+        val owner = FangqiLocalStorage(FangqiStorageEpochGate(), { store }, dispatcher, { _, _ -> store })
+        var allocated = false
+        val vm = FangqiGameViewModel(owner, sessionFactory = { FangqiOwnerTestSession() }, worker = dispatcher,
+            newId = { allocated = true; "forbidden" }, expectedSessionId = "expected", formal = true)
+        runCurrent()
+        assertTrue(vm.state.value.retryLoad)
+        assertFalse(allocated)
+        assertTrue(store.attempts.isEmpty())
+        assertTrue(vm.leave())
+    }
+
+    @Test fun formalTerminalCannotUndoOrResetItsExistingNativeSession() = runTest(dispatcher) {
+        val store = FangqiOwnerTestStore().apply {
+            saved = FangqiOwnerTestSession.saved(FangqiStoredMode.HUMAN_VS_AI, Difficulty.EASY, count = 1)
+        }
+        val native = FangqiOwnerTestSession().apply { finishAfter = 1 }
+        val owner = FangqiLocalStorage(FangqiStorageEpochGate(), { store }, dispatcher, { _, _ -> store })
+        val vm = FangqiGameViewModel(owner, sessionFactory = { native }, worker = dispatcher,
+            expectedSessionId = "retained-id", formal = true)
+        runCurrent()
+        assertFalse(vm.state.value.undoAllowed)
+        assertFalse(vm.state.value.restartAllowed)
+        val before = native.serialize()
+        vm.state.value.interaction!!.undo()
+        vm.state.value.interaction!!.reset()
+        runCurrent()
+        assertArrayEquals(before, native.serialize())
+        assertEquals(0, native.undoCalls)
+        assertTrue(store.attempts.isEmpty())
+        assertTrue(vm.leave())
+    }
+
+    @Test fun newCheckpointDoesNotMoveItsTimestampBackWhenTheWallClockChanges() = runTest(dispatcher) {
+        val store = FangqiOwnerTestStore().apply { saved = FangqiOwnerTestSession.saved() }
+        val native = FangqiOwnerTestSession()
+        val vm = FangqiGameViewModel(storage(store), sessionFactory = { native }, worker = dispatcher, now = { 9L })
+        runCurrent()
+        vm.state.value.interaction!!.tap(FangqiPoint(0, 0))
+        vm.state.value.interaction!!.tap(FangqiPoint(1, 0))
+        runCurrent()
+        assertEquals(1, store.saved!!.acceptedActionCount)
+        assertEquals(10L, store.saved!!.updatedAtEpochMillis)
+        assertFalse(vm.state.value.retrySave)
+        assertTrue(vm.leave())
+    }
+
     private val dispatcher = StandardTestDispatcher()
     @Before fun main() { Dispatchers.setMain(dispatcher) }
     @After fun reset() { Dispatchers.resetMain() }

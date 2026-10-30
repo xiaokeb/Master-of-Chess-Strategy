@@ -23,14 +23,17 @@ internal fun LanzhouFangqiRoute(
     storage: FangqiLocalStorage,
     onBack: () -> Unit,
     aiDifficulty: Difficulty? = null,
+    expectedSessionId: String? = null,
+    formal: Boolean = false,
 ) {
     val epoch by storage.epoch.collectAsState()
-    val factory = remember(database, storage, aiDifficulty, writers) {
+    val factory = remember(database, storage, aiDifficulty, expectedSessionId, formal, writers) {
         viewModelFactory {
-            initializer { FangqiGameViewModel(storage, aiDifficulty).also(writers::register) }
+            initializer { FangqiGameViewModel(storage, aiDifficulty,
+                expectedSessionId = expectedSessionId, formal = formal).also(writers::register) }
         }
     }
-    val game: FangqiGameViewModel = viewModel(owner, key = "fangqi:$epoch", factory = factory)
+    val game: FangqiGameViewModel = viewModel(owner, key = "fangqi:$epoch:$expectedSessionId:$formal", factory = factory)
     writers.register(game) // Retained owners also participate after Activity recreation.
     FangqiGameRoute(game, onBack)
 }

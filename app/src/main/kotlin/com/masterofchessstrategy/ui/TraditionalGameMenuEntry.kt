@@ -4,6 +4,7 @@ import java.util.Collections
 
 internal const val LANZHOU_FANGQI_LOCAL_TAG = "lanzhou_fangqi_local"
 internal const val LANZHOU_FANGQI_LEARNING_TAG = "lanzhou_fangqi_learning"
+internal const val LANZHOU_FANGQI_AI_TAG = "lanzhou_fangqi_ai"
 internal const val TIGER_GOAT_LOCAL_TAG = "tiger_goat_local"
 
 internal enum class TraditionalMenuButtonStyle { FILLED, OUTLINED }

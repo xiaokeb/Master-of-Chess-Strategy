@@ -11,17 +11,35 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
 /** Fixed-owner transactions. Requests supply their original ID/time; retries never allocate either. */
-internal class RoomFangqiRankedRepository(private val database: MocsDatabase) {
-    private val gate = FangqiStorageEpochGate.forDatabase(database)
-    private val owner = gate.captureOwner()
-    val ownerEpoch: Long get() = owner.epoch
-    val epoch get() = gate.epoch
+internal class RoomFangqiRankedRepository(
+    private val database: MocsDatabase,
+    private val gate: FangqiStorageEpochGate = FangqiStorageEpochGate.forDatabase(database),
+    private val owner: FangqiStorageEpochGate.Owner = gate.captureOwner(),
+) : FangqiAiEntryRepository {
+    init { require(gate === FangqiStorageEpochGate.forDatabase(database)) }
+    override val ownerEpoch: Long get() = owner.epoch
+    override val epoch get() = gate.epoch
     private val replay = NativeFangqiRankedReplay()
     private val ledger = FangqiRankedLedger(replay)
     private val validator = FangqiRankedSnapshotValidator(ledger)
     private val ranked get() = database.fangqiRankedDao()
 
     suspend fun load(): FangqiRankedVerifiedSnapshot = transact { read() }
+
+    override suspend fun loadFacts(): FangqiAiEntryFacts = transact {
+        val snapshot = read()
+        val rows = database.fangqiLearningProgressDao().readAll()
+        val learning = try { FangqiLearningRead.Ready(FangqiLearningSnapshot(rows)) }
+        catch (_: IOException) { FangqiLearningRead.Incompatible }
+        val id = snapshot.active?.sessionId
+        FangqiAiEntryFacts(FangqiAiAdmission.eligibility(learning,
+            FangqiQualifiedWinsRead.Verified(snapshot.wins)), snapshot.active,
+            id != null && id in snapshot.creations, id != null && id in snapshot.settlements)
+    }
+
+    override suspend fun create(creation: FangqiRankedCreation,
+        expectedPrevious: FangqiStoredSession?,
+    ): FangqiStoredSession = admitNew(creation, expectedPrevious)
 
     suspend fun admitNew(creation: FangqiRankedCreation,
         expectedPrevious: FangqiStoredSession? = null,
