@@ -33,7 +33,7 @@ internal data class GameRecord(
         require(GameRecordPayloadPolicy.accepts(gameType, engineFormatVersion, engineState)) {
             "Game record format or payload size is invalid"
         }
-        require(moveCount in 0..MAX_MOVE_COUNT)
+        require(GameRecordPayloadPolicy.acceptsMoveCount(gameType, engineFormatVersion, engineState, moveCount))
         require(completedAtEpochMillis >= 0L)
         require(isEndgame == (mode == StoredGameMode.ENDGAME))
         require(mode.acceptsPlayerIndex(playerIndex))
@@ -141,7 +141,7 @@ internal fun GameRecordEntity.toGameRecord(): GameRecord? {
     val gameType = GameType.entries.firstOrNull { it.code == gameTypeCode } ?: return null
     if (
         !GameRecordPayloadPolicy.accepts(gameType, engineFormatVersion, engineState) ||
-        moveCount !in 0..GameRecord.MAX_MOVE_COUNT ||
+        !GameRecordPayloadPolicy.acceptsMoveCount(gameType, engineFormatVersion, engineState, moveCount) ||
         completedAtEpochMillis < 0L
     ) {
         return null

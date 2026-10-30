@@ -24,6 +24,9 @@ import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiLearningProgres
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiLearningProgressDao
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongLearningProgressEntity
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongLearningProgressDao
+import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiRankedStartEntity
+import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiRankedSettlementEntity
+import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiRankedDao
 
 @Database(
     entities = [
@@ -46,8 +49,10 @@ import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongLearni
         GoRankedSettlementEntity::class,
         FangqiLearningProgressEntity::class,
         LanzhouMahjongLearningProgressEntity::class,
+        FangqiRankedStartEntity::class,
+        FangqiRankedSettlementEntity::class,
     ],
-    version = 20,
+    version = 21,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -82,6 +87,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
     abstract fun goRankedDao(): GoRankedDao
     abstract fun fangqiLearningProgressDao(): FangqiLearningProgressDao
     abstract fun lanzhouMahjongLearningProgressDao(): LanzhouMahjongLearningProgressDao
+    abstract fun fangqiRankedDao(): FangqiRankedDao
 
     companion object {
         internal val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -481,6 +487,39 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_20_21 = object : Migration(20, 21) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Empty sources only. Legacy rows never acquire ranked provenance by migration.
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS fangqi_ranked_starts (
+                        sessionId TEXT NOT NULL PRIMARY KEY, formatVersion INTEGER NOT NULL,
+                        startOrigin TEXT NOT NULL, gameTypeCode INTEGER NOT NULL, modeCode INTEGER NOT NULL,
+                        difficultyCode INTEGER NOT NULL, humanPlayerIndex INTEGER NOT NULL,
+                        rulesVersion TEXT NOT NULL, engineFormatVersion INTEGER NOT NULL,
+                        initialHistory BLOB NOT NULL, startedAtEpochMillis INTEGER NOT NULL,
+                        acceptedActionCount INTEGER NOT NULL, undoUseCount INTEGER NOT NULL,
+                        hintUseCount INTEGER NOT NULL, creationSha256 TEXT NOT NULL
+                    )
+                """.trimIndent())
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS fangqi_ranked_settlements (
+                        sessionId TEXT NOT NULL PRIMARY KEY, formatVersion INTEGER NOT NULL,
+                        creationSha256 TEXT NOT NULL, gameTypeCode INTEGER NOT NULL, modeCode INTEGER NOT NULL,
+                        difficultyCode INTEGER NOT NULL, humanPlayerIndex INTEGER NOT NULL,
+                        rulesVersion TEXT NOT NULL, engineFormatVersion INTEGER NOT NULL,
+                        terminalHistory BLOB NOT NULL, updatedAtEpochMillis INTEGER NOT NULL,
+                        acceptedActionCount INTEGER NOT NULL, undoUseCount INTEGER NOT NULL,
+                        hintUseCount INTEGER NOT NULL, resultCode INTEGER NOT NULL,
+                        settledAtEpochMillis INTEGER NOT NULL, recordDeletedAtEpochMillis INTEGER DEFAULT NULL,
+                        FOREIGN KEY(sessionId) REFERENCES fangqi_ranked_starts(sessionId)
+                            ON UPDATE NO ACTION ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+                        FOREIGN KEY(sessionId) REFERENCES match_outcomes(matchId)
+                            ON UPDATE NO ACTION ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED
+                    )
+                """.trimIndent())
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -511,6 +550,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_17_18,
                         MIGRATION_18_19,
                         MIGRATION_19_20,
+                        MIGRATION_20_21,
                     )
                     .build()
                     .also { instance = it }

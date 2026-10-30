@@ -5,12 +5,14 @@ import com.masterofchessstrategy.engine.GameType
 internal enum class BackupStorageTable {
     ACTIVE_GAME, COMPETITION_MATCH, GO_LOCAL_SESSION, GO_RECORD_SOURCE, GO_PROGRESS,
     GO_AI_SESSION, GO_AI_ARCHIVE, GO_AI_PROJECTION, GO_RANKED_START, GO_RANKED_SETTLEMENT,
-    FANGQI_LEARNING, LANZHOU_MAHJONG_LEARNING,
+    FANGQI_LEARNING, LANZHOU_MAHJONG_LEARNING, FANGQI_RANKED_START, FANGQI_RANKED_SETTLEMENT, FANGQI_RECORD,
 }
 
 /** A schema-owned row slot; registration cannot introduce or conditionally remove tables. */
 internal data class BackupStorageSlot(val table: BackupStorageTable, val gameType: GameType) {
     init {
+        require(table !in setOf(BackupStorageTable.FANGQI_RANKED_START, BackupStorageTable.FANGQI_RANKED_SETTLEMENT, BackupStorageTable.FANGQI_RECORD) ||
+            gameType == GameType.LANZHOU_SQUARE_CHESS) { "Fangqi ranked storage belongs only to Fangqi" }
         require(table != BackupStorageTable.LANZHOU_MAHJONG_LEARNING || gameType == GameType.LANZHOU_MAHJONG) {
             "Lanzhou learning storage belongs only to Lanzhou mahjong"
         }
@@ -84,4 +86,9 @@ internal interface GameBackupSnapshotGuard {
 /** Cross-owner facts: extensions may verify, but never duplicate or overwrite core outcomes. */
 internal interface GameBackupCoreSnapshotGuard {
     fun validateCoreSnapshot(records: List<PreparedGameBackup>, outcomes: List<MatchOutcome>)
+}
+
+/** Exact companion payloads, not only ID membership, are required by source-linked ledgers. */
+internal interface GameBackupCompleteSnapshotGuard {
+    fun validateCompleteSnapshot(records: List<PreparedGameBackup>, outcomes: List<MatchOutcome>, coreRecords: List<GameRecord>)
 }

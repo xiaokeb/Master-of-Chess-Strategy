@@ -6,6 +6,14 @@ import androidx.room.Query
 /** Inventory all actual row owners without decoding or silently filtering unsupported games. */
 @Dao
 internal interface BackupStorageInventoryDao {
+    @Query("SELECT gameTypeCode FROM game_records WHERE gameTypeCode = 4 ORDER BY recordId")
+    suspend fun fangqiRecordGameTypeCodes(): List<Int>
+    @Query("SELECT gameTypeCode FROM fangqi_ranked_starts ORDER BY sessionId")
+    suspend fun fangqiRankedStartGameTypeCodes(): List<Int>
+
+    @Query("SELECT gameTypeCode FROM fangqi_ranked_settlements ORDER BY sessionId")
+    suspend fun fangqiRankedSettlementGameTypeCodes(): List<Int>
+
     @Query("SELECT gameTypeCode FROM active_games ORDER BY gameTypeCode")
     suspend fun activeGameTypeCodes(): List<Int>
 

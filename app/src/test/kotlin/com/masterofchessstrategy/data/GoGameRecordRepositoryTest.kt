@@ -26,7 +26,8 @@ class GoGameRecordRepositoryTest {
         val repository = RoomGameRecordRepository(dao) { error("Non-Go row invoked Go admission") }
         for (game in GameType.entries.filter { it != GameType.GO }) {
             val record = GameRecord("legacy-${game.code}", game, StoredGameMode.LOCAL_TWO_PLAYER,
-                null, GameResult.DRAW, byteArrayOf(1, 2, 3), 2, completedAtEpochMillis = 1)
+                null, GameResult.DRAW, byteArrayOf(1, 2, 3), 2, completedAtEpochMillis = 1,
+                engineFormatVersion = 2)
             assertTrue(repository.saveCompleted(record))
             assertEquals(2, requireNotNull(repository.load(record.recordId)).engineFormatVersion)
         }

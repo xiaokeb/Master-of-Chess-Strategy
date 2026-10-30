@@ -17,6 +17,9 @@ internal object BackupStorageInventory {
         database.backupStorageInventoryDao().goRankedSettlementGameTypeCodes(),
         database.backupStorageInventoryDao().fangqiLearningGameTypeCodes(),
         database.backupStorageInventoryDao().lanzhouMahjongLearningGameTypeCodes(),
+        database.backupStorageInventoryDao().fangqiRankedStartGameTypeCodes(),
+        database.backupStorageInventoryDao().fangqiRankedSettlementGameTypeCodes(),
+        database.backupStorageInventoryDao().fangqiRecordGameTypeCodes(),
     )
 
     fun fromCodes(
@@ -28,6 +31,8 @@ internal object BackupStorageInventory {
         goRankedStartCodes: List<Int> = emptyList(), goRankedSettlementCodes: List<Int> = emptyList(),
         fangqiLearningCodes: List<Int> = emptyList(),
         lanzhouMahjongLearningCodes: List<Int> = emptyList(),
+        fangqiRankedStartCodes: List<Int> = emptyList(), fangqiRankedSettlementCodes: List<Int> = emptyList(),
+        fangqiRecordCodes: List<Int> = emptyList(),
     ): Set<BackupStorageSlot> {
         require(activeCodes.distinct().size == activeCodes.size && competitionCodes.distinct().size == competitionCodes.size &&
             goLocalCodes.distinct().size == goLocalCodes.size &&
@@ -44,6 +49,9 @@ internal object BackupStorageInventory {
             goRankedStartCodes.map { BackupStorageSlot(BackupStorageTable.GO_RANKED_START, gameType(it)) } +
             goRankedSettlementCodes.map { BackupStorageSlot(BackupStorageTable.GO_RANKED_SETTLEMENT, gameType(it)) } +
             fangqiLearningCodes.map { BackupStorageSlot(BackupStorageTable.FANGQI_LEARNING, gameType(it)) } +
-            lanzhouMahjongLearningCodes.map { BackupStorageSlot(BackupStorageTable.LANZHOU_MAHJONG_LEARNING, gameType(it)) }
+            lanzhouMahjongLearningCodes.map { BackupStorageSlot(BackupStorageTable.LANZHOU_MAHJONG_LEARNING, gameType(it)) } +
+            fangqiRankedStartCodes.map { BackupStorageSlot(BackupStorageTable.FANGQI_RANKED_START, gameType(it)) } +
+            fangqiRankedSettlementCodes.map { BackupStorageSlot(BackupStorageTable.FANGQI_RANKED_SETTLEMENT, gameType(it)) } +
+            fangqiRecordCodes.map { BackupStorageSlot(BackupStorageTable.FANGQI_RECORD, gameType(it)) }
     }
 }

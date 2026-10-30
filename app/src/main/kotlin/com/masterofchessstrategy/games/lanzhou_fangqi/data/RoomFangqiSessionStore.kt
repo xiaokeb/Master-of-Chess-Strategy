@@ -26,6 +26,7 @@ internal class RoomFangqiSessionStore internal constructor(
     // Explicit test seam; production always uses the MocsDatabase constructor below.
     private val transaction: suspend (suspend () -> Unit) -> Unit,
 ) : FangqiSessionStore {
+    private var rankedDao: FangqiRankedDao? = null
     constructor(
         database: MocsDatabase,
         gate: FangqiStorageEpochGate = FangqiStorageEpochGate.forDatabase(database),
@@ -33,12 +34,14 @@ internal class RoomFangqiSessionStore internal constructor(
     ) : this(database.activeGameDao(), gate, owner, FangqiSessionAdmission(), Dispatchers.IO,
         { operation -> database.withTransaction { operation() } }) {
         require(gate === FangqiStorageEpochGate.forDatabase(database)) { "方棋存储必须使用该数据库的统一门禁" }
+        rankedDao = database.fangqiRankedDao()
     }
 
     override suspend fun load(): FangqiStoredSession? = gate.access(owner) {
         withContext(dispatcher) {
             currentCoroutineContext().ensureActive()
             val row = dao.find(GameType.LANZHOU_SQUARE_CHESS.code)?.copyOwned() ?: return@withContext null
+            rejectFormalSource(row.sessionId)
             val snapshot = decode(row)
             admission.admit(snapshot).also { currentCoroutineContext().ensureActive() }
         }
@@ -50,6 +53,8 @@ internal class RoomFangqiSessionStore internal constructor(
             val candidate = encode(admission.admit(snapshot))
             transaction {
                 currentCoroutineContext().ensureActive()
+                dao.find(GameType.LANZHOU_SQUARE_CHESS.code)?.let { rejectFormalSource(it.sessionId) }
+                rejectFormalSource(candidate.sessionId)
                 dao.upsert(candidate.copyOwned())
                 currentCoroutineContext().ensureActive()
                 val readBack = dao.find(GameType.LANZHOU_SQUARE_CHESS.code)?.copyOwned()
@@ -57,6 +62,12 @@ internal class RoomFangqiSessionStore internal constructor(
                 currentCoroutineContext().ensureActive()
             }
             // Successful return is the only save acknowledgement; enqueueing is never an acknowledgement.
+        }
+    }
+
+    private suspend fun rejectFormalSource(sessionId: String) {
+        if (rankedDao?.findStart(sessionId) != null) {
+            throw IOException("此局已有正式人机来源，请从正式对局入口继续；原存档已保留")
         }
     }
 

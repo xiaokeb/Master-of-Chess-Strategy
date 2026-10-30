@@ -1,25 +1,48 @@
 package com.masterofchessstrategy.data
 
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiSessionAdmission
+import java.io.IOException
 
 /** Envelope checks only. Go rule replay and terminal metadata still require Native admission. */
 internal object GameRecordPayloadPolicy {
     const val XIANGQI_MAX_BYTES = 64 * 1024
     const val GO_MAX_BYTES = 16 + 21 * 16_386
+    const val FANGQI_MAX_BYTES = 1_048_576
 
-    // All non-Go rows keep the existing envelope marker; this is not Native rule admission.
-    fun currentVersion(gameType: GameType): Int = if (gameType == GameType.GO) 3 else 2
+    fun currentVersion(gameType: GameType): Int = when (gameType) {
+        GameType.GO -> 3
+        GameType.LANZHOU_SQUARE_CHESS -> 1
+        else -> 2
+    }
 
     fun maximumBytes(gameType: GameType): Int = when (gameType) {
         GameType.GO -> GO_MAX_BYTES
+        GameType.LANZHOU_SQUARE_CHESS -> FANGQI_MAX_BYTES
         else -> XIANGQI_MAX_BYTES
     }
 
     fun accepts(gameType: GameType, version: Int, state: ByteArray): Boolean = when (gameType) {
         GameType.GO -> acceptsGo(version, state)
+        GameType.LANZHOU_SQUARE_CHESS -> when (version) {
+            1 -> fangqiActions(state) != null
+            // Preserve old generic envelopes without granting ranked participation.
+            2 -> state.size in 1..XIANGQI_MAX_BYTES
+            else -> false
+        }
         // Do not tighten other game families while introducing the Go-specific contract.
         else -> version == 2 && state.size in 1..XIANGQI_MAX_BYTES
     }
+
+    /** A full Fangqi record must keep every action and the exact native history count. */
+    fun acceptsMoveCount(gameType: GameType, version: Int, state: ByteArray, moveCount: Int): Boolean =
+        if (gameType == GameType.LANZHOU_SQUARE_CHESS && version == 1) {
+            moveCount in 0..FangqiSessionAdmission.MAX_ACTIONS && fangqiActions(state) == moveCount
+        } else moveCount in 0..GameRecord.MAX_MOVE_COUNT
+
+    private fun fangqiActions(state: ByteArray): Int? = try {
+        FangqiSessionAdmission.inspectHistory(state)
+    } catch (_: IOException) { null }
 
     private fun acceptsGo(version: Int, state: ByteArray): Boolean {
         val header = when (version) { 1 -> 10; 2 -> 11; 3 -> 16; else -> return false }

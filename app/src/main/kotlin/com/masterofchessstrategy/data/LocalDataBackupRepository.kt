@@ -84,7 +84,9 @@ internal class RoomLocalDataBackupRepository(
                 ) {
                     LoadGameRecordsResult.Incompatible -> error("Game records are incompatible")
                     // Go payload/provenance is owned by its registered extension, not Xiangqi RECORD.
-                    is LoadGameRecordsResult.Loaded -> result.records.filter { it.gameType != GameType.GO }
+                    is LoadGameRecordsResult.Loaded -> result.records.filter {
+                        it.gameType != GameType.GO && it.gameType != GameType.LANZHOU_SQUARE_CHESS
+                    }
                 },
                 endgameProgress = when (val result = endgameRepository.load()) {
                     LoadEndgameProgressResult.Incompatible -> error("Endgame progress is incompatible")
@@ -95,7 +97,7 @@ internal class RoomLocalDataBackupRepository(
         validateEngineStates(snapshot)
         // Export is subject to the same real engine admission as restore, without writes.
         gameBackups.prepareRestore(snapshot.gameExtensions, gameBackups.containerVersion(snapshot.gameExtensions),
-            snapshot.gameRecords.map { it.recordId }.toSet(), snapshot.matchOutcomes)
+            snapshot.gameRecords.map { it.recordId }.toSet(), snapshot.matchOutcomes, snapshot.gameRecords)
         return LocalDataBackupCodec.encode(snapshot, gameBackups)
     }
 
@@ -107,6 +109,7 @@ internal class RoomLocalDataBackupRepository(
             gameBackups.containerVersion(snapshot.gameExtensions),
             snapshot.gameRecords.map { it.recordId }.toSet(),
             snapshot.matchOutcomes,
+            snapshot.gameRecords,
         )
         val endgameLevels = snapshot.endgameProgress.associateWith { progress ->
             val level = levelsById[progress.levelId]
@@ -179,6 +182,9 @@ internal class RoomLocalDataBackupRepository(
     }
 
     private suspend fun clearAll() {
+        // Children precede both parents; the caller owns the complete replacement transaction.
+        database.openHelper.writableDatabase.execSQL("DELETE FROM fangqi_ranked_settlements")
+        database.openHelper.writableDatabase.execSQL("DELETE FROM fangqi_ranked_starts")
         // Both tables form one deferred parent graph; clear inside this same
         // replacement transaction, never orphaning a child in a separate commit.
         database.goRankedDao().deleteSettlements()

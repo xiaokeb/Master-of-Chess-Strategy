@@ -48,7 +48,7 @@ class GameRecordPayloadPolicyTest {
     }
 
     @Test fun everyNonGoFamilyPreservesItsLegacyEnvelopeWithoutAcquiringGoCapacity() {
-        for (game in GameType.entries.filter { it != GameType.GO }) {
+        for (game in GameType.entries.filter { it != GameType.GO && it != GameType.LANZHOU_SQUARE_CHESS }) {
             assertEquals(2, GameRecordPayloadPolicy.currentVersion(game))
             assertTrue(GameRecordPayloadPolicy.accepts(game, 2, byteArrayOf(1)))
             assertFalse(GameRecordPayloadPolicy.accepts(game, 3, byteArrayOf(1)))

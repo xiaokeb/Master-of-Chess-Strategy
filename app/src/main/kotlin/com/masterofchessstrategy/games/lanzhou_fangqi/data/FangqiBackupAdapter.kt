@@ -41,6 +41,7 @@ internal class FangqiBackupAdapter(
 
     internal class PreparedFangqiBackup internal constructor(snapshot: FangqiStoredSession) : PreparedGameBackup {
         private val owned = FangqiSessionAdmission.copyOwned(snapshot)
+        internal fun activeRow(): ActiveGameEntity = toEntity(owned)
         override val storageSlot = SLOT
 
         override suspend fun write(database: MocsDatabase) = write(database.activeGameDao())

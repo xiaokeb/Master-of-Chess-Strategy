@@ -74,9 +74,13 @@ internal class GameBackupRegistry(
     fun prepareRestore(records: List<GameBackupRecord>, containerVersion: Int,
         coreRecordIds: Set<String> = emptySet(),
         coreOutcomes: List<MatchOutcome> = emptyList(),
+        coreRecords: List<GameRecord> = emptyList(),
     ): List<PreparedGameBackup> {
         val coreIds = coreRecordIds.toSet()
         val outcomes = Collections.unmodifiableList(coreOutcomes.toList())
+        val completeRecords = Collections.unmodifiableList(coreRecords.map { it.copy(engineState = it.engineState.copyOf()) })
+        require(completeRecords.map { it.recordId }.distinct().size == completeRecords.size) { "Duplicate core record payload" }
+        require(completeRecords.all { it.recordId in coreIds }) { "Core record payload lacks declared identity" }
         require(outcomes.map { it.matchId }.distinct().size == outcomes.size) { "Duplicate core outcome" }
         val ordered = canonicalRecords(records, containerVersion)
         val context = GameBackupPreparationContext()
@@ -97,6 +101,7 @@ internal class GameBackupRegistry(
         registrations.forEach { owner ->
             (owner.adapter as? GameBackupSnapshotGuard)?.validatePreparedSnapshot(prepared)
             (owner.adapter as? GameBackupCoreSnapshotGuard)?.validateCoreSnapshot(prepared, outcomes)
+            (owner.adapter as? GameBackupCompleteSnapshotGuard)?.validateCompleteSnapshot(prepared, outcomes, completeRecords)
             requireFixedRegistrations()
         }
         return prepared

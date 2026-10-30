@@ -6,6 +6,9 @@ import com.masterofchessstrategy.games.go.data.GoLocalStorage
 import com.masterofchessstrategy.games.go.data.GoStorageEpochGate
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiBackupAdapter
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiLearningBackupAdapter
+import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiRankedStartBackupAdapter
+import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiRankedSettlementBackupAdapter
+import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiRecordBackupAdapter
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiCoordinatedBackupRepository
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiLocalStorage
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiStorageEpochGate
@@ -31,7 +34,8 @@ internal fun createProductionGameBackupRepository(
                 RoomLocalDataBackupRepository(
                     database, endgamePack, validateEngineState,
                     GameBackupRegistry(listOf(TigerGoatBackupAdapter(), CompetitionMahjongBackupAdapter(),
-                        FangqiBackupAdapter(), FangqiLearningBackupAdapter(), LanzhouMahjongBackupAdapter(),
+                        FangqiBackupAdapter(), FangqiLearningBackupAdapter(), FangqiRankedStartBackupAdapter(),
+                        FangqiRankedSettlementBackupAdapter(), FangqiRecordBackupAdapter(), LanzhouMahjongBackupAdapter(),
                         LanzhouMahjongLearningBackupAdapter()) + goAdapters),
                 )
             },
