@@ -9,6 +9,7 @@ import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.games.go.data.requireGoAiArchiveParents
 import com.masterofchessstrategy.games.go.data.requireGoAiProjectionParents
 import com.masterofchessstrategy.games.go.data.requireGoRankedParents
+import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalBackupBundle
 
 internal data class LocalDataRestoreSummary(
     val activeSessionCount: Int,
@@ -46,6 +47,7 @@ internal class RoomLocalDataBackupRepository(
         require(createdAtEpochMillis >= 0L)
         val snapshot = database.withTransaction {
             gameBackups.requireSupportedSlots(BackupStorageInventory.read(database))
+            CompetitionMahjongFormalBackupBundle.requireStoredViewers(database.competitionMahjongFormalRoomDao())
             LocalDataSnapshot(
                 createdAtEpochMillis = createdAtEpochMillis,
                 gameExtensions = gameBackups.readRecords(database),
@@ -123,6 +125,8 @@ internal class RoomLocalDataBackupRepository(
         database.withTransaction {
             // Recheck actual stored slots under the write transaction before clearing anything.
             gameBackups.requireSupportedSlots(BackupStorageInventory.read(database))
+            // Check every actual seat before clearAll can erase an unowned/unknown row.
+            CompetitionMahjongFormalBackupBundle.requireStoredViewers(database.competitionMahjongFormalRoomDao())
             clearAll()
             // A pre-migration/Go-free backup must not resurrect data from any old disk source.
             // These tombstones share this transaction and survive only a successful replacement.

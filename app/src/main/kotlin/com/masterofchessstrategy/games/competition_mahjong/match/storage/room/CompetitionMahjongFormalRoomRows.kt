@@ -28,6 +28,9 @@ internal data class CompetitionMahjongFormalRoomMetadata(
 /** Synchronous methods run on the repository's IO dispatcher, never via runBlocking. */
 @Dao
 internal interface CompetitionMahjongFormalRoomDao {
+    @Query("SELECT viewerPlayerId FROM competition_mahjong_formal ORDER BY viewerPlayerId")
+    fun listViewerIds(): List<Int>
+
     @Query("SELECT viewerPlayerId, ownerId, epoch, revision, length(mctx) AS mctxSize " +
         "FROM competition_mahjong_formal WHERE viewerPlayerId = :viewer")
     fun find(viewer: Int): CompetitionMahjongFormalRoomMetadata?
