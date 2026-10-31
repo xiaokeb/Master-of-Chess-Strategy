@@ -6,6 +6,10 @@ import androidx.room.Query
 /** Inventory all actual row owners without decoding or silently filtering unsupported games. */
 @Dao
 internal interface BackupStorageInventoryDao {
+    // Claim rows count even before migration (mctx=null) or if their metadata is damaged.
+    @Query("SELECT 2 FROM competition_mahjong_formal ORDER BY viewerPlayerId")
+    suspend fun competitionFormalGameTypeCodes(): List<Int>
+
     @Query("SELECT gameTypeCode FROM game_records WHERE gameTypeCode = 4 ORDER BY recordId")
     suspend fun fangqiRecordGameTypeCodes(): List<Int>
     @Query("SELECT gameTypeCode FROM fangqi_ranked_starts ORDER BY sessionId")

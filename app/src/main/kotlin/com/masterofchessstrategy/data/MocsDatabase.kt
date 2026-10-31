@@ -27,6 +27,8 @@ import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongLearni
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiRankedStartEntity
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiRankedSettlementEntity
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiRankedDao
+import com.masterofchessstrategy.games.competition_mahjong.match.storage.room.CompetitionMahjongFormalRoomRow
+import com.masterofchessstrategy.games.competition_mahjong.match.storage.room.CompetitionMahjongFormalRoomDao
 
 @Database(
     entities = [
@@ -51,8 +53,9 @@ import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiRankedDao
         LanzhouMahjongLearningProgressEntity::class,
         FangqiRankedStartEntity::class,
         FangqiRankedSettlementEntity::class,
+        CompetitionMahjongFormalRoomRow::class,
     ],
-    version = 21,
+    version = 22,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -73,6 +76,8 @@ internal abstract class MocsDatabase : RoomDatabase() {
     abstract fun endgameProgressDao(): EndgameProgressDao
 
     abstract fun competitionMahjongMatchDao(): CompetitionMahjongMatchDao
+
+    abstract fun competitionMahjongFormalRoomDao(): CompetitionMahjongFormalRoomDao
 
     abstract fun goLocalSessionDao(): GoLocalSessionDao
 
@@ -520,6 +525,13 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_21_22 = object : Migration(21, 22) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Preserve old MCMT sources; claiming or migrating them requires an explicit host.
+                db.execSQL(CompetitionMahjongFormalRoomDao.CREATE_SQL)
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -551,6 +563,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_18_19,
                         MIGRATION_19_20,
                         MIGRATION_20_21,
+                        MIGRATION_21_22,
                     )
                     .build()
                     .also { instance = it }

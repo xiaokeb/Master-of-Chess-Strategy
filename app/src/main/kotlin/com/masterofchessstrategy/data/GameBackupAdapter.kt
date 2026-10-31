@@ -6,6 +6,7 @@ internal enum class BackupStorageTable {
     ACTIVE_GAME, COMPETITION_MATCH, GO_LOCAL_SESSION, GO_RECORD_SOURCE, GO_PROGRESS,
     GO_AI_SESSION, GO_AI_ARCHIVE, GO_AI_PROJECTION, GO_RANKED_START, GO_RANKED_SETTLEMENT,
     FANGQI_LEARNING, LANZHOU_MAHJONG_LEARNING, FANGQI_RANKED_START, FANGQI_RANKED_SETTLEMENT, FANGQI_RECORD,
+    COMPETITION_FORMAL,
 }
 
 /** A schema-owned row slot; registration cannot introduce or conditionally remove tables. */
@@ -19,8 +20,9 @@ internal data class BackupStorageSlot(val table: BackupStorageTable, val gameTyp
         require(table != BackupStorageTable.FANGQI_LEARNING || gameType == GameType.LANZHOU_SQUARE_CHESS) {
             "Fangqi learning storage belongs only to Fangqi"
         }
-        require(table != BackupStorageTable.COMPETITION_MATCH || gameType == GameType.STANDARD_MAHJONG) {
-            "The competition match table belongs only to competition mahjong"
+        require(table !in setOf(BackupStorageTable.COMPETITION_MATCH, BackupStorageTable.COMPETITION_FORMAL) ||
+            gameType == GameType.STANDARD_MAHJONG) {
+            "Competition storage belongs only to competition mahjong"
         }
         require(table !in setOf(BackupStorageTable.GO_LOCAL_SESSION, BackupStorageTable.GO_RECORD_SOURCE,
             BackupStorageTable.GO_PROGRESS, BackupStorageTable.GO_AI_SESSION, BackupStorageTable.GO_AI_ARCHIVE,
