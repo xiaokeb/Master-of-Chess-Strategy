@@ -1,5 +1,9 @@
 # 已验证节点与后续集成
 
+## 2026-10-31 国标正式表与库存保护
+
+4a8a050bcf50f78c770209b1ecb9da27018e057b／tag v0.1.0-competition-mahjong-formal-schema.1／[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-formal-schema.1) id429685600。schema22/同步DAO/空表迁移与正式槽库存已接，旧21实体和MCMT不变；缺适配器时任意归属行阻断漏导和替换清表。6组57正式JVM、23设备方法/25调用、双字号12PNG/8不同画面直接检查通过，双ABI/APK/Manifest/Lint0错23警告。1877完整导出、13路径显式提交，无APK附件；原AVD关闭后保数据冷启动，未清默认数据，字体1.0。下一接正式RoomStorage/Bridge、可信权限、旧writer屏障与明确迁移、整容器四座恢复；尚未发布Bundle须补棋种前缀并枚举实际viewer拒绝越界行后才能注册。当前原始3MB BLOB/CAS不冒充有效MCTX或正式宿主验收。方棋棋谱/完整控件、虎羊Owner及完整内容/音效/棋力/实体设备仍待，完整目标active，其他WIP与象棋旧槽保留。
+
 ## 2026-10-31 方棋可信成长与统计刷新
 
 19b3fb8126c99ba8d161ad3c8361c5b783a6d751／tag v0.1.0-lanzhou-fangqi-ranked-growth.1／[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-lanzhou-fangqi-ranked-growth.1) id429387407。可信成长同Room事务核对方棋完整来源，旧Outcome保留不授分，删谱保留首次结果，正式返回刷新首页/个人中心；异常边界不泄漏checked异常至普通棋种VM。23不同JVM（6最终＋17同源继承）、30设备方法/32调用（含21围棋回归）、8PNG/6不同画面直接检查通过；双ABI/APK/Manifest/Lint0错23警告。1868完整导出、14路径显式提交，schema21不变，无APK附件，未清默认数据。下一串行审国标正式Room桥/schema22与整容器备份接线；方棋棋谱列表/详情和完整控件继续单列，虎羊Owner私有模块仍冻结待集成。AI强度、完整内容/音效、全横屏、错误页与实体设备未验；完整目标active，象棋旧槽与其他WIP保留。
