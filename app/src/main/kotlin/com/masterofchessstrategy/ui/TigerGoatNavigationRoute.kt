@@ -12,6 +12,8 @@ import com.masterofchessstrategy.games.tiger_goat.NativeTigerGoatRulesSession
 import com.masterofchessstrategy.games.tiger_goat.RoomTigerGoatSessionStore
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatGameRoute
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatGameViewModel
+import com.masterofchessstrategy.games.tiger_goat.data.GatedTigerGoatSessionStore
+import com.masterofchessstrategy.games.tiger_goat.data.TigerGoatStorageEpochGate
 import com.masterofchessstrategy.settings.LocalDataWriterRegistry
 
 /** The NavBackStackEntry owns the VM; only completed scopes leave the restore writer registry. */
@@ -26,7 +28,10 @@ internal fun TigerGoatNavigationRoute(
         viewModelFactory {
             initializer {
                 TigerGoatGameViewModel(
-                    store = RoomTigerGoatSessionStore(database.activeGameDao()),
+                    store = GatedTigerGoatSessionStore(
+                        RoomTigerGoatSessionStore(database.activeGameDao()),
+                        TigerGoatStorageEpochGate.forDatabase(database),
+                    ),
                     sessionFactory = { NativeTigerGoatRulesSession(NativeTigerGoatSession()) },
                 ).also(writers::register)
             }

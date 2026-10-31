@@ -13,6 +13,8 @@ import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiCoordinatedBack
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiLocalStorage
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiStorageEpochGate
 import com.masterofchessstrategy.games.tiger_goat.data.TigerGoatBackupAdapter
+import com.masterofchessstrategy.games.tiger_goat.data.TigerGoatCoordinatedBackupRepository
+import com.masterofchessstrategy.games.tiger_goat.data.TigerGoatStorageEpochGate
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongBackupAdapter
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongCoordinatedBackupRepository
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongStorageEpochGate
@@ -28,7 +30,7 @@ internal fun createProductionGameBackupRepository(
 ): LocalDataBackupRepository {
     require(goStorage.gate === GoStorageEpochGate.forDatabase(database)) { "围棋备份门禁与数据库不匹配" }
     require(fangqiStorage.gate === FangqiStorageEpochGate.forDatabase(database)) { "方棋备份门禁与数据库不匹配" }
-    return LanzhouMahjongCoordinatedBackupRepository(
+    val coordinated = LanzhouMahjongCoordinatedBackupRepository(
         FangqiCoordinatedBackupRepository(
             goStorage.backupRepository { goAdapters ->
                 RoomLocalDataBackupRepository(
@@ -43,4 +45,6 @@ internal fun createProductionGameBackupRepository(
         ),
         LanzhouMahjongStorageEpochGate.forDatabase(database),
     )
+    // The writer-retirement barrier stays outside: tiger → Lanzhou → Fangqi → Go → Room.
+    return TigerGoatCoordinatedBackupRepository(coordinated, TigerGoatStorageEpochGate.forDatabase(database))
 }
