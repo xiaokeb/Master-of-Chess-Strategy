@@ -74,6 +74,8 @@ internal object AppDestination {
     const val GO_AI_MATCH_ARGUMENT = "goAiMatchId"
     const val GO_AI_MATCH = "go/ai/match/{$GO_AI_MATCH_ARGUMENT}"
     const val GO_TUTORIAL = "go/tutorial"
+    const val COMPETITION_MAHJONG_MODES = "competition-mahjong/modes"
+    const val COMPETITION_MAHJONG_TUTORIAL = "competition-mahjong/tutorial"
     const val LANZHOU_FANGQI_GAME = "lanzhou-fangqi/game"
     const val LANZHOU_FANGQI_LEARNING = "lanzhou-fangqi/learning"
     const val LANZHOU_FANGQI_AI_ENTRY = "lanzhou-fangqi/ai-entry"
@@ -176,7 +178,7 @@ internal enum class HomeGameEntry(
 ) {
     CHINESE_CHESS(setOf(GameType.CHINESE_CHESS), true),
     GO(setOf(GameType.GO), true),
-    STANDARD_MAHJONG(setOf(GameType.STANDARD_MAHJONG), false),
+    STANDARD_MAHJONG(setOf(GameType.STANDARD_MAHJONG), true),
     LANZHOU_MAHJONG(setOf(GameType.LANZHOU_MAHJONG), true),
     LANZHOU_TRADITIONAL(
         setOf(GameType.LANZHOU_SQUARE_CHESS, GameType.TIGER_AND_GOAT),

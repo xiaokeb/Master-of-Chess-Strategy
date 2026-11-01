@@ -29,6 +29,8 @@ import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiRankedSettlemen
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiRankedDao
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.room.CompetitionMahjongFormalRoomRow
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.room.CompetitionMahjongFormalRoomDao
+import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningProofRow
+import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningProofDao
 
 @Database(
     entities = [
@@ -54,8 +56,9 @@ import com.masterofchessstrategy.games.competition_mahjong.match.storage.room.Co
         FangqiRankedStartEntity::class,
         FangqiRankedSettlementEntity::class,
         CompetitionMahjongFormalRoomRow::class,
+        CompetitionMahjongLearningProofRow::class,
     ],
-    version = 22,
+    version = 23,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -78,6 +81,8 @@ internal abstract class MocsDatabase : RoomDatabase() {
     abstract fun competitionMahjongMatchDao(): CompetitionMahjongMatchDao
 
     abstract fun competitionMahjongFormalRoomDao(): CompetitionMahjongFormalRoomDao
+
+    abstract fun competitionMahjongLearningProofDao(): CompetitionMahjongLearningProofDao
 
     abstract fun goLocalSessionDao(): GoLocalSessionDao
 
@@ -532,6 +537,14 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_22_23 = object : Migration(22, 23) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Shared four-step tutorial rows remain historical; they cannot create chapter receipts.
+                db.execSQL("CREATE TABLE IF NOT EXISTS competition_mahjong_learning_proof (" +
+                    "singletonId INTEGER NOT NULL, proof BLOB NOT NULL, PRIMARY KEY(singletonId))")
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -564,6 +577,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_19_20,
                         MIGRATION_20_21,
                         MIGRATION_21_22,
+                        MIGRATION_22_23,
                     )
                     .build()
                     .also { instance = it }

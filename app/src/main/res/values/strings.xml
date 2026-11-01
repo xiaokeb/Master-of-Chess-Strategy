@@ -428,4 +428,7 @@
     <string name="open_source_katago_source_exporting">正在保存源码包…</string>
     <string name="open_source_katago_source_exported">KataGo 依赖源码包已保存到所选位置。</string>
     <string name="open_source_katago_source_export_failed">源码包保存失败；请重新选择可写位置。</string>
+    <string name="competition_mahjong_navigation_learning">入门教程</string>
+    <string name="competition_mahjong_navigation_learning_note">四章讲解与练习：牌组、行牌与认领、八分门槛、结算与错和。每章全部通过且保存成功后才计教程进度。</string>
+    <string name="competition_mahjong_navigation_pending">赛事与其他对局模式正在准备中，当前可先学习与复习四章课程。</string>
 </resources>

@@ -27,6 +27,7 @@ import com.masterofchessstrategy.navigation.HomeGameEntry
 
 internal const val HOME_CHINESE_CHESS_TAG = "home_chinese_chess"
 internal const val HOME_GO_TAG = "home_go"
+internal const val HOME_COMPETITION_MAHJONG_TAG = "home_competition_mahjong"
 internal const val HOME_LANZHOU_TRADITIONAL_TAG = "home_lanzhou_traditional"
 internal const val HOME_SETTINGS_TAG = "home_settings"
 internal const val HOME_RECORDS_TAG = "home_records"
@@ -217,6 +218,7 @@ private fun GameEntryCard(
                 when (entry) {
                     HomeGameEntry.CHINESE_CHESS -> Modifier.testTag(HOME_CHINESE_CHESS_TAG)
                     HomeGameEntry.GO -> Modifier.testTag(HOME_GO_TAG)
+                    HomeGameEntry.STANDARD_MAHJONG -> Modifier.testTag(HOME_COMPETITION_MAHJONG_TAG)
                     HomeGameEntry.LANZHOU_TRADITIONAL -> Modifier.testTag(HOME_LANZHOU_TRADITIONAL_TAG)
                     else -> Modifier
                 },

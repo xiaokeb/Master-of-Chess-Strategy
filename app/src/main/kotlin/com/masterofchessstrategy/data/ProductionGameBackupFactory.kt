@@ -2,6 +2,9 @@ package com.masterofchessstrategy.data
 
 import com.masterofchessstrategy.endgame.ChineseChessEndgamePack
 import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongBackupAdapter
+import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningBackupAdapter
+import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongCoordinatedBackupRepository
+import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongStorageEpochGate
 import com.masterofchessstrategy.games.go.data.GoLocalStorage
 import com.masterofchessstrategy.games.go.data.GoStorageEpochGate
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiBackupAdapter
@@ -38,13 +41,16 @@ internal fun createProductionGameBackupRepository(
                     GameBackupRegistry(listOf(TigerGoatBackupAdapter(), CompetitionMahjongBackupAdapter(),
                         FangqiBackupAdapter(), FangqiLearningBackupAdapter(), FangqiRankedStartBackupAdapter(),
                         FangqiRankedSettlementBackupAdapter(), FangqiRecordBackupAdapter(), LanzhouMahjongBackupAdapter(),
-                        LanzhouMahjongLearningBackupAdapter()) + goAdapters),
+                        LanzhouMahjongLearningBackupAdapter(), CompetitionMahjongLearningBackupAdapter()) + goAdapters),
                 )
             },
             fangqiStorage.gate,
         ),
         LanzhouMahjongStorageEpochGate.forDatabase(database),
     )
-    // The writer-retirement barrier stays outside: tiger → Lanzhou → Fangqi → Go → Room.
-    return TigerGoatCoordinatedBackupRepository(coordinated, TigerGoatStorageEpochGate.forDatabase(database))
+    // The writer-retirement barrier stays outside: competition → tiger → Lanzhou → Fangqi → Go → Room.
+    return CompetitionMahjongCoordinatedBackupRepository(
+        TigerGoatCoordinatedBackupRepository(coordinated, TigerGoatStorageEpochGate.forDatabase(database)),
+        CompetitionMahjongStorageEpochGate.forDatabase(database),
+    )
 }

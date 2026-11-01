@@ -36,23 +36,33 @@ class AppNavigationModelTest {
     }
 
     @Test
-    fun publishedChineseChessGoAndTigerTraditionalEntryAreAvailable() {
+    fun implementedGameOrTutorialEntriesAreAvailable() {
         assertTrue(HomeGameEntry.CHINESE_CHESS.isAvailable)
         assertTrue(HomeGameEntry.GO.isAvailable)
         assertTrue(HomeGameEntry.LANZHOU_MAHJONG.isAvailable)
+        assertTrue(HomeGameEntry.STANDARD_MAHJONG.isAvailable)
         assertTrue(HomeGameEntry.LANZHOU_TRADITIONAL.isAvailable)
         HomeGameEntry.entries
-            .filterNot { it in setOf(HomeGameEntry.CHINESE_CHESS, HomeGameEntry.GO, HomeGameEntry.LANZHOU_MAHJONG, HomeGameEntry.LANZHOU_TRADITIONAL) }
+            .filterNot { it in setOf(HomeGameEntry.CHINESE_CHESS, HomeGameEntry.GO,
+                HomeGameEntry.STANDARD_MAHJONG, HomeGameEntry.LANZHOU_MAHJONG, HomeGameEntry.LANZHOU_TRADITIONAL) }
             .forEach { assertFalse(it.isAvailable) }
     }
 
     @Test
-    fun tigerLocalAndTraditionalMenuUseStableSeparateRoutes() {
+    fun competitionMahjongTutorialRoutesAreStableAndDoNotAliasOtherGames() {
+        assertEquals("competition-mahjong/modes", AppDestination.COMPETITION_MAHJONG_MODES)
+        assertEquals("competition-mahjong/tutorial", AppDestination.COMPETITION_MAHJONG_TUTORIAL)
+        assertEquals(4, setOf(AppDestination.COMPETITION_MAHJONG_MODES,
+            AppDestination.COMPETITION_MAHJONG_TUTORIAL, AppDestination.GO_TUTORIAL,
+            AppDestination.CHINESE_CHESS_TUTORIAL).size)
+    }
+
+    @Test
+    fun tigerGoatLocalRouteIsStableAndDoesNotAliasTheTraditionalMenuOrFangqi() {
         assertEquals("lanzhou-traditional/modes", AppDestination.LANZHOU_TRADITIONAL_MODES)
         assertEquals("tiger-goat/local-game", AppDestination.TIGER_GOAT_LOCAL_GAME)
-        assertTrue(HomeGameEntry.GO.isAvailable)
-        assertFalse(HomeGameEntry.STANDARD_MAHJONG.isAvailable)
-        assertTrue(HomeGameEntry.LANZHOU_MAHJONG.isAvailable)
+        assertEquals(3, setOf(AppDestination.TIGER_GOAT_LOCAL_GAME,
+            AppDestination.LANZHOU_TRADITIONAL_MODES, AppDestination.LANZHOU_FANGQI_GAME).size)
     }
 
     @Test
@@ -62,6 +72,7 @@ class AppNavigationModelTest {
         assertEquals("go/tutorial", AppDestination.GO_TUTORIAL)
         assertFalse(AppDestination.GO_TUTORIAL == AppDestination.CHINESE_CHESS_TUTORIAL)
         assertFalse(AppDestination.GO_LOCAL_GAME == AppDestination.CHINESE_CHESS_GAME)
+        assertFalse(AppDestination.GO_LOCAL_GAME == AppDestination.LANZHOU_FANGQI_GAME)
     }
 
     @Test

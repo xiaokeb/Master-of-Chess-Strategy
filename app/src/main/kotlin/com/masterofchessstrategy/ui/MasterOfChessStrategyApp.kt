@@ -3,6 +3,10 @@ package com.masterofchessstrategy.ui
 import com.masterofchessstrategy.engine.ChineseChessRuleRevision
 import com.masterofchessstrategy.games.go.data.GoLocalStorage
 import com.masterofchessstrategy.games.go.GoStoredRecordRoute
+import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningRoute
+import com.masterofchessstrategy.games.competition_mahjong.learning.RoomCompetitionMahjongLearningProofStore
+import com.masterofchessstrategy.games.competition_mahjong.learning.GatedCompetitionMahjongLearningProofStore
+import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongStorageEpochGate
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -310,6 +314,8 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                             navController.navigate(AppDestination.GO_MODES)
                         } else if (entry == HomeGameEntry.LANZHOU_MAHJONG) {
                             navController.navigate(AppDestination.LANZHOU_MAHJONG_MODES)
+                        } else if (entry == HomeGameEntry.STANDARD_MAHJONG) {
+                            navController.navigate(AppDestination.COMPETITION_MAHJONG_MODES)
                         } else if (entry == HomeGameEntry.LANZHOU_TRADITIONAL) {
                             navController.navigate(AppDestination.LANZHOU_TRADITIONAL_MODES)
                         }
@@ -486,6 +492,26 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
             )) { entry ->
                 GoAiPlayNavigationRoute(goStorage, gameWriters,
                     entry.arguments?.getString(AppDestination.GO_AI_MATCH_ARGUMENT), navController::popBackStack)
+            }
+            composable(AppDestination.COMPETITION_MAHJONG_MODES) {
+                CompetitionMahjongNavigationModesScreen(
+                    onBack = navController::popBackStack,
+                    onLearning = { navController.navigate(AppDestination.COMPETITION_MAHJONG_TUTORIAL) },
+                )
+            }
+            composable(AppDestination.COMPETITION_MAHJONG_TUTORIAL) {
+                val store = remember(database) {
+                    GatedCompetitionMahjongLearningProofStore(
+                        RoomCompetitionMahjongLearningProofStore(database, database.competitionMahjongLearningProofDao()),
+                        CompetitionMahjongStorageEpochGate.forDatabase(database),
+                    )
+                }
+                CompetitionMahjongLearningRoute(
+                    store = store,
+                    writers = gameWriters,
+                    onBack = navController::popBackStack,
+                    onCompleted = { navController.popBackStack() },
+                )
             }
             composable(AppDestination.GO_TUTORIAL) {
                 GoLearningNavigationRoute(goStorage, gameWriters, navController::popBackStack)

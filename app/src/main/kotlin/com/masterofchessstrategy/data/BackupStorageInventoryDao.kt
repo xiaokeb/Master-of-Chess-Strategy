@@ -6,6 +6,10 @@ import androidx.room.Query
 /** Inventory all actual row owners without decoding or silently filtering unsupported games. */
 @Dao
 internal interface BackupStorageInventoryDao {
+    // Include every actual key, including damaged or foreign singleton rows.
+    @Query("SELECT 2 FROM competition_mahjong_learning_proof ORDER BY singletonId")
+    suspend fun competitionLearningGameTypeCodes(): List<Int>
+
     // Claim rows count even before migration (mctx=null) or if their metadata is damaged.
     @Query("SELECT 2 FROM competition_mahjong_formal ORDER BY viewerPlayerId")
     suspend fun competitionFormalGameTypeCodes(): List<Int>

@@ -1,0 +1,577 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-competition-mahjong-learning.1",
+  "candidate": "cmlp5",
+  "baseline_commit": "9cab8a366c39d87017c2f6a450346fd50fda5237",
+  "frozen_source_files": 1951,
+  "full_export_files": 1954,
+  "expected_changed_paths": 44,
+  "metadata_files": 4,
+  "overlays": [
+    {
+      "sha256": "81efb5f5151bb8eb9276676859531adaf60827e67e2fc2212ee0fd9368f6a5bb",
+      "original_sha256": "81efb5f5151bb8eb9276676859531adaf60827e67e2fc2212ee0fd9368f6a5bb",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/MocsDatabase.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "fcf76989761fc346b05d6ea09e2868b0d79985a5ea6f27b3f8f88f84f2b1199e",
+      "original_sha256": "fcf76989761fc346b05d6ea09e2868b0d79985a5ea6f27b3f8f88f84f2b1199e",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/GameBackupAdapter.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "b8ac10cf30dd88fcab907133be31657d63a7efafb220fb38953e921afc44ea95",
+      "original_sha256": "b8ac10cf30dd88fcab907133be31657d63a7efafb220fb38953e921afc44ea95",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/BackupStorageInventory.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "a6c2cb275449f962dd264b849c9127fb9775d6a7ae49683a589b51e3dfba1245",
+      "original_sha256": "a6c2cb275449f962dd264b849c9127fb9775d6a7ae49683a589b51e3dfba1245",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/BackupStorageInventoryDao.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "b821c7810db1c8d3dc1a13c206307549d6299458989fb9fafb57dee21beb631f",
+      "original_sha256": "b821c7810db1c8d3dc1a13c206307549d6299458989fb9fafb57dee21beb631f",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/LocalDataBackupRepository.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "9eed4834809de01e5f6ad63fa42ed7963dccc93e88b1a910a9c279cb4ea8b11c",
+      "original_sha256": "9eed4834809de01e5f6ad63fa42ed7963dccc93e88b1a910a9c279cb4ea8b11c",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/ProductionGameBackupFactory.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "6b7725db5981719e1bc4e928bcb6c10b6577ea149b8c1447a9dec06cd393d62c",
+      "original_sha256": "6b7725db5981719e1bc4e928bcb6c10b6577ea149b8c1447a9dec06cd393d62c",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/HomeScreen.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "bc42fbedfd0b60bc4b1f089e0be605cac98a18a7682ab879d53d9f183785ef2c",
+      "original_sha256": "bc42fbedfd0b60bc4b1f089e0be605cac98a18a7682ab879d53d9f183785ef2c",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongNavigationModesScreen.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "bd01e8699ab02336c32b5b2bfc47052a9a95025a5961273dd6b136433ba9f1be",
+      "original_sha256": "bd01e8699ab02336c32b5b2bfc47052a9a95025a5961273dd6b136433ba9f1be",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/CompetitionMahjongTileNames.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "e347755df0c588f409276acbd3eedb3fde8feec7da6511b227e0f21bf5c5c940",
+      "original_sha256": "e347755df0c588f409276acbd3eedb3fde8feec7da6511b227e0f21bf5c5c940",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/navigation/AppNavigationModelTest.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "13fc5734387c290f5e44b94c60f5c8fcb16613d1a9160cddc999eed43c558525",
+      "original_sha256": "13fc5734387c290f5e44b94c60f5c8fcb16613d1a9160cddc999eed43c558525",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongNavigationIntegrationTest.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "969cf03e99a9dbe6d799c176b8725105ba1373dc70f829f6d4f73108f7002477",
+      "original_sha256": "969cf03e99a9dbe6d799c176b8725105ba1373dc70f829f6d4f73108f7002477",
+      "path": "app/schemas/com.masterofchessstrategy.data.MocsDatabase/23.json",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "bfa5d8e566dbe0850a04520b46e225e02d728f7a151e94ca0c35f6772b8d16f9",
+      "original_sha256": "bfa5d8e566dbe0850a04520b46e225e02d728f7a151e94ca0c35f6772b8d16f9",
+      "path": "docs/development/competition-learning-integration-2026-10-31.md",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "e7209a741886d3d101509855be2e6625eb92b7b4845a97d63df1aee01ec920eb",
+      "original_sha256": "e7209a741886d3d101509855be2e6625eb92b7b4845a97d63df1aee01ec920eb",
+      "path": "docs/games/competition-mahjong/2026-10-31-learning-proof-model.md",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "5163244f249e78b2f417ddcefc977a0fc8a3219fda0a40cf01a6e046e756ef15",
+      "original_sha256": "5163244f249e78b2f417ddcefc977a0fc8a3219fda0a40cf01a6e046e756ef15",
+      "path": "docs/games/competition-mahjong/2026-10-31-learning-proof-room-store.md",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "e4bdb298f2b23f946a7b3317bf65fac962236c6fd4d7e0f0289ca70d01b04f36",
+      "original_sha256": "e4bdb298f2b23f946a7b3317bf65fac962236c6fd4d7e0f0289ca70d01b04f36",
+      "path": "docs/games/competition-mahjong/2026-10-31-learning-proof-course-host.md",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "ad87256e05f618f74faff7be3317b1a05a289578681198087f6678ee108a9cea",
+      "original_sha256": "ad87256e05f618f74faff7be3317b1a05a289578681198087f6678ee108a9cea",
+      "path": "docs/games/competition-mahjong/2026-10-09-learning-v1.md",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "1b15dc384a50574e38b6bac388e8f45ab20955f73188cc64bc35ea82ca1ea4a6",
+      "original_sha256": "1b15dc384a50574e38b6bac388e8f45ab20955f73188cc64bc35ea82ca1ea4a6",
+      "path": "docs/games/competition-mahjong/2026-10-10-learning-chapter-visibility.md",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "1d51cdd901cccebe58b416f98c68a7398bd14e127f112dde1e41b0fb212facd0",
+      "original_sha256": "1d51cdd901cccebe58b416f98c68a7398bd14e127f112dde1e41b0fb212facd0",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningLibrary.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "5d356ce0d32a7f68c9d0a766a5c424804db271d238194e926beaf5e094cb1f15",
+      "original_sha256": "5d356ce0d32a7f68c9d0a766a5c424804db271d238194e926beaf5e094cb1f15",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningProof.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "2b48cbfbc6335ec3b8608a8e2c616a2727109b57b8fe22e77bddf81cd072df75",
+      "original_sha256": "2b48cbfbc6335ec3b8608a8e2c616a2727109b57b8fe22e77bddf81cd072df75",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningProofCodec.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "271abb8f8c2bada5c2118dc222c81ac2d59cc3dc43a8f61308e9ec39da1fdc10",
+      "original_sha256": "271abb8f8c2bada5c2118dc222c81ac2d59cc3dc43a8f61308e9ec39da1fdc10",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningProofRows.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "dae17c277e2e328c36dbdcbec2efde17d1c7221a3cc1366b6bd15bb59189ee5b",
+      "original_sha256": "dae17c277e2e328c36dbdcbec2efde17d1c7221a3cc1366b6bd15bb59189ee5b",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/RoomCompetitionMahjongLearningProofStore.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "16e15c4f44b1e64cf52eeea83d7fddca957cea93e3b1adb07223c19372d5f303",
+      "original_sha256": "16e15c4f44b1e64cf52eeea83d7fddca957cea93e3b1adb07223c19372d5f303",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongStorageEpochGate.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "75b7eff06dc3509449a0bef5090ff5d3325f8471528cab882a6384b7ee5ecd10",
+      "original_sha256": "75b7eff06dc3509449a0bef5090ff5d3325f8471528cab882a6384b7ee5ecd10",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/GatedCompetitionMahjongLearningProofStore.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "965fddee1a1d69c57d0c543c8ad1fd855362c6b716812d4952e8af4a6dc03062",
+      "original_sha256": "965fddee1a1d69c57d0c543c8ad1fd855362c6b716812d4952e8af4a6dc03062",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongCoordinatedBackupRepository.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "4e6c36c1154bc0c59a73dc4a4017348b2776a601818046e93c1df45b67f55b28",
+      "original_sha256": "4e6c36c1154bc0c59a73dc4a4017348b2776a601818046e93c1df45b67f55b28",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningBackupAdapter.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "773f6fee93bdc8e25e1fdb8650e01b7b08b64e802e8323035ebed0b33e527213",
+      "original_sha256": "773f6fee93bdc8e25e1fdb8650e01b7b08b64e802e8323035ebed0b33e527213",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningController.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "799ad6f128e6c96fd0f7ea96ce65841140cec29d23838fedd966db8ccab6d95a",
+      "original_sha256": "799ad6f128e6c96fd0f7ea96ce65841140cec29d23838fedd966db8ccab6d95a",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningViewModel.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "486a8474e69a2b7d5060b3ddfc32f6f7154b1a501388786afd367820369dea7c",
+      "original_sha256": "486a8474e69a2b7d5060b3ddfc32f6f7154b1a501388786afd367820369dea7c",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningScreen.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "12310e52377c8c96a28b623776c5227d1ffc6c3bc881a3f29b115178ed5a4df3",
+      "original_sha256": "12310e52377c8c96a28b623776c5227d1ffc6c3bc881a3f29b115178ed5a4df3",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningProofTest.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "9ee7b34ce32462f045cbf596de110f70005f077a86297a152580e971f294d498",
+      "original_sha256": "9ee7b34ce32462f045cbf596de110f70005f077a86297a152580e971f294d498",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/RoomCompetitionMahjongLearningProofStoreTest.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "f0cdd5ec20ed1db6650dd251424bae0bc86e53ad29f45aca78c9c2fe9dc7b5bb",
+      "original_sha256": "f0cdd5ec20ed1db6650dd251424bae0bc86e53ad29f45aca78c9c2fe9dc7b5bb",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningControllerTest.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "111b42dcfd12d1a6287148c687a2d299de81a64a470adccdbe8035ba45ec47fe",
+      "original_sha256": "111b42dcfd12d1a6287148c687a2d299de81a64a470adccdbe8035ba45ec47fe",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningViewModelTest.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "39b234083f13e8a9eb8cccbaaed1e311c4a3f2f8f0754cea9e77b5ea2519cf1b",
+      "original_sha256": "39b234083f13e8a9eb8cccbaaed1e311c4a3f2f8f0754cea9e77b5ea2519cf1b",
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningBackupAdapterTest.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "328b18e76f8358923062935bd5c9e1fa1fe8e9785a89acaff294db663e774f40",
+      "original_sha256": "328b18e76f8358923062935bd5c9e1fa1fe8e9785a89acaff294db663e774f40",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningProofRoomInstrumentedTest.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "0e7e6b516c78a1ee034f21b52f30d71917b60fbf1d1e24aa1f3cfee920d3ddcb",
+      "original_sha256": "0e7e6b516c78a1ee034f21b52f30d71917b60fbf1d1e24aa1f3cfee920d3ddcb",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningBackupInstrumentedTest.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "33af9bd91f3f275f1c5882195efe797be64b09dfb1ad6fa77c2413c3fece9cee",
+      "original_sha256": "33af9bd91f3f275f1c5882195efe797be64b09dfb1ad6fa77c2413c3fece9cee",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningScreenTest.kt",
+      "scope": "whole owned learning dependency"
+    },
+    {
+      "sha256": "01810607323a7a9bc7f0600aac62a865be9ad88323d91afa455ad7eeb7e6f76f",
+      "original_sha256": "fe8e6e588d9cacf8f4a12a9e571d8ebc27b35236c8dc2d82ea0fbd7b83fb783b",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/MasterOfChessStrategyApp.kt",
+      "scope": "only learning imports/home/routes"
+    },
+    {
+      "sha256": "f5ada4791f4970fda7e619f2da591a901a524d6b6a74514eaa3daa638ec24fb3",
+      "original_sha256": "56644ed984eb416cba2c7548e1b9f51907cb728ddf8baf3a07dd149fc2f554a7",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/navigation/AppNavigationModel.kt",
+      "scope": "only two learning routes and entry availability"
+    },
+    {
+      "sha256": "74d49064ec8a5a245bf86bcd5178d28c2c791420ee508c198245afc85750723d",
+      "original_sha256": "b9d3e1590c1228ea1acbede8679ce3a06cdb7bb1236bd50accf0866c671e4072",
+      "path": "app/src/main/res/values/strings.xml",
+      "scope": "only three learning menu strings"
+    }
+  ],
+  "source_identity_sha256": "d8e99a77d5dcd2f52810a9ef247032e814f38a35ba564261bc54768b62e7a7d0",
+  "room_schema_version": 23,
+  "schema_sha256": "969cf03e99a9dbe6d799c176b8725105ba1373dc70f829f6d4f73108f7002477",
+  "schema_identity": "bec67451e5775bded55644fb1b8e8525",
+  "schema22_entities_unchanged": true,
+  "build": {
+    "unique_jvm_tests": 144,
+    "receipt_sha256": "69108a877b12e8dfd4e5641a64a8714891bba420a40af233c1e2ac6bdcf5004f",
+    "inherited_from": "cmlp2",
+    "abis": [
+      "arm64-v8a",
+      "x86_64"
+    ],
+    "lint_warnings": 24,
+    "lint_errors": 0,
+    "only_changed_source": [
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningScreenTest.kt",
+        "sha256": "33af9bd91f3f275f1c5882195efe797be64b09dfb1ad6fa77c2413c3fece9cee"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongNavigationIntegrationTest.kt",
+        "sha256": "13fc5734387c290f5e44b94c60f5c8fcb16613d1a9160cddc999eed43c558525"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/learning/CompetitionMahjongLearningScreen.kt",
+        "sha256": "486a8474e69a2b7d5060b3ddfc32f6f7154b1a501388786afd367820369dea7c"
+      }
+    ],
+    "release_manifest_sha256": "2b473cc2bc8854915ceb2e813e9957c52cb931eb8326f332aed30fcd3c02b80d",
+    "suites": [
+      {
+        "sha256": "7fab47225f182350ce05b8c4f0f66b3376cd487cb6835d9240dfb91cc4db50b8",
+        "tests": 14,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.learning.RoomCompetitionMahjongLearningProofStoreTest"
+      },
+      {
+        "sha256": "d4c102dbbfe9fa0d08e8e81b8d922dfa2dc922ceb90483f2e436dc3318a8f5e9",
+        "tests": 9,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningBackupAdapterTest"
+      },
+      {
+        "sha256": "f1fe71934990ec47a64752c46afbc93feb4e52019eb6f9706d8268f3330b9f3c",
+        "tests": 19,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningControllerTest"
+      },
+      {
+        "sha256": "0b6c8bc17678bc11a68b03581827e75641f63d7b1d82f17a67cabe0907d14980",
+        "tests": 6,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningViewModelTest"
+      },
+      {
+        "sha256": "95994ebeb87a446719a6cbbe57a4915e14bef2e9b556781bb3f8c3af40468a25",
+        "tests": 23,
+        "name": "com.masterofchessstrategy.data.GameBackupRegistryTest"
+      },
+      {
+        "sha256": "0dbbd003fd75f9aa112241c9082fae4fee530de13c9b4e8cb338742cc6abc02a",
+        "tests": 15,
+        "name": "com.masterofchessstrategy.data.LocalDataBackupCodecTest"
+      },
+      {
+        "sha256": "ac47101c1d3106ad9882bd675eba80f8c49ea0c62738630d8e6d1b74847c5eaf",
+        "tests": 1,
+        "name": "com.masterofchessstrategy.data.RegisteredGameBackupMixedCodecTest"
+      },
+      {
+        "sha256": "bd52dd960665912128f6565f1bc0f0d08cf5d2c8c68a44a376d70a2b20095ba9",
+        "tests": 7,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.data.CompetitionFormalInventoryTest"
+      },
+      {
+        "sha256": "8dc0ed310c2d11b672d8a0dbfec6b53459f1964dc2d89a1c3c2eb720b31cea2d",
+        "tests": 16,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningProofTest"
+      },
+      {
+        "sha256": "7c52a2f7ebbbce721e29f9672fe55edf3a9e2fa2b69c49a4161453be6de306be",
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongLearningBackupAdapterTest"
+      },
+      {
+        "sha256": "9c1e24e703ae0484ae53d2af07f964fdf45179368857805ae5a94797c5884ef2",
+        "tests": 29,
+        "name": "com.masterofchessstrategy.navigation.AppNavigationModelTest"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "96dad4808c2b0e8efc9bffba7f1bb2b1d7029533a92543eb42505cb07c33816d",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "66d36a89c90e84c4c13f5b8b5ed97d78db21aadc51ed14e5bdff25f1bb1a769d"
+    }
+  },
+  "device": {
+    "app_data_cleared": false,
+    "final_runs": [
+      {
+        "class": "com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningScreenTest",
+        "log_sha256": "05bdeb8e626ca403fc024cfd32d39570c50113ba5f92e7af8911fbce648775d0",
+        "font": "1.0",
+        "expected": 5,
+        "transport_exit": 0,
+        "passed": true,
+        "name": "learning-screen"
+      },
+      {
+        "class": "com.masterofchessstrategy.ui.CompetitionMahjongNavigationIntegrationTest",
+        "log_sha256": "789f5ec4f40327b29ff9c86770a5b6f7895cde93a415651e65f8f4768595827c",
+        "font": "1.0",
+        "expected": 5,
+        "transport_exit": 0,
+        "passed": true,
+        "name": "learning-navigation"
+      },
+      {
+        "class": "com.masterofchessstrategy.ui.CompetitionMahjongNavigationIntegrationTest",
+        "log_sha256": "4091e4c5854a5220dcb04ae3e82d7c6be450bf2f007c06d8882a8bec9608e41f",
+        "font": "1.5",
+        "expected": 5,
+        "transport_exit": 0,
+        "passed": true,
+        "name": "learning-navigation-font1.5"
+      }
+    ],
+    "accepted_invocations": 47,
+    "api": "37",
+    "final_receipt_sha256": "7537b0b6920840c7e6d41f75aa9cb8d6a0564fd3881eae349da66328a1a89fc6",
+    "inherited_runs": [
+      {
+        "name": "learning-room",
+        "class": "com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningProofRoomInstrumentedTest",
+        "transport_exit": 0,
+        "expected": 7,
+        "font": "1.0",
+        "passed": true,
+        "log_sha256": "fc164577eb97d76d612e3f765ed80b44c38e0dd7383651015c5ba179d1daa2b1"
+      },
+      {
+        "name": "learning-backup",
+        "class": "com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningBackupInstrumentedTest",
+        "transport_exit": 0,
+        "expected": 8,
+        "font": "1.0",
+        "passed": true,
+        "log_sha256": "e799fdf5133b998d4b0f9f669a0de9078a85266432d898b3a54c1ba876a95415"
+      }
+    ],
+    "page_size": "16384",
+    "animations": {
+      "restored": [
+        {
+          "value": "1.0",
+          "key": "window_animation_scale"
+        },
+        {
+          "value": "1.0",
+          "key": "transition_animation_scale"
+        },
+        {
+          "value": "null",
+          "key": "animator_duration_scale"
+        }
+      ],
+      "old": {
+        "window_animation_scale": "1.0",
+        "animator_duration_scale": "null",
+        "transition_animation_scale": "1.0"
+      }
+    },
+    "inherited_invocations": 32,
+    "regression_runs": [
+      {
+        "transport_exit": 0,
+        "passed": true,
+        "log_sha256": "1296c0570499d7f9bc459f1722392e4a4e61ffdf445ac0d0b89b8e355e9c8f90",
+        "name": "fangqi-backup",
+        "expected": 5,
+        "font": "1.0",
+        "class": "com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiRankedBackupInstrumentedTest"
+      },
+      {
+        "transport_exit": 0,
+        "passed": true,
+        "log_sha256": "1c8a87c3153ef57e84fd7840b6dbe3b578468e9d1b9bbae8d3aa331438b4b771",
+        "name": "lanzhou-backup",
+        "expected": 4,
+        "font": "1.0",
+        "class": "com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongCompleteBackupInstrumentedTest"
+      },
+      {
+        "transport_exit": 0,
+        "passed": true,
+        "log_sha256": "879f3b2d9a546b3cf31a089bad40d7d7653b694f2bcde683bebec406c4def239",
+        "name": "tiger-storage",
+        "expected": 6,
+        "font": "1.0",
+        "class": "com.masterofchessstrategy.games.tiger_goat.data.TigerGoatStorageProductionInstrumentedTest"
+      },
+      {
+        "transport_exit": 0,
+        "passed": true,
+        "log_sha256": "ebeb8083b824cf23a17dfbd5031070be4d592268a21757a58a20cd20dae44770",
+        "name": "settings-production",
+        "expected": 2,
+        "font": "1.0",
+        "class": "com.masterofchessstrategy.ui.GoProductionBackupFlowInstrumentedTest"
+      }
+    ],
+    "emulator_reused": true,
+    "final_invocations": 15,
+    "inherited_partial_sha256": "1c2c90059bcbce1872eec286b1c5604e41a82862e6b3ecd5dac49e991f45f8a0",
+    "abi": "x86_64",
+    "fonts": [
+      "1.0",
+      "1.5"
+    ],
+    "distinct_methods": 42,
+    "restored_font": "1.0"
+  },
+  "visual": {
+    "directly_viewed_unique_pngs": 16,
+    "original_pngs": 18,
+    "full_landscape_accepted": false,
+    "images": [
+      {
+        "sha256": "0513564ba6b4a4b868889b002993a8777658f9abfe76c682fbc35f54aa283e70"
+      },
+      {
+        "sha256": "33c9be63a4d724da7bd56c42190af2444b2590d37b0edc919c5aaf091fe379bf"
+      },
+      {
+        "sha256": "a95ae84d924abb32804b36deefec4f5116109fa4fa70ff3282c09dd52c094fa6"
+      },
+      {
+        "sha256": "940f0a56b006b87ed89d4d7cfcad3553f5273e3b7ffd733323f481b4f7bc4dbc"
+      },
+      {
+        "sha256": "7ca645484a8d74fe8fe585fb3f7b6968f7134de266dc23c6fd1141e37b3391ac"
+      },
+      {
+        "sha256": "8a1b94472684a8c594f9ba9509b8c67a4715cb4996120aeb596cfe5f7febad04"
+      },
+      {
+        "sha256": "0cf8ddf259550b88adb66437813799f832265f3cf846eeb6b6a7b3b5424d6ee4"
+      },
+      {
+        "sha256": "3b360b50f45bc555da0f3eb02ae6e8b26ea6d3f1078c46bcd22c4dc286520d9e"
+      },
+      {
+        "sha256": "c458fb236dfb740a31addfb76223e77e3a3841f10f06dd8bb449c925325cbe71"
+      },
+      {
+        "sha256": "0e6fd792c4ad3f08aea7db57a3acad2394c8529bc8ae6273f989b09d58e6a32b"
+      },
+      {
+        "sha256": "564a76cd4bdf74da97145a4c4e533f2fda008b29bba678fa6dd800300f93e434"
+      },
+      {
+        "sha256": "ca538b28c6e0f49958b407b09a4d854b6c957d0335d16050c4b09ba66f9220a7"
+      },
+      {
+        "sha256": "ac2e6a773e13526b1df0bf7b16d4306dfa393c630ddef0b2106c77c31bfdd7c2"
+      },
+      {
+        "sha256": "c71974425bc9a40a0859d4ab17df6fd22fea7ab0e25d56ce60c2edbeed988711"
+      },
+      {
+        "sha256": "651926c6f5693a7b159694eb8e8425b8c4e60c198029e50d5cfcba3ece910a68"
+      },
+      {
+        "sha256": "ac2e6a773e13526b1df0bf7b16d4306dfa393c630ddef0b2106c77c31bfdd7c2"
+      },
+      {
+        "sha256": "8daf00218587de7e04878b844b4d87a8c9e82bd004ccf4bd4e1dd5ef25ca7173"
+      },
+      {
+        "sha256": "651926c6f5693a7b159694eb8e8425b8c4e60c198029e50d5cfcba3ece910a68"
+      }
+    ],
+    "unique_pngs": 16,
+    "review_sha256": "c08e55be2d26d7005671f6525f6d436ddb55fabc77a769272b7f6418ef671869"
+  },
+  "retained_history": [
+    "cmlp2 font1.5 full course failed at tile selection; all raw logs and images retained",
+    "cmlp3 readiness waits alone did not fix; same APK diagnostic frames locate chapter3 PureStraight tiles below viewport",
+    "cmlp4 test-only fix exposes tile row in vertical parent before horizontal tile scrolling; production sources unchanged",
+    "cmlp3 Gradle succeeded; receipt collector expected new JVM XML despite inheritance; evidence collector corrected without rebuild",
+    "cmlp4 passed functions; direct visuals found fourth chapter checkmark width clipped at150%; cmlp5 adds completion count effect key and full-bounds device assertions"
+  ],
+  "metadata": [
+    {
+      "sha256": "925d08212725544f3220598b99a3b8c77245f17ee6e4ddb24ae6a17cabed9ce8",
+      "path": "docs/games/competition-mahjong/2026-10-31-learning-integration-verification.md"
+    },
+    {
+      "sha256": "1bc4fb46536901b9977d6f1929ee6395189ff8060a8ae1c5acf55be937c0fd13",
+      "path": "docs/development/competition-learning-integration-2026-10-31.md"
+    },
+    {
+      "sha256": "3bcae19e5f04a3b679096c32cf730d898522387dca890ca296a26c327ba181d3",
+      "path": "docs/releases/v0.1.0-competition-mahjong-learning.1.md"
+    }
+  ],
+  "source_only": true,
+  "release_assets": [],
+  "new_third_party_assets": false,
+  "learning_course_accepted": true,
+  "learning_backup_accepted": true,
+  "formal_play_host_accepted": false,
+  "qualified_wins_accepted": false,
+  "ai_strength_accepted": false,
+  "physical_device_accepted": false,
+  "process_death_accepted": false,
+  "full_game_accepted": false,
+  "remaining": [
+    "Formal four-seat container backup before first claim",
+    "Fixed-owner formal host and three routes",
+    "Native proof of every past hand and approved growth mapping",
+    "Full81fan content, endgames, sound/art/performance and physical/process-death acceptance"
+  ]
+}
