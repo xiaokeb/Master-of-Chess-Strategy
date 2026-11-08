@@ -84,7 +84,7 @@ internal class GameBackupRegistry(
         require(outcomes.map { it.matchId }.distinct().size == outcomes.size) { "Duplicate core outcome" }
         val ordered = canonicalRecords(records, containerVersion)
         val context = GameBackupPreparationContext()
-        val prepared = Collections.unmodifiableList(ordered.map { record ->
+        val individual = ordered.filter { registration(it).adapter !is GameBackupContainerPreparation }.map { record ->
             val owner = registration(record)
             val result = (owner.adapter as? GameBackupContextualPreparation)?.prepareRestore(record, context)
                 ?: owner.adapter.prepareRestore(record)
@@ -92,7 +92,17 @@ internal class GameBackupRegistry(
                 requireFixedRegistrations()
                 require(it.storageSlot == owner.descriptor.storageSlot) { "Prepared backup belongs to a foreign slot" }
             }
-        })
+        }
+        // A whole-container owner must see missing rows as well as all candidate companion facts.
+        val containers = registrations.filter { it.adapter is GameBackupContainerPreparation }
+            .sortedWith(compareBy<Registration> { it.descriptor.canonicalOrder }.thenBy { it.descriptor.kind })
+            .map { owner ->
+                (owner.adapter as GameBackupContainerPreparation).prepareContainer(ordered, context).also {
+                    requireFixedRegistrations()
+                    require(it.storageSlot == owner.descriptor.storageSlot) { "Prepared container belongs to a foreign slot" }
+                }
+            }
+        val prepared = Collections.unmodifiableList(individual + containers)
         val extensionIds = prepared.flatMap { it.completedRecordIds.toList() }
         require(extensionIds.all { it.isNotBlank() && it.length <= 64 } &&
             extensionIds.distinct().size == extensionIds.size && extensionIds.none { it in coreIds }) {

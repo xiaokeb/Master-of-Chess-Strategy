@@ -10,6 +10,7 @@ import com.masterofchessstrategy.games.go.data.requireGoAiArchiveParents
 import com.masterofchessstrategy.games.go.data.requireGoAiProjectionParents
 import com.masterofchessstrategy.games.go.data.requireGoRankedParents
 import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalBackupBundle
+import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalBackupAdapter
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningBackupAdapter
 
 internal data class LocalDataRestoreSummary(
@@ -128,6 +129,7 @@ internal class RoomLocalDataBackupRepository(
             gameBackups.requireSupportedSlots(BackupStorageInventory.read(database))
             // Check every actual seat before clearAll can erase an unowned/unknown row.
             CompetitionMahjongFormalBackupBundle.requireStoredViewers(database.competitionMahjongFormalRoomDao())
+            CompetitionMahjongFormalBackupAdapter.requireStoredTarget(database)
             CompetitionMahjongLearningBackupAdapter.requireStoredProof(database)
             clearAll()
             // A pre-migration/Go-free backup must not resurrect data from any old disk source.

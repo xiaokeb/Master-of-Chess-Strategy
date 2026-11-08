@@ -2,6 +2,8 @@ package com.masterofchessstrategy.data
 
 import com.masterofchessstrategy.endgame.ChineseChessEndgamePack
 import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongBackupAdapter
+import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalBackupAdapter
+import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningBackupAdapter
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongCoordinatedBackupRepository
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongStorageEpochGate
@@ -41,7 +43,10 @@ internal fun createProductionGameBackupRepository(
                     GameBackupRegistry(listOf(TigerGoatBackupAdapter(), CompetitionMahjongBackupAdapter(),
                         FangqiBackupAdapter(), FangqiLearningBackupAdapter(), FangqiRankedStartBackupAdapter(),
                         FangqiRankedSettlementBackupAdapter(), FangqiRecordBackupAdapter(), LanzhouMahjongBackupAdapter(),
-                        LanzhouMahjongLearningBackupAdapter(), CompetitionMahjongLearningBackupAdapter()) + goAdapters),
+                        LanzhouMahjongLearningBackupAdapter(), CompetitionMahjongLearningBackupAdapter(),
+                        // Explicit strategy identities; this mapping does not certify playing strength.
+                        CompetitionMahjongFormalBackupAdapter(mapOf(Difficulty.EASY to 0, Difficulty.MEDIUM to 1,
+                            Difficulty.HARD to 2, Difficulty.MASTER to 3))) + goAdapters),
                 )
             },
             fangqiStorage.gate,
