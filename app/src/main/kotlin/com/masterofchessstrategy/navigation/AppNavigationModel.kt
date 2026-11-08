@@ -76,6 +76,8 @@ internal object AppDestination {
     const val GO_TUTORIAL = "go/tutorial"
     const val COMPETITION_MAHJONG_MODES = "competition-mahjong/modes"
     const val COMPETITION_MAHJONG_TUTORIAL = "competition-mahjong/tutorial"
+    const val COMPETITION_MAHJONG_VIEWER = "competitionViewer"
+    const val COMPETITION_MAHJONG_FORMAL = "competition-mahjong/formal/{$COMPETITION_MAHJONG_VIEWER}"
     const val LANZHOU_FANGQI_GAME = "lanzhou-fangqi/game"
     const val LANZHOU_FANGQI_LEARNING = "lanzhou-fangqi/learning"
     const val LANZHOU_FANGQI_AI_ENTRY = "lanzhou-fangqi/ai-entry"

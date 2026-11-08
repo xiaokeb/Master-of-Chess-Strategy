@@ -5,11 +5,14 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.room.withTransaction
 import androidx.test.platform.app.InstrumentationRegistry
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.TutorialProgressEntity
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.games.competition_mahjong.learning.*
+import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalSnapshotCodec
+import com.masterofchessstrategy.games.competition_mahjong.match.storage.room.CompetitionMahjongFormalRoomStorage
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.*
@@ -43,11 +46,15 @@ class CompetitionMahjongNavigationIntegrationTest {
         TigerGoatNavigationCheckActivity.closeOwnedDatabase(name)
         assertTrue(instrumentation.targetContext.deleteDatabase(name))
     }
-    @Test fun readOnlyNavigationPreservesProgressAndWithholdsUnverifiedGame() {
+    @Test fun navigationPreservesLearningAndKeepsUnqualifiedFormalPlayLocked() {
         enterModes()
-        compose.onNodeWithText("赛事与其他对局模式正在准备中，当前可先学习与复习四章课程。")
-            .performScrollTo().assertExists()
         capture("modes")
+        clickReady("competition_formal_entry")
+        waitForTag("competition_formal_summary")
+        compose.onNodeWithTag("competition_formal_play").assertIsNotEnabled()
+        capture("formal-locked")
+        compose.onNodeWithText("返回").performScrollTo().performClick()
+        waitForTag(COMPETITION_MAHJONG_MODES_TAG)
         enterLearning()
         waitForCard(CompetitionMahjongLearningLibrary.chapters.first().cards.first())
         compose.onNodeWithTag(nextTag).performScrollTo().assertIsNotEnabled()
@@ -57,6 +64,47 @@ class CompetitionMahjongNavigationIntegrationTest {
         compose.onNodeWithTag(COMPETITION_MAHJONG_MODES_BACK_TAG).performScrollTo().performClick()
         compose.onNodeWithTag(HOME_COMPETITION_MAHJONG_TAG).assertExists()
         assertNull(progress())
+        assertOtherGamesUntouched()
+    }
+
+    @Test fun qualifiedFormalNavigationSavesARealMoveAndReopensTheSameMatch() {
+        runBlocking {
+            val store = RoomCompetitionMahjongLearningProofStore(database, database.competitionMahjongLearningProofDao())
+            for (chapter in CompetitionMahjongLearningProofCatalog.chapterIds) {
+                store.confirm(CompetitionMahjongLearningProofRequest(UUID.randomUUID().toString(), chapter,
+                    CompetitionMahjongLearningProofCatalog.cardIds(chapter), 1))
+            }
+        }
+        enterModes()
+        clickReady("competition_formal_entry")
+        waitForTag("competition_formal_summary")
+        capture("formal-unlocked")
+        clickReady("competition_formal_statistics")
+        waitForTag("competition_mahjong_statistics_empty")
+        capture("formal-statistics")
+        compose.onNodeWithText("返回").performScrollTo().performClick()
+        clickReady("competition_formal_history")
+        waitForTag("competition_mahjong_history_empty")
+        capture("formal-history")
+        compose.onNodeWithText("返回").performScrollTo().performClick()
+
+        clickReady("competition_formal_play")
+        waitForTag("competition_mahjong_action_bar")
+        val start = checkNotNull(activeMatch())
+        val discard = hasText("出 ", substring = true) and hasClickAction() and isEnabled()
+        compose.waitUntil(10_000) { compose.onAllNodes(discard).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("competition_mahjong_local_tiles").assertIsDisplayed()
+        capture("formal-table")
+        compose.onNodeWithTag("competition_mahjong_action_bar").performScrollTo()
+        capture("formal-actions")
+        compose.onAllNodes(discard).onFirst().performScrollTo().performClick()
+        compose.waitUntil(10_000) { activeMatch()?.engineRecord?.contentEquals(start.engineRecord) == false }
+        compose.onNodeWithText("返回").performScrollTo().performClick()
+        waitForTag("competition_formal_summary")
+        clickReady("competition_formal_play")
+        waitForTag("competition_mahjong_table")
+        assertEquals(start.config.matchId, activeMatch()?.config?.matchId)
+        capture("formal-resumed")
         assertOtherGamesUntouched()
     }
 
@@ -142,6 +190,19 @@ class CompetitionMahjongNavigationIntegrationTest {
     private fun enterModes() {
         compose.onNodeWithTag(HOME_COMPETITION_MAHJONG_TAG).performScrollTo().performClick()
         compose.onNodeWithTag(COMPETITION_MAHJONG_MODES_TAG).assertExists()
+    }
+
+    private fun waitForTag(tag: String) {
+        compose.waitUntil(15_000) { compose.onAllNodes(hasTestTag(tag)).fetchSemanticsNodes().size == 1 }
+    }
+
+    private fun activeMatch() = runBlocking {
+        database.withTransaction {
+            val bytes = CompetitionMahjongFormalRoomStorage.readMctxInTransaction(
+                database, database.competitionMahjongFormalRoomDao(), 0,
+            )
+            bytes?.let { CompetitionMahjongFormalSnapshotCodec.decode(it, 0)?.active }
+        }
     }
 
     private fun enterLearning() {

@@ -27,8 +27,10 @@ internal class CompetitionMahjongStorageEpochGate {
     /** Capture once per page/writer lifetime. An old writer must never renew this identity. */
     fun captureOwner(): Owner = Owner(identity, mutableEpoch.value)
 
+    fun isCurrent(owner: Owner): Boolean = owner.belongsTo(identity) && owner.epoch == mutableEpoch.value
+
     suspend fun <T> access(owner: Owner, block: suspend () -> T): T = locked {
-        if (!owner.belongsTo(identity) || owner.epoch != mutableEpoch.value) {
+        if (!isCurrent(owner)) {
             throw IOException("本地数据已替换，请重新打开国标麻将页面")
         }
         block()

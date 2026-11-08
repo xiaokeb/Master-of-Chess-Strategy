@@ -7,6 +7,7 @@ import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionM
 import com.masterofchessstrategy.games.competition_mahjong.learning.RoomCompetitionMahjongLearningProofStore
 import com.masterofchessstrategy.games.competition_mahjong.learning.GatedCompetitionMahjongLearningProofStore
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongStorageEpochGate
+import com.masterofchessstrategy.games.competition_mahjong.match.play.CompetitionMahjongFormalRoute
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -497,7 +498,16 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                 CompetitionMahjongNavigationModesScreen(
                     onBack = navController::popBackStack,
                     onLearning = { navController.navigate(AppDestination.COMPETITION_MAHJONG_TUTORIAL) },
+                    onFormal = { viewer -> navController.navigate("competition-mahjong/formal/$viewer") },
                 )
+            }
+            composable(AppDestination.COMPETITION_MAHJONG_FORMAL, arguments = listOf(
+                navArgument(AppDestination.COMPETITION_MAHJONG_VIEWER) { type = NavType.IntType },
+            )) { entry ->
+                val viewer = entry.arguments?.getInt(AppDestination.COMPETITION_MAHJONG_VIEWER)
+                if (viewer != null && viewer in 0..3) {
+                    CompetitionMahjongFormalRoute(database, viewer, gameWriters, navController::popBackStack)
+                }
             }
             composable(AppDestination.COMPETITION_MAHJONG_TUTORIAL) {
                 val store = remember(database) {

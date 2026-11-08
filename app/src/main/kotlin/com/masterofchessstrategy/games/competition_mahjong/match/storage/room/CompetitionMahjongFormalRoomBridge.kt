@@ -1,14 +1,18 @@
 package com.masterofchessstrategy.games.competition_mahjong.match.storage.room
 
 import androidx.room.RoomDatabase
+import androidx.room.withTransaction
 import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
 import com.masterofchessstrategy.engine.RestoreResult
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpoint
 import com.masterofchessstrategy.games.competition_mahjong.match.policy.CompetitionMahjongPlayPolicy
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalMigration
+import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalMigrationPreview
+import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalMigrationSource
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalRepository
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalSnapshot
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalSnapshotCodec
+import com.masterofchessstrategy.games.competition_mahjong.match.storage.prepareCompetitionMahjongFormalMigration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -50,6 +54,34 @@ internal class CompetitionMahjongFormalRoomBridge private constructor(
     }
 
     companion object {
+        /** Validate a legacy source without claiming a seat or creating an incomplete formal row. */
+        suspend fun previewInitialMigration(
+            viewer: Int,
+            policy: CompetitionMahjongPlayPolicy,
+            source: CompetitionMahjongFormalMigrationSource,
+        ): CompetitionMahjongFormalMigrationPreview = withContext(Dispatchers.IO) {
+            prepareCompetitionMahjongFormalMigration(source, viewer, policy, ::admitCompetitionMahjongFormalNative).preview
+        }
+
+        /** The caller holds the writer barrier. Recheck the source and claim with payload in one transaction. */
+        suspend fun installInitialMigration(
+            database: RoomDatabase,
+            dao: CompetitionMahjongFormalRoomDao,
+            viewer: Int,
+            policy: CompetitionMahjongPlayPolicy,
+            expectedSourceSha256: String,
+            readSource: suspend () -> CompetitionMahjongFormalMigrationSource,
+        ): CompetitionMahjongFormalRoomBridge = withContext(Dispatchers.IO) {
+            val source = readSource()
+            require(source.sha256 == expectedSourceSha256) { "迁移来源或选择已变化，请重新预览" }
+            val candidate = CompetitionMahjongFormalRoomBackup.prepareMigration(viewer, policy, source)
+            database.withTransaction {
+                if (dao.find(viewer)?.mctxSize != null) throw IOException("正式赛事已存在，请重新打开")
+                require(readSource().sha256 == expectedSourceSha256) { "迁移来源在准入期间变化，原数据已保留" }
+                installBackupInTransaction(database, dao, candidate)
+            }
+        }
+
         /** Call under the coordinator's retired-writer barrier; this does not retire legacy MCMT writers. */
         suspend fun acquire(database: RoomDatabase, dao: CompetitionMahjongFormalRoomDao,
                             viewer: Int, policy: CompetitionMahjongPlayPolicy): CompetitionMahjongFormalRoomBridge =
@@ -77,6 +109,15 @@ internal class CompetitionMahjongFormalRoomBackup private constructor(
     internal val mctx: ByteArray get() = bytes.copyOf()
 
     companion object {
+        suspend fun prepareMigration(
+            viewer: Int,
+            policy: CompetitionMahjongPlayPolicy,
+            source: CompetitionMahjongFormalMigrationSource,
+        ): CompetitionMahjongFormalRoomBackup {
+            val plan = prepareCompetitionMahjongFormalMigration(source, viewer, policy, ::admitCompetitionMahjongFormalNative)
+            return CompetitionMahjongFormalRoomBackup(viewer, plan.encoded, policy)
+        }
+
         /** An absent formal slot in a replacement backup must seal old sources with an explicit empty fact. */
         fun emptyForRestore(viewer: Int, policy: CompetitionMahjongPlayPolicy): CompetitionMahjongFormalRoomBackup =
             admit(viewer, CompetitionMahjongFormalSnapshotCodec.encode(CompetitionMahjongFormalSnapshot(viewer)), policy)

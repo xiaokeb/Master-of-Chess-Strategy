@@ -89,7 +89,9 @@ class CompetitionMahjongFormalMigration internal constructor(
     private val dispatcher: CoroutineDispatcher,
 ) {
     suspend fun preview(readSource: suspend () -> CompetitionMahjongFormalMigrationSource):
-        CompetitionMahjongFormalMigrationPreview = withContext(dispatcher) { prepare(readSource()).preview }
+        CompetitionMahjongFormalMigrationPreview = withContext(dispatcher) {
+            prepareCompetitionMahjongFormalMigration(readSource(), viewerPlayerId, playPolicy, admitCheckpoint).preview
+        }
 
     /** The caller must keep legacy writers stopped until routing has switched to the new repository. */
     suspend fun migrate(expectedSourceSha256: String,
@@ -98,84 +100,92 @@ class CompetitionMahjongFormalMigration internal constructor(
         storage.mutex.withLock {
             val source = readSource()
             require(source.sha256 == expectedSourceSha256) { "迁移来源或选择已变化，请重新预览" }
-            val plan = prepare(source)
+            val plan = prepareCompetitionMahjongFormalMigration(source, viewerPlayerId, playPolicy, admitCheckpoint)
             val previous = storage.read()
-            val encoded = CompetitionMahjongFormalSnapshotCodec.encode(plan.snapshot)
+            val encoded = plan.encoded
             if (previous != null) require(previous.contentEquals(encoded)) { "统一仓库已有不同数据，未执行迁移覆盖" }
             require(readSource().sha256 == expectedSourceSha256) { "迁移来源在准入期间变化，原数据已保留" }
             if (previous == null) storage.replace(encoded)
             CompetitionMahjongFormalMigrationResult(plan.preview, wasInstalled = previous == null)
         }
     }
+}
 
-    private data class Plan(val snapshot: CompetitionMahjongFormalSnapshot,
-                            val preview: CompetitionMahjongFormalMigrationPreview)
+internal data class CompetitionMahjongFormalMigrationPlan(
+    val encoded: ByteArray,
+    val preview: CompetitionMahjongFormalMigrationPreview,
+)
 
-    private suspend fun prepare(source: CompetitionMahjongFormalMigrationSource): Plan {
-        require(source.viewerPlayerId == viewerPlayerId) { "迁移观察玩家归属不一致" }
-        val active = source.activeBytes?.let {
-            requireNotNull(CompetitionMahjongMatchCheckpointCodec.decode(it, viewerPlayerId)) { "旧MCMT损坏或版本不兼容" }
-        }
-        var statistics = source.statisticsBytes?.let {
-            requireNotNull(CompetitionMahjongStatisticsCodec.decode(it, viewerPlayerId)) { "旧统计损坏或版本不兼容" }
-        } ?: CompetitionMahjongStatistics.empty()
-        var history = source.historyBytes?.let {
-            requireNotNull(CompetitionMahjongMatchHistoryCodec.decode(it, viewerPlayerId)) { "旧成绩历史损坏或版本不兼容" }
-        } ?: CompetitionMahjongMatchHistory.empty()
-
-        // Admit the actual active Native record before any repair or derivation.
-        active?.let {
-            playPolicy.requireAuthorized(it.config.botLevel, it.assistance)
-            admitCheckpoint(it)
-        }
-        require(history.entries.none { it.matchId in source.confirmedDeletedMatchIds }) { "删除证据与可见历史冲突" }
-        var materialized = false
-        var retracted = false
-        active?.let { checkpoint ->
-            val id = checkpoint.config.matchId
-            if (!checkpoint.ledger.isComplete) {
-                retracted = statistics.outcomes.any { it.matchId == id } || history.entries.any { it.matchId == id }
-                if (retracted) {
-                    require(checkpoint.activeHandIndex == 15 && checkpoint.ledger.completedHandCount == 15) {
-                        "旧成绩只能随当前赛事末盘撤回，不可用早期档清除已结算结果"
-                    }
-                    history.entries.firstOrNull { it.matchId == id }?.let {
-                        require(it.hands.take(15) == checkpoint.ledger.results) { "末盘撤回前十五盘与旧成绩单不一致" }
-                    }
-                }
-                statistics = CompetitionMahjongStatistics.from(statistics.outcomes.filterNot { it.matchId == id })
-                history = CompetitionMahjongMatchHistory.from(history.entries.filterNot { it.matchId == id })
-            } else if (source.materializeActiveCompletion) {
-                val existing = statistics.outcomes.firstOrNull { it.matchId == id }
-                val existingSheet = history.entries.firstOrNull { it.matchId == id }
-                val time = existing?.settledAtEpochMillis ?: existingSheet?.settledAtEpochMillis ?: source.activeSettledAtEpochMillis
-                val outcome = CompetitionMahjongSeriesOutcome.from(checkpoint, playPolicy, time)
-                val sheet = CompetitionMahjongMatchHistoryEntry.from(checkpoint, playPolicy, time)
-                existing?.let { require(it == outcome) { "当前赛事与旧统计冲突" } }
-                existingSheet?.let {
-                    require(it.sameResult(sheet) && it.settledAtEpochMillis == time) { "当前赛事与旧成绩单冲突" }
-                }
-                // A recorded result with no sheet has unknown deletion status; explicit evidence is required.
-                require(existing == null || existingSheet != null || id in source.confirmedDeletedMatchIds) {
-                    "当前赛事已有统计但历史缺失，不能推定删除或补建"
-                }
-                materialized = existing == null || (existingSheet == null && id !in source.confirmedDeletedMatchIds)
-                if (existing == null) statistics = CompetitionMahjongStatistics.from(statistics.outcomes + outcome)
-                if (existingSheet == null && id !in source.confirmedDeletedMatchIds)
-                    history = CompetitionMahjongMatchHistory.from(history.entries + sheet)
-            }
-        }
-
-        val sheetIds = history.entries.map { it.matchId }.toSet()
-        require(statistics.outcomes.all { it.matchId in sheetIds || it.matchId in source.confirmedDeletedMatchIds }) {
-            "旧统计存在缺少逐盘历史且无删除证据的赛事，未执行迁移"
-        }
-        val snapshot = CompetitionMahjongFormalSnapshot(viewerPlayerId, active, statistics, history,
-            source.confirmedDeletedMatchIds)
-        // Check all capacities and canonical inner formats before a preview is offered.
-        CompetitionMahjongFormalSnapshotCodec.encode(snapshot)
-        return Plan(snapshot, CompetitionMahjongFormalMigrationPreview(source.sha256, active?.config?.matchId,
-            active?.ledger?.completedHandCount, statistics.seriesCount, history.entries.size,
-            source.confirmedDeletedMatchIds.size, materialized, retracted))
+internal suspend fun prepareCompetitionMahjongFormalMigration(
+    source: CompetitionMahjongFormalMigrationSource,
+    viewerPlayerId: Int,
+    playPolicy: CompetitionMahjongPlayPolicy,
+    admitCheckpoint: suspend (CompetitionMahjongMatchCheckpoint) -> Unit,
+): CompetitionMahjongFormalMigrationPlan {
+    require(source.viewerPlayerId == viewerPlayerId) { "迁移观察玩家归属不一致" }
+    val active = source.activeBytes?.let {
+        requireNotNull(CompetitionMahjongMatchCheckpointCodec.decode(it, viewerPlayerId)) { "旧MCMT损坏或版本不兼容" }
     }
+    var statistics = source.statisticsBytes?.let {
+        requireNotNull(CompetitionMahjongStatisticsCodec.decode(it, viewerPlayerId)) { "旧统计损坏或版本不兼容" }
+    } ?: CompetitionMahjongStatistics.empty()
+    var history = source.historyBytes?.let {
+        requireNotNull(CompetitionMahjongMatchHistoryCodec.decode(it, viewerPlayerId)) { "旧成绩历史损坏或版本不兼容" }
+    } ?: CompetitionMahjongMatchHistory.empty()
+
+    // Admit the actual active Native record before any repair or derivation.
+    active?.let {
+        playPolicy.requireAuthorized(it.config.botLevel, it.assistance)
+        admitCheckpoint(it)
+    }
+    require(history.entries.none { it.matchId in source.confirmedDeletedMatchIds }) { "删除证据与可见历史冲突" }
+    var materialized = false
+    var retracted = false
+    active?.let { checkpoint ->
+        val id = checkpoint.config.matchId
+        if (!checkpoint.ledger.isComplete) {
+            retracted = statistics.outcomes.any { it.matchId == id } || history.entries.any { it.matchId == id }
+            if (retracted) {
+                require(checkpoint.activeHandIndex == 15 && checkpoint.ledger.completedHandCount == 15) {
+                    "旧成绩只能随当前赛事末盘撤回，不可用早期档清除已结算结果"
+                }
+                history.entries.firstOrNull { it.matchId == id }?.let {
+                    require(it.hands.take(15) == checkpoint.ledger.results) { "末盘撤回前十五盘与旧成绩单不一致" }
+                }
+            }
+            statistics = CompetitionMahjongStatistics.from(statistics.outcomes.filterNot { it.matchId == id })
+            history = CompetitionMahjongMatchHistory.from(history.entries.filterNot { it.matchId == id })
+        } else if (source.materializeActiveCompletion) {
+            val existing = statistics.outcomes.firstOrNull { it.matchId == id }
+            val existingSheet = history.entries.firstOrNull { it.matchId == id }
+            val time = existing?.settledAtEpochMillis ?: existingSheet?.settledAtEpochMillis ?: source.activeSettledAtEpochMillis
+            val outcome = CompetitionMahjongSeriesOutcome.from(checkpoint, playPolicy, time)
+            val sheet = CompetitionMahjongMatchHistoryEntry.from(checkpoint, playPolicy, time)
+            existing?.let { require(it == outcome) { "当前赛事与旧统计冲突" } }
+            existingSheet?.let {
+                require(it.sameResult(sheet) && it.settledAtEpochMillis == time) { "当前赛事与旧成绩单冲突" }
+            }
+            // A recorded result with no sheet has unknown deletion status; explicit evidence is required.
+            require(existing == null || existingSheet != null || id in source.confirmedDeletedMatchIds) {
+                "当前赛事已有统计但历史缺失，不能推定删除或补建"
+            }
+            materialized = existing == null || (existingSheet == null && id !in source.confirmedDeletedMatchIds)
+            if (existing == null) statistics = CompetitionMahjongStatistics.from(statistics.outcomes + outcome)
+            if (existingSheet == null && id !in source.confirmedDeletedMatchIds)
+                history = CompetitionMahjongMatchHistory.from(history.entries + sheet)
+        }
+    }
+
+    val sheetIds = history.entries.map { it.matchId }.toSet()
+    require(statistics.outcomes.all { it.matchId in sheetIds || it.matchId in source.confirmedDeletedMatchIds }) {
+        "旧统计存在缺少逐盘历史且无删除证据的赛事，未执行迁移"
+    }
+    val snapshot = CompetitionMahjongFormalSnapshot(viewerPlayerId, active, statistics, history,
+        source.confirmedDeletedMatchIds)
+    // Check all capacities and canonical inner formats before a preview is offered.
+    val encoded = CompetitionMahjongFormalSnapshotCodec.encode(snapshot)
+    val preview = CompetitionMahjongFormalMigrationPreview(source.sha256, active?.config?.matchId,
+        active?.ledger?.completedHandCount, statistics.seriesCount, history.entries.size,
+        source.confirmedDeletedMatchIds.size, materialized, retracted)
+    return CompetitionMahjongFormalMigrationPlan(encoded, preview)
 }

@@ -1,7 +1,9 @@
 package com.masterofchessstrategy.games.competition_mahjong.match.storage.room
 
 import androidx.room.withTransaction
+import android.database.sqlite.SQLiteException
 import com.masterofchessstrategy.data.CompetitionMahjongMatchEntity
+import com.masterofchessstrategy.data.CompetitionMahjongMatchArchive
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.engine.CompetitionMahjongAction
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundActionKind
@@ -9,6 +11,10 @@ import com.masterofchessstrategy.engine.CompetitionMahjongRoundPhase
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
 import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalBackupBundle
+import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningProofCatalog
+import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningProofRequest
+import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongStorageEpochGate
+import com.masterofchessstrategy.games.competition_mahjong.learning.RoomCompetitionMahjongLearningProofStore
 import com.masterofchessstrategy.games.competition_mahjong.match.*
 import com.masterofchessstrategy.games.competition_mahjong.match.hint.CompetitionMahjongHintReceipt
 import com.masterofchessstrategy.games.competition_mahjong.match.hint.competitionMahjongHintPosition
@@ -205,6 +211,136 @@ class CompetitionMahjongFormalRoomBridgeInstrumentedTest {
         f.db.competitionMahjongMatchDao().upsert(legacy(nativeV4(seedStart = 400)))
         invalid { bridge.migration.migrate(preview.sourceSha256, source) }
         assertArrayEquals(first, bridge.exportMctx())
+    }
+
+    @Test fun firstMigrationPreviewAndStaleConfirmationLeaveNoClaimThenValidConfirmationInstalls() =
+        withOwnedLanzhouDatabase { f ->
+            val dao = f.db.competitionMahjongFormalRoomDao()
+            val legacyDao = f.db.competitionMahjongMatchDao()
+            val original = nativeV4()
+            legacyDao.upsert(legacy(original))
+            val readSource: suspend () -> CompetitionMahjongFormalMigrationSource = {
+                val row = requireNotNull(legacyDao.find(2))
+                CompetitionMahjongFormalMigrationSource(0, row.checkpoint, null, null, false, row.updatedAtEpochMillis)
+            }
+            val preview = CompetitionMahjongFormalRoomBridge.previewInitialMigration(0, policy, readSource())
+            assertEquals(original.config.matchId, preview.activeMatchId)
+            assertTrue(dao.listViewerIds().isEmpty())
+            val replacement = nativeV4(seedStart = 400)
+            invalid {
+                var firstRead = true
+                CompetitionMahjongFormalRoomBridge.installInitialMigration(f.db, dao, 0, policy, preview.sourceSha256) {
+                    if (firstRead) {
+                        firstRead = false
+                        readSource()
+                    } else {
+                        assertTrue(f.db.inTransaction())
+                        CompetitionMahjongFormalMigrationSource(0, legacy(replacement).checkpoint, null, null, false, 1)
+                    }
+                }
+            }
+            assertTrue(dao.listViewerIds().isEmpty())
+            val bridge = CompetitionMahjongFormalRoomBridge.installInitialMigration(
+                f.db, dao, 0, policy, preview.sourceSha256, readSource,
+            )
+            val claim = requireNotNull(dao.find(0))
+            assertNotNull(claim.mctxSize)
+            assertCheckpoint(original, bridge.openRepository().matchStore.load(0))
+            assertArrayEquals(legacy(original).checkpoint, legacyDao.find(2)!!.checkpoint)
+            denied {
+                CompetitionMahjongFormalRoomBridge.installInitialMigration(f.db, dao, 0, policy, preview.sourceSha256, readSource)
+            }
+            assertEquals(claim, dao.find(0))
+        }
+
+    @Test fun firstInitializationFailureDoesNotLeaveAnUnmigratedRow() = withOwnedLanzhouDatabase { f ->
+        val dao = f.db.competitionMahjongFormalRoomDao()
+        val empty = CompetitionMahjongFormalMigrationSource(2, null, null, null, false, 0)
+        val sql = f.db.openHelper.writableDatabase
+        sql.execSQL("""
+            CREATE TRIGGER fail_first_formal AFTER INSERT ON competition_mahjong_formal
+            BEGIN SELECT RAISE(ABORT, 'test first formal insert'); END
+        """.trimIndent())
+        try {
+            CompetitionMahjongFormalRoomBridge.installInitialMigration(f.db, dao, 2, policy, empty.sha256) { empty }
+            fail("The first formal insert unexpectedly succeeded")
+        } catch (failure: SQLiteException) {
+            assertTrue(failure.message.orEmpty().contains("test first formal insert"))
+        }
+        assertNull(dao.find(2))
+        sql.execSQL("DROP TRIGGER fail_first_formal")
+        val bridge = CompetitionMahjongFormalRoomBridge.installInitialMigration(f.db, dao, 2, policy, empty.sha256) { empty }
+        assertArrayEquals(emptyMctx(2), bridge.exportMctx())
+    }
+
+    @Test fun productionHostRequiresCourseAndFencesEveryStoreAfterFailedReplacement() = withOwnedLanzhouDatabase { f ->
+        val checkpoint = nativeV4()
+        val initialHost = CompetitionMahjongFormalHost(f.db, 0)
+        val locked = (initialHost.open() as CompetitionMahjongFormalHost.Entry.Ready).session
+        assertTrue(locked.policy.allowedBotLevels.isEmpty())
+        invalid { locked.match.save(checkpoint) }
+        initialHost.close()
+        denied { locked.match.load(0) }
+
+        completeCourse(f.db)
+        val host = CompetitionMahjongFormalHost(f.db, 0)
+        val session = (host.open() as CompetitionMahjongFormalHost.Entry.Ready).session
+        assertSame(session, (host.open() as CompetitionMahjongFormalHost.Entry.Ready).session)
+        assertEquals(listOf(0), session.policy.allowedBotLevels)
+        session.match.save(checkpoint)
+        assertCheckpoint(checkpoint, session.match.load(0))
+        assertTrue(session.statistics.load(0).outcomes.isEmpty())
+        assertTrue(session.history.load(0).entries.isEmpty())
+
+        val dao = f.db.competitionMahjongFormalRoomDao()
+        val lease = dao.find(0)
+        denied {
+            CompetitionMahjongStorageEpochGate.forDatabase(f.db).exclusive(replacing = true) {
+                throw IOException("Replacement transaction rejected")
+            }
+        }
+        assertEquals(lease, dao.find(0))
+        assertFalse(host.isCurrent())
+        denied { session.match.save(checkpoint) }
+        denied { session.statistics.load(0) }
+        denied { session.history.setFavorite(0, checkpoint.config.matchId, true) }
+        val fresh = (CompetitionMahjongFormalHost(f.db, 0).open() as CompetitionMahjongFormalHost.Entry.Ready).session
+        assertCheckpoint(checkpoint, fresh.match.load(0))
+    }
+
+    @Test fun productionHostDoesNotArchiveLegacyThroughAnotherSeatBeforeConfirmation() = withOwnedLanzhouDatabase { f ->
+        completeCourse(f.db)
+        val checkpoint = nativeV4()
+        val archive = CompetitionMahjongMatchArchive(0, checkpoint.config.matchId, 1,
+            CompetitionMahjongMatchCheckpointCodec.encode(checkpoint))
+        f.db.competitionMahjongMatchDao().upsert(archive.toEntity())
+        val dao = f.db.competitionMahjongFormalRoomDao()
+        denied { CompetitionMahjongFormalHost(f.db, 1).open() }
+        val cancelled = CompetitionMahjongFormalHost(f.db, 0)
+        val preview = (cancelled.open() as CompetitionMahjongFormalHost.Entry.ConfirmMigration).preview
+        cancelled.close()
+        denied { cancelled.confirmMigration(preview) }
+        assertTrue(dao.listViewerIds().isEmpty())
+
+        val host = CompetitionMahjongFormalHost(f.db, 0)
+        invalid { host.confirmMigration(preview) }
+        val current = (host.open() as CompetitionMahjongFormalHost.Entry.ConfirmMigration).preview
+        val session = host.confirmMigration(current)
+        assertSame(session, host.confirmMigration(current))
+        assertCheckpoint(checkpoint, session.match.load(0))
+        assertArrayEquals(archive.encodedCheckpoint, f.db.competitionMahjongMatchDao().find(2)!!.checkpoint)
+        val other = (CompetitionMahjongFormalHost(f.db, 1).open() as CompetitionMahjongFormalHost.Entry.Ready).session
+        assertNull(other.match.load(1))
+        assertEquals(listOf(0, 1), dao.listViewerIds())
+    }
+
+    private suspend fun completeCourse(db: MocsDatabase) {
+        val learning = RoomCompetitionMahjongLearningProofStore(db, db.competitionMahjongLearningProofDao())
+        for (chapter in CompetitionMahjongLearningProofCatalog.chapterIds) {
+            learning.confirm(CompetitionMahjongLearningProofRequest(
+                UUID.randomUUID().toString(), chapter, CompetitionMahjongLearningProofCatalog.cardIds(chapter), 1,
+            ))
+        }
     }
 
     /** Real histories; v4 receipt is QA metadata tied to an actually legal public action. */
