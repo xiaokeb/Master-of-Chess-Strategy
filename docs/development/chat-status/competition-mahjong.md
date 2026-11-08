@@ -1,5 +1,7 @@
 # 国标麻将对话状态
 
+2026-11-08 发布身份：38aadf62f195f11b0a7497f54a8bfc87a6a84fb3／tag v0.1.0-competition-mahjong-formal-backup.1／[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-formal-backup.1) id438131941。四席正式备份已接生产，旧源保留、候选权限隔离、清表前保护及第四席失败原子回滚已验。125 JVM、52设备方法各执行一次、6张原图中4个不同画面已检查，双ABI/APK/Manifest通过，Lint 0错误24警告。1971文件干净导出、20路径显式提交，源码预发布无APK。下一节点为首次打开、旧档确认迁移、固定Owner及赛事/统计/历史路由。完整横屏、可信胜场、强度、音画、杀进程与实体设备仍待。
+
 2026-11-01 发布身份：909f8eddccfb42200b9f031058d968b876d39271／tag v0.1.0-competition-mahjong-learning.1／[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-learning.1) id430395104。四章29卡实际导航、独立MCLP/schema23、生产学习备份与固定Owner退休已验。144 JVM证据按输入核对继承，42设备方法47次有效调用、18PNG16不同画面直接查看；双ABI/APK/Manifest及Lint0错24警告。1954完整导出44路径显式提交，源码预发布无APK；其他WIP保留。下一节点先接四座FormalBundle整容器备份，再创建正式宿主及赛事/统计/历史入口；当前公开ledger不能证明过去十五盘私有Native过程，不推造可信胜场或成长。正式强度、全部内容音画、杀进程/实体设备及完整横屏继续。
 
 2026-10-31 发布身份：923623af9afbaa0c42d3cd0a89ff40d2d66f6612／tag v0.1.0-competition-mahjong-formal-room.1／[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-formal-room.1) id429699238。MCTX统一仓库、实际Room桥/Native准入、Owner/epoch/revision、显式迁移与四座Bundle已验；公共导出/替换在读adapter/清表前拒绝全部异常座位，DELETE触发器锁定顺序。11组120正式JVM、24设备方法/24调用、6PNG/4不同画面直接检查，双ABI/APK/Manifest/Lint0错23警告。1907完整导出、31路径显式提交，schema22未变，无APK附件；未清默认数据，字体1.0。生产Formal工厂、可信学习/胜场、旧写者退休封源、整库四座提交后发布和三Route仍待，不把QA提示或数据库重开当真实教程/支付/全场/杀进程。下一串行接虎羊本地双人存储与页面退休；国标4章29卡独立MCLP模型16私有JVM已冻结待持久化，旧共享四步不自动授予完成。完整内容/音效/强度/横屏/实体设备与全项目目标继续，其他WIP及象棋旧槽保留。

@@ -1,5 +1,7 @@
 # 跨棋种集成与统一提交队列
 
+2026-11-08 国标正式赛事备份：38aadf62f195f11b0a7497f54a8bfc87a6a84fb3／tag v0.1.0-competition-mahjong-formal-backup.1／[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-formal-backup.1) id438131941。四席正式备份已接生产，旧源保留、候选权限隔离、清表前保护及第四席失败原子回滚已验。125 JVM、52设备方法各执行一次、6张原图中4个不同画面已检查，双ABI/APK/Manifest通过，Lint 0错误24警告。1971文件干净导出、20路径显式提交，源码预发布无APK。下一节点为首次打开、旧档确认迁移、固定Owner及赛事/统计/历史路由。完整横屏、可信胜场、强度、音画、杀进程与实体设备仍待。
+
 2026-11-01 国标课程窗口完成：909f8eddccfb42200b9f031058d968b876d39271／tag v0.1.0-competition-mahjong-learning.1／[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-learning.1) id430395104。四章29卡实际导航、独立MCLP/schema23、生产学习备份与固定Owner退休已验。144 JVM证据按输入核对继承，42设备方法47次有效调用、18PNG16不同画面直接查看；双ABI/APK/Manifest及Lint0错24警告。1954完整导出44路径显式提交，源码预发布无APK；其他WIP保留。下一节点先接四座FormalBundle整容器备份，再创建正式宿主及赛事/统计/历史入口；当前公开ledger不能证明过去十五盘私有Native过程，不推造可信胜场或成长。正式强度、全部内容音画、杀进程/实体设备及完整横屏继续。
 
 2026-10-31 虎羊本地双人存储窗口完成：7123ffd2b6d024979f6641594dd1aa0c76d7057f／tag v0.1.0-tiger-goat-storage-lifecycle.1／[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-tiger-goat-storage-lifecycle.1) id429861244。正式本地双人页面与完整备份共用固定Owner/代次门禁，恢复后旧页退役，返回等待排空与Native释放；失败凭据不重复释放。99同源JVM（72+27分段）、21设备方法/25采纳调用（19同源前置+6最终）、双字号30原图/18不同画面已直接检查；双ABI/APK/Manifest/Lint0错23警告。1920完整导出、17明确路径，schema22不变，无二进制附件，未清默认数据，字体与动画设置恢复。下一共享窗口接国标4章29卡独立学习事实、专属持久化/完整备份与页面；旧共享四步不授予新教材完成，不以未认证胜场解锁。国标正式宿主/备份生产接线、虎羊AI宿主及全部棋种完整内容/音效/强度/横屏/杀进程/实体设备继续，原目标active，其他WIP与象棋旧槽保留。
