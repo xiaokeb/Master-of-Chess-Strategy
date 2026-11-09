@@ -48,3 +48,7 @@ MCTX v3 在同一 Room 行中保留已完成的新策略赛事证据。每条包
 隔离候选 `cmarchive1` 基于 `d69a690`，叠加 17 个明确路径。162 项 JVM、双架构 Debug 构建和 14 项 Pixel 7 Pro 模拟器测试通过，Lint 为 0 错误、24 警告。模拟器覆盖末盘归档写入失败后重试、撤回再结算、删除成绩单后新开赛事、跨场档案恢复，以及拒绝缺少玩家动作的档案。已检查正式入口、统计、历史、牌桌、出牌和续赛六张横屏截图，未清除应用数据。详细散列见[发布清单](../../releases/manifests/v0.1.0-competition-mahjong-series-evidence.1.json)。
 
 下一步根据已复核的名次投影胜场、星级和积分，再接难度解锁。恢复含较高难度的备份时，先从同一候选备份验证成长证据，再按候选权限准入活动赛事。旧结果继续用于原有统计。
+
+## 源码发布
+
+提交 `e0f634172c0dd27f2bacdbf9edf648edbba4c1ba` 和附注标签 `v0.1.0-competition-mahjong-series-evidence.1` 已推送。GitHub 源码预发布编号为 `439139570`。[GitHub Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-series-evidence.1)
