@@ -1,5 +1,9 @@
 # 已验证节点与后续集成
 
+## 2026-11-09 国标麻将整场赛事与旧档保留
+
+485e7a40f3e8dc8f5ee565d5b5c45813c81ecd47／tag v0.1.0-competition-mahjong-formal-series.1／[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-formal-series.1) id439096226。真实Native与生产Room走完十六盘，第八盘重开磁盘，末盘撤回与重结算、备份恢复后收藏和删除均通过。旧档明确确认后可保留并新开。28项JVM、25个设备方法28次调用，核看两档字号相关10张原图。下一步实现逐盘私有证据并接入可信胜场，继续完整横屏与音画、杀进程和实体设备验收。
+
 ## 2026-11-08 国标麻将正式赛事入口
 
 87358bedb912150dda12861469a867240a8983bf／tag v0.1.0-competition-mahjong-formal-play.1／[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-formal-play.1) id438148095。首页四席、赛事大厅、真实出牌保存与续赛、同库统计和历史已接。110 JVM、38个设备方法40次调用、22张不同原图已检查。双ABI/APK/Manifest通过，Lint 0错误24警告；1999文件干净导出，38路径显式提交。下一步做完整十六盘设备验收、末盘撤回与非空历史，补缺少辅助历史旧档的明确保留入口，再接逐盘证据与可信胜场。高难度、完整横屏与音画、杀进程和实体设备仍待。
