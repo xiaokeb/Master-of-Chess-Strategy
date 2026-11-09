@@ -142,6 +142,115 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
         assertEquals(listOf(kept), f.db.matchOutcomeDao().listAll())
     }
 
+    @Test fun sixteenRealHandsSettleWithdrawAndReopenWithHistoryAndDeletionIntact() = withOwnedLanzhouDatabase { f ->
+        completeCourse(f.db)
+        val config = CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(), 20261009, 0, 0)
+        var host = CompetitionMahjongFormalHost(f.db, 0)
+        var session = (host.open() as CompetitionMahjongFormalHost.Entry.Ready).session
+        var usage = session.policy.freshUsage(config.botLevel)
+        // The controller is driven directly. Supply the assistance metadata normally attached by the play VM.
+        val store = object : CompetitionMahjongMatchStore {
+            override suspend fun load(viewerPlayerId: Int) = session.match.load(viewerPlayerId)
+            override suspend fun save(checkpoint: CompetitionMahjongMatchCheckpoint) =
+                session.match.save(checkpoint.withAssistance(usage))
+        }
+        var controller = CompetitionMahjongMatchController(config, store)
+        try {
+            assertTrue(controller.open())
+            for (index in 0 until 16) {
+                val seating = CompetitionMahjongMatchSeating.forHand(index)
+                val frame = checkNotNull(controller.state.value.table)
+                assertEquals(seating.seatOfPlayer(0), frame.viewerSeat)
+                assertEquals(seating.dealerSeat, frame.dealerSeat)
+                assertEquals(seating.roundWind, frame.roundWind)
+                finishCompetitionMahjongTestHand(controller, index)
+                if (index == 7) {
+                    controller.close()
+                    host.close()
+                    f.reopen()
+                    host = CompetitionMahjongFormalHost(f.db, 0)
+                    session = (host.open() as CompetitionMahjongFormalHost.Entry.Ready).session
+                    controller = CompetitionMahjongMatchController(config, store)
+                    assertTrue(controller.open())
+                    assertEquals(8, controller.state.value.completedHandCount)
+                }
+                if (index < 15) assertTrue(controller.nextHand(index))
+            }
+            assertFalse(controller.nextHand(15))
+            val original = session.history.load(0).entries.single()
+            assertEquals(config.matchId, original.matchId)
+            assertEquals(16, original.hands.size)
+            assertEquals(original.viewerStanding.score, session.statistics.load(0).outcomes.single().score)
+
+            usage = usage.consumeUndo()
+            assertTrue(controller.undo(15))
+            assertEquals(15, controller.state.value.completedHandCount)
+            assertTrue(session.statistics.load(0).outcomes.isEmpty())
+            assertTrue(session.history.load(0).entries.isEmpty())
+            finishCompetitionMahjongTestHand(controller, 15)
+            val settled = session.history.load(0).entries.single()
+            assertEquals(original.hands.take(15), settled.hands.take(15))
+            assertEquals(1, session.statistics.load(0).seriesCount)
+            assertTrue(session.history.setFavorite(0, config.matchId, true).entries.single().favorite)
+            controller.close()
+            host.close()
+
+            val favoriteBackup = f.repository().export(100)
+            f.repository().restore(favoriteBackup)
+            f.reopen()
+            host = CompetitionMahjongFormalHost(f.db, 0)
+            session = (host.open() as CompetitionMahjongFormalHost.Entry.Ready).session
+            assertTrue(session.history.load(0).entries.single().favorite)
+            assertEquals(16, session.match.load(0)?.ledger?.completedHandCount)
+            assertTrue(session.history.delete(0, config.matchId).entries.isEmpty())
+            val deletedBackup = f.repository().export(101)
+            f.repository().restore(deletedBackup)
+            host.close()
+            host = CompetitionMahjongFormalHost(f.db, 0)
+            session = (host.open() as CompetitionMahjongFormalHost.Entry.Ready).session
+            assertTrue(session.history.load(0).entries.isEmpty())
+            assertEquals(config.matchId, session.statistics.load(0).outcomes.single().matchId)
+        } finally {
+            controller.close()
+            host.close()
+        }
+    }
+
+    @Test fun legacyArchiveConfirmationRejectsChangedSourceAndRoundTripsOriginalBytes() = withOwnedLanzhouDatabase { f ->
+        val original = legacy(nativeCheckpoint().withoutLegacyAssistance())
+        val dao = f.db.competitionMahjongMatchDao()
+        dao.upsert(original)
+        val host = CompetitionMahjongFormalHost(f.db, 0)
+        try {
+            val first = host.open() as CompetitionMahjongFormalHost.Entry.ConfirmLegacyArchive
+            assertTrue(f.db.competitionMahjongFormalRoomDao().listViewerIds().isEmpty())
+            dao.upsert(original.copy(updatedAtEpochMillis = original.updatedAtEpochMillis + 1))
+            assertTrue(runCatching { host.confirmLegacyArchive(first) }.exceptionOrNull() is IllegalArgumentException)
+            assertTrue(f.db.competitionMahjongFormalRoomDao().listViewerIds().isEmpty())
+
+            val current = host.open() as CompetitionMahjongFormalHost.Entry.ConfirmLegacyArchive
+            assertNotEquals(first.sourceSha256, current.sourceSha256)
+            val session = host.confirmLegacyArchive(current)
+            assertSame(session, host.confirmLegacyArchive(current))
+            assertNull(session.match.load(0))
+            assertTrue(session.policy.allowedBotLevels.isEmpty())
+            assertTrue(session.history.load(0).entries.isEmpty())
+            val backup = f.repository().export(200)
+            f.repository().restore(backup)
+            f.reopen()
+            val kept = checkNotNull(f.db.competitionMahjongMatchDao().find(2))
+            assertArrayEquals(original.checkpoint, kept.checkpoint)
+            assertEquals(original.updatedAtEpochMillis + 1, kept.updatedAtEpochMillis)
+            val reopened = (CompetitionMahjongFormalHost(f.db, 0).open() as CompetitionMahjongFormalHost.Entry.Ready).session
+            assertNull(reopened.match.load(0))
+        } finally {
+            host.close()
+        }
+    }
+
+    private fun CompetitionMahjongMatchCheckpoint.withoutLegacyAssistance() =
+        CompetitionMahjongMatchCheckpoint(config, ledger, activeHandIndex, engineRecord)
+
     private fun nativeCheckpoint(): CompetitionMahjongMatchCheckpoint {
         for (seed in 321L until 337L) NativeCompetitionMahjongSession(seed, 0, 0, 0).use { native ->
             val view = native.snapshot()
@@ -181,4 +290,27 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
     private suspend fun denied(action: suspend () -> Any?) {
         try { action(); fail("Retired Owner accepted") } catch (_: IOException) { }
     }
+}
+
+internal suspend fun finishCompetitionMahjongTestHand(controller: CompetitionMahjongMatchController, index: Int) {
+    repeat(1024) { batch ->
+        controller.advanceOtherSeats(index, index * 1024L + batch + 1, 32)
+        val state = controller.state.value
+        assertFalse(state.error, state.needsSave)
+        if (state.completedHandCount > index) return
+        val action = state.legalActions.minByOrNull {
+            when (it.kind) {
+                CompetitionMahjongRoundActionKind.WIN -> 0
+                CompetitionMahjongRoundActionKind.PASS -> 1
+                CompetitionMahjongRoundActionKind.DISCARD -> 2
+                CompetitionMahjongRoundActionKind.DRAW -> 3
+                else -> 4
+            }
+        }
+        assertNotNull("Native未终局却无法推进，第${index + 1}盘", action)
+        assertTrue(controller.apply(checkNotNull(action), index)?.accepted == true)
+        assertFalse(controller.state.value.error, controller.state.value.needsSave)
+        if (controller.state.value.completedHandCount > index) return
+    }
+    fail("第${index + 1}盘未在有界操作内结束")
 }

@@ -68,10 +68,14 @@ internal fun CompetitionMahjongFormalRoute(
         try {
             // A prior table can still be closing after its destination has been removed.
             awaitLocalDataWriters(writers.snapshot().filterIsInstance<CompetitionMahjongMatchPlayViewModel>()) {}
-            val preview = (holder.entry as? CompetitionMahjongFormalHost.Entry.ConfirmMigration)?.preview
-            holder.entry = if (confirming && preview != null) {
-                CompetitionMahjongFormalHost.Entry.Ready(host.confirmMigration(preview))
-            } else host.open()
+            val choice = holder.entry
+            holder.entry = if (!confirming) host.open() else when (choice) {
+                is CompetitionMahjongFormalHost.Entry.ConfirmMigration ->
+                    CompetitionMahjongFormalHost.Entry.Ready(host.confirmMigration(choice.preview))
+                is CompetitionMahjongFormalHost.Entry.ConfirmLegacyArchive ->
+                    CompetitionMahjongFormalHost.Entry.Ready(host.confirmLegacyArchive(choice))
+                else -> host.open()
+            }
         } catch (failure: Exception) {
             if (failure is CancellationException) throw failure
             holder.entry = null
@@ -99,6 +103,19 @@ internal fun CompetitionMahjongFormalRoute(
                 title = { Text("迁移旧赛事") },
                 text = { Text("旧档已完成 ${migration.preview.completedHandCount ?: 0} 盘。确认后可继续赛事，旧档仍会保留。") },
                 confirmButton = { TextButton(onClick = { confirming = true }) { Text("确认迁移") } },
+                dismissButton = { TextButton(onClick = onBack) { Text("取消") } },
+            )
+        }
+        val archive = holder.entry as? CompetitionMahjongFormalHost.Entry.ConfirmLegacyArchive
+        if (archive != null && !confirming) {
+            AlertDialog(
+                onDismissRequest = onBack,
+                modifier = Modifier.testTag("competition_formal_legacy_archive"),
+                title = { Text("保留旧档并新开") },
+                text = {
+                    Text("旧档已完成 ${archive.completedHandCount} 盘，缺少难度和辅助记录，无法继续。确认后旧档仍可随备份导出，本座位可开始新赛事。")
+                },
+                confirmButton = { TextButton(onClick = { confirming = true }) { Text("保留旧档") } },
                 dismissButton = { TextButton(onClick = onBack) { Text("取消") } },
             )
         }

@@ -8,10 +8,20 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.room.withTransaction
 import androidx.test.platform.app.InstrumentationRegistry
 import com.masterofchessstrategy.data.MocsDatabase
+import com.masterofchessstrategy.data.CompetitionMahjongMatchArchive
 import com.masterofchessstrategy.data.TutorialProgressEntity
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
+import com.masterofchessstrategy.games.competition_mahjong.data.finishCompetitionMahjongTestHand
 import com.masterofchessstrategy.games.competition_mahjong.learning.*
+import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongCompetitionConfig
+import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpoint
+import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpointCodec
+import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchLedger
+import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchController
+import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchStore
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalSnapshotCodec
+import com.masterofchessstrategy.games.competition_mahjong.match.storage.room.CompetitionMahjongFormalHost
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.room.CompetitionMahjongFormalRoomStorage
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -106,6 +116,94 @@ class CompetitionMahjongNavigationIntegrationTest {
         assertEquals(start.config.matchId, activeMatch()?.config?.matchId)
         capture("formal-resumed")
         assertOtherGamesUntouched()
+    }
+
+    @Test fun legacyArchiveCanBeCancelledThenConfirmedWithoutDeletingOldMatch() {
+        val config = CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(), 321, botLevel = 0)
+        val checkpoint = NativeCompetitionMahjongSession(config.seed, 0, 0, 0).use {
+            CompetitionMahjongMatchCheckpoint(config, CompetitionMahjongMatchLedger.empty(), 0, it.serialize())
+        }
+        val bytes = CompetitionMahjongMatchCheckpointCodec.encode(checkpoint)
+        runBlocking {
+            database.competitionMahjongMatchDao().upsert(CompetitionMahjongMatchArchive(0, config.matchId, 1, bytes).toEntity())
+        }
+        enterModes()
+        clickReady("competition_formal_entry")
+        waitForTag("competition_formal_legacy_archive")
+        capture("legacy-archive-offer", useSystemScreenshot = true)
+        compose.onNodeWithText("取消").performClick()
+        waitForTag(COMPETITION_MAHJONG_MODES_TAG)
+        assertTrue(runBlocking { database.withTransaction { database.competitionMahjongFormalRoomDao().listViewerIds() } }.isEmpty())
+
+        clickReady("competition_formal_entry")
+        waitForTag("competition_formal_legacy_archive")
+        compose.onNodeWithText("保留旧档").performClick()
+        waitForTag("competition_formal_summary")
+        compose.onNodeWithTag("competition_formal_play").assertIsNotEnabled()
+        capture("legacy-archive-confirmed")
+        assertNull(activeMatch())
+        assertArrayEquals(bytes, runBlocking { database.competitionMahjongMatchDao().find(2) }!!.checkpoint)
+    }
+
+    @Test fun completedSeriesHistoryCanBeViewedFavoritedAndDeletedThroughProductionNavigation() {
+        val matchId = runBlocking { createCompletedSeries() }
+        enterModes()
+        clickReady("competition_formal_entry")
+        waitForTag("competition_formal_summary")
+        clickReady("competition_formal_history")
+        waitForTag("competition_mahjong_history_$matchId")
+        compose.onNodeWithText("查看").performScrollTo().performClick()
+        waitForTag("competition_mahjong_history_detail")
+        compose.onNodeWithTag("competition_mahjong_history_hand_15").performScrollTo().assertIsDisplayed()
+        compose.onNode(hasText("玩家1 0分", substring = true) and
+            hasAnyAncestor(hasTestTag("competition_mahjong_history_hand_15"))).assertIsDisplayed()
+        capture("formal-history-last-hand")
+        compose.onNodeWithText("收藏").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodes(hasText("取消收藏") and isEnabled()).fetchSemanticsNodes().size == 1 }
+        capture("formal-history-favorite")
+        compose.onNodeWithText("删除").performScrollTo().performClick()
+        waitForTag("competition_mahjong_history_confirm_delete")
+        compose.onNodeWithText("取消").performClick()
+        waitForTag("competition_mahjong_history_detail")
+        compose.onNodeWithText("删除").performScrollTo().performClick()
+        compose.onNodeWithTag("competition_mahjong_history_confirm_delete").performClick()
+        waitForTag("competition_mahjong_history_empty")
+        assertNotNull(activeMatch())
+        compose.onNodeWithText("返回").performScrollTo().performClick()
+        clickReady("competition_formal_statistics")
+        waitForTag("competition_mahjong_statistics_series_$matchId")
+        compose.onNodeWithTag("competition_mahjong_statistics_series_$matchId").performScrollTo().assertIsDisplayed()
+        capture("formal-statistics-after-history-delete")
+    }
+
+    private suspend fun createCompletedSeries(): String {
+        val learning = RoomCompetitionMahjongLearningProofStore(database, database.competitionMahjongLearningProofDao())
+        for (chapter in CompetitionMahjongLearningProofCatalog.chapterIds) {
+            learning.confirm(CompetitionMahjongLearningProofRequest(UUID.randomUUID().toString(), chapter,
+                CompetitionMahjongLearningProofCatalog.cardIds(chapter), 1))
+        }
+        val config = CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(), 20261009, botLevel = 0)
+        val host = CompetitionMahjongFormalHost(database, 0)
+        val session = (host.open() as CompetitionMahjongFormalHost.Entry.Ready).session
+        val usage = session.policy.freshUsage(config.botLevel)
+        val store = object : CompetitionMahjongMatchStore {
+            override suspend fun load(viewerPlayerId: Int) = session.match.load(viewerPlayerId)
+            override suspend fun save(checkpoint: CompetitionMahjongMatchCheckpoint) =
+                session.match.save(checkpoint.withAssistance(usage))
+        }
+        val controller = CompetitionMahjongMatchController(config, store)
+        try {
+            assertTrue(controller.open())
+            for (index in 0 until 16) {
+                finishCompetitionMahjongTestHand(controller, index)
+                if (index < 15) assertTrue(controller.nextHand(index))
+            }
+            assertEquals(config.matchId, session.history.load(0).entries.single().matchId)
+            return config.matchId
+        } finally {
+            controller.close()
+            host.close()
+        }
     }
 
     @Test fun allTwentyNineStepsCommitFourChaptersBeforeCompletionCallback() {
@@ -269,11 +367,12 @@ class CompetitionMahjongNavigationIntegrationTest {
         assertTrue(database.matchOutcomeDao().listAll().isEmpty())
     }
 
-    private fun capture(name: String) {
+    private fun capture(name: String, useSystemScreenshot: Boolean = false) {
         compose.waitForIdle()
         val directory = File(instrumentation.targetContext.getExternalFilesDir(null), "competition-navigation-qa/$runId")
         assertTrue(directory.isDirectory || directory.mkdirs())
-        val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
+        val bitmap = if (useSystemScreenshot) checkNotNull(instrumentation.uiAutomation.takeScreenshot())
+            else compose.onRoot().captureToImage().asAndroidBitmap()
         try {
             assertTrue("Production Activity must render landscape", bitmap.width > bitmap.height)
             File(directory, "$name.png").outputStream().use {

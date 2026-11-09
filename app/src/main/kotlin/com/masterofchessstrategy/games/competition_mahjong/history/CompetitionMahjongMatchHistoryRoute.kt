@@ -141,7 +141,7 @@ private fun HistoryDetail(entry: CompetitionMahjongMatchHistoryEntry, enabled: B
                     if (hand.phase == CompetitionMahjongRoundPhase.WON) "和牌 ${hand.totalFan}番" else "荒牌",
                     style = MaterialTheme.typography.titleSmall)
                 Text((0..3).joinToString(" · ") { player ->
-                    "玩家${player + 1}${signed(hand.scores[player])}"
+                    "玩家${player + 1} ${signed(hand.scores[player])}分"
                 })
                 if (hand.phase == CompetitionMahjongRoundPhase.WON) Text(
                     "赢家 玩家${checkNotNull(hand.winnerPlayerId) + 1}" +

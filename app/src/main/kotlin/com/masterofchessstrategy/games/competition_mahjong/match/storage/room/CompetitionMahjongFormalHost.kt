@@ -1,7 +1,9 @@
 package com.masterofchessstrategy.games.competition_mahjong.match.storage.room
 
+import androidx.room.withTransaction
 import com.masterofchessstrategy.data.CompetitionMahjongMatchArchive
 import com.masterofchessstrategy.data.MocsDatabase
+import com.masterofchessstrategy.data.validateCompetitionMahjongMatchArchive
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.games.competition_mahjong.history.CompetitionMahjongMatchHistoryStore
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningProofRead
@@ -30,7 +32,7 @@ internal class CompetitionMahjongFormalHost(private val database: MocsDatabase, 
     private val dao = database.competitionMahjongFormalRoomDao()
     private val learning = RoomCompetitionMahjongLearningProofStore(database, database.competitionMahjongLearningProofDao())
     private var session: Session? = null // Accessed under the database gate.
-    private var pendingMigration: CompetitionMahjongFormalMigrationPreview? = null
+    private var pending: Entry? = null
     @Volatile private var closed = false
     val ownerKey: String = UUID.randomUUID().toString()
     fun isCurrent(): Boolean = !closed && gate.isCurrent(owner)
@@ -38,12 +40,14 @@ internal class CompetitionMahjongFormalHost(private val database: MocsDatabase, 
 
     sealed interface Entry {
         data class ConfirmMigration(val preview: CompetitionMahjongFormalMigrationPreview) : Entry
+        data class ConfirmLegacyArchive(val sourceSha256: String, val completedHandCount: Int) : Entry
         data class Ready(val session: Session) : Entry
     }
 
     /** The navigator drains the previous writer before opening or confirming a new host. */
     suspend fun open(): Entry = access {
         session?.let { return@access Entry.Ready(it) }
+        pending = null
         val policy = loadPolicy()
         if (dao.find(viewerPlayerId)?.mctxSize != null) {
             val bridge = CompetitionMahjongFormalRoomBridge.acquire(database, dao, viewerPlayerId, policy)
@@ -51,9 +55,15 @@ internal class CompetitionMahjongFormalHost(private val database: MocsDatabase, 
         }
         val legacy = readLegacy()
         if (legacy != null) {
-            val preview = CompetitionMahjongFormalRoomBridge.previewInitialMigration(viewerPlayerId, policy, source(legacy))
-            pendingMigration = preview
-            return@access Entry.ConfirmMigration(preview)
+            val source = source(legacy)
+            val proposal = if (legacy.checkpoint.assistance == null) {
+                require(validateCompetitionMahjongMatchArchive(legacy)) { "旧赛事无法通过重放校验，原档已保留" }
+                Entry.ConfirmLegacyArchive(source.sha256, legacy.checkpoint.ledger.completedHandCount)
+            } else {
+                Entry.ConfirmMigration(CompetitionMahjongFormalRoomBridge.previewInitialMigration(viewerPlayerId, policy, source))
+            }
+            pending = proposal
+            return@access proposal
         }
         Entry.Ready(installInitial(policy, source(null).sha256))
     }
@@ -61,8 +71,25 @@ internal class CompetitionMahjongFormalHost(private val database: MocsDatabase, 
     suspend fun confirmMigration(preview: CompetitionMahjongFormalMigrationPreview): Session = access {
         // A repeated click after a successful commit reuses the same lease.
         session ?: run {
-            require(preview == pendingMigration) { "请先预览此座位的旧赛事档案" }
+            require(Entry.ConfirmMigration(preview) == pending) { "请先预览此座位的旧赛事档案" }
             installInitial(loadPolicy(), preview.sourceSha256)
+        }
+    }
+
+    suspend fun confirmLegacyArchive(proposal: Entry.ConfirmLegacyArchive): Session = access {
+        session ?: run {
+            require(proposal == pending) { "请先预览此座位的旧赛事档案" }
+            val policy = loadPolicy()
+            val empty = CompetitionMahjongFormalRoomBackup.emptyForRestore(viewerPlayerId, policy)
+            val bridge = database.withTransaction {
+                if (dao.find(viewerPlayerId)?.mctxSize != null) throw IOException("正式赛事已存在，请重新打开")
+                val archive = readLegacy()
+                require(archive != null && archive.checkpoint.assistance == null &&
+                    source(archive).sha256 == proposal.sourceSha256) { "旧赛事已变化，请重新预览" }
+                // Publish an empty formal seat and keep the original MCMT for export.
+                CompetitionMahjongFormalRoomBridge.installBackupInTransaction(database, dao, empty)
+            }
+            publish(bridge, policy)
         }
     }
 
@@ -75,7 +102,7 @@ internal class CompetitionMahjongFormalHost(private val database: MocsDatabase, 
 
     private suspend fun publish(bridge: CompetitionMahjongFormalRoomBridge, policy: CompetitionMahjongPlayPolicy): Session =
         Session(bridge.openRepository(), policy).also {
-            pendingMigration = null
+            pending = null
             session = it
         }
 
