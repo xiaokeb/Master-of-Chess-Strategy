@@ -1,8 +1,10 @@
 package com.masterofchessstrategy.data
 
+import androidx.room.withTransaction
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.games.competition_mahjong.data.qualifiedCompetitionMahjongRowsInTransaction
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.qualifiedPlayerGrowthRows
 import java.io.IOException
 
@@ -97,7 +99,12 @@ internal class RoomMatchStatisticsRepository(
     private val rejectDirectFormalWrites: Boolean = false,
 ) : MatchStatisticsRepository {
     constructor(database: MocsDatabase) : this(database.matchOutcomeDao(),
-        { database.qualifiedPlayerGrowthRows() }, true)
+        {
+            database.withTransaction {
+                database.qualifiedPlayerGrowthRows().filterNot { it.gameTypeCode == GameType.STANDARD_MAHJONG.code } +
+                    database.qualifiedCompetitionMahjongRowsInTransaction()
+            }
+        }, true)
 
     override suspend fun load(): LoadMatchStatisticsResult =
         try {
@@ -111,7 +118,8 @@ internal class RoomMatchStatisticsRepository(
         }
 
     override suspend fun record(outcome: MatchOutcome): RecordMatchOutcomeResult {
-        require(!rejectDirectFormalWrites || (outcome.gameType != GameType.GO && outcome.gameType != GameType.LANZHOU_SQUARE_CHESS)) {
+        require(!rejectDirectFormalWrites || (outcome.gameType != GameType.GO && outcome.gameType != GameType.LANZHOU_SQUARE_CHESS &&
+            outcome.gameType != GameType.STANDARD_MAHJONG)) {
             "Formal growth must be committed with its creation and terminal source"
         }
         val inserted = dao.insert(outcome.toMatchOutcomeEntity()) != INSERT_IGNORED

@@ -16,6 +16,7 @@ import com.masterofchessstrategy.games.competition_mahjong.match.storage.Competi
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalSnapshotCodec
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongPrivateSeriesReplay
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.prepareCompetitionMahjongFormalMigration
+import com.masterofchessstrategy.games.competition_mahjong.match.storage.qualifiedGrowth
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.toOutcome
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.withLock
@@ -53,7 +54,7 @@ internal class CompetitionMahjongFormalRoomBridge private constructor(
         val snapshot = CompetitionMahjongFormalSnapshotCodec.decode(bytes, viewer)
             ?: throw IOException("国标正式数据损坏或版本不兼容，原数据已保留")
         snapshot.active?.let {
-            policy.requireAuthorized(it.config.botLevel, it.assistance)
+            snapshot.qualifiedGrowth(policy).policy.requireAuthorized(it.config.botLevel, it.assistance)
             admitCompetitionMahjongFormalNative(it)
             admitReplayEvidence(snapshot, it)
         }
@@ -135,12 +136,13 @@ internal class CompetitionMahjongFormalRoomBackup private constructor(
             val candidate = bytes.copyOf()
             val snapshot = CompetitionMahjongFormalSnapshotCodec.decode(candidate, viewer)
                 ?: throw IOException("国标正式备份损坏或版本不兼容")
+            admitArchivedSeries(snapshot, policy)
+            val restoredPolicy = snapshot.qualifiedGrowth(policy).policy
             snapshot.active?.let {
-                policy.requireAuthorized(it.config.botLevel, it.assistance)
+                restoredPolicy.requireAuthorized(it.config.botLevel, it.assistance)
                 admitCompetitionMahjongFormalNative(it)
                 admitReplayEvidence(snapshot, it)
             }
-            admitArchivedSeries(snapshot, policy)
             return CompetitionMahjongFormalRoomBackup(viewer, candidate, policy)
         }
     }

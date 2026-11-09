@@ -81,6 +81,9 @@ class CompetitionMahjongPlayPolicy private constructor(
         require(usage.difficulty == difficulty) { "赛事难度与策略权限不一致，原存档已保留" }
     }
 
+    internal fun withProgress(progress: CompetitionMahjongUnlockProgress): CompetitionMahjongPlayPolicy =
+        fromProgress(progress, strategyBindings)
+
     private fun requireDifficulty(botLevel: Int): Difficulty {
         val option = options.firstOrNull { it.botLevel == botLevel }
         requireNotNull(option) { "赛事策略未获配置授权" }

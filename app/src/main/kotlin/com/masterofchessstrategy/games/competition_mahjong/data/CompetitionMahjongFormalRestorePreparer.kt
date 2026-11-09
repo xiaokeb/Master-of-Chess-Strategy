@@ -23,7 +23,7 @@ internal object CompetitionMahjongFormalRestorePreparer {
             val bytes = CompetitionMahjongLearningBackupAdapter().decode(record)
             checkNotNull(CompetitionMahjongLearningProofCodec.decode(bytes)).isCompleted
         } ?: false
-        // No trusted series-win source exists yet. Candidate MCTX statistics never grant permission.
+        // Each seat derives additional wins from its own Native-admitted archive during preparation.
         val policy = CompetitionMahjongPlayPolicy.fromProgress(
             CompetitionMahjongUnlockProgress(tutorialCompleted, easyWins = 0, mediumWins = 0, hardWins = 0),
             strategyBindings.toMap(),

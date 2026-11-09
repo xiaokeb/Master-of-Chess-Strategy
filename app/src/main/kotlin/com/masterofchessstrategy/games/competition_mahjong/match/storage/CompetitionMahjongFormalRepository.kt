@@ -36,21 +36,33 @@ class CompetitionMahjongFormalRepository internal constructor(
         override suspend fun load(viewerPlayerId: Int): CompetitionMahjongMatchCheckpoint? =
             query(viewerPlayerId) { it.active }
 
-        override suspend fun save(checkpoint: CompetitionMahjongMatchCheckpoint) {
-            require(checkpoint.config.viewerPlayerId == viewerPlayerId)
-            playPolicy.requireAuthorized(checkpoint.config.botLevel, checkpoint.assistance)
-            change(viewerPlayerId) { current ->
-                admitCheckpoint(checkpoint)
-                val next = current.save(checkpoint, playPolicy, clockMillis())
-                val records = captureSettledHands(current, checkpoint)
-                require(!capturePrivateReplay || records != null ||
-                    checkpoint.config.botStrategy == CompetitionMahjongBotStrategy.LEGACY_BATCH) {
-                    "逐动作策略赛事缺少私有证据"
-                }
-                next.withPrivateEvidence(records, retainSettledSeries(current, next, checkpoint, records))
-            }
-        }
+        override suspend fun save(checkpoint: CompetitionMahjongMatchCheckpoint) { saveMatch(checkpoint) }
     }
+
+    internal suspend fun loadPolicy(): CompetitionMahjongPlayPolicy = query(viewerPlayerId, ::policyFor)
+
+    internal suspend fun saveMatch(checkpoint: CompetitionMahjongMatchCheckpoint): CompetitionMahjongPlayPolicy {
+        require(checkpoint.config.viewerPlayerId == viewerPlayerId)
+        var committedPolicy = playPolicy
+        change(viewerPlayerId) { current ->
+            val policy = policyFor(current)
+            policy.requireAuthorized(checkpoint.config.botLevel, checkpoint.assistance)
+            admitCheckpoint(checkpoint)
+            val next = current.save(checkpoint, policy, clockMillis())
+            val records = captureSettledHands(current, checkpoint)
+            require(!capturePrivateReplay || records != null ||
+                checkpoint.config.botStrategy == CompetitionMahjongBotStrategy.LEGACY_BATCH) {
+                "逐动作策略赛事缺少私有证据"
+            }
+            val candidate = next.withPrivateEvidence(records, retainSettledSeries(current, next, checkpoint, records))
+            committedPolicy = policyFor(candidate)
+            candidate
+        }
+        return committedPolicy
+    }
+
+    private fun policyFor(snapshot: CompetitionMahjongFormalSnapshot): CompetitionMahjongPlayPolicy =
+        if (capturePrivateReplay) snapshot.qualifiedGrowth(playPolicy).policy else playPolicy
 
     private fun retainSettledSeries(
         current: CompetitionMahjongFormalSnapshot,
@@ -153,7 +165,7 @@ class CompetitionMahjongFormalRepository internal constructor(
         val snapshot = CompetitionMahjongFormalSnapshotCodec.decode(bytes, viewerPlayerId)
             ?: throw IOException("国标麻将正式事务存档损坏或版本不兼容，原数据已保留")
         snapshot.active?.let {
-            playPolicy.requireAuthorized(it.config.botLevel, it.assistance)
+            policyFor(snapshot).requireAuthorized(it.config.botLevel, it.assistance)
             admitCheckpoint(it)
         }
         return snapshot

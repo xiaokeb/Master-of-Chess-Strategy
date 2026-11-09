@@ -85,6 +85,7 @@ internal class CompetitionMahjongMatchPlayViewModel(
     private val playPolicy: CompetitionMahjongPlayPolicy? = null,
     private val hintAdvisor: CompetitionMahjongHintAdvisor? = null,
     private val ownerIsCurrent: (() -> Boolean)? = null,
+    private val policyProvider: (() -> CompetitionMahjongPlayPolicy)? = null,
 ) : ViewModel(), LocalDataWriterRetirement {
     private val mutableState = MutableStateFlow(CompetitionMahjongMatchPlayState(botLevel = initialConfig.botLevel))
     val state = mutableState.asStateFlow()
@@ -474,7 +475,7 @@ internal class CompetitionMahjongMatchPlayViewModel(
             }
             CompetitionMahjongMatchPlayState(series, table, false, effectiveBusy, paused, previous.speed, effectiveConfig.botLevel,
                 operationError ?: series.error, frame?.let { declarationTiles(it, series.legalActions.isNotEmpty()) }.orEmpty(),
-                playPolicy?.options.orEmpty(), assistance,
+                currentPolicy()?.options.orEmpty(), assistance,
                 hintReceipt?.takeIf { !effectiveBusy && !series.needsSave && frame != null &&
                     it.matches(series.activeHandIndex, frame, series.legalActions) },
                 hintAdvisor != null && frame?.publicFrameVersion == 2)
@@ -484,7 +485,9 @@ internal class CompetitionMahjongMatchPlayViewModel(
     private fun createController(config: CompetitionMahjongCompetitionConfig, store: CompetitionMahjongMatchStore) =
         CompetitionMahjongMatchController(config, store, sessionFactory, workerDispatcher)
 
-    private fun requirePolicy(): CompetitionMahjongPlayPolicy = checkNotNull(playPolicy) {
+    private fun currentPolicy(): CompetitionMahjongPlayPolicy? = policyProvider?.invoke() ?: playPolicy
+
+    private fun requirePolicy(): CompetitionMahjongPlayPolicy = checkNotNull(currentPolicy()) {
         "国标麻将难度权限尚未接入，未创建或替换赛事"
     }
 

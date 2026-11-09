@@ -71,6 +71,7 @@ internal fun CompetitionMahjongMatchRoute(
     ownerKey: String? = null,
     ownerIsCurrent: (() -> Boolean)? = null,
     writers: LocalDataWriterRegistry? = null,
+    policyProvider: (() -> CompetitionMahjongPlayPolicy)? = null,
 ) {
     val config = remember(initialConfig, playPolicy) {
         initialConfig ?: CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(),
@@ -78,13 +79,14 @@ internal fun CompetitionMahjongMatchRoute(
     }
     val game: CompetitionMahjongMatchPlayViewModel = viewModel(
         key = "competition-mahjong-series-${config.viewerPlayerId}-$ownerKey",
-        factory = remember(store, config, playPolicy, hintAdvisor, ownerKey, writers) {
+        factory = remember(store, config, playPolicy, hintAdvisor, ownerKey, writers, policyProvider) {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
                     CompetitionMahjongMatchPlayViewModel(store, config, playPolicy = playPolicy,
                         hintAdvisor = hintAdvisor,
-                        ownerIsCurrent = { ownerKey != null && writers != null && ownerIsCurrent?.invoke() == true })
+                        ownerIsCurrent = { ownerKey != null && writers != null && ownerIsCurrent?.invoke() == true },
+                        policyProvider = policyProvider)
                         .also { writers?.register(it) } as T
             }
         },

@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -132,7 +133,8 @@ private fun CompetitionMahjongFormalDestinations(
 ) {
     val navigator = rememberNavController()
     val viewer = host.viewerPlayerId
-    val easyLevel = session.policy.allowedBotLevels.firstOrNull()
+    val policy by session.policyUpdates.collectAsState()
+    val easyLevel = policy.allowedBotLevels.firstOrNull()
     NavHost(navigator, startDestination = "summary") {
         composable("summary") {
             BackHandler(onBack = onBack)
@@ -162,6 +164,7 @@ private fun CompetitionMahjongFormalDestinations(
                 }
                 CompetitionMahjongMatchRoute(
                     store = session.match, initialConfig = config, playPolicy = session.policy,
+                    policyProvider = { session.policy },
                     ownerKey = host.ownerKey, ownerIsCurrent = host::isCurrent, writers = writers,
                     onBack = { navigator.popBackStack() },
                 )

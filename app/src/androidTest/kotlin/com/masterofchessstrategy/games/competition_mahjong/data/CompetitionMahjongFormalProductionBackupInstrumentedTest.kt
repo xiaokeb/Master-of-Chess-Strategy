@@ -218,6 +218,14 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
             assertEquals(16, original.hands.size)
             assertEquals(original.viewerStanding.score, session.statistics.load(0).outcomes.single().score)
             assertEquals(config, storedSnapshot(f.db).archivedSeries.single().config)
+            val won = original.viewerStanding.rank == 1 && original.viewerStanding.standardPointsDenominator == 1
+            val lost = original.viewerStanding.rank != 1
+            val growth = (RoomMatchStatisticsRepository(f.db).load() as LoadMatchStatisticsResult.Loaded).statistics
+            assertEquals(GameStatistics(1, if (won) 1 else 0, if (lost) 1 else 0, if (!won && !lost) 1 else 0),
+                growth.byGame[GameType.STANDARD_MAHJONG])
+            assertEquals(if (won) 10 else if (lost) -20 else 0, growth.score)
+            assertEquals(if (won) 1L else 0L, session.policy.progress.easyWins)
+            assertEquals(listOf(0), session.policy.allowedBotLevels)
 
             usage = usage.consumeUndo()
             assertTrue(controller.undo(15))
@@ -226,6 +234,8 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
             assertTrue(storedSnapshot(f.db).archivedSeries.isEmpty())
             assertTrue(session.statistics.load(0).outcomes.isEmpty())
             assertTrue(session.history.load(0).entries.isEmpty())
+            assertEquals(0, (RoomMatchStatisticsRepository(f.db).load() as LoadMatchStatisticsResult.Loaded)
+                .statistics.byGame.getValue(GameType.STANDARD_MAHJONG).completedMatches)
             finishCompetitionMahjongTestHand(controller, 15)
             val settled = session.history.load(0).entries.single()
             assertEquals(original.hands.take(15), settled.hands.take(15))
@@ -289,10 +299,24 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
             f.reopen()
             assertArrayEquals(bytesWithNewMatch, storedMctx(f.db))
             assertEquals(config, storedSnapshot(f.db).archivedSeries.single().config)
+            assertEquals(1, (RoomMatchStatisticsRepository(f.db).load() as LoadMatchStatisticsResult.Loaded)
+                .statistics.byGame.getValue(GameType.STANDARD_MAHJONG).completedMatches)
         } finally {
             controller.close()
             host.close()
         }
+    }
+
+    @Test fun rawLegacyOutcomeDoesNotGrantFormalMahjongGrowth() = withOwnedLanzhouDatabase { f ->
+        val raw = MatchOutcome("legacy-unverified-mahjong", GameType.STANDARD_MAHJONG, StoredGameMode.HUMAN_VS_AI,
+            Difficulty.EASY, 0, GameResult.FIRST_PLAYER_WIN, 1)
+        f.db.matchOutcomeDao().insert(raw.toMatchOutcomeEntity())
+        val repository = RoomMatchStatisticsRepository(f.db)
+        val summary = (repository.load() as LoadMatchStatisticsResult.Loaded).statistics
+        assertEquals(0, summary.totalWins)
+        assertEquals(0, summary.score)
+        assertTrue(runCatching { repository.record(raw.copy(matchId = "direct-mahjong")) }.exceptionOrNull() is IllegalArgumentException)
+        assertEquals(listOf(raw.toMatchOutcomeEntity()), f.db.matchOutcomeDao().listAll())
     }
 
     @Test fun v1SeriesCanAdvanceWithoutInventingEarlierEvidence() = withOwnedLanzhouDatabase { f ->

@@ -19,6 +19,8 @@ import com.masterofchessstrategy.games.competition_mahjong.match.storage.Competi
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalRepository
 import com.masterofchessstrategy.games.competition_mahjong.statistics.CompetitionMahjongStatisticsStore
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.UUID
@@ -51,7 +53,7 @@ internal class CompetitionMahjongFormalHost(private val database: MocsDatabase, 
         val policy = loadPolicy()
         if (dao.find(viewerPlayerId)?.mctxSize != null) {
             val bridge = CompetitionMahjongFormalRoomBridge.acquire(database, dao, viewerPlayerId, policy)
-            return@access Entry.Ready(publish(bridge, policy))
+            return@access Entry.Ready(publish(bridge))
         }
         val legacy = readLegacy()
         if (legacy != null) {
@@ -89,7 +91,7 @@ internal class CompetitionMahjongFormalHost(private val database: MocsDatabase, 
                 // Publish an empty formal seat and keep the original MCMT for export.
                 CompetitionMahjongFormalRoomBridge.installBackupInTransaction(database, dao, empty)
             }
-            publish(bridge, policy)
+            publish(bridge)
         }
     }
 
@@ -97,14 +99,16 @@ internal class CompetitionMahjongFormalHost(private val database: MocsDatabase, 
         val bridge = CompetitionMahjongFormalRoomBridge.installInitialMigration(
             database, dao, viewerPlayerId, policy, expectedSha,
         ) { source(readLegacy()) }
-        return publish(bridge, policy)
+        return publish(bridge)
     }
 
-    private suspend fun publish(bridge: CompetitionMahjongFormalRoomBridge, policy: CompetitionMahjongPlayPolicy): Session =
-        Session(bridge.openRepository(), policy).also {
+    private suspend fun publish(bridge: CompetitionMahjongFormalRoomBridge): Session {
+        val repository = bridge.openRepository()
+        return Session(repository, repository.loadPolicy()).also {
             pending = null
             session = it
         }
+    }
 
     private suspend fun loadPolicy(): CompetitionMahjongPlayPolicy {
         val proof = when (val result = learning.load()) {
@@ -142,12 +146,20 @@ internal class CompetitionMahjongFormalHost(private val database: MocsDatabase, 
 
     inner class Session internal constructor(
         private val repository: CompetitionMahjongFormalRepository,
-        val policy: CompetitionMahjongPlayPolicy,
+        initialPolicy: CompetitionMahjongPlayPolicy,
     ) {
+        private val mutablePolicy = MutableStateFlow(initialPolicy)
+        val policyUpdates = mutablePolicy.asStateFlow()
+        val policy: CompetitionMahjongPlayPolicy get() = mutablePolicy.value
+
         val match: CompetitionMahjongMatchStore = object : CompetitionMahjongMatchStore {
             override suspend fun load(viewerPlayerId: Int) = access { repository.matchStore.load(viewerPlayerId) }
-            override suspend fun save(checkpoint: CompetitionMahjongMatchCheckpoint) =
-                access { repository.matchStore.save(checkpoint) }
+            override suspend fun save(checkpoint: CompetitionMahjongMatchCheckpoint) {
+                access {
+                    val committed = repository.saveMatch(checkpoint)
+                    if (committed.progress != policy.progress) mutablePolicy.value = committed
+                }
+            }
         }
         val statistics: CompetitionMahjongStatisticsStore = object : CompetitionMahjongStatisticsStore by repository.statisticsStore {
             override suspend fun load(viewerPlayerId: Int) = access { repository.statisticsStore.load(viewerPlayerId) }
