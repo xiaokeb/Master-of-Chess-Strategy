@@ -17,3 +17,7 @@
 隔离候选 `cmgrowth1` 基于 `acbdac5`，叠加 14 个明确路径。共享导航文件只包含国标麻将离场刷新这处改动。184 项 JVM、双架构 Debug 构建、15 项国标麻将模拟器用例和 2 项共享成长回归通过，Lint 为 0 错误、24 警告。已检查六张国标麻将横屏截图，未清除模拟器应用数据。
 
 模拟器验证真实十六盘归档进入共享成长、末盘撤回后移除、重结算和备份恢复后只计一次，以及旧通用胜负行仍保留但不授予成长。JVM 验证独占第一、并列第一、失利、种子去重和三个解锁门槛。逐级累计真实胜场后打开高难度牌桌、各档 AI 强度与实体设备验收仍待进行。[发布清单](../../releases/manifests/v0.1.0-competition-mahjong-formal-growth.1.json)
+
+## 源码发布
+
+提交 `22496d11080598bbdf1e518ba4a2959adcdf6c33` 和附注标签 `v0.1.0-competition-mahjong-formal-growth.1` 已推送，GitHub 源码预发布编号为 `439154727`。[GitHub Release](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-formal-growth.1)
