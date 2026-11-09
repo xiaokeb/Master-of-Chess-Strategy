@@ -4,6 +4,8 @@ import androidx.room.RoomDatabase
 import androidx.room.withTransaction
 import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
 import com.masterofchessstrategy.engine.RestoreResult
+import com.masterofchessstrategy.games.competition_mahjong.history.CompetitionMahjongMatchHistoryEntry
+import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongBotStrategy
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpoint
 import com.masterofchessstrategy.games.competition_mahjong.match.policy.CompetitionMahjongPlayPolicy
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalMigration
@@ -12,7 +14,9 @@ import com.masterofchessstrategy.games.competition_mahjong.match.storage.Competi
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalRepository
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalSnapshot
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalSnapshotCodec
+import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongPrivateSeriesReplay
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.prepareCompetitionMahjongFormalMigration
+import com.masterofchessstrategy.games.competition_mahjong.match.storage.toOutcome
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -32,7 +36,8 @@ internal class CompetitionMahjongFormalRoomBridge private constructor(
             val bytes = storage.read() ?: throw IOException("国标正式数据尚未显式迁移，旧来源已保留")
             admitSnapshot(bytes)
         }
-        CompetitionMahjongFormalRepository(storage, viewer, policy, ::admitCompetitionMahjongFormalNative)
+        CompetitionMahjongFormalRepository(storage, viewer, policy, ::admitCompetitionMahjongFormalNative,
+            capturePrivateReplay = true)
     }
 
     /** Standalone IO export; global backup instead uses readMctxInTransaction without switching threads. */
@@ -50,6 +55,7 @@ internal class CompetitionMahjongFormalRoomBridge private constructor(
         snapshot.active?.let {
             policy.requireAuthorized(it.config.botLevel, it.assistance)
             admitCompetitionMahjongFormalNative(it)
+            admitReplayEvidence(snapshot, it)
         }
     }
 
@@ -132,10 +138,41 @@ internal class CompetitionMahjongFormalRoomBackup private constructor(
             snapshot.active?.let {
                 policy.requireAuthorized(it.config.botLevel, it.assistance)
                 admitCompetitionMahjongFormalNative(it)
+                admitReplayEvidence(snapshot, it)
             }
+            admitArchivedSeries(snapshot, policy)
             return CompetitionMahjongFormalRoomBackup(viewer, candidate, policy)
         }
     }
+}
+
+private fun admitArchivedSeries(snapshot: CompetitionMahjongFormalSnapshot, policy: CompetitionMahjongPlayPolicy) {
+    val outcomes = snapshot.statistics.outcomes.associateBy { it.matchId }
+    val history = snapshot.history.entries.associateBy { it.matchId }
+    for (proof in snapshot.archivedSeries) {
+        val config = proof.config
+        val expected = outcomes.getValue(config.matchId)
+        require(policy.options.single { it.botLevel == config.botLevel }.difficulty == expected.difficulty) {
+            "跨场证据与正式赛事难度不一致"
+        }
+        val original = snapshot.active?.takeIf { it.config == config }?.let {
+            checkNotNull(snapshot.settledHandRecords) + listOf(it.engineRecord)
+        }
+        val ledger = CompetitionMahjongPrivateSeriesReplay.replayArchive(proof, original)
+        val entry = CompetitionMahjongMatchHistoryEntry(config.matchId, config.viewerPlayerId, expected.difficulty,
+            config.botLevel, expected.settledAtEpochMillis, false, ledger.results)
+        require(entry.toOutcome() == expected && history[config.matchId]?.sameResult(entry) != false) {
+            "跨场证据与正式成绩不一致"
+        }
+    }
+}
+
+private fun admitReplayEvidence(snapshot: CompetitionMahjongFormalSnapshot, checkpoint: CompetitionMahjongMatchCheckpoint) {
+    val records = snapshot.settledHandRecords
+    require(records != null || checkpoint.config.botStrategy == CompetitionMahjongBotStrategy.LEGACY_BATCH) {
+        "逐动作策略赛事缺少私有证据"
+    }
+    records?.let { CompetitionMahjongPrivateSeriesReplay.verifyCheckpoint(checkpoint, it) }
 }
 
 /** Includes v4 paid-hint legality, not just the current public frame and terminal ledger. */

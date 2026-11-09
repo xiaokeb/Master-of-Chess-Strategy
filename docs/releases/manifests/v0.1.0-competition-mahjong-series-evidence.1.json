@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-competition-mahjong-series-evidence.1",
+  "candidate": "cmarchive1",
+  "baseline_commit": "d69a690f1699737b2a89a3f4ff0405b6c0b25b5a",
+  "frozen_source_files": 2007,
+  "expected_changed_paths": 20,
+  "room_schema_version": 23,
+  "source_identity_sha256": "d9d9519bc576df4a2a4ff6b9971e3903c4040985ba7df32e705cb482ea8c0a4a",
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/storage/CompetitionMahjongPrivateSeriesReplay.kt",
+      "scope": "private series replay",
+      "sha256": "0c867ba50c7fce2f5fae6f85ab22c61537bd30b5a47a04b15d8c1cd06c8d0ea0",
+      "original_sha256": "0c867ba50c7fce2f5fae6f85ab22c61537bd30b5a47a04b15d8c1cd06c8d0ea0"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/storage/CompetitionMahjongFormalRepository.kt",
+      "scope": "private series replay",
+      "sha256": "312ea9de2a2b742526cfbe6404e675c8639554eea145c7d25a340f89e8b4b2d9",
+      "original_sha256": "312ea9de2a2b742526cfbe6404e675c8639554eea145c7d25a340f89e8b4b2d9"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/storage/CompetitionMahjongFormalSnapshot.kt",
+      "scope": "private series replay",
+      "sha256": "ef48b9d656a9c1503382167cdca0664f728d91ff2726a7d34d3fa5c9939c57ad",
+      "original_sha256": "ef48b9d656a9c1503382167cdca0664f728d91ff2726a7d34d3fa5c9939c57ad"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/storage/CompetitionMahjongFormalSnapshotCodec.kt",
+      "scope": "private series replay",
+      "sha256": "d2daee2adf2e8d2bc2e41314ec4254a71c800da30acfe8bcff8ffc97609a2935",
+      "original_sha256": "d2daee2adf2e8d2bc2e41314ec4254a71c800da30acfe8bcff8ffc97609a2935"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/storage/room/CompetitionMahjongFormalRoomBridge.kt",
+      "scope": "private series replay",
+      "sha256": "2fc1ecafb884cf14cefd8c9724ad8284aa56f29b631469a0f6d19fe0ad3d0291",
+      "original_sha256": "2fc1ecafb884cf14cefd8c9724ad8284aa56f29b631469a0f6d19fe0ad3d0291"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/data/CompetitionMahjongPrivateSeriesReplayInstrumentedTest.kt",
+      "scope": "private series replay",
+      "sha256": "9672731c5993c16c675c0d52ec4dc1c287580c3ccc58ef31a13af7fe1d5ce1c9",
+      "original_sha256": "9672731c5993c16c675c0d52ec4dc1c287580c3ccc58ef31a13af7fe1d5ce1c9"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/data/CompetitionMahjongFormalProductionBackupInstrumentedTest.kt",
+      "scope": "private series replay",
+      "sha256": "ae671df7c6aa78148887a4c75e3d69b1d3650e8699f4b713df7b4ae6c12debb2",
+      "original_sha256": "ae671df7c6aa78148887a4c75e3d69b1d3650e8699f4b713df7b4ae6c12debb2"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/storage/CompetitionMahjongFormalSnapshotCodecTest.kt",
+      "scope": "private series replay",
+      "sha256": "4b977f69e3798ef3e09796b12ab52fd66be1b9f0fe8fd559df3116d090658b6c",
+      "original_sha256": "4b977f69e3798ef3e09796b12ab52fd66be1b9f0fe8fd559df3116d090658b6c"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/CompetitionMahjongMatchCheckpoint.kt",
+      "scope": "private series replay",
+      "sha256": "bb07ab6e1707e1792a6ef3bc7888cffa5c365b8df6586a2407e47fc1ac50a608",
+      "original_sha256": "bb07ab6e1707e1792a6ef3bc7888cffa5c365b8df6586a2407e47fc1ac50a608"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/CompetitionMahjongMatchController.kt",
+      "scope": "private series replay",
+      "sha256": "baa4a8435c6a8e682a7848f5c7cde3bef4db1154ea2fcdc83cd14a3bb9c0fc8a",
+      "original_sha256": "baa4a8435c6a8e682a7848f5c7cde3bef4db1154ea2fcdc83cd14a3bb9c0fc8a"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/CompetitionMahjongMatchLedger.kt",
+      "scope": "private series replay",
+      "sha256": "9340cbb1976e682b087a4c14aa351a86eb3c5d128aaf7ddd7d994d8f221136d4",
+      "original_sha256": "9340cbb1976e682b087a4c14aa351a86eb3c5d128aaf7ddd7d994d8f221136d4"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/CompetitionMahjongPositionSeededBot.kt",
+      "scope": "private series replay",
+      "sha256": "0ac0ef1c9afd5a03b2af40966a5bd0ced9a1b10b0339ef8d77c84a67ae67a6f3",
+      "original_sha256": "0ac0ef1c9afd5a03b2af40966a5bd0ced9a1b10b0339ef8d77c84a67ae67a6f3"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/play/CompetitionMahjongFormalRoute.kt",
+      "scope": "private series replay",
+      "sha256": "5a930b819fa8753cb1fb981548b36b3571dec77bc7d33e9e6233bf3edbe1f38b",
+      "original_sha256": "5a930b819fa8753cb1fb981548b36b3571dec77bc7d33e9e6233bf3edbe1f38b"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/play/CompetitionMahjongMatchPlayViewModel.kt",
+      "scope": "private series replay",
+      "sha256": "f81c503cba20c07bf12ad312d9b75d4a414eb9d029fbbbc1820a7c9df8815c20",
+      "original_sha256": "f81c503cba20c07bf12ad312d9b75d4a414eb9d029fbbbc1820a7c9df8815c20"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/CompetitionMahjongMatchCheckpointTest.kt",
+      "scope": "private series replay",
+      "sha256": "a0922622c1bfb2184bd6374989511f09f7f714b669a518d1e2d8249b1ddb103c",
+      "original_sha256": "a0922622c1bfb2184bd6374989511f09f7f714b669a518d1e2d8249b1ddb103c"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongNavigationIntegrationTest.kt",
+      "scope": "private series replay",
+      "sha256": "fc1d5897868e92375e220584cc65edc6c76fc7ebb88e8a413bcd040d14d52476",
+      "original_sha256": "fc1d5897868e92375e220584cc65edc6c76fc7ebb88e8a413bcd040d14d52476"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/storage/CompetitionMahjongArchivedSeries.kt",
+      "scope": "private series replay",
+      "sha256": "ccede43c1e5d4c859f18e20988c48dd0fce240362c253e73ca0ccb9c551a1ae1",
+      "original_sha256": "ccede43c1e5d4c859f18e20988c48dd0fce240362c253e73ca0ccb9c551a1ae1"
+    }
+  ],
+  "build": {
+    "receipt_sha256": "501472b02774fa1a39e611f72ff561035b26ac75456a173762d48c2920082a8c",
+    "abis": [
+      "arm64-v8a",
+      "x86_64"
+    ],
+    "jvm_tests": 162,
+    "suites": [
+      {
+        "tests": 14,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalBackupAdapterTest",
+        "sha256": "a75888c8efb29b5b87a259f88f4899e059de39c01c0565e743fffead84a5d7b2"
+      },
+      {
+        "tests": 8,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalSnapshotCodecTest",
+        "sha256": "cb1c5647a5e2c0adbce8cfc4acd0d00ca6a040e4aa4de66ab51ac200ea0a105c"
+      },
+      {
+        "tests": 16,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalRepositoryTest",
+        "sha256": "9a7e448fd3dd5d8caec7ef35dee0ad880921d1ca1ae6bb01bd9b3543d97d75e6"
+      },
+      {
+        "tests": 51,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.match.play.CompetitionMahjongMatchPlayViewModelTest",
+        "sha256": "f6d5c79ae7865e7a5e0665b7771332dec81f33392c8d942728686a2e5151eaa8"
+      },
+      {
+        "tests": 12,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalMigrationTest",
+        "sha256": "ce9d42e242f76fbca98d7dbb1fe2ae810dd1b8c495b9ad06f9d2bf019754e1ea"
+      },
+      {
+        "tests": 20,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalBackupBundleTest",
+        "sha256": "ff49b78f68e03c2fd90c895db9862d4eb30fa393874339a53accd7a26634da79"
+      },
+      {
+        "tests": 16,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalBackupWireTest",
+        "sha256": "9f85981b43ac1c1b1919027664670bb55310e6908dd1622507b152050fc94df3"
+      },
+      {
+        "tests": 14,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpointTest",
+        "sha256": "abebdda9e6d9d4c728a5c579b73ba5a1d092efae9de80728c8c7f8ae7cc49e31"
+      },
+      {
+        "tests": 11,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchControllerTest",
+        "sha256": "a4a8256fc3d6d026e091257eb24a78eb3d3096877c278af0e38c40d2553ca816"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "cf34cab09ec134f4c6be5c751070fe3d510756bd06a7fda134b8bbfe51e56ec0",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "56e77a472dadb38a7a8e2ed88b9021b7cc11ffb49e234d329cb29d77e2d69654"
+    },
+    "lint_errors": 0,
+    "lint_warnings": 24
+  },
+  "device": {
+    "app_data_cleared": false,
+    "folder": "device-2ecbc7591e4a4f3ba7a3313bd55d9225",
+    "page_size": "16384",
+    "api": "37",
+    "runs": [
+      {
+        "class": "com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongPrivateSeriesReplayInstrumentedTest",
+        "count": 3,
+        "name": "private-series-replay",
+        "log_sha256": "552e09c8c84c4d425b35cc1deec91ae4c98fe241bbf3c72ddebeb37cd54447e1"
+      },
+      {
+        "class": "com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalProductionBackupInstrumentedTest",
+        "count": 10,
+        "name": "formal-production",
+        "log_sha256": "7319237935bb0e6194ce008e64dabfc42db48df9da96bb64cef984a503e6e3bc"
+      },
+      {
+        "class": "com.masterofchessstrategy.ui.CompetitionMahjongNavigationIntegrationTest#qualifiedFormalNavigationSavesARealMoveAndReopensTheSameMatch",
+        "count": 1,
+        "name": "production-navigation",
+        "log_sha256": "aa3394084758008d51e11155f9970dcd31e3b1136ac4dde28c05c85dfce80db9"
+      }
+    ],
+    "abi": "x86_64",
+    "invocations": 14,
+    "receipt_sha256": "c5673fc1fbefe4e8ddce21ff200079ac064d6888b484ab12201203a2c4b5f319"
+  },
+  "visual": {
+    "images": {
+      "formal-table": "39d70cf58904161cafd71d14e4ddeab795807b244aab62ff249015ccc075fad9",
+      "formal-resumed": "7bbaa325200026aeff03d3118abd59bcedbc1001ffc29e289c1c2fd703ae7c80",
+      "formal-actions": "62b8d7b80653ed10655f510d474e027df97ed1946600e049ec3e282f57995f4e",
+      "formal-history": "e4dffb098a9b878af4307f69e1958474ba6795857949d0176245ed0dcf3ec6d7",
+      "formal-unlocked": "02b1a53ee257edadaa6988e83fc8636ab7fd22d9ba2bfbddf81f4d2e45fc0492",
+      "formal-statistics": "dfc3c5fccac651d1c51ab22258198e39a6e862953617bd29892ceebbefd9ff99"
+    },
+    "directly_reviewed": 6,
+    "screenshots": 6
+  },
+  "metadata": [
+    {
+      "sha256": "d8d8f14b0506fe0278eb2545745c6ff8f539d8db84b35dc2640f3a4998f3d647",
+      "path": "docs/games/competition-mahjong/2026-11-09-private-series-replay.md"
+    },
+    {
+      "sha256": "92f725497a1c22d49f8cc6f3aa8277591370c9731915da037706586b0d110a04",
+      "path": "docs/releases/v0.1.0-competition-mahjong-series-evidence.1.md"
+    }
+  ],
+  "source_only": true,
+  "release_assets": [],
+  "new_third_party_assets": false,
+  "remaining": [
+    "Trusted wins, points, stars and difficulty unlocks",
+    "Large archive performance and capacity verification",
+    "AI strength and physical device acceptance"
+  ]
+}

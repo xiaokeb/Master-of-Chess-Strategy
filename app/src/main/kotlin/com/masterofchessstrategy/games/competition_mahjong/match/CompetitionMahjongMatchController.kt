@@ -107,7 +107,14 @@ class CompetitionMahjongMatchController(
         if (!canChange(expectedHandIndex)) return@transaction 0
         val active = checkNotNull(session)
         try {
-            val count = active.advanceBots(config.botLevel, randomSeed, maxActions)
+            val count = when (config.botStrategy) {
+                CompetitionMahjongBotStrategy.LEGACY_BATCH -> active.advanceBots(config.botLevel, randomSeed, maxActions)
+                CompetitionMahjongBotStrategy.POSITION_SEEDED_V1 -> {
+                    var moved = 0
+                    while (moved < maxActions && active.advancePositionSeededBot(config.botLevel) == 1) moved++
+                    moved
+                }
+            }
             if (count > 0) persist(ledger) else publish()
             count
         } catch (failure: Exception) {

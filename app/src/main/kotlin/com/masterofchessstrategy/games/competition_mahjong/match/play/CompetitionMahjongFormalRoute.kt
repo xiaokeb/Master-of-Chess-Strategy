@@ -33,6 +33,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.games.competition_mahjong.history.CompetitionMahjongMatchHistoryRoute
+import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongBotStrategy
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongCompetitionConfig
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.room.CompetitionMahjongFormalHost
 import com.masterofchessstrategy.games.competition_mahjong.statistics.CompetitionMahjongStatisticsRoute
@@ -156,7 +157,8 @@ private fun CompetitionMahjongFormalDestinations(
             if (easyLevel != null) {
                 val config = remember {
                     CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(),
-                        System.currentTimeMillis().coerceAtLeast(0), viewer, easyLevel)
+                        System.currentTimeMillis().coerceAtLeast(0), viewer, easyLevel,
+                        CompetitionMahjongBotStrategy.POSITION_SEEDED_V1)
                 }
                 CompetitionMahjongMatchRoute(
                     store = session.match, initialConfig = config, playPolicy = session.policy,

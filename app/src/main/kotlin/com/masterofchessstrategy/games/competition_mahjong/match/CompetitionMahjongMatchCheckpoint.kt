@@ -82,7 +82,7 @@ interface CompetitionMahjongMatchStore {
     suspend fun save(checkpoint: CompetitionMahjongMatchCheckpoint)
 }
 
-/** MCMT v1..v4: assistance, user playback, paid hint receipt; nested MCPK/MCMS stays v1. */
+/** MCMT v5 adds position-seeded AI. v1–v4 retain their original metadata layout. */
 internal object CompetitionMahjongMatchCheckpointCodec {
     private const val MAGIC = 0x4d434d54
     private const val HEADER_BYTES = 12
@@ -91,6 +91,13 @@ internal object CompetitionMahjongMatchCheckpointCodec {
     private const val MAX_FILE_BYTES = 1_100_000
 
     fun encode(checkpoint: CompetitionMahjongMatchCheckpoint): ByteArray {
+        val metadata = when {
+            checkpoint.hintReceipt != null -> 4
+            checkpoint.playback != null -> 3
+            checkpoint.assistance != null -> 2
+            else -> 1
+        }
+        val positionSeeded = checkpoint.config.botStrategy == CompetitionMahjongBotStrategy.POSITION_SEEDED_V1
         val output = ByteArrayOutputStream()
         DataOutputStream(output).use { data ->
             val config = checkpoint.config
@@ -103,6 +110,7 @@ internal object CompetitionMahjongMatchCheckpointCodec {
             data.writeByte(checkpoint.activeHandIndex)
             val results = checkpoint.ledger.results
             data.writeByte(results.size)
+            if (positionSeeded) data.writeByte(metadata)
             results.forEach { result ->
                 data.writeByte(result.handIndex)
                 data.writeByte(result.phase.code)
@@ -141,7 +149,7 @@ internal object CompetitionMahjongMatchCheckpointCodec {
         val body = output.toByteArray()
         val frame = ByteBuffer.allocate(HEADER_BYTES + body.size + FOOTER_BYTES).order(ByteOrder.BIG_ENDIAN)
         require(frame.capacity() <= MAX_FILE_BYTES)
-        val version = if (checkpoint.hintReceipt != null) 4 else if (checkpoint.playback != null) 3 else if (checkpoint.assistance != null) 2 else 1
+        val version = if (positionSeeded) 5 else metadata
         frame.putInt(MAGIC).put(version.toByte())
             .put(0.toByte()).put(0.toByte()).put(0.toByte()).putInt(body.size)
         frame.put(body)
@@ -155,7 +163,7 @@ internal object CompetitionMahjongMatchCheckpointCodec {
         val input = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN)
         if (input.int != MAGIC) return null
         val version = input.get().toInt()
-        if (version !in 1..4) return null
+        if (version !in 1..5) return null
         repeat(3) { if (input.get().toInt() != 0) return null }
         if (input.int != bytes.size - HEADER_BYTES - FOOTER_BYTES ||
             crc(bytes, bytes.size - FOOTER_BYTES) != input.getInt(bytes.size - FOOTER_BYTES)) return null
@@ -169,12 +177,18 @@ internal object CompetitionMahjongMatchCheckpointCodec {
         val level = input.get().toInt() and 255
         val active = input.get().toInt() and 255
         val count = input.get().toInt() and 255
+        val metadata = if (version == 5) {
+            if (!input.hasRemaining()) return null
+            input.get().toInt().takeIf { it in 1..4 } ?: return null
+        } else version
         if (seed < 0 || viewer != viewerPlayerId || level !in 0..3 || active !in 0..15 || count !in 0..16 ||
             count !in active..active + 1 || input.remaining() < count * RESULT_BYTES + 4 +
-                (if (version >= 2) 12 else 0) + (if (version >= 3) 8 else 0) +
-                (if (version == 4) 4 + CompetitionMahjongHintReceiptCodec.MIN_BYTES else 0)) return null
+                (if (metadata >= 2) 12 else 0) + (if (metadata >= 3) 8 else 0) +
+                (if (metadata == 4) 4 + CompetitionMahjongHintReceiptCodec.MIN_BYTES else 0)) return null
         return try {
-            val config = CompetitionMahjongCompetitionConfig(id, seed, viewer, level)
+            val strategy = if (version == 5) CompetitionMahjongBotStrategy.POSITION_SEEDED_V1
+                else CompetitionMahjongBotStrategy.LEGACY_BATCH
+            val config = CompetitionMahjongCompetitionConfig(id, seed, viewer, level, strategy)
             val results = ArrayList<CompetitionMahjongHandResult>(count)
             repeat(count) { index ->
                 if ((input.get().toInt() and 255) != index) return null
@@ -194,7 +208,7 @@ internal object CompetitionMahjongMatchCheckpointCodec {
                 if (input.long != 0L) return null
                 results += CompetitionMahjongHandResult(index, phase, scores, winner, payer, fan, total)
             }
-            val assistance = if (version >= 2) {
+            val assistance = if (metadata >= 2) {
                 if (input.get().toInt() != 1) return null
                 val difficultyCode = input.get().toInt()
                 val difficulty = Difficulty.entries.firstOrNull { it.code == difficultyCode } ?: return null
@@ -202,7 +216,7 @@ internal object CompetitionMahjongMatchCheckpointCodec {
                 if (pending !in 0..1 || input.get().toInt() != 0) return null
                 CompetitionMahjongAssistanceUsage(difficulty, input.int, input.int, pending == 1)
             } else null
-            val playback = if (version >= 3) {
+            val playback = if (metadata >= 3) {
                 if (input.get().toInt() != 1) return null
                 val paused = input.get().toInt()
                 if (paused !in 0..1 || input.short.toInt() != 0) return null
@@ -210,7 +224,7 @@ internal object CompetitionMahjongMatchCheckpointCodec {
                 if (speedPermille !in setOf(500, 1000, 2000, 4000)) return null
                 CompetitionMahjongMatchPlayback(paused == 1, speedPermille / 1000f)
             } else null
-            val receipt = if (version == 4) {
+            val receipt = if (metadata == 4) {
                 val size = input.int
                 if (size !in CompetitionMahjongHintReceiptCodec.MIN_BYTES..CompetitionMahjongHintReceiptCodec.MAX_BYTES ||
                     size > input.remaining() - 4) return null

@@ -14,6 +14,7 @@ import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
 import com.masterofchessstrategy.games.competition_mahjong.data.finishCompetitionMahjongTestHand
 import com.masterofchessstrategy.games.competition_mahjong.learning.*
+import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongBotStrategy
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongCompetitionConfig
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpoint
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpointCodec
@@ -101,6 +102,7 @@ class CompetitionMahjongNavigationIntegrationTest {
         clickReady("competition_formal_play")
         waitForTag("competition_mahjong_action_bar")
         val start = checkNotNull(activeMatch())
+        assertEquals(CompetitionMahjongBotStrategy.POSITION_SEEDED_V1, start.config.botStrategy)
         val discard = hasText("出 ", substring = true) and hasClickAction() and isEnabled()
         compose.waitUntil(10_000) { compose.onAllNodes(discard).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("competition_mahjong_local_tiles").assertIsDisplayed()
@@ -114,6 +116,7 @@ class CompetitionMahjongNavigationIntegrationTest {
         clickReady("competition_formal_play")
         waitForTag("competition_mahjong_table")
         assertEquals(start.config.matchId, activeMatch()?.config?.matchId)
+        assertEquals(start.config.botStrategy, activeMatch()?.config?.botStrategy)
         capture("formal-resumed")
         assertOtherGamesUntouched()
     }

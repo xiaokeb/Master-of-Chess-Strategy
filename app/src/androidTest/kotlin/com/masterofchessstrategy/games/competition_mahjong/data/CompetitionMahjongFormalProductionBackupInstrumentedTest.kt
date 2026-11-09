@@ -144,7 +144,8 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
 
     @Test fun sixteenRealHandsSettleWithdrawAndReopenWithHistoryAndDeletionIntact() = withOwnedLanzhouDatabase { f ->
         completeCourse(f.db)
-        val config = CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(), 20261009, 0, 0)
+        val config = CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(), 20261009, 0, 0,
+            CompetitionMahjongBotStrategy.POSITION_SEEDED_V1)
         var host = CompetitionMahjongFormalHost(f.db, 0)
         var session = (host.open() as CompetitionMahjongFormalHost.Entry.Ready).session
         var usage = session.policy.freshUsage(config.botLevel)
@@ -157,13 +158,41 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
         var controller = CompetitionMahjongMatchController(config, store)
         try {
             assertTrue(controller.open())
+            assertEquals(0, storedSnapshot(f.db).settledHandRecords!!.size)
+            assertEquals(config.botStrategy, storedSnapshot(f.db).active!!.config.botStrategy)
             for (index in 0 until 16) {
                 val seating = CompetitionMahjongMatchSeating.forHand(index)
                 val frame = checkNotNull(controller.state.value.table)
                 assertEquals(seating.seatOfPlayer(0), frame.viewerSeat)
                 assertEquals(seating.dealerSeat, frame.dealerSeat)
                 assertEquals(seating.roundWind, frame.roundWind)
-                finishCompetitionMahjongTestHand(controller, index)
+                if (index == 15) {
+                    val sql = f.db.openHelper.writableDatabase
+                    sql.execSQL("CREATE TRIGGER reject_series_archive BEFORE UPDATE OF mctx ON competition_mahjong_formal " +
+                        "WHEN hex(substr(NEW.mctx,5,1))='03' BEGIN SELECT RAISE(ABORT,'archive fault'); END")
+                    try {
+                        finishCompetitionMahjongTestHand(controller, index, allowPendingSave = true)
+                        assertTrue(controller.state.value.needsSave)
+                        assertTrue(storedSnapshot(f.db).archivedSeries.isEmpty())
+                        assertTrue(session.statistics.load(0).outcomes.isEmpty())
+                    } finally {
+                        sql.execSQL("DROP TRIGGER reject_series_archive")
+                    }
+                    assertTrue(controller.retrySave())
+                } else finishCompetitionMahjongTestHand(controller, index)
+                if (index == 0) {
+                    val before = storedMctx(f.db)
+                    val sql = f.db.openHelper.writableDatabase
+                    sql.execSQL("CREATE TRIGGER reject_next_hand BEFORE UPDATE OF mctx ON competition_mahjong_formal " +
+                        "BEGIN SELECT RAISE(ABORT,'next hand fault'); END")
+                    try {
+                        assertFalse(controller.nextHand(0))
+                        assertEquals(0, controller.state.value.activeHandIndex)
+                        assertArrayEquals(before, storedMctx(f.db))
+                    } finally {
+                        sql.execSQL("DROP TRIGGER reject_next_hand")
+                    }
+                }
                 if (index == 7) {
                     controller.close()
                     host.close()
@@ -173,31 +202,52 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
                     controller = CompetitionMahjongMatchController(config, store)
                     assertTrue(controller.open())
                     assertEquals(8, controller.state.value.completedHandCount)
+                    assertEquals(7, storedSnapshot(f.db).settledHandRecords!!.size)
                 }
-                if (index < 15) assertTrue(controller.nextHand(index))
+                if (index < 15) {
+                    val finished = checkNotNull(store.load(0)).engineRecord
+                    assertTrue(controller.nextHand(index))
+                    val prefix = checkNotNull(storedSnapshot(f.db).settledHandRecords)
+                    assertEquals(index + 1, prefix.size)
+                    assertArrayEquals(finished, prefix.last())
+                }
             }
             assertFalse(controller.nextHand(15))
             val original = session.history.load(0).entries.single()
             assertEquals(config.matchId, original.matchId)
             assertEquals(16, original.hands.size)
             assertEquals(original.viewerStanding.score, session.statistics.load(0).outcomes.single().score)
+            assertEquals(config, storedSnapshot(f.db).archivedSeries.single().config)
 
             usage = usage.consumeUndo()
             assertTrue(controller.undo(15))
             assertEquals(15, controller.state.value.completedHandCount)
+            assertEquals(15, storedSnapshot(f.db).settledHandRecords!!.size)
+            assertTrue(storedSnapshot(f.db).archivedSeries.isEmpty())
             assertTrue(session.statistics.load(0).outcomes.isEmpty())
             assertTrue(session.history.load(0).entries.isEmpty())
             finishCompetitionMahjongTestHand(controller, 15)
             val settled = session.history.load(0).entries.single()
             assertEquals(original.hands.take(15), settled.hands.take(15))
             assertEquals(1, session.statistics.load(0).seriesCount)
+            assertEquals(config, storedSnapshot(f.db).archivedSeries.single().config)
             assertTrue(session.history.setFavorite(0, config.matchId, true).entries.single().favorite)
             controller.close()
             host.close()
 
+            val beforeBackup = storedMctx(f.db)
+            val recorded = storedSnapshot(f.db)
+            val prefix = checkNotNull(recorded.settledHandRecords)
+            val wrongHand = recorded.withSettledHandRecords(listOf(prefix[1]) + prefix.drop(1))
+            val wire = CompetitionMahjongFormalBackupWire.encode(0, CompetitionMahjongFormalSnapshotCodec.encode(wrongHand))
+            val proof = f.db.withTransaction { CompetitionMahjongLearningBackupAdapter().read(f.db) }
+            val failure = runCatching { f.repository().restore(envelope(listOf(wire) + proof)) }.exceptionOrNull()
+            assertTrue(failure.toString(), failure is IllegalArgumentException)
+            assertArrayEquals(beforeBackup, storedMctx(f.db))
             val favoriteBackup = f.repository().export(100)
             f.repository().restore(favoriteBackup)
             f.reopen()
+            assertArrayEquals(beforeBackup, storedMctx(f.db))
             host = CompetitionMahjongFormalHost(f.db, 0)
             session = (host.open() as CompetitionMahjongFormalHost.Entry.Ready).session
             assertTrue(session.history.load(0).entries.single().favorite)
@@ -210,9 +260,60 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
             session = (host.open() as CompetitionMahjongFormalHost.Entry.Ready).session
             assertTrue(session.history.load(0).entries.isEmpty())
             assertEquals(config.matchId, session.statistics.load(0).outcomes.single().matchId)
+
+            val next = config.copy(matchId = UUID.randomUUID().toString(), seed = config.seed + 1)
+            val freshStore = object : CompetitionMahjongMatchStore {
+                override suspend fun load(viewerPlayerId: Int): CompetitionMahjongMatchCheckpoint? = null
+                override suspend fun save(checkpoint: CompetitionMahjongMatchCheckpoint) =
+                    session.match.save(checkpoint.withAssistance(session.policy.freshUsage(next.botLevel)))
+            }
+            controller = CompetitionMahjongMatchController(next, freshStore)
+            assertTrue(controller.open())
+            val nextSnapshot = storedSnapshot(f.db)
+            assertEquals(next, nextSnapshot.active!!.config)
+            val archived = nextSnapshot.archivedSeries.single()
+            assertEquals(config, archived.config)
+            assertEquals(settled.hands, CompetitionMahjongPrivateSeriesReplay.replayArchive(archived).results)
+            controller.close()
+            host.close()
+            val bytesWithNewMatch = storedMctx(f.db)
+            val compactHands = List(16, archived::decisions)
+            val broken = CompetitionMahjongArchivedSeries(config, listOf(shortArrayOf()) + compactHands.drop(1))
+            val corrupted = nextSnapshot.withPrivateEvidence(nextSnapshot.settledHandRecords, listOf(broken))
+            val badWire = CompetitionMahjongFormalBackupWire.encode(0, CompetitionMahjongFormalSnapshotCodec.encode(corrupted))
+            val rejected = runCatching { f.repository().restore(envelope(listOf(badWire) + proof)) }.exceptionOrNull()
+            assertTrue(rejected.toString(), rejected is IllegalArgumentException)
+            assertArrayEquals(bytesWithNewMatch, storedMctx(f.db))
+            val crossSeriesBackup = f.repository().export(102)
+            f.repository().restore(crossSeriesBackup)
+            f.reopen()
+            assertArrayEquals(bytesWithNewMatch, storedMctx(f.db))
+            assertEquals(config, storedSnapshot(f.db).archivedSeries.single().config)
         } finally {
             controller.close()
             host.close()
+        }
+    }
+
+    @Test fun v1SeriesCanAdvanceWithoutInventingEarlierEvidence() = withOwnedLanzhouDatabase { f ->
+        val checkpoint = nativeCheckpoint()
+        val repository = install(f.db, checkpoint).openRepository()
+        val store = object : CompetitionMahjongMatchStore {
+            override suspend fun load(viewerPlayerId: Int) = repository.matchStore.load(viewerPlayerId)
+            override suspend fun save(checkpoint: CompetitionMahjongMatchCheckpoint) =
+                repository.matchStore.save(checkpoint.withAssistance(policy.freshUsage(0).consumeHint()))
+        }
+        val controller = CompetitionMahjongMatchController(checkpoint.config, store)
+        try {
+            assertTrue(controller.open())
+            finishCompetitionMahjongTestHand(controller, 0)
+            assertTrue(controller.nextHand(0))
+            assertEquals(1, storedMctx(f.db)[4].toInt())
+            val snapshot = storedSnapshot(f.db)
+            assertEquals(1, snapshot.active!!.activeHandIndex)
+            assertNull(snapshot.settledHandRecords)
+        } finally {
+            controller.close()
         }
     }
 
@@ -265,6 +366,12 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
     private fun legacy(c: CompetitionMahjongMatchCheckpoint) = CompetitionMahjongMatchArchive(c.config.viewerPlayerId,
         c.config.matchId, 1, CompetitionMahjongMatchCheckpointCodec.encode(c)).toEntity()
     private fun mctx(c: CompetitionMahjongMatchCheckpoint) = CompetitionMahjongFormalSnapshotCodec.encode(CompetitionMahjongFormalSnapshot(0, c))
+    private suspend fun storedMctx(db: MocsDatabase): ByteArray = db.withTransaction {
+        checkNotNull(CompetitionMahjongFormalRoomStorage.readMctxInTransaction(db, db.competitionMahjongFormalRoomDao(), 0))
+    }
+    private suspend fun storedSnapshot(db: MocsDatabase): CompetitionMahjongFormalSnapshot =
+        checkNotNull(CompetitionMahjongFormalSnapshotCodec.decode(storedMctx(db), 0))
+
     private suspend fun install(db: MocsDatabase, c: CompetitionMahjongMatchCheckpoint): CompetitionMahjongFormalRoomBridge {
         val candidate = CompetitionMahjongFormalRoomBackup.admit(0, mctx(c), policy)
         return db.withTransaction { CompetitionMahjongFormalRoomBridge.installBackupInTransaction(db, db.competitionMahjongFormalRoomDao(), candidate) }
@@ -292,10 +399,15 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
     }
 }
 
-internal suspend fun finishCompetitionMahjongTestHand(controller: CompetitionMahjongMatchController, index: Int) {
+internal suspend fun finishCompetitionMahjongTestHand(
+    controller: CompetitionMahjongMatchController,
+    index: Int,
+    allowPendingSave: Boolean = false,
+) {
     repeat(1024) { batch ->
         controller.advanceOtherSeats(index, index * 1024L + batch + 1, 32)
         val state = controller.state.value
+        if (allowPendingSave && state.needsSave) return
         assertFalse(state.error, state.needsSave)
         if (state.completedHandCount > index) return
         val action = state.legalActions.minByOrNull {
@@ -308,7 +420,9 @@ internal suspend fun finishCompetitionMahjongTestHand(controller: CompetitionMah
             }
         }
         assertNotNull("Native未终局却无法推进，第${index + 1}盘", action)
-        assertTrue(controller.apply(checkNotNull(action), index)?.accepted == true)
+        val result = controller.apply(checkNotNull(action), index)
+        if (allowPendingSave && controller.state.value.needsSave) return
+        assertTrue(result?.accepted == true)
         assertFalse(controller.state.value.error, controller.state.value.needsSave)
         if (controller.state.value.completedHandCount > index) return
     }

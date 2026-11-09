@@ -75,7 +75,7 @@ internal data class CompetitionMahjongMatchPlayState(
 /** UI scheduler for a full series; persistence and Native ownership stay in MatchController. */
 internal class CompetitionMahjongMatchPlayViewModel(
     private val store: CompetitionMahjongMatchStore,
-    initialConfig: CompetitionMahjongCompetitionConfig,
+    private val initialConfig: CompetitionMahjongCompetitionConfig,
     private val sessionFactory: (CompetitionMahjongMatchConfig) -> CompetitionMahjongRuleSession = {
         NativeCompetitionMahjongSession(it.seed, it.dealerSeat, it.roundWind, it.viewerSeat)
     },
@@ -224,7 +224,8 @@ internal class CompetitionMahjongMatchPlayViewModel(
         if (botLevel !in 0..3 || !begin(requireTable = false)) return
         launchTransaction {
             val nextUsage = requirePolicy().freshUsage(botLevel)
-            val config = effectiveConfig.copy(matchId = idSource(), seed = seedSource(), botLevel = botLevel)
+            val config = effectiveConfig.copy(matchId = idSource(), seed = seedSource(), botLevel = botLevel,
+                botStrategy = initialConfig.botStrategy)
             val oldUsage = assistance
             val oldHint = hintReceipt
             assistance = nextUsage

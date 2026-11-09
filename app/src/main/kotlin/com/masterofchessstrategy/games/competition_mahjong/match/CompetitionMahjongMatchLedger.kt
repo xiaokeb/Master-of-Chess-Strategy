@@ -5,12 +5,15 @@ import com.masterofchessstrategy.engine.CompetitionMahjongRoundPhase
 import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongMatchConfig
 import java.util.UUID
 
+enum class CompetitionMahjongBotStrategy { LEGACY_BATCH, POSITION_SEEDED_V1 }
+
 /** Player IDs are their original East/South/West/North assignments, never current seats. */
 data class CompetitionMahjongCompetitionConfig(
     val matchId: String,
     val seed: Long,
     val viewerPlayerId: Int = 0,
     val botLevel: Int = 1,
+    val botStrategy: CompetitionMahjongBotStrategy = CompetitionMahjongBotStrategy.LEGACY_BATCH,
 ) {
     init {
         require(runCatching { UUID.fromString(matchId).toString() == matchId }.getOrDefault(false))

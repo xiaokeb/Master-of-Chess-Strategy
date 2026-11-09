@@ -16,8 +16,14 @@ internal class CompetitionMahjongFormalSnapshot(
     val statistics: CompetitionMahjongStatistics = CompetitionMahjongStatistics.empty(),
     val history: CompetitionMahjongMatchHistory = CompetitionMahjongMatchHistory.empty(),
     deletedMatchIds: Set<String> = emptySet(),
+    settledHandRecords: List<ByteArray>? = null,
+    archivedSeries: List<CompetitionMahjongArchivedSeries> = emptyList(),
 ) {
     val deletedMatchIds: Set<String> = Collections.unmodifiableSet(deletedMatchIds.toSortedSet())
+    private val records = settledHandRecords?.map(ByteArray::copyOf)
+    // Null marks a legacy series. An empty list tracks a new series in its first hand.
+    val settledHandRecords: List<ByteArray>? get() = records?.map(ByteArray::copyOf)
+    val archivedSeries: List<CompetitionMahjongArchivedSeries> = Collections.unmodifiableList(archivedSeries.toList())
 
     init {
         require(viewerPlayerId in 0..3)
@@ -26,14 +32,26 @@ internal class CompetitionMahjongFormalSnapshot(
         require(statistics.outcomes.all { it.viewerPlayerId == viewerPlayerId })
         require(history.entries.all { it.viewerPlayerId == viewerPlayerId && it.matchId !in this.deletedMatchIds })
         val outcomes = statistics.outcomes.associateBy { it.matchId }
+        require(this.archivedSeries.map { it.config.matchId }.distinct().size == this.archivedSeries.size &&
+            this.archivedSeries.all { it.config.viewerPlayerId == viewerPlayerId && it.config.matchId in outcomes }) {
+            "国标跨场证据缺少对应结算或编号重复"
+        }
         history.entries.forEach { entry ->
             require(outcomes[entry.matchId] == entry.toOutcome()) { "成绩单与统计不一致" }
         }
         val visibleIds = history.entries.map { it.matchId }.toSet()
         require(outcomes.keys.all { it in visibleIds || it in this.deletedMatchIds }) { "统计缺少成绩单或删除标记" }
+        records?.let { prefix ->
+            require(prefix.size == active?.activeHandIndex && prefix.all {
+                it.size in CompetitionMahjongPrivateSeriesReplay.HAND_BYTES
+            }) { "国标赛事逐盘证据长度无效" }
+        }
         active?.let { checkpoint ->
             require(checkpoint.config.viewerPlayerId == viewerPlayerId && checkpoint.assistance != null)
             val outcome = outcomes[checkpoint.config.matchId]
+            this.archivedSeries.firstOrNull { it.config.matchId == checkpoint.config.matchId }?.let {
+                require(it.config == checkpoint.config) { "当前赛事与跨场证据配置不一致" }
+            }
             if (checkpoint.ledger.isComplete) {
                 requireNotNull(outcome) { "完成赛事未在同一事务结算" }
                 val expected = checkpoint.toHistory(outcome.settledAtEpochMillis)
@@ -79,7 +97,8 @@ internal class CompetitionMahjongFormalSnapshot(
                 checkpoint.ledger.completedHandCount == 15) { "只能撤回当前赛事末盘成绩" }
             return CompetitionMahjongFormalSnapshot(viewerPlayerId, checkpoint,
                 CompetitionMahjongStatistics.from(statistics.outcomes.filterNot { it.matchId == id }),
-                CompetitionMahjongMatchHistory.from(history.entries.filterNot { it.matchId == id }), deletedMatchIds)
+                CompetitionMahjongMatchHistory.from(history.entries.filterNot { it.matchId == id }), deletedMatchIds,
+                archivedSeries = archivedSeries.filterNot { it.config.matchId == id })
         }
 
         val time = existing?.settledAtEpochMillis ?: now
@@ -88,12 +107,13 @@ internal class CompetitionMahjongFormalSnapshot(
         if (existing != null) {
             require(existing == outcome) { "同一赛事结果冲突，需先保存合法撤回" }
             history.entries.firstOrNull { it.matchId == id }?.let { require(it.sameResult(entry)) }
-            return CompetitionMahjongFormalSnapshot(viewerPlayerId, checkpoint, statistics, history, deletedMatchIds)
+            return CompetitionMahjongFormalSnapshot(viewerPlayerId, checkpoint, statistics, history, deletedMatchIds,
+                archivedSeries = archivedSeries)
         }
         return CompetitionMahjongFormalSnapshot(viewerPlayerId, checkpoint,
             CompetitionMahjongStatistics.from(statistics.outcomes + outcome),
             if (id in deletedMatchIds) history else CompetitionMahjongMatchHistory.from(history.entries + entry),
-            deletedMatchIds)
+            deletedMatchIds, archivedSeries = archivedSeries)
     }
 
     fun favorite(matchId: String, favorite: Boolean): CompetitionMahjongFormalSnapshot {
@@ -101,7 +121,7 @@ internal class CompetitionMahjongFormalSnapshot(
         return CompetitionMahjongFormalSnapshot(viewerPlayerId, active, statistics,
             CompetitionMahjongMatchHistory.from(history.entries.map {
                 if (it.matchId == matchId) it.withFavorite(favorite) else it
-            }), deletedMatchIds)
+            }), deletedMatchIds, records, archivedSeries)
     }
 
     fun delete(matchId: String): CompetitionMahjongFormalSnapshot {
@@ -109,8 +129,14 @@ internal class CompetitionMahjongFormalSnapshot(
         require(history.entries.any { it.matchId == matchId }) { "赛事成绩单不存在" }
         return CompetitionMahjongFormalSnapshot(viewerPlayerId, active, statistics,
             CompetitionMahjongMatchHistory.from(history.entries.filterNot { it.matchId == matchId }),
-            deletedMatchIds + matchId)
+            deletedMatchIds + matchId, records, archivedSeries)
     }
+
+    fun withSettledHandRecords(records: List<ByteArray>): CompetitionMahjongFormalSnapshot =
+        withPrivateEvidence(records, archivedSeries)
+
+    fun withPrivateEvidence(records: List<ByteArray>?, archive: List<CompetitionMahjongArchivedSeries>): CompetitionMahjongFormalSnapshot =
+        CompetitionMahjongFormalSnapshot(viewerPlayerId, active, statistics, history, deletedMatchIds, records, archive)
 
     companion object { const val MAX_DELETIONS = 10_000 }
 }
@@ -119,7 +145,7 @@ private fun CompetitionMahjongMatchCheckpoint.toHistory(time: Long): Competition
     CompetitionMahjongMatchHistoryEntry(config.matchId, config.viewerPlayerId,
         checkNotNull(assistance).difficulty, config.botLevel, time, false, ledger.results)
 
-private fun CompetitionMahjongMatchHistoryEntry.toOutcome(): CompetitionMahjongSeriesOutcome {
+internal fun CompetitionMahjongMatchHistoryEntry.toOutcome(): CompetitionMahjongSeriesOutcome {
     val wins = hands.filter { it.winnerPlayerId == viewerPlayerId }
     return CompetitionMahjongSeriesOutcome(matchId, viewerPlayerId, difficulty, settledAtEpochMillis,
         viewerStanding.rank, viewerStanding.score, viewerStanding.standardPointsNumerator,

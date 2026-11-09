@@ -2,6 +2,7 @@ package com.masterofchessstrategy.games.competition_mahjong.match.storage
 
 import android.content.Context
 import com.masterofchessstrategy.games.competition_mahjong.history.*
+import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongBotStrategy
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpoint
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchStore
 import com.masterofchessstrategy.games.competition_mahjong.match.policy.CompetitionMahjongPlayPolicy
@@ -20,6 +21,7 @@ class CompetitionMahjongFormalRepository internal constructor(
     private val admitCheckpoint: suspend (CompetitionMahjongMatchCheckpoint) -> Unit,
     private val clockMillis: () -> Long = System::currentTimeMillis,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val capturePrivateReplay: Boolean = false,
 ) {
     constructor(context: Context, viewerPlayerId: Int, playPolicy: CompetitionMahjongPlayPolicy,
                 admitCheckpoint: suspend (CompetitionMahjongMatchCheckpoint) -> Unit) : this(
@@ -39,9 +41,63 @@ class CompetitionMahjongFormalRepository internal constructor(
             playPolicy.requireAuthorized(checkpoint.config.botLevel, checkpoint.assistance)
             change(viewerPlayerId) { current ->
                 admitCheckpoint(checkpoint)
-                current.save(checkpoint, playPolicy, clockMillis())
+                val next = current.save(checkpoint, playPolicy, clockMillis())
+                val records = captureSettledHands(current, checkpoint)
+                require(!capturePrivateReplay || records != null ||
+                    checkpoint.config.botStrategy == CompetitionMahjongBotStrategy.LEGACY_BATCH) {
+                    "逐动作策略赛事缺少私有证据"
+                }
+                next.withPrivateEvidence(records, retainSettledSeries(current, next, checkpoint, records))
             }
         }
+    }
+
+    private fun retainSettledSeries(
+        current: CompetitionMahjongFormalSnapshot,
+        next: CompetitionMahjongFormalSnapshot,
+        checkpoint: CompetitionMahjongMatchCheckpoint,
+        records: List<ByteArray>?,
+    ): List<CompetitionMahjongArchivedSeries> {
+        val previous = current.active
+        val archive = next.archivedSeries
+        // An older v2 installation may already have a complete current series at replacement time.
+        val settled = if (previous != null && previous.config.matchId != checkpoint.config.matchId &&
+            previous.ledger.isComplete) previous else checkpoint
+        if (!settled.ledger.isComplete || settled.config.botStrategy != CompetitionMahjongBotStrategy.POSITION_SEEDED_V1)
+            return archive
+        if (archive.any { it.config.matchId == settled.config.matchId }) {
+            if (settled === checkpoint && previous != null && previous.config == checkpoint.config) {
+                require(checkpoint.engineRecord.contentEquals(previous.engineRecord)) { "完成赛事需先撤回才能修改" }
+            }
+            return archive
+        }
+        val prefix = if (settled === checkpoint) records else current.settledHandRecords
+        return archive + CompetitionMahjongPrivateSeriesReplay.archive(settled, checkNotNull(prefix))
+    }
+
+    private fun captureSettledHands(
+        current: CompetitionMahjongFormalSnapshot,
+        checkpoint: CompetitionMahjongMatchCheckpoint,
+    ): List<ByteArray>? {
+        val previous = current.active
+        if (previous == null || previous.config.matchId != checkpoint.config.matchId) {
+            return if (capturePrivateReplay && checkpoint.activeHandIndex == 0 && checkpoint.ledger.completedHandCount == 0)
+                emptyList() else null
+        }
+        val records = current.settledHandRecords ?: return null
+        val handIndex = checkpoint.activeHandIndex
+        if (handIndex > previous.activeHandIndex) {
+            val record = previous.engineRecord
+            CompetitionMahjongPrivateSeriesReplay.verifyResult(previous, previous.activeHandIndex, record)
+            return records + listOf(record)
+        }
+        if (checkpoint.ledger.isComplete) {
+            val record = checkpoint.engineRecord
+            if (!previous.ledger.isComplete || !record.contentEquals(previous.engineRecord)) {
+                CompetitionMahjongPrivateSeriesReplay.verifyResult(checkpoint, handIndex, record)
+            }
+        }
+        return records
     }
 
     /** Derived results can only change through a validated MCMT save. */
