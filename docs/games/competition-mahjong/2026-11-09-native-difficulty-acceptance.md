@@ -17,3 +17,5 @@
 同一安装包通过两项原生门槛测试。累计 10、25、45 场真实原生胜局分别开放中等、困难和大师，逐档验证实际出牌。只有 9 场时，较低权限不能沿用当前赛事的中等难度，新开失败且现存存档字节一致。完整收据见 [发布清单](../../releases/manifests/v0.1.0-competition-mahjong-formal-growth.2.json)。
 
 两档字号的八张截图均已检查。难度选项和两个底部操作在滚动后可用。150% 字号下，倍速行右端的 4 倍标签需要横向滚动才能完整显示。首轮测试发现固定确认区和出牌栏需要分别处理，最终测试直接点击确认区，再先将出牌栏滚入页面视口，然后触碰具体牌面。字号已恢复，模拟器应用数据保留。
+
+源码已在 `662b245baf2ab526115fe9f66945924eac589054` 发布。测试样本的散列以 Git 中的 LF 原始字节为准。[源码预发布 v0.1.0-competition-mahjong-formal-growth.2](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-formal-growth.2)
