@@ -6,6 +6,7 @@ import com.masterofchessstrategy.engine.CompetitionMahjongRoundActionKind
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundPhase
 import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
 import com.masterofchessstrategy.engine.RestoreResult
+import com.masterofchessstrategy.games.competition_mahjong.competitionMahjongPublicBotSeed
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongBotStrategy
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongCompetitionConfig
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpoint
@@ -54,23 +55,24 @@ internal object CompetitionMahjongPrivateSeriesReplay {
         val decisions = proof.decisions(index)
         NativeCompetitionMahjongSession(hand.seed, hand.dealerSeat, hand.roundWind, hand.viewerSeat).use { native ->
             var read = 0
+            var frame = native.snapshot()
             for (step in 0 until CompetitionMahjongArchivedSeries.MAX_ACTIONS) {
-                if (native.advancePositionSeededBot(config.botLevel) == 1) continue
-                val frame = native.snapshot()
                 if (frame.isTerminal()) break
-                require(read < decisions.size) { "跨场证据缺少玩家动作" }
-                val bits = decisions[read++].toInt() and 0xffff
-                val kind = CompetitionMahjongRoundActionKind.entries.first { it.code == (bits and 15) }
-                require(native.apply(CompetitionMahjongAction(kind, (bits ushr 4) and 63, bits ushr 10)).accepted) {
-                    "跨场证据玩家动作不合法"
+                if (native.advanceBots(config.botLevel, competitionMahjongPublicBotSeed(frame), maxActions = 1) != 1) {
+                    require(read < decisions.size) { "跨场证据缺少玩家动作" }
+                    val bits = decisions[read++].toInt() and 0xffff
+                    val kind = CompetitionMahjongRoundActionKind.entries.first { it.code == (bits and 15) }
+                    require(native.apply(CompetitionMahjongAction(kind, (bits ushr 4) and 63, bits ushr 10)).accepted) {
+                        "跨场证据玩家动作不合法"
+                    }
                 }
+                frame = native.snapshot()
             }
-            val terminal = native.snapshot()
-            require(read == decisions.size && terminal.isTerminal()) { "跨场证据未完整重放" }
+            require(read == decisions.size && frame.isTerminal()) { "跨场证据未完整重放" }
             if (originalRecords != null) require(native.serialize().contentEquals(originalRecords[index])) {
                 "跨场证据无法重建原赛事日志"
             }
-            CompetitionMahjongMatchLedger.captureTerminal(config, index, terminal)
+            CompetitionMahjongMatchLedger.captureTerminal(config, index, frame)
         }
     })
 

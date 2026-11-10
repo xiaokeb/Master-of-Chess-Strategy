@@ -42,7 +42,30 @@ internal object CompetitionMahjongNativeWinFixture {
 
     fun records(wins: Int, activeLevel: Int? = null): List<GameBackupRecord> {
         require(wins in 0..45)
-        val selected = matches.take(wins).map { it.value }
+        return records(matches.take(wins).map { it.value }, activeLevel)
+    }
+
+    /** Reuse replayable seeds to exercise storage volume without creating extra qualified wins. */
+    fun volumeBackup(series: Int): ByteArray {
+        require(series in matches.size..500)
+        val originals = matches.map { it.value }
+        val selected = List(series) { index ->
+            val original = originals[index % originals.size]
+            if (index < originals.size) original else {
+                val (proof, entry) = original
+                val config = proof.config.copy(matchId = UUID(3, index.toLong()).toString())
+                CompetitionMahjongArchivedSeries(config, List(16, proof::decisions)) to
+                    CompetitionMahjongMatchHistoryEntry(config.matchId, entry.viewerPlayerId, entry.difficulty,
+                        entry.botLevel, index.toLong() + 1, false, entry.hands)
+            }
+        }
+        return encodeBackup(records(selected, activeLevel = 3))
+    }
+
+    private fun records(
+        selected: List<Pair<CompetitionMahjongArchivedSeries, CompetitionMahjongMatchHistoryEntry>>,
+        activeLevel: Int?,
+    ): List<GameBackupRecord> {
         val history = selected.map { it.second }
         val active = activeLevel?.let { initial(it) }
         val snapshot = CompetitionMahjongFormalSnapshot(0, active,
@@ -59,7 +82,10 @@ internal object CompetitionMahjongNativeWinFixture {
     }
 
     fun backup(wins: Int, activeLevel: Int? = null): ByteArray =
-        LocalDataBackupCodec.encode(LocalDataSnapshot(1, gameExtensions = records(wins, activeLevel)),
+        encodeBackup(records(wins, activeLevel))
+
+    private fun encodeBackup(records: List<GameBackupRecord>): ByteArray =
+        LocalDataBackupCodec.encode(LocalDataSnapshot(1, gameExtensions = records),
             GameBackupRegistry(listOf(CompetitionMahjongFormalBackupAdapter(competitionMahjongProductionStrategies),
                 CompetitionMahjongLearningBackupAdapter())))
 

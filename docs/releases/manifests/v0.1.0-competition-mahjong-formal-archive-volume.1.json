@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-competition-mahjong-formal-archive-volume.1",
+  "baseline_commit": "92f7ef6abb958ef689024c9d828af2ffd3a3b8d0",
+  "distribution": "source-only",
+  "expected_changed_paths": 6,
+  "build": {
+    "candidate": "cmvolume2",
+    "baseline": "92f7ef6abb958ef689024c9d828af2ffd3a3b8d0",
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/storage/CompetitionMahjongPrivateSeriesReplay.kt",
+        "sha256": "2e2236a8bb315ced0cc434d0eb8507265dbf0db2502d317b0ed17953898ac3c0"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/data/CompetitionMahjongNativeWinFixture.kt",
+        "sha256": "64bcca4e253aab4e0a4178e5ba7c62d04a50e07fe3c94d4453fe74321a7eadc7"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/data/CompetitionMahjongFormalVolumeInstrumentedTest.kt",
+        "sha256": "acbeda165848552479affade569edb560b31e9ce070edac51b6d3d5ca0716438"
+      }
+    ],
+    "lint_errors": 0,
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "6ad5f9c295e9daaf4358b3e5fd3560fd5e1f349d334ebeaf30d41fa44788c0ad",
+      "app/build/outputs/apk/debug/app-debug.apk": "74757218eeb53a117fdbbf29d7299f9f475670a4eface66f5b586310c9de20c3"
+    },
+    "tests": [
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalSnapshotCodecTest",
+        "tests": 8
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalRepositoryTest",
+        "tests": 16
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongQualifiedGrowthTest",
+        "tests": 2
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalRestorePreparerTest",
+        "tests": 14
+      }
+    ],
+    "lint_warnings": 24
+  },
+  "device": {
+    "series_500": {
+      "metrics": {
+        "export_bytes": 3151274,
+        "native_admission_and_restore_ms": 268051,
+        "series": 500,
+        "write_favorite_ms": 100,
+        "mctx_bytes": 1574792,
+        "read_history_ms": 62,
+        "prepare_fixture_ms": 27225,
+        "export_ms": 268970,
+        "restore_export_ms": 267417,
+        "open_room_host_ms": 150
+      },
+      "log_sha256": "09e8bddb0deb90251659eb720d870aa47174fede2a8f20bd42eb351ef0b38e34"
+    },
+    "model": "Pixel_7_Pro",
+    "folder": "device-16648922188549348a004792121c466f",
+    "series_100": {
+      "metrics": {
+        "export_bytes": 640506,
+        "native_admission_and_restore_ms": 51754,
+        "series": 100,
+        "write_favorite_ms": 30,
+        "mctx_bytes": 319408,
+        "read_history_ms": 19,
+        "prepare_fixture_ms": 26298,
+        "export_ms": 51951,
+        "restore_export_ms": 50839,
+        "open_room_host_ms": 48
+      },
+      "log_sha256": "171dfd163f4bc2d847cf16c2bb382095b0cf32888d041205c3bb55fe01830ad8"
+    },
+    "real_series": {
+      "metrics": {},
+      "log_sha256": "d14c185ffc51486b0484c7bbc38e274a5c47d76b2e0e5c9e7aff49badc527a59"
+    }
+  },
+  "previous_100": {
+    "metrics": {
+      "export_bytes": 640506,
+      "native_admission_and_restore_ms": 53533,
+      "series": 100,
+      "write_favorite_ms": 30,
+      "mctx_bytes": 319408,
+      "read_history_ms": 19,
+      "prepare_fixture_ms": 27602,
+      "export_ms": 61781,
+      "restore_export_ms": 65052,
+      "open_room_host_ms": 47
+    },
+    "log_sha256": "aff63f4b8266e36a1a9109164eac8e1312ac39e2b12d76743e08c0204051b13d"
+  }
+}
