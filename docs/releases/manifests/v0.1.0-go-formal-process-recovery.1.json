@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-go-formal-process-recovery.1",
+  "baseline_commit": "adc41d4d9ec4bff8a0caab4d4784edbd68896c86",
+  "distribution": "source-only",
+  "expected_changed_paths": 6,
+  "build": {
+    "release_qa_activity": false,
+    "baseline": "adc41d4d9ec4bff8a0caab4d4784edbd68896c86",
+    "lint_errors": 0,
+    "candidate": "goformalproc2",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "83ead3d7ca2c4afbbbc5e75f6cbcbe7c41f9656385e47bdbe07b1fba465cb961",
+      "app/build/outputs/apk/debug/app-debug.apk": "832072dc1dfa7620b8081987e77780227ac5ac2fbaa970a64fc48ab4fd636d08"
+    },
+    "lint_warnings": 24,
+    "build_log_sha256": "8ecbd59e480122c2890225451eda7a8440cb95a62acfeb49c820ed5f4ebb58d7",
+    "overlays": [
+      {
+        "sha256": "1e81ecbde62bdc88d51874a5f00bc9ed0934aa14c943741dfc225bb8d91b15ff",
+        "path": "app/src/debug/AndroidManifest.xml"
+      },
+      {
+        "sha256": "112db2872c9011c7b70988cd4dc10bb3bb8613736526b906ce5359d007abd66e",
+        "path": "app/src/debug/kotlin/com/masterofchessstrategy/ui/GoFormalProcessCheckActivity.kt"
+      },
+      {
+        "sha256": "ab6d335976dedced17d24d3fcffd8aadc27b21df2d7b7ad015843a612183357d",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/data/GoFormalProcessCheckpointInstrumentedTest.kt"
+      }
+    ]
+  },
+  "metadata": [
+    {
+      "sha256": "eca4544c11e752bfe1032556741a62a0c600fc84302899127f1a7dc6aacc59a7",
+      "path": "docs/games/go/2026-11-10-formal-process-recovery.md"
+    },
+    {
+      "sha256": "caf5791bdca237dc8df15f64bd695300ef4c25ab1fbf4c203ef1ae5e956d0afe",
+      "path": "docs/releases/v0.1.0-go-formal-process-recovery.1.md"
+    }
+  ],
+  "device": {
+    "cases": [
+      {
+        "mode": "standard",
+        "seed_log_sha256": "a5801284f819814a7c5795c3fc2fbe604ef9eea8525d126e5698d12bc72996e2",
+        "before_sha256": "dbe4a15b733852da056189abe12bff2b8e4772a828f1f3dd898fa00e27a3b8ba",
+        "events": 2,
+        "new_pid": 6944,
+        "opening_events": 0,
+        "after_sha256": "0405d9de2253ef158fd8d47f06032c44f2534a74e5b7304c2b026e7f48eff6f3",
+        "old_pid": 6840
+      },
+      {
+        "mode": "opening",
+        "seed_log_sha256": "149e0b2f386697845851304fed01d71070d95027e05ecd139c089d69666c6e00",
+        "before_sha256": "42c8dd51ff9d43680598dae8cb7da6c524dcd5a7b6882a8275b6ec5d7aabeee7",
+        "events": 4,
+        "new_pid": 7110,
+        "opening_events": 2,
+        "after_sha256": "b08853a799fb28b675aaab954d83c6f850ecf4c0b4386e44d7452d512d117a3d",
+        "old_pid": 7047
+      },
+      {
+        "mode": "continuation",
+        "seed_log_sha256": "7e260f696699517954a5db74536fd5f719e6b5542aea1746ceb567b5ed6365b9",
+        "before_sha256": "bfe8a0b297b8cbd92e4ffd7bd31ab45cbc3dc0a110b9a5711320b764e4cc8c28",
+        "events": 5,
+        "new_pid": 7272,
+        "opening_events": 2,
+        "after_sha256": "acefc098602c2641fcbdca457bc9b15321735c1bc59a9d79f1ef44899c80018d",
+        "old_pid": 7212
+      }
+    ],
+    "model": "Pixel_7_Pro",
+    "folder": "device-8f7c82fea06c4342aad1e370ae595b69",
+    "app_data_cleared": false
+  },
+  "previous_candidate": {
+    "visual_screenshots_reviewed": 3,
+    "baseline": "688b2a2e9d3d16d7d97c73d5faa6b70a134ed94e",
+    "name": "goformalproc1",
+    "identical_go_overlays": true,
+    "outputs": [
+      {
+        "sha256": "d58fd0f11992496b3d96e96611752c62555a92cf813f009a44adaca361f59a06",
+        "path": "finish-d869486d301d48139953df7d37fd6b7f/standard-after.json"
+      },
+      {
+        "sha256": "435d1be9bee24d53197350a17dc605f6d2cf98b9e169e5089cb7910fea4787c6",
+        "path": "finish-d869486d301d48139953df7d37fd6b7f/standard-after.png"
+      },
+      {
+        "sha256": "75ffbded2e57123ca268db85583d5eadae0ce4ec000c63c0523492610fff0c78",
+        "path": "finish-d869486d301d48139953df7d37fd6b7f/standard-storage/receipt.json"
+      },
+      {
+        "sha256": "6a6848487a765411b1b87b8b4a43a174b51b768e4027f41aecec93f0c728b5f5",
+        "path": "finish-d869486d301d48139953df7d37fd6b7f/archive-prior/receipt.json"
+      },
+      {
+        "sha256": "6a6848487a765411b1b87b8b4a43a174b51b768e4027f41aecec93f0c728b5f5",
+        "path": "finish-d869486d301d48139953df7d37fd6b7f/archive-after/receipt.json"
+      },
+      {
+        "sha256": "b690570a6d32c122ac4c586dd13312486f0b81e7ed375f38a5e01f3238f405b2",
+        "path": "finish-0a9780dda7124bba987d7dafd0007e9a/opening-after.json"
+      },
+      {
+        "sha256": "506e3ee0fc10bfd004ecfd17292a2150a7150dc79720cf96c656320135dc4257",
+        "path": "finish-0a9780dda7124bba987d7dafd0007e9a/opening-after.png"
+      },
+      {
+        "sha256": "106993845958f734a68a57d815ec5be5acc459301a3512ae49fe55fc5c0fa90d",
+        "path": "interaction-cdacf042b03f4255b912b9c8265f600f/after.json"
+      },
+      {
+        "sha256": "581233efaf31e8ecd8537a537e5b5dcf9d28a430e293f12e211f118914952979",
+        "path": "interaction-cdacf042b03f4255b912b9c8265f600f/continued.png"
+      }
+    ]
+  }
+}
