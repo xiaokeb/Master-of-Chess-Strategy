@@ -17,3 +17,5 @@
 100 场 MCTX 与导出容器字节数和基线一致。首次准入与恢复约 51.8 秒，导出 52.0 秒，导出包恢复 50.8 秒，读历史及写收藏仍为 19、30 毫秒。两次运行的主机负载不同，记录只表示这两次观察。
 
 500 场测试通过，MCTX 为 1574792 字节，导出容器为 3151274 字节。打开牌桌宿主 150 毫秒、读历史 62 毫秒、写收藏 100 毫秒，首次准入与恢复 268.1 秒、导出 269.0 秒、导出包恢复 267.4 秒。档案再次恢复后字节一致，成长仍为 45 胜。原始日志见 `.build/cmvolume2/device-16648922188549348a004792121c466f/`。[发布清单](../../releases/manifests/v0.1.0-competition-mahjong-formal-archive-volume.1.json)
+
+发布提交为 `f85d79762b9e76b7ddca13b813eb89102221eaa7`。[源码预发布 v0.1.0-competition-mahjong-formal-archive-volume.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-formal-archive-volume.1)

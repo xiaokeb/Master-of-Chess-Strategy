@@ -40,6 +40,8 @@
 
 修复后，两条回归在旧代码上复现失败，修复候选通过 26 项相关 JVM 测试和 Debug Lint。Pixel 7 Pro 使用同一终局存档，确认 91 条事件、双方计分确认和棋谱完成状态。再次终止专用进程并重启后，两个归档及其时间、棋谱、投影均与原数据库一致。复验截图及收据见 `.build/gofinalarchive1/device-2509e958b7ce4e67bdc7c46d722636af/`。
 
+修复提交为 `92f7ef6abb958ef689024c9d828af2ffd3a3b8d0`。[源码预发布 v0.1.0-go-formal-process-recovery.2](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-formal-process-recovery.2)
+
 ## 复现
 
 1. 安装同源 Debug 应用和测试 APK。以 `GoFormalProcessCheckpointInstrumentedTest#seed` 运行 AndroidJUnitRunner，传入唯一 UUID 参数 `go_process_token`，以及 `go_process_case` 的 `standard`、`opening` 或 `continuation`。
