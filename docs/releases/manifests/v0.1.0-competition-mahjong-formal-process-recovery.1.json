@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-competition-mahjong-formal-process-recovery.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 6,
+  "build": {
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "ce897829d1b9fac02fc02b234ab0704ca76ad68d684954995a80ab1f0e505240",
+      "app/build/outputs/apk/debug/app-debug.apk": "98490f6a05efc0fa737c2131a3843ac77d7b954083e0d17404616b4407700a0a"
+    },
+    "lint_errors": 0,
+    "candidate": "cmformalproc1",
+    "overlays": [
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/data/CompetitionMahjongFormalProcessInstrumentedTest.kt",
+        "sha256": "4c61f0eac8072bb29e30bede5ff811f3d9c19fde53fa372e892028a6ae28a27a"
+      },
+      {
+        "path": "app/src/debug/kotlin/com/masterofchessstrategy/games/competition_mahjong/CompetitionMahjongFormalProcessCheckActivity.kt",
+        "sha256": "9f938d2e94fcf4bb607623b7638a6544ff57a088d852508b3cfc8ef4e32c64de"
+      },
+      {
+        "path": "app/src/debug/AndroidManifest.xml",
+        "sha256": "b6c9d4f68b7e4157d6f9007e4e69a670d7836859f430b1469372358ba7436eb0"
+      }
+    ],
+    "baseline": "b8f853818a863e208acfd684280fc8482f3f52fc",
+    "lint_warnings": 24
+  },
+  "device": {
+    "difficulty": "MEDIUM",
+    "hints_remaining_after_recovery": 2,
+    "screenshots_reviewed": 3,
+    "model": "Pixel_7_Pro",
+    "folder": "device-b2377d4caf6542b6bac714d3a248539b",
+    "evidence": [
+      {
+        "sha256": "a6dd6e690e01c2bbfc6d78ccc6314c1ee656c35e3d2e347214ea1a676187cf0c",
+        "path": "seed.log"
+      },
+      {
+        "sha256": "f4d2aafc4af65cf39b852a37b170941439021e1b98a00520075868ade8838983",
+        "path": "initial.json"
+      },
+      {
+        "sha256": "a62e1d1776b43e571e36c1d4c9f7b3bb1ae318bd5913adb752d673fa214817df",
+        "path": "hinted.json"
+      },
+      {
+        "sha256": "8de817356a6da7735a2015b9724877ad47b458c151ea69d1be3750004e15d1a9",
+        "path": "hint-recovered.json"
+      },
+      {
+        "sha256": "0195fef26960362a1667ebac2fa2715e26b7d8cf976dade0d93f3e3b98ccccd4",
+        "path": "before.json"
+      },
+      {
+        "sha256": "161a61a8dbd75cb57da132f2219898807008d06bc4217d77d7dd24f5a3d288ba",
+        "path": "recovered.json"
+      },
+      {
+        "sha256": "3c32b96af3a240f7b7e87fbc4b0c4a337da6f5d374ec2a3468a2cbe37477e537",
+        "path": "continued.json"
+      },
+      {
+        "sha256": "6e15100f670ef6b2da6b524c7ceb0998c00b005df6620f781c00f5839125c764",
+        "path": "hint-recovered.png"
+      },
+      {
+        "sha256": "847cfdce708af59dac8a409f665ef7e63849379a6b59b173cfce9f2c255fe44d",
+        "path": "before.png"
+      },
+      {
+        "sha256": "6807810653bbc6099bba28f4153831575e292578db57fd6afd7b29c4d8ed4a1a",
+        "path": "recovered.png"
+      }
+    ],
+    "process_restarts": 2,
+    "app_data_cleared": false
+  }
+}
