@@ -8,3 +8,5 @@
 种子测试、三张截图和两次恢复前后收据在 `.build/cmformalproc1/device-b2377d4caf6542b6bac714d3a248539b/`。截屏已核对。中间换盘、末盘结算时的进程终止与实体设备待验收。[发布清单](../../releases/manifests/v0.1.0-competition-mahjong-formal-process-recovery.1.json)
 
 复现使用 `CompetitionMahjongFormalProcessInstrumentedTest#seedMediumTable` 和唯一 `mahjong_process_token`。以 ADB 启动 `.games.competition_mahjong.CompetitionMahjongFormalProcessCheckActivity` 并传入 `owned_database=competition-mahjong-process-qa-<UUID>.db`。收据保存在 `files/competition-mahjong-process-qa/<UUID>.json`。只终止已核对的 `:competition_mahjong_formal_qa` PID，每次从赛事概要进入并等待新 PID 收据。
+
+发布提交为 `d329445916bb6b1be64ec29153c12f1daa3a2ac8`。[源码预发布 v0.1.0-competition-mahjong-formal-process-recovery.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-formal-process-recovery.1)

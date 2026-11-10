@@ -8,3 +8,5 @@ Pixel 7 Pro 模拟器使用 `golong19`，基于 `69fd16b`，沿用正式牌桌�
 - Room 中只有一份归档、棋谱和投影，三者记录 ID 一致，成长结果为零。七次进程 PSS 采样介于 300161 至 307434 KiB。
 
 复现沿用 [围棋正式对局跨进程恢复](2026-11-10-formal-process-recovery.md)，种子参数 `go_process_case` 使用 `long19`。原始证据见 `.build/golong19/device-9789767ee56b4c05a8ab232c1d797718/seed.log` 和 `.build/golong19/device-038e553d39964aa097afa4ed75064943/`。[发布清单](../../releases/manifests/v0.1.0-go-katago-long-game.1.json)
+
+发布提交为 `b8f853818a863e208acfd684280fc8482f3f52fc`。[源码预发布 v0.1.0-go-katago-long-game.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-katago-long-game.1)
