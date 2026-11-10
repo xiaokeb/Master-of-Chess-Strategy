@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-competition-mahjong-formal-growth.2",
+  "candidate": "cmnativequal4",
+  "baseline_commit": "688b2a2e9d3d16d7d97c73d5faa6b70a134ed94e",
+  "frozen_source_files": 2020,
+  "expected_changed_paths": 9,
+  "source_identity_sha256": "a177409963c9d2fe403ce3517764e65ac72bd9a354c41e32aeeaa823fd6db0d8",
+  "overlays": [
+    {
+      "original_sha256": "25b6869ed6b5eb3d9aa54dc186e29f98650c7de199f1abb40ac710cecfa37c00",
+      "sha256": "25b6869ed6b5eb3d9aa54dc186e29f98650c7de199f1abb40ac710cecfa37c00",
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/play/CompetitionMahjongMatchPlayRoute.kt"
+    },
+    {
+      "original_sha256": "2a77928bf5717393c33e1879ec16de7df68a30e101ea7362cd725fe62a46c036",
+      "sha256": "2a77928bf5717393c33e1879ec16de7df68a30e101ea7362cd725fe62a46c036",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/data/CompetitionMahjongNativeWinFixture.kt"
+    },
+    {
+      "original_sha256": "33fe79c81febb6f6e7629933341307cf285d51267b8486a1c98308fe0a10e649",
+      "sha256": "33fe79c81febb6f6e7629933341307cf285d51267b8486a1c98308fe0a10e649",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/data/CompetitionMahjongNativeDifficultyInstrumentedTest.kt"
+    },
+    {
+      "original_sha256": "85ba362873b85c3b55876b3faaa6a345c59d9374f6088dd8f7441328badd2da7",
+      "sha256": "85ba362873b85c3b55876b3faaa6a345c59d9374f6088dd8f7441328badd2da7",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongNavigationIntegrationTest.kt"
+    },
+    {
+      "original_sha256": "34ef9a6367c752f021c9112383c203a7d55a1b9627e3a408ffb4b47e9ddeb74d",
+      "sha256": "34ef9a6367c752f021c9112383c203a7d55a1b9627e3a408ffb4b47e9ddeb74d",
+      "path": "app/src/androidTest/assets/competition-mahjong/native-wins-v1.tsv"
+    },
+    {
+      "original_sha256": "5a7b9cf2a318c6af2d5e58543507bcb8f52380fcec4d2734fe81441530dfe88d",
+      "sha256": "5a7b9cf2a318c6af2d5e58543507bcb8f52380fcec4d2734fe81441530dfe88d",
+      "path": "tools/android/competition-mahjong/competition-mahjong-fixture-driver.cpp"
+    }
+  ],
+  "metadata": [
+    {
+      "path": "docs/games/competition-mahjong/2026-11-09-native-difficulty-acceptance.md",
+      "sha256": "ccdeb7575f7fe8fbb886afb7917004f10e1b708b43dd23dc75d7de86088d9dc3"
+    },
+    {
+      "path": "docs/releases/v0.1.0-competition-mahjong-formal-growth.2.md",
+      "sha256": "117ef3771b2ca07fb63b895e58cb8c976fc374c6fc03a45b29cbe87e65ba7fc3"
+    }
+  ],
+  "build": {
+    "candidate": "cmnativequal4",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "8db4aa54fd858bdccd329f0f8c5cda2221bcc60c72e715a914be7df8201503b3",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "be171151883c094b9458e50616530cb221b06c82704f504081006b999e4ac408"
+    },
+    "source_unchanged": true,
+    "lint_errors": 0,
+    "lint_warnings": 24
+  },
+  "build_log_sha256": "4d5ec2e36809c8f3e873cdfe6eb2aef765420ac0fd913fca136e696c616bd8a8",
+  "abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "distribution": "source-only",
+  "device": {
+    "model": "Pixel_7_Pro",
+    "folder": "device-d86e8efe06b04cfebf5475771a0de0d7",
+    "api": "37",
+    "abi": "x86_64",
+    "original_font": "1.0",
+    "restored_font": "1.0",
+    "app_data_cleared": false,
+    "settings": [
+      {
+        "font": "1.0",
+        "log_sha256": "0ef958a368c92121a7c8397fd8871ed7235a386175f93cdc543e32fd62165289",
+        "class": "com.masterofchessstrategy.ui.CompetitionMahjongNavigationIntegrationTest#restoredNativeWinsCanStartAllThreeHigherTiersFromTableSettings",
+        "images": {
+          "growth-master-table": "6a7568d23d9818303236b720b6601f3f1cc15a676c4074fa33acd17a88365aca",
+          "growth-level-1": "22a78a9eba4f40b001f699c81e23bdf841ec280f1da053430f784835b063817d",
+          "growth-level-2": "650aa15cecea688364b05acdbb388c7aacb6dd31b1a7a8d3a3f8c49ef7a3f7f0",
+          "growth-level-3": "af013ab7824d2b4b188ee475a2e9f56ef9c00dcb77880b6e4bc2f1b9de984bbb"
+        }
+      },
+      {
+        "font": "1.5",
+        "log_sha256": "70e5e614eff0eaaae91e16b9718b03a3f5cca25dd9e1eaa18757bdf2787bb3b5",
+        "class": "com.masterofchessstrategy.ui.CompetitionMahjongNavigationIntegrationTest#restoredNativeWinsCanStartAllThreeHigherTiersFromTableSettings",
+        "images": {
+          "growth-master-table": "798a5f84fb8f6234e30e385dc068075c205015da93c4d446954127da03cdd675",
+          "growth-level-1": "8a29e27cf7d408f1d111775831c03159e2b9bcb744b47594e2e862cc870fa700",
+          "growth-level-2": "3783c734b7c9a57358c7d3791e998302715321647306b8c96f5ffabdd1809b55",
+          "growth-level-3": "cbce51e3bd32e4a034102df5feac026542714e03532cd951709ef69a36ec732a"
+        }
+      }
+    ],
+    "thresholds": {
+      "log_sha256": "8110fe664a731e0e3f3777efee847767c2a74ce24dc9a93d3b3636cc3cbadf74",
+      "tests": 2
+    }
+  },
+  "visual": {
+    "screenshots": 8,
+    "manually_reviewed": true
+  }
+}

@@ -7,12 +7,16 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.room.withTransaction
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.filters.LargeTest
+import com.masterofchessstrategy.data.GameBackupPreparationContext
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.CompetitionMahjongMatchArchive
 import com.masterofchessstrategy.data.TutorialProgressEntity
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
 import com.masterofchessstrategy.games.competition_mahjong.data.finishCompetitionMahjongTestHand
+import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalBackupAdapter
+import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongNativeWinFixture
 import com.masterofchessstrategy.games.competition_mahjong.learning.*
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongBotStrategy
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongCompetitionConfig
@@ -21,9 +25,12 @@ import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahj
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchLedger
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchController
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchStore
+import com.masterofchessstrategy.games.competition_mahjong.match.policy.competitionMahjongProductionStrategies
+import com.masterofchessstrategy.games.competition_mahjong.match.play.CompetitionMahjongMatchPlayViewModel
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalSnapshotCodec
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.room.CompetitionMahjongFormalHost
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.room.CompetitionMahjongFormalRoomStorage
+import com.masterofchessstrategy.settings.LocalDataWriterRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.*
@@ -119,6 +126,65 @@ class CompetitionMahjongNavigationIntegrationTest {
         assertEquals(start.config.botStrategy, activeMatch()?.config?.botStrategy)
         capture("formal-resumed")
         assertOtherGamesUntouched()
+    }
+
+    @LargeTest
+    @Test fun restoredNativeWinsCanStartAllThreeHigherTiersFromTableSettings() {
+        runBlocking {
+            val records = CompetitionMahjongNativeWinFixture.records(45)
+            val formal = CompetitionMahjongFormalBackupAdapter(competitionMahjongProductionStrategies)
+                .prepareContainer(records, GameBackupPreparationContext())
+            val learning = CompetitionMahjongLearningBackupAdapter()
+                .prepareRestore(records.single { it.kind == CompetitionMahjongLearningBackupAdapter.KIND })
+            database.withTransaction {
+                learning.write(database)
+                formal.write(database)
+            }
+        }
+        enterModes()
+        clickReady("competition_formal_entry")
+        clickReady("competition_formal_play")
+        waitForTag("competition_mahjong_table")
+        for ((level, expectedAllowance) in listOf(1 to 3, 2 to 1, 3 to 0)) {
+            val before = checkNotNull(activeMatch()).config.matchId
+            compose.onNodeWithText("设置").performScrollTo().assertIsEnabled().performClick()
+            waitForTag("competition_mahjong_match_settings")
+            clickReady("competition_mahjong_match_level_$level")
+            capture("growth-level-$level")
+            val confirm = "competition_mahjong_match_confirm_new"
+            compose.waitUntil(10_000) {
+                compose.onAllNodes(hasTestTag(confirm) and isEnabled()).fetchSemanticsNodes().size == 1
+            }
+            // AlertDialog keeps its buttons outside the scrollable settings body.
+            compose.onNodeWithTag(confirm).assertIsDisplayed().assertIsEnabled().performTouchInput { click() }
+            compose.waitUntil(15_000) { activeMatch()?.config?.let { it.matchId != before && it.botLevel == level } == true }
+            waitForTag("competition_mahjong_table")
+            val start = checkNotNull(activeMatch())
+            assertEquals(expectedAllowance, start.assistance?.undoRemaining)
+            assertEquals(expectedAllowance, start.assistance?.hintRemaining)
+            val owner = LocalDataWriterRegistry.forDatabase(database).snapshot()
+                .filterIsInstance<CompetitionMahjongMatchPlayViewModel>().single()
+            compose.waitUntil(15_000) {
+                owner.state.value.let { it.series.matchId == start.config.matchId && !it.busy && it.canOperate }
+            }
+            val discard = hasText("出 ", substring = true) and hasClickAction() and isEnabled()
+            compose.waitUntil(10_000) { compose.onAllNodes(discard).fetchSemanticsNodes().isNotEmpty() }
+            // Bring the horizontal action row into the table's vertical viewport first.
+            compose.onNodeWithTag("competition_mahjong_action_bar").performScrollTo()
+            compose.onAllNodes(discard).onFirst().performScrollTo().assertIsDisplayed().performTouchInput { click() }
+            try {
+                compose.waitUntil(15_000) {
+                    activeMatch()?.let { it.config == start.config && !it.engineRecord.contentEquals(start.engineRecord) } == true
+                }
+            } catch (failure: ComposeTimeoutException) {
+                capture("growth-discard-failed-$level")
+                throw AssertionError("Difficulty $level did not save a discard. UI error: ${owner.state.value.error}", failure)
+            }
+        }
+        val master = checkNotNull(activeMatch())
+        assertEquals(0, master.assistance?.undoRemaining)
+        assertEquals(0, master.assistance?.hintRemaining)
+        capture("growth-master-table")
     }
 
     @Test fun legacyArchiveCanBeCancelledThenConfirmedWithoutDeletingOldMatch() {

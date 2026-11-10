@@ -238,7 +238,7 @@ internal fun CompetitionMahjongMatchPlayContent(
                     state.assistance?.let { usage ->
                         Text("本十六盘赛事悔棋剩余：${usage.undoRemaining?.toString() ?: "不限"}；换盘不重置。")
                     }
-                    Text("新开将替换当前十六盘赛事。此前的累计与当前盘不再续接。")
+                    Text("新开将替换当前赛事进度，已结算赛事的成绩和成长会保留。")
                 }
             },
             confirmButton = {
