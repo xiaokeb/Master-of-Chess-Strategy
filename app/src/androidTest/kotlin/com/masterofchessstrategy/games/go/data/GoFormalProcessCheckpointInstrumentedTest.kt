@@ -28,7 +28,7 @@ class GoFormalProcessCheckpointInstrumentedTest {
         val token = externalToken ?: UUID.randomUUID().toString()
         val mode = args.getString("go_process_case") ?: "standard"
         require(UUID.fromString(token).toString() == token)
-        require(mode in setOf("standard", "opening", "continuation"))
+        require(mode in setOf("standard", "opening", "continuation", "long19"))
         val name = "go-formal-process-qa-$token.db"
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         check(!context.getDatabasePath(name).exists())
@@ -38,9 +38,14 @@ class GoFormalProcessCheckpointInstrumentedTest {
             val bundle = GoCompleteStorageBundle(db, GoLocalLegacySource { null },
                 GoLearningLegacySource { GoLearningProgress() }, GoEndgameLegacySource { GoEndgameProgress() },
                 GoAiLegacySource { null })
-            val config = GoAiMatchConfig(9, humanPlayer = if (mode == "continuation") null else GoPlayer.BLACK)
+            val longGame = mode == "long19"
+            val automatic = longGame || mode == "continuation"
+            val config = GoAiMatchConfig(if (longGame) 19 else 9,
+                humanPlayer = if (automatic) null else GoPlayer.BLACK)
             val repository = bundle.formalAiRepository()
-            val saved = NativeGoEngine(9).use { native ->
+            val saved = NativeGoEngine(config.boardSize).use { native ->
+                if (longGame) return@use GoAiSavedMatch(matchId, config, native.serialize(),
+                    autoContinueEnabled = true, autoContinueMaxGames = 2, autoContinueGameNumber = 2)
                 if (mode == "standard") {
                     RoomGoLearningProgressRepository(db).save(GoLearningProgress(GoLearningLibrary.lessons.map { it.id }.toSet()))
                     bundle.rankedMatchCreator().create(GoAiSavedMatch(matchId, config, native.serialize()))
@@ -57,7 +62,6 @@ class GoFormalProcessCheckpointInstrumentedTest {
                     assertEquals(ActionResult.Accepted, native.apply(GoAction.Place(BoardPosition(2, 0))))
                     assertEquals(ActionResult.Accepted, native.apply(GoAction.Place(BoardPosition(3, 0))))
                 }
-                val automatic = mode == "continuation"
                 GoAiSavedMatch(matchId, config, native.serialize(), openingBytes = opening,
                     autoContinueEnabled = automatic, autoContinueMaxGames = if (automatic) 3 else 1,
                     autoContinueGameNumber = if (automatic) 2 else 1)

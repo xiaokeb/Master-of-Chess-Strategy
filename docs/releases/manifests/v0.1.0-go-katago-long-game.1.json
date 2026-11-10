@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-go-katago-long-game.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 4,
+  "build": {
+    "candidate": "golong19",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "675485eaea141771ddfbf06ae2b1d46de95d1b3dbdad3dae8a249d370a1f7ab0",
+      "app/build/outputs/apk/debug/app-debug.apk": "38a83eab4710526ae80956d27fe65955135b77b1cad314b187927894f792a8d5"
+    },
+    "overlay": {
+      "sha256": "1f657f544c1db7eec35e868ed8aae34ad2919bcf1b3b131bc3cce02be9d27fef",
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/data/GoFormalProcessCheckpointInstrumentedTest.kt"
+    },
+    "baseline": "69fd16b3aca6caad0a6f7d8726c7b6e7fddad348"
+  },
+  "lint": {
+    "log_sha256": "14e18b6a4387a16a006534ba2482bdf243393dae740a2da1186e2c74c324a849",
+    "errors": 0,
+    "warnings": 24
+  },
+  "device": {
+    "pss_max_kib": 307434,
+    "model": "Pixel_7_Pro",
+    "scoring_at_seconds": 396.54,
+    "pss_min_kib": 300161,
+    "board_size": 19,
+    "archived_games": 1,
+    "evidence": [
+      {
+        "path": "device-9789767ee56b4c05a8ab232c1d797718/seed.log",
+        "sha256": "2268f4173bd882a70d739313a57f8048acb2c14723ec07ad5564e363aec200b0"
+      },
+      {
+        "path": "device-038e553d39964aa097afa4ed75064943/progress.jsonl",
+        "sha256": "0ccc9b8f7ebd96862e3b3c254f053354cc77a3e37e8f1c549c38281b0f4b527d"
+      },
+      {
+        "path": "device-038e553d39964aa097afa4ed75064943/midgame-before.json",
+        "sha256": "205aaad2c03744d23e8eb0d245581de6436bae44d96c46713eed87ea0e5ce403"
+      },
+      {
+        "path": "device-038e553d39964aa097afa4ed75064943/midgame-after.json",
+        "sha256": "e97051dcb219c409baafe876bee0813032677823bf3f0104ed20fc0401d4658f"
+      },
+      {
+        "path": "device-038e553d39964aa097afa4ed75064943/terminal.json",
+        "sha256": "2029386bc97f0536b6301a2526169ced9d278b7a31ad63a8f7eadd358dd983cd"
+      },
+      {
+        "path": "device-038e553d39964aa097afa4ed75064943/storage/receipt.json",
+        "sha256": "6219acff7b8dc5c74256835be8069c9f8d9c266071e90587aec1dc6eabb3bc45"
+      },
+      {
+        "path": "device-038e553d39964aa097afa4ed75064943/terminal.png",
+        "sha256": "e8248b8f1553c9bf741893168fa20cbeef2cc5ba18004f749d4e19c25a0c4143"
+      }
+    ],
+    "terminal_events": 357,
+    "midgame_events": 82
+  }
+}
