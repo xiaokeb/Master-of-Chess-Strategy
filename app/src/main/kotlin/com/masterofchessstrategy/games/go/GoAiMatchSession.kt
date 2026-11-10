@@ -548,7 +548,7 @@ class GoAiMatchSession(
         val previous = mutableState.value
         if (disposed.get() || !lifetime.isActive || !previous.game.canOperate || !previous.autoContinueEnabled ||
             !previous.config.automatic || previous.game.phase != GoPhase.FINISHED ||
-            previous.autoContinueGameNumber < previous.autoContinueMaxGames) return false
+            previous.autoContinueGameNumber < previous.autoContinueMaxGames || previous.completionStored) return false
         val sink = completedSink ?: run {
             mutableState.value = previous.copy(game = previous.game.copy(
                 error = "完成棋谱保存功能尚未准备好，连续对局结果已保留。"))
@@ -577,7 +577,7 @@ class GoAiMatchSession(
                 }
             }
             if (disposed.get()) return@launch
-            mutableState.value = mutableState.value.copy(completionReserved = reserved,
+            mutableState.value = mutableState.value.copy(completionReserved = reserved, completionStored = stored,
                 game = previous.game.copy(error = if (stored) null
                     else "连续对局已结束；完成棋谱保存未完成，请重试。"))
         }

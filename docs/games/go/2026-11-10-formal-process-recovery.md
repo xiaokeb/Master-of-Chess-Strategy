@@ -24,11 +24,21 @@
 - 指定开局恢复后点击「重新开始」「确认重开」，取得新对局 ID，当前四手回到原开局两手，开局散列不变。
 - 自动续局恢复后点击「白方确认」，进入新 ID 的第 3／3 局。重复启动后，原局归档、棋谱和投影各一份，归档时间与记录 ID 一致，成长结果为零，外键检查无异常。
 
-三项后续操作的截图与收据分别位于 `.build/goformalproc1/finish-d869486d301d48139953df7d37fd6b7f/`、`.build/goformalproc1/finish-0a9780dda7124bba987d7dafd0007e9a/` 和 `.build/goformalproc1/interaction-cdacf042b03f4255b912b9c8265f600f/`。设备使用实际生产牌桌与隔离 QA 数据库。真实模型长局和实体设备仍待验收。
+三项后续操作的截图与收据分别位于 `.build/goformalproc1/finish-d869486d301d48139953df7d37fd6b7f/`、`.build/goformalproc1/finish-0a9780dda7124bba987d7dafd0007e9a/` 和 `.build/goformalproc1/interaction-cdacf042b03f4255b912b9c8265f600f/`。设备使用实际生产牌桌与隔离 QA 数据库。
 
 ## 发布候选复验
 
 候选 `goformalproc2` 基于 `adc41d4`，沿用相同的三个围棋覆盖文件，包含已发布的国标麻将难度节点。Debug 双 ABI 与测试 APK 构建通过，Lint 0 错误、24 警告，Release Manifest 排除了 QA Activity。Pixel 7 Pro 复验三个场景，PID 依次为 `6840` → `6944`、`7047` → `7110`、`7212` → `7272`，除进程身份外的收据字段一致。[发布清单](../../releases/manifests/v0.1.0-go-formal-process-recovery.1.json)
+
+发布提交为 `fb559505ff71466e5b4de5577879cbd636d8ac52`。[源码预发布 v0.1.0-go-formal-process-recovery.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-formal-process-recovery.1)
+
+## 九路真实模型长局
+
+使用 `goformalproc2` 的实际安装包，在指定两手开局的连续第 3 局启动简单档 KataGo 自动演局。94.8 秒后进入双方复核，已存 89 条事件。实际点击双方确认后为 91 条事件，前后两局分别有唯一归档、棋谱和投影，成长结果为零。进程四次 PSS 采样介于 301529 至 310019 KiB。该记录用于九路自动演局稳定性检查，19 路长局、棋力和实体设备待验收。
+
+初次终局检查因页面状态的 `completion_stored` 仍为 `false` 超时。只读检查原 Room 数据库确认写入成功，问题集中在自动系列末局的状态更新。证据位于 `.build/goformalproc2/long-98f7bc7b266a4bc79354bef90d774de7/`，包含计分截图、事件日志、内存样本和原终局归档记录。
+
+修复后，两条回归在旧代码上复现失败，修复候选通过 26 项相关 JVM 测试和 Debug Lint。Pixel 7 Pro 使用同一终局存档，确认 91 条事件、双方计分确认和棋谱完成状态。再次终止专用进程并重启后，两个归档及其时间、棋谱、投影均与原数据库一致。复验截图及收据见 `.build/gofinalarchive1/device-2509e958b7ce4e67bdc7c46d722636af/`。
 
 ## 复现
 

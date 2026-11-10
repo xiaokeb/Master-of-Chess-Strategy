@@ -102,6 +102,7 @@ class GoAiAutoContinuationTest {
             assertFalse(stopped.state.value.autoContinuePending); assertEquals(1, stoppedArchive.size)
             assertEquals("series-3", stoppedArchive.single().matchId)
             assertTrue(stoppedRepository.saved!!.completionReserved)
+            assertTrue(stopped.state.value.completionStored)
         } finally { stopped.closeAndJoin() }
     }
 
@@ -124,6 +125,7 @@ class GoAiAutoContinuationTest {
             assertTrue(repository.saved!!.completionReserved)
             assertEquals(GoPhase.FINISHED, session.state.value.game.phase)
             assertNotNull(session.state.value.game.error)
+            assertFalse(session.state.value.completionStored)
             assertEquals(1, attempts)
 
             assertTrue(session.retryAutoContinuation()); runCurrent()
@@ -132,6 +134,9 @@ class GoAiAutoContinuationTest {
             assertEquals(2, repository.saved!!.autoContinueGameNumber)
             assertEquals(GoPhase.FINISHED, session.state.value.game.phase)
             assertNull(session.state.value.game.error)
+            assertTrue(session.state.value.completionStored)
+            assertFalse(session.retryAutoContinuation())
+            assertEquals(2, attempts)
             assertFalse(session.continueAutomatically())
         } finally { session.closeAndJoin() }
     }

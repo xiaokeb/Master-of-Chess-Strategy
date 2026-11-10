@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-go-formal-process-recovery.2",
+  "baseline_commit": "fb559505ff71466e5b4de5577879cbd636d8ac52",
+  "distribution": "source-only",
+  "expected_changed_paths": 5,
+  "build": {
+    "lint_warnings": 24,
+    "overlays": [
+      {
+        "sha256": "65127211cce81aec2b40ff8ea475d6716870010d012819ca1d1fe4deea4ec643",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiMatchSession.kt"
+      },
+      {
+        "sha256": "5029061c5c255e24070afea37755e5a2591c9db2d93d386744aeb8c6a3436ef5",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoAiAutoContinuationTest.kt"
+      }
+    ],
+    "lint_errors": 0,
+    "apk_sha256": "cb21bd6fbd2c321354ae730aa611fee370edd519ee4ffa54e942159733b933bc",
+    "baseline": "fb559505ff71466e5b4de5577879cbd636d8ac52",
+    "apk": "app/build/outputs/apk/debug/app-debug.apk",
+    "candidate": "gofinalarchive1",
+    "tests": [
+      {
+        "tests": 11,
+        "name": "com.masterofchessstrategy.games.go.GoAiAutoContinuationTest"
+      },
+      {
+        "tests": 15,
+        "name": "com.masterofchessstrategy.games.go.GoAiMatchSessionTest"
+      }
+    ]
+  },
+  "tests": {
+    "green_log_sha256": "af5cdc1ec8559b680a199b2c1d2a7ca31fc89953b0790a1cfe40443733af0e22",
+    "red_sha256": "dfb44ba5f66165ea72d42c50dfd59c55caab13f2162a9af25e137be6fc5b84a7"
+  },
+  "device": {
+    "new_pid": 9114,
+    "archived_games": 2,
+    "model": "Pixel_7_Pro",
+    "storage_sha256": "561ffeb0cc4818c829611682c2e36864c044a2410016bb0dfc9dc1439a735972",
+    "old_pid": 9032,
+    "candidate": "gofinalarchive1",
+    "events": 91,
+    "fixed_sha256": "eb4d26f559e36f06289859d8418fc8d6bbfd3fc6811dcd23d769561638d678cd",
+    "folder": "device-2509e958b7ce4e67bdc7c46d722636af",
+    "screenshot_sha256": "eee07e98856cf43f57a366391f0358b94a2e6743ff31a0483616dbb2a34f1d2e",
+    "reopen_sha256": "5c518f5a8b7e11f94504f22cd7636507ed41db0a6ae9cec991879cb67fe30559"
+  },
+  "previous_long_game": {
+    "old_terminal_sha256": "b24be829bd68637dfb8dd5b2c77c19aff8a44169f01e5a703d83e2af943efa0a",
+    "candidate": "goformalproc2",
+    "scoring_after_seconds": 94.8,
+    "board": 9,
+    "progress_sha256": "a884eaaa45beff5b46e1445be5944b4be117aa63950e6e7c616b09c5337bfdbc",
+    "events_before_confirmation": 89
+  }
+}
