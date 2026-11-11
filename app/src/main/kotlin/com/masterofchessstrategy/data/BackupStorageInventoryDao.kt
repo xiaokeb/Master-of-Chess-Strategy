@@ -10,6 +10,9 @@ internal interface BackupStorageInventoryDao {
     @Query("SELECT 2 FROM competition_mahjong_learning_proof ORDER BY singletonId")
     suspend fun competitionLearningGameTypeCodes(): List<Int>
 
+    @Query("SELECT 2 FROM competition_mahjong_auto ORDER BY viewerPlayerId, recordKey")
+    suspend fun competitionAutoGameTypeCodes(): List<Int>
+
     // Claim rows count even before migration (mctx=null) or if their metadata is damaged.
     @Query("SELECT 2 FROM competition_mahjong_formal ORDER BY viewerPlayerId")
     suspend fun competitionFormalGameTypeCodes(): List<Int>

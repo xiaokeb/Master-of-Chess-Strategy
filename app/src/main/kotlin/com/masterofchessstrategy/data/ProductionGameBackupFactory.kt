@@ -1,6 +1,7 @@
 package com.masterofchessstrategy.data
 
 import com.masterofchessstrategy.endgame.ChineseChessEndgamePack
+import com.masterofchessstrategy.games.competition_mahjong.auto.storage.CompetitionMahjongAutoBackupAdapter
 import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongBackupAdapter
 import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalBackupAdapter
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningBackupAdapter
@@ -44,7 +45,8 @@ internal fun createProductionGameBackupRepository(
                         FangqiBackupAdapter(), FangqiLearningBackupAdapter(), FangqiRankedStartBackupAdapter(),
                         FangqiRankedSettlementBackupAdapter(), FangqiRecordBackupAdapter(), LanzhouMahjongBackupAdapter(),
                         LanzhouMahjongLearningBackupAdapter(), CompetitionMahjongLearningBackupAdapter(),
-                        CompetitionMahjongFormalBackupAdapter(competitionMahjongProductionStrategies)) + goAdapters),
+                        CompetitionMahjongFormalBackupAdapter(competitionMahjongProductionStrategies),
+                        CompetitionMahjongAutoBackupAdapter()) + goAdapters),
                 )
             },
             fangqiStorage.gate,

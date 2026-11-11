@@ -31,6 +31,8 @@ import com.masterofchessstrategy.games.competition_mahjong.match.storage.room.Co
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.room.CompetitionMahjongFormalRoomDao
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningProofRow
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningProofDao
+import com.masterofchessstrategy.games.competition_mahjong.auto.storage.CompetitionMahjongAutoDao
+import com.masterofchessstrategy.games.competition_mahjong.auto.storage.CompetitionMahjongAutoRow
 
 @Database(
     entities = [
@@ -57,8 +59,9 @@ import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionM
         FangqiRankedSettlementEntity::class,
         CompetitionMahjongFormalRoomRow::class,
         CompetitionMahjongLearningProofRow::class,
+        CompetitionMahjongAutoRow::class,
     ],
-    version = 23,
+    version = 24,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -83,6 +86,8 @@ internal abstract class MocsDatabase : RoomDatabase() {
     abstract fun competitionMahjongFormalRoomDao(): CompetitionMahjongFormalRoomDao
 
     abstract fun competitionMahjongLearningProofDao(): CompetitionMahjongLearningProofDao
+
+    abstract fun competitionMahjongAutoDao(): CompetitionMahjongAutoDao
 
     abstract fun goLocalSessionDao(): GoLocalSessionDao
 
@@ -545,6 +550,12 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_23_24 = object : Migration(23, 24) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(CompetitionMahjongAutoDao.CREATE_SQL)
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -578,6 +589,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_20_21,
                         MIGRATION_21_22,
                         MIGRATION_22_23,
+                        MIGRATION_23_24,
                     )
                     .build()
                     .also { instance = it }

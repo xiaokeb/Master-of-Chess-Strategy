@@ -1,0 +1,278 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-competition-mahjong-auto-room.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 39,
+  "build": {
+    "release_manifest": "processed",
+    "candidate": "cmautoroom1",
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/data/BackupStorageInventory.kt",
+        "sha256": "be6b88db5480d232761e5ec00e9220ba96836199334acb1acbb62e01074b8018"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/data/BackupStorageInventoryDao.kt",
+        "sha256": "01643933bea6c7deff35cc148ca9714ddc904a671b65743019d464115c21a8fa"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/data/GameBackupAdapter.kt",
+        "sha256": "3cd9c3775b573a88efbbc3cd71b0a6e7b9f89d97530ba294e613bf5e74884af1"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/data/LocalDataBackupRepository.kt",
+        "sha256": "636433d3aff527e7f3932167b2e823cf66cd15cc38924c9cc38d3d7aef2609c1"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/data/MocsDatabase.kt",
+        "sha256": "71fe5d0f0d81bd1a48ea68b4727745c61f670e06bcdf85ad9476df19507e835b"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/data/ProductionGameBackupFactory.kt",
+        "sha256": "9b0985bf64f34a880a6dc70246819f9cd4bc1306e50f105edc5de6ff81a74387"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoAdmission.kt",
+        "sha256": "02a5523b6a0d59d0c9064cf07cfd095bde6ad69796dae870db256a0e7a579182"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoCheckpoint.kt",
+        "sha256": "dc245bec5665ad51ef8eace3887031c510a264971b3a5062c1c9647f94bb9aee"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoController.kt",
+        "sha256": "e58d66126a5ecb6126776a0cdd23eb5f4690b5f0e1935c9ccb8af635537d87ee"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoPlayback.kt",
+        "sha256": "27958f52879611af850a49d28c4058f5c84a07d7e6e91a1029bc897ded1bd6d7"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoPlayRoute.kt",
+        "sha256": "2151d20c563d97bb5e6e11b3ea56d45921a527391bd12d5dbfd162fdda721326"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoPlayViewModel.kt",
+        "sha256": "1073e96ea130f015aae4bccdbf8130142320d2a80ed8b38b92c7fd570388e825"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoRecord.kt",
+        "sha256": "411dd3b07c6c9265c132c944d9127eb7bf8967fef9a2030a5681f9cd12d85fef"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoRun.kt",
+        "sha256": "07a13edcd6b3702a8ba28b6d9a3714aed4f9a61dedb729d9af177be64580adfd"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/replay/CompetitionMahjongAutoArchiveLibrary.kt",
+        "sha256": "07f555ed11ddceb64bce647a2e7c5998c27c4f050080013c049bc67592df0636"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/replay/CompetitionMahjongAutoReplayController.kt",
+        "sha256": "8eba0de428b7af761dc8b97fe4555c0aade6f99c2f59ee40aa121411dc764268"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/replay/CompetitionMahjongAutoReplayRecord.kt",
+        "sha256": "44db6d64dc30459e466f706902788051133a0d90d79cd7dcaec9b3e1b9625e66"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/replay/CompetitionMahjongAutoReplayRoute.kt",
+        "sha256": "8916900425933a8bfb0f6df46cb0bea4c0a427f0439f20a9b5c677e005f833a7"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/replay/CompetitionMahjongAutoReplayViewModel.kt",
+        "sha256": "61eda0de5fa543407875b9501c8bef67f83d8b664e1d5ad28d59e0912e2c06bd"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/storage/CompetitionMahjongAutoBackupAdapter.kt",
+        "sha256": "ff11bb871a374c05bc6edd7980e6f992985d006e00033b6ab4535235b4c6d40b"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/storage/CompetitionMahjongAutoDao.kt",
+        "sha256": "3b2e54f454f9876b97a7bad8b816f5d76df53f90a178b7ec7a90b39f37453678"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/storage/RoomCompetitionMahjongAutoStore.kt",
+        "sha256": "f73781e1dcb16ca4cffd91116e8fd5671b9b281efadaaa614ceb70e0b4321170"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoCheckpointTest.kt",
+        "sha256": "a2689d66b126d2722431768b666055aa2ca82f493997ee826ffe2fc93bb82b56"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoControllerTest.kt",
+        "sha256": "f9ecec197241489c34b415e0f5b42a1eb0f37066a44431424d8e5d6ea9be1142"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoFixtures.kt",
+        "sha256": "b63cb50a714e559d18d8382486b5f581cfaf63da7b109fe15e621f907bb16588"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoPlaybackTest.kt",
+        "sha256": "cb324e45f34d9e774563f7a5e92d8c9fd18e86ac710dd9c9957d69ee23902f39"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoPlayViewModelTest.kt",
+        "sha256": "fab29eee698646a660c4c335815d78ee500351e6a357f7cc099fb66e672460e5"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/replay/CompetitionMahjongAutoArchiveLibraryTest.kt",
+        "sha256": "9aa85958067e3ff41816c11c58eb03235a517e0a924ee6858f19eca849052679"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/replay/CompetitionMahjongAutoReplayControllerTest.kt",
+        "sha256": "c81d6e4d447bc60ff10f7a78a1e52317240d16e0b25e65146a3a58fd91951bc0"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/replay/CompetitionMahjongAutoReplayViewModelTest.kt",
+        "sha256": "b9c98d7c04021db991035b47f520ee159cd8d619777cd6a4b504a51bff0369ee"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoControllerInstrumentedTest.kt",
+        "sha256": "4bd4521d833758444773d7250ff8a5e27e15873fb240a59320832cbc116c870a"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoPlayContentTest.kt",
+        "sha256": "cfdea5b6af590045b4f223bb155484ed23e4def4921ba36fb8067503f7f57233"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/replay/CompetitionMahjongAutoReplayContentTest.kt",
+        "sha256": "86a26b6447a98c7b9e95829decba8d825de1b8805410154ab17cd133c7e36b43"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/replay/CompetitionMahjongAutoReplayInstrumentedTest.kt",
+        "sha256": "b6bbf92c9027fe8ebc3d5d4b977432cf5969b1597fffec53eb0c27d4c5816ea1"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/storage/CompetitionMahjongAutoRoomInstrumentedTest.kt",
+        "sha256": "e74452570fd9baf9e92cf9aa5b7c53a235d7daf278d2ab06e42ae37f0533d038"
+      },
+      {
+        "path": "app/schemas/com.masterofchessstrategy.data.MocsDatabase/24.json",
+        "sha256": "0dcd688bad495b960b73f566a1a83f717c18703086dee1f753c8e45d71824de6"
+      }
+    ],
+    "build_label": "settled-visuals",
+    "lint_warnings": 24,
+    "lint_errors": 0,
+    "tests": [
+      {
+        "tests": 11,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayControllerTest"
+      },
+      {
+        "tests": 12,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayViewModelTest"
+      },
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoArchiveLibraryTest"
+      },
+      {
+        "tests": 9,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoCheckpointTest"
+      },
+      {
+        "tests": 22,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoControllerTest"
+      },
+      {
+        "tests": 11,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoPlaybackTest"
+      },
+      {
+        "tests": 7,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoPlayViewModelTest"
+      }
+    ],
+    "baseline": "81ac035593b8d2ff31a37fcf5cbe717fe4b2cd1e",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "30d4717692dd20a92f03aeb4228f7eb7142aee1d498fa9cd113baf48954f31d9",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "c5898f1c74276bba19384776132362b3882fa18ea5bad6669b34159d385eec69"
+    }
+  },
+  "device": {
+    "model": "Pixel_7_Pro",
+    "backend_folder": "device-686df6768f13431c9213e96d809460f7",
+    "backend": {
+      "runs": [
+        {
+          "tests": 8,
+          "selectors": [
+            "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoControllerInstrumentedTest",
+            "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayInstrumentedTest",
+            "com.masterofchessstrategy.games.competition_mahjong.auto.storage.CompetitionMahjongAutoRoomInstrumentedTest"
+          ],
+          "images": [],
+          "log_sha256": "3b7342b59c293245cd48dde6003663a9109615de1f9c2c6a31c7aff1b7ffa838",
+          "name": "backend"
+        }
+      ],
+      "restored_font": "1.0",
+      "original_font": "1.0",
+      "scope": "all",
+      "products": {
+        "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "c5b3ec37e0d882b4603614d2a29edc5eb7fb7af5442e64fd5e1dd2db8ddbb1be",
+        "app/build/outputs/apk/debug/app-debug.apk": "30d4717692dd20a92f03aeb4228f7eb7142aee1d498fa9cd113baf48954f31d9"
+      },
+      "candidate": "cmautoroom1"
+    },
+    "visual_folder": "device-6f4eaf7022df4df1ae46594d671f4ae3",
+    "visual": {
+      "original_font": "1.0",
+      "restored_font": "1.0",
+      "products": {
+        "app/build/outputs/apk/debug/app-debug.apk": "30d4717692dd20a92f03aeb4228f7eb7142aee1d498fa9cd113baf48954f31d9",
+        "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "c5898f1c74276bba19384776132362b3882fa18ea5bad6669b34159d385eec69"
+      },
+      "scope": "visual",
+      "candidate": "cmautoroom1",
+      "runs": [
+        {
+          "selectors": [
+            "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoPlayContentTest#pausedObservationStepsAndUndoesOneRealNativeEventWithoutManualActions",
+            "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoPlayContentTest#lockedOpeningAndDifficultyAreDisabledBeforeConfirmedNewRun",
+            "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayContentTest#realNativeReplayExposesOnlyObservationControlsAndSelectsAnyHand"
+          ],
+          "log_sha256": "276f407477748e483283ef768a7c819b55b533a519a89817260098b0e159f69f",
+          "tests": 3,
+          "images": [
+            {
+              "sha256": "d345d8cdd2214e7467a497edeaba4069cd32fe878a0f1c6d9a7b3f6c0d17ef3f",
+              "path": "font-1.0\\new-run.png"
+            },
+            {
+              "sha256": "7c8e38051a6887bff6dd6ada15228f7d72f0e3f22b6ae2d54fbf667421919c23",
+              "path": "font-1.0\\replay.png"
+            },
+            {
+              "sha256": "54db8a3891f3ee7076166e1520b8394547773fe5b3fd13e99588fa43783d1826",
+              "path": "font-1.0\\table.png"
+            }
+          ],
+          "name": "font-1.0"
+        },
+        {
+          "selectors": [
+            "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoPlayContentTest#system150PercentSettingsRemainScrollableAndSaveContinuousSpeedAndFiniteContinuation",
+            "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayContentTest#privateExportRequiresExplicitWarningAndCancelPreservesArchiveAt150Percent"
+          ],
+          "log_sha256": "4b84966e69b05a1ea8b9f98629e08601e9c430d6ce115734bbf4113ac8fbf04c",
+          "tests": 2,
+          "images": [
+            {
+              "sha256": "c7500a9a81ff521417650e936043c7ebd713ae8d7d9f8b6d2842ad51567d95a0",
+              "path": "font-1.5\\export-warning.png"
+            },
+            {
+              "sha256": "f2009d025e51ba5b0303978c9510952dec9d8d319163ca595ba73c165f788581",
+              "path": "font-1.5\\settings.png"
+            }
+          ],
+          "name": "font-1.5"
+        }
+      ]
+    },
+    "screenshots_reviewed": 5
+  }
+}
