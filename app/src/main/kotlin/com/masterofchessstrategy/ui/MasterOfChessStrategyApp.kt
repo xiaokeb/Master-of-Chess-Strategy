@@ -476,6 +476,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                     onBack = navController::popBackStack,
                     onLocalGame = { navController.navigate(AppDestination.GO_LOCAL_GAME) },
                     onLearning = { navController.navigate(AppDestination.GO_TUTORIAL) },
+                    onEndgames = { navController.navigate(AppDestination.GO_ENDGAMES) },
                     onAiGame = { navController.navigate(AppDestination.GO_AI_SETUP) },
                 )
             }
@@ -527,7 +528,20 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                 )
             }
             composable(AppDestination.GO_TUTORIAL) {
-                GoLearningNavigationRoute(goStorage, gameWriters, navController::popBackStack)
+                GoLearningNavigationRoute(goStorage, gameWriters, navController::popBackStack,
+                    onPractice = { navController.navigate(AppDestination.goLessonPractice(it)) })
+            }
+            composable(AppDestination.GO_ENDGAMES) {
+                GoEndgameNavigationRoute(goStorage, gameWriters, navController::popBackStack)
+            }
+            composable(AppDestination.GO_LESSON_PRACTICE, arguments = listOf(
+                navArgument(AppDestination.GO_LESSON_ARGUMENT) { type = NavType.StringType },
+                navArgument(AppDestination.GO_PRACTICE_ARGUMENT) { type = NavType.StringType },
+            )) { entry ->
+                GoLessonPracticeNavigationRoute(goStorage, gameWriters,
+                    entry.arguments?.getString(AppDestination.GO_LESSON_ARGUMENT),
+                    entry.arguments?.getString(AppDestination.GO_PRACTICE_ARGUMENT), entry.savedStateHandle,
+                    navController::popBackStack)
             }
             composable(AppDestination.LANZHOU_FANGQI_GAME) { entry ->
                 LanzhouFangqiRoute(database, entry, gameWriters, fangqiStorage, navController::popBackStack)

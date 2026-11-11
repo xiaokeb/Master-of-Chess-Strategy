@@ -44,6 +44,7 @@ fun GoLearningRoute(
     repository: GoLearningProgressRepository? = null,
     viewModelKey: String = "go-learning",
     onWriterReady: (ViewModel) -> Unit = {},
+    onPractice: ((GoLessonPracticeLink) -> Unit)? = null,
 ) {
     val context = LocalContext.current.applicationContext
     val progress = remember(context, repository) { repository ?: GoLearningPreferencesRepository(context) }
@@ -56,7 +57,10 @@ fun GoLearningRoute(
     onWriterReady(lessons)
     val state by lessons.state.collectAsState()
     GoLearningScreen(state, lessons::answer, lessons::selectLesson, { lessons.restart() },
-        lessons::retry, onBack, modifier)
+        lessons::retry, onBack, modifier, onPractice = onPractice?.let { navigate -> { link ->
+            val current = lessons.state.value
+            if (current.practiceLink() == link) navigate(link)
+        } })
 }
 
 @Composable
@@ -68,6 +72,7 @@ fun GoLearningScreen(
     onRetrySave: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onPractice: ((GoLessonPracticeLink) -> Unit)? = null,
 ) {
     var showCatalog by remember { mutableStateOf(false) }
     val exercise = state.exercise
@@ -92,7 +97,7 @@ fun GoLearningScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("围棋入门", style = MaterialTheme.typography.titleLarge)
-                        TextButton(onClick = onBack) { Text("返回") }
+                        TextButton(onClick = onBack, modifier = Modifier.testTag("go_lesson_back")) { Text("返回") }
                     }
                     Text("已完成 ${state.progress.completedLessonIds.size}/${GoLearningLibrary.lessons.size}")
                     TextButton(onClick = { showCatalog = true }, enabled = state.canOperate) { Text("知识点目录") }
@@ -123,6 +128,12 @@ fun GoLearningScreen(
                             else -> Unit
                         }
                         if (exercise.completed) Text("本项完成", color = MaterialTheme.colorScheme.primary)
+                        val practice = GoLessonPracticeLink.forLesson(lesson.id)
+                        if (practice != null && onPractice != null) {
+                            OutlinedButton(onClick = { onPractice(practice) },
+                                enabled = state.practiceLink() == practice,
+                                modifier = Modifier.testTag("go_lesson_practice")) { Text("对应残局练习") }
+                        }
                         OutlinedButton(onClick = onRestart, enabled = state.canOperate) { Text("重新练习本项") }
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)) {

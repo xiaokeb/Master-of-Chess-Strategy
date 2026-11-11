@@ -1,6 +1,7 @@
 package com.masterofchessstrategy.games.go
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.masterofchessstrategy.engine.*
 import kotlinx.coroutines.*
@@ -15,6 +16,8 @@ class GoEndgameViewModel(
     private val engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
     private val today: () -> LocalDate = { LocalDate.now() },
     private val random: Random = Random.Default,
+    private val initialPuzzleId: String? = null,
+    private val initialRequestState: SavedStateHandle? = null,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(GoEndgameUiState())
     val state: StateFlow<GoEndgameUiState> = mutableState.asStateFlow()
@@ -23,28 +26,60 @@ class GoEndgameViewModel(
     private var operation: Job? = null
     private var pendingCompletion: String? = null
     private var pendingSelection: Selection? = null
+    private var pendingInitialPuzzleId = initialPuzzleId.takeUnless {
+        initialRequestState?.get<Any>(INITIAL_REQUEST_CONSUMED) == true
+    }
     private sealed interface Selection {
         data class Puzzle(val id: String, val mode: GoEndgameChallengeMode) : Selection
         data class Daily(val date: LocalDate) : Selection
     }
 
-    init { reload() }
+    init {
+        require(initialPuzzleId == null || GoEndgameLibrary.puzzle(initialPuzzleId) != null)
+        reload()
+    }
+
+    private data class Loaded(val progress: GoEndgameProgress, val session: GoEndgameSession?, val lockedId: String? = null)
 
     private fun reload() {
         if (disposed.get() || operation?.isActive == true) return
         mutableState.value = mutableState.value.copy(loading = true, error = null)
         operation = viewModelScope.launch {
             try {
-                val (progress, next) = withContext(worker) {
+                val loaded = withContext(worker) {
                     val progress = repository.load()
-                    progress to createSession(progress.lastPuzzleId)
+                    val requested = pendingInitialPuzzleId
+                    if (requested != null && !progress.isUnlocked(requested)) Loaded(progress, null, requested)
+                    else {
+                        // Validate the real exercise before persisting a new selection. The repository
+                        // rechecks the current prefix, so a concurrent replacement cannot bypass it.
+                        val next = createSession(requested ?: progress.lastPuzzleId)
+                        val committed = if (requested == null) progress
+                            else repository.select(requested, GoEndgameChallengeMode.THEME)
+                        Loaded(committed, next)
+                    }
                 }
-                session = next
+                session = loaded.session
+                val progress = loaded.progress
+                if (loaded.lockedId == null) consumeInitialRequest()
                 if (!disposed.get()) mutableState.value = GoEndgameUiState(loading = false,
-                    exercise = next.state(), completedIds = progress.completedIds, mode = progress.lastMode,
-                    dailyDate = progress.dailyDate)
+                    exercise = loaded.session?.state(), completedIds = progress.completedIds, mode = progress.lastMode,
+                    dailyDate = progress.dailyDate, lockedRequestedPuzzleId = loaded.lockedId)
             } catch (error: Exception) { report(error, "围棋残局加载失败，原进度已保留。") }
         }
+    }
+
+    private fun consumeInitialRequest() {
+        pendingInitialPuzzleId = null
+        if (initialPuzzleId != null) initialRequestState?.set(INITIAL_REQUEST_CONSUMED, true)
+    }
+
+    fun openRequiredMainline() {
+        val previous = mutableState.value
+        if (disposed.get() || operation?.isActive == true || previous.loading || previous.needsSave ||
+            previous.error != null || previous.lockedRequestedPuzzleId == null) return
+        val firstIncomplete = GoEndgameLibrary.puzzles.firstOrNull { it.id !in previous.completedIds } ?: return
+        selectAndSave(Selection.Puzzle(firstIncomplete.id, GoEndgameChallengeMode.MAINLINE))
     }
 
     fun select(id: String, mode: GoEndgameChallengeMode = GoEndgameChallengeMode.MAINLINE) {
@@ -86,8 +121,10 @@ class GoEndgameViewModel(
                     progress to next
                 }
                 session = next; pendingSelection = null
+                consumeInitialRequest()
                 if (!disposed.get()) mutableState.value = previous.copy(loading = false, exercise = next.state(),
-                    completedIds = progress.completedIds, error = null, mode = progress.lastMode, dailyDate = progress.dailyDate)
+                    completedIds = progress.completedIds, error = null, mode = progress.lastMode, dailyDate = progress.dailyDate,
+                    lockedRequestedPuzzleId = null)
             } catch (error: Exception) { report(error, "围棋残局切换未保存，原关卡已保留。") }
         }
     }
@@ -157,4 +194,6 @@ class GoEndgameViewModel(
         disposed.set(true)
         super.onCleared()
     }
+
+    private companion object { const val INITIAL_REQUEST_CONSUMED = "go.practice.initialRequestConsumed" }
 }

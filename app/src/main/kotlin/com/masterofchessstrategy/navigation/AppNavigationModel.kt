@@ -74,6 +74,10 @@ internal object AppDestination {
     const val GO_AI_MATCH_ARGUMENT = "goAiMatchId"
     const val GO_AI_MATCH = "go/ai/match/{$GO_AI_MATCH_ARGUMENT}"
     const val GO_TUTORIAL = "go/tutorial"
+    const val GO_ENDGAMES = "go/endgames"
+    const val GO_LESSON_ARGUMENT = "goLessonId"
+    const val GO_PRACTICE_ARGUMENT = "goPracticeId"
+    const val GO_LESSON_PRACTICE = "go/tutorial/{$GO_LESSON_ARGUMENT}/practice/{$GO_PRACTICE_ARGUMENT}"
     const val COMPETITION_MAHJONG_MODES = "competition-mahjong/modes"
     const val COMPETITION_MAHJONG_TUTORIAL = "competition-mahjong/tutorial"
     const val COMPETITION_MAHJONG_VIEWER = "competitionViewer"
@@ -133,6 +137,9 @@ internal object AppDestination {
         require(matchId.isNotBlank() && '\u0000' !in matchId && matchId.toByteArray(Charsets.UTF_8).size <= 128)
         return "go/ai/match/" + java.net.URLEncoder.encode(matchId, "UTF-8").replace("+", "%20")
     }
+
+    fun goLessonPractice(link: com.masterofchessstrategy.games.go.GoLessonPracticeLink): String =
+        "go/tutorial/${link.lessonId}/practice/${link.puzzleId}"
 
     fun chineseChessEndgame(levelId: String): String {
         require(levelId.isNotBlank() && '/' !in levelId)

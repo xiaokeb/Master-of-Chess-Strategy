@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-go-lesson-practice.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 15,
+  "build": {
+    "candidate": "golesson2",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "76af9fcf706130c2378442285caf019060cf9ce3eeeb72c50746083efb34db42",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "a49ca66156156fea9e926707565d5d41e309a16c65c6fcc925b0c47d4756d29b"
+    },
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameRoute.kt",
+        "frozen_sha256": "483ce36bf5ae4172468525f02af0d4a07c7398f012fce608344c49b1ee68b093",
+        "working_sha256": "483ce36bf5ae4172468525f02af0d4a07c7398f012fce608344c49b1ee68b093"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameViewModel.kt",
+        "frozen_sha256": "c4c2df3934055f334e0484b1e4ace2e6905d5abebb46732f7c5f770bc178feeb",
+        "working_sha256": "c4c2df3934055f334e0484b1e4ace2e6905d5abebb46732f7c5f770bc178feeb"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoLearningScreen.kt",
+        "frozen_sha256": "562dacd6c87f9ab5dc0aebff4a073c2b723f98f2bddc4eb335ffa06a3aaa7d73",
+        "working_sha256": "562dacd6c87f9ab5dc0aebff4a073c2b723f98f2bddc4eb335ffa06a3aaa7d73"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoLearningViewModel.kt",
+        "frozen_sha256": "841393738c36aee34050b94e3295e5076c23e06801b594903c8a062b1547676e",
+        "working_sha256": "841393738c36aee34050b94e3295e5076c23e06801b594903c8a062b1547676e"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoLessonPracticeLink.kt",
+        "frozen_sha256": "14de1a317457e6b71daf89c831b7ff0a73bf3ecbb92599ab99a1a9af9c4b1df4",
+        "working_sha256": "14de1a317457e6b71daf89c831b7ff0a73bf3ecbb92599ab99a1a9af9c4b1df4"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoInvalidLessonPracticeScreen.kt",
+        "frozen_sha256": "c2bd9241453c2e0027e300b327b68cb86b6433769ebe1b4ed47a772663bf0ef9",
+        "working_sha256": "c2bd9241453c2e0027e300b327b68cb86b6433769ebe1b4ed47a772663bf0ef9"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoLessonPracticeLinkTest.kt",
+        "frozen_sha256": "b71d8441fa195f65faf2f47b64452a2e0eb801bdc0e3bb91dd8cf70133ac7b28",
+        "working_sha256": "b71d8441fa195f65faf2f47b64452a2e0eb801bdc0e3bb91dd8cf70133ac7b28"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoLessonPracticeViewModelTest.kt",
+        "frozen_sha256": "3e13bcc9d064c0ae1d0fba50cd73c2666b487f2d91d1130faaaaa320dd6e7890",
+        "working_sha256": "3e13bcc9d064c0ae1d0fba50cd73c2666b487f2d91d1130faaaaa320dd6e7890"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoLessonPracticeNavigationTest.kt",
+        "frozen_sha256": "878d8833fffd2ffa19008b529ede0b375ecc81e825670f046d4ac7bb11ce5f53",
+        "working_sha256": "878d8833fffd2ffa19008b529ede0b375ecc81e825670f046d4ac7bb11ce5f53"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/GoLocalNavigationRoutes.kt",
+        "frozen_sha256": "3ebfc1764e152ac23aad09348d99ccda45fcbdc894d188d6e9cff81b20332026",
+        "working_sha256": "8cc188279e81726809873a41264623571f23b12cc34ff9fb8dad3776cf9c1db4"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/navigation/AppNavigationModel.kt",
+        "frozen_sha256": "492e2e160a24f6c9e1fc870d11e35dae72aa6b2267b711c5fb28e2161a385b8a",
+        "working_sha256": "bfda4d6857e845ae4115fb111951b5184027604f51c59b0bcb839f86e9ab9c09"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/MasterOfChessStrategyApp.kt",
+        "frozen_sha256": "a5b945e79a7b990976099ddcbc6de98d2271f6b81d68a4a64e52c86c2ce5baa1",
+        "working_sha256": "ef9cc17ed1523b3c89a845509bbc2373d5c1a6392bd64dc4d7ccf0c00101558c"
+      }
+    ],
+    "lint_errors": 0,
+    "baseline": "1906d87c5fe5fc6ca1858184e891880da63809db",
+    "lint_warnings": 24,
+    "tests": [
+      {
+        "tests": 11,
+        "name": "com.masterofchessstrategy.games.go.GoEndgameViewModelTest"
+      },
+      {
+        "tests": 7,
+        "name": "com.masterofchessstrategy.games.go.GoLearningViewModelTest"
+      },
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.go.GoLessonPracticeLinkTest"
+      },
+      {
+        "tests": 10,
+        "name": "com.masterofchessstrategy.games.go.GoLessonPracticeViewModelTest"
+      }
+    ]
+  },
+  "device": {
+    "runs": [
+      {
+        "font": "1.0",
+        "tests": 3,
+        "images": [
+          {
+            "path": "font-1.0\\3add8a99-9f21-4943-8d1b-73084fd955ea\\activity-recreated.png",
+            "sha256": "c82e390b2cf2853182646ea3654a37324f7b29074b4c14f3985caff50e69aba1"
+          },
+          {
+            "path": "font-1.0\\3add8a99-9f21-4943-8d1b-73084fd955ea\\capture-lesson-returned.png",
+            "sha256": "f7c72bc88780e2664d448659f68b853d53da9cdd4a642264dd072b32fdc382b8"
+          },
+          {
+            "path": "font-1.0\\3add8a99-9f21-4943-8d1b-73084fd955ea\\corresponding-capture.png",
+            "sha256": "c82e390b2cf2853182646ea3654a37324f7b29074b4c14f3985caff50e69aba1"
+          },
+          {
+            "path": "font-1.0\\7c3e4625-3980-4f96-b7c8-216507feaff8\\locked-prerequisite.png",
+            "sha256": "0b6d55ac1197cd4976c55d87818e470c5c48924c24925426952ee2edb378f58f"
+          },
+          {
+            "path": "font-1.0\\7c3e4625-3980-4f96-b7c8-216507feaff8\\original-lesson-returned.png",
+            "sha256": "538856251efe3d6deb62b1e85ead469730a615a9706d593fa488742d0c5f3d85"
+          },
+          {
+            "path": "font-1.0\\7c3e4625-3980-4f96-b7c8-216507feaff8\\prerequisite-completed.png",
+            "sha256": "356a8560dc2f5e87a64138783b40b124a17e000c68e1b28ba71a66fc03243e57"
+          }
+        ],
+        "log_sha256": "85267c6bc2412a428987e3ab2c9ce988ed24db997ab13c9044bda8954092c08f"
+      },
+      {
+        "font": "1.5",
+        "tests": 2,
+        "images": [
+          {
+            "path": "font-1.5\\4d436795-41b5-4728-aad0-b13bca6804f0\\activity-recreated.png",
+            "sha256": "5e85f91b6111be010b7dbe55fe63cf7a339d7042419c5f3d1ab1400c056fbf26"
+          },
+          {
+            "path": "font-1.5\\4d436795-41b5-4728-aad0-b13bca6804f0\\capture-lesson-returned.png",
+            "sha256": "aca7a872ee1aed447eca01f5cc14e8dc36eaf77a2596750d884fdfcc377126e2"
+          },
+          {
+            "path": "font-1.5\\4d436795-41b5-4728-aad0-b13bca6804f0\\corresponding-capture.png",
+            "sha256": "5e85f91b6111be010b7dbe55fe63cf7a339d7042419c5f3d1ab1400c056fbf26"
+          },
+          {
+            "path": "font-1.5\\ea5e7fd3-5c7f-4183-80e3-b4e3394900d1\\locked-prerequisite.png",
+            "sha256": "558cd38167924ecf01d9a6e94726fb2ef1f9fbe937dbbbde82d997ebff47a176"
+          },
+          {
+            "path": "font-1.5\\ea5e7fd3-5c7f-4183-80e3-b4e3394900d1\\original-lesson-returned.png",
+            "sha256": "e8dd9abc484dcf861e3038b358248e271513f368c8283b4aea13a571c7e678e6"
+          },
+          {
+            "path": "font-1.5\\ea5e7fd3-5c7f-4183-80e3-b4e3394900d1\\prerequisite-completed.png",
+            "sha256": "d2a152cced01880b3d710f08759b39bbaac9179a515f16290006bb871a34bed8"
+          }
+        ],
+        "log_sha256": "b2b255a647d37645748e66508a1c61bc241490341d42511aae867ce6d206f60b"
+      }
+    ],
+    "restored_font": "1.0",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "76af9fcf706130c2378442285caf019060cf9ce3eeeb72c50746083efb34db42",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "a49ca66156156fea9e926707565d5d41e309a16c65c6fcc925b0c47d4756d29b"
+    },
+    "candidate": "golesson2",
+    "original_font": "1.0"
+  },
+  "device_folder": "device-0626c8b1a9c641dd8f1c340e150d4b72",
+  "model": "Pixel_7_Pro",
+  "screenshots_reviewed": 12
+}

@@ -24,6 +24,13 @@ data class GoLearningUiState(
         progress.isCompleted && !needsSave && !saving
 }
 
+/** Navigation is allowed only after the visible lesson selection is durably saved. */
+internal fun GoLearningUiState.practiceLink(): GoLessonPracticeLink? {
+    val lessonId = exercise?.lesson?.id ?: return null
+    if (!canOperate || error != null || progress.lastLessonId != lessonId) return null
+    return GoLessonPracticeLink.forLesson(lessonId)
+}
+
 class GoLearningViewModel(
     private val repository: GoLearningProgressRepository,
     private val engineFactory: (Int, Int, Int) -> GoRuleEngine = { size, komi, handicap ->

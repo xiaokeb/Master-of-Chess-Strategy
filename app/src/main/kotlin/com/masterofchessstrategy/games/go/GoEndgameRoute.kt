@@ -11,6 +11,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.masterofchessstrategy.engine.*
 import java.time.LocalDate
@@ -23,6 +26,7 @@ data class GoEndgameUiState(
     val needsSave: Boolean = false,
     val mode: GoEndgameChallengeMode = GoEndgameChallengeMode.MAINLINE,
     val dailyDate: LocalDate? = null,
+    val lockedRequestedPuzzleId: String? = null,
 ) {
     val canOperate get() = !loading && !needsSave && error == null && exercise != null
     fun isUnlocked(id: String): Boolean {
@@ -36,19 +40,25 @@ fun GoEndgameRoute(onBack: () -> Unit, modifier: Modifier = Modifier,
     repository: GoEndgameProgressRepository? = null,
     viewModelKey: String = "go-endgame",
     onWriterReady: (ViewModel) -> Unit = {},
+    initialPuzzleId: String? = null,
+    sourceLessonTitle: String? = null,
+    initialRequestState: SavedStateHandle? = null,
 ) {
     val context = LocalContext.current.applicationContext
     val storage = remember(context, repository) { repository ?: GoEndgameFileRepository(context) }
-    val factory = remember(storage, onWriterReady) { object : ViewModelProvider.Factory {
+    val factory = remember(storage, onWriterReady, initialPuzzleId, initialRequestState) { object : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T = GoEndgameViewModel(storage).also(onWriterReady) as T
+        override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T =
+            GoEndgameViewModel(storage, initialPuzzleId = initialPuzzleId,
+                initialRequestState = initialRequestState ?: extras.createSavedStateHandle()).also(onWriterReady) as T
     } }
     val model: GoEndgameViewModel = viewModel(key = viewModelKey, factory = factory)
     onWriterReady(model)
     val state by model.state.collectAsState()
     GoEndgameScreen(state, model::answer, { model.select(it) }, model::reset, model::retry, onBack, modifier,
         onDaily = model::openDaily, onRandom = model::openRandom,
-        onThemedSelect = { model.select(it, GoEndgameChallengeMode.THEME) })
+        onThemedSelect = { model.select(it, GoEndgameChallengeMode.THEME) },
+        onRequiredMainline = model::openRequiredMainline, sourceLessonTitle = sourceLessonTitle)
 }
 
 @Composable
@@ -63,6 +73,8 @@ fun GoEndgameScreen(
     onDaily: () -> Unit = {},
     onRandom: (GoEndgameTheme?, GoEndgameLevel?) -> Unit = { _, _ -> },
     onThemedSelect: (String) -> Unit = onSelect,
+    onRequiredMainline: () -> Unit = {},
+    sourceLessonTitle: String? = null,
 ) {
     var catalog by remember { mutableStateOf(false) }
     var theme by remember { mutableStateOf<GoEndgameTheme?>(null) }
@@ -71,7 +83,11 @@ fun GoEndgameScreen(
     Surface(modifier.fillMaxSize()) {
         BoxWithConstraints(Modifier.fillMaxSize().padding(12.dp)) {
             val board: @Composable (Modifier) -> Unit = { boardModifier ->
-                if (exercise == null) Box(boardModifier) { Text(if (state.loading) "正在验证残局…" else "残局暂不可用") }
+                if (exercise == null) Box(boardModifier) { Text(when {
+                    state.loading -> "正在验证残局…"
+                    state.lockedRequestedPuzzleId != null -> "对应练习尚未解锁，请先完成前置主线。"
+                    else -> "残局暂不可用"
+                }) }
                 else GoBoard(exercise.puzzle.boardSize, exercise.stones,
                     { x, y -> onAnswer(BoardPosition(x, y)) }, boardModifier,
                     lastMoveIndex = exercise.lastMoveIndex,
@@ -81,7 +97,20 @@ fun GoEndgameScreen(
                 Column(controlsModifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("围棋死活练习", style = MaterialTheme.typography.titleLarge)
-                        TextButton(onClick = onBack) { Text("返回") }
+                        TextButton(onClick = onBack, modifier = Modifier.testTag("go_endgame_back")) {
+                            Text(if (sourceLessonTitle == null) "返回" else "返回知识点")
+                        }
+                    }
+                    if (sourceLessonTitle != null) Text("来自知识点：$sourceLessonTitle",
+                        Modifier.testTag("go_endgame_source_lesson"))
+                    state.lockedRequestedPuzzleId?.let { id ->
+                        val target = GoEndgameLibrary.puzzle(id)
+                        val prerequisite = GoEndgameLibrary.puzzles.firstOrNull { it.id !in state.completedIds }
+                        Text("${target?.title ?: "对应练习"}尚未解锁。请从“${prerequisite?.title ?: "主线"}”开始完成前置关卡。",
+                            Modifier.testTag("go_endgame_practice_locked"))
+                        Button(onClick = onRequiredMainline,
+                            enabled = !state.loading && !state.needsSave && state.error == null && prerequisite != null,
+                            modifier = Modifier.testTag("go_endgame_required_mainline")) { Text("先做前置主线") }
                     }
                     Text("项目自编种子题 · 已完成 ${state.completedIds.size}/${GoEndgameLibrary.puzzles.size}")
                     Text(state.mode.label + if (state.mode == GoEndgameChallengeMode.DAILY) " · ${state.dailyDate}" else "",
