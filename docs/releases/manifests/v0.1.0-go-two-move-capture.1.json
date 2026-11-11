@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-go-two-move-capture.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 12,
+  "build": {
+    "lint_warnings": 24,
+    "tests": [
+      {
+        "name": "com.masterofchessstrategy.games.go.data.RoomGoProgressRepositoriesTest",
+        "tests": 14
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameChallengesTest",
+        "tests": 7
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameLibraryTest",
+        "tests": 12
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameProgressTest",
+        "tests": 9
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameViewModelTest",
+        "tests": 11
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoTacticalCaptureTest",
+        "tests": 10
+      }
+    ],
+    "candidate": "gotactical1",
+    "lint_errors": 0,
+    "baseline": "3c2473f1ec4a3a0edfb9bf9493a08315a292ccb7",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "8f7b4b58f2a7b80395030ded1998321ad8993de04b392134a968642e4a570f4d",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "05c0b69bc2563f2116c36e47d25adcee4342be5e0a3333377ede55da2ad54fae"
+    },
+    "overlays": [
+      {
+        "sha256": "6b52e478e8a6eac0e6c07f5f19e47ae977c2b0f3bb0f703baa3c339337bf4ca9",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibrary.kt"
+      },
+      {
+        "sha256": "b45cb8f24535a4ad7e699af10b0ca928a85ba439152e79781408a0f3d945f0e1",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoTacticalCapture.kt"
+      },
+      {
+        "sha256": "460aad4418be74912130cbc996d0089dd4f7864d571b0537cca8b07cc6bf6527",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibraryTest.kt"
+      },
+      {
+        "sha256": "e3f6b381c433923b42bcdc0198966a7d8d5b291bcb49210c0680607a5db181b8",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameChallengesTest.kt"
+      },
+      {
+        "sha256": "a823c51746f4d735654c5a528d3eb6cb30ebb6e5b0ffe42ed5711c25492b82e5",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoTacticalCaptureTest.kt"
+      },
+      {
+        "sha256": "6bc068aa913f06a4d1a904116e3b5fc58bd1a1e2fa86b50412e5e8101c3b57da",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoEndgameNativeInstrumentedTest.kt"
+      },
+      {
+        "sha256": "7b80d1e25de38809fdf011a03865b545ab90e3c3ec602cc7b9454a0d13dce861",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoEndgameScreenInstrumentedTest.kt"
+      },
+      {
+        "sha256": "812cc62caad2ca9b601b16f8ab88e1c3410bc207857daaccfcedc3db6a8886f3",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoTacticalCaptureNativeInstrumentedTest.kt"
+      },
+      {
+        "sha256": "1ff05c2b6b3152faf8cc8462029452ef525c911eb8e67b1379c7ac5731bf49f9",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoLessonPracticeNavigationTest.kt"
+      }
+    ]
+  },
+  "device": {
+    "runs": [
+      {
+        "images": [
+          {
+            "path": "font-1.0\\815d9988-8987-4ac5-ba8d-3e7ccebdcdc6\\tactical-completed.png",
+            "sha256": "955288d51cfad7207b2690c428d376c203c3243f4fd5900f860a90f1ae1dd4f8"
+          },
+          {
+            "path": "font-1.0\\815d9988-8987-4ac5-ba8d-3e7ccebdcdc6\\tactical-first-capture.png",
+            "sha256": "69039bb7b8b3ae98f516fa7f140f5007e830a2f199ff455ab8eb79a5d50ee9f1"
+          },
+          {
+            "path": "font-1.0\\815d9988-8987-4ac5-ba8d-3e7ccebdcdc6\\tactical-reopened.png",
+            "sha256": "76505253ce55510d3c10ed54476eac3baf77c003cf69813dff252ef6849eb337"
+          }
+        ],
+        "font": "1.0",
+        "tests": 4,
+        "log_sha256": "d9180edeef62e80f796183ed9526ea25d9eb260a41bf4925440cc809b1281395"
+      },
+      {
+        "images": [
+          {
+            "path": "font-1.5\\f51c016f-d214-4e36-8362-bb00cae82a1d\\tactical-completed.png",
+            "sha256": "18abcb748e328b49d1b107a744a70464da421ed44364dbefa8ff069d99b4a1a2"
+          },
+          {
+            "path": "font-1.5\\f51c016f-d214-4e36-8362-bb00cae82a1d\\tactical-first-capture.png",
+            "sha256": "f1c42d9531d791cd7c02b84a8ca6001da417c644a51a99da145bd2c3f8dc4cad"
+          },
+          {
+            "path": "font-1.5\\f51c016f-d214-4e36-8362-bb00cae82a1d\\tactical-reopened.png",
+            "sha256": "7a7ce563e86f33749b1b73006f81ffeb91483ea7026c8e626dab939b8c10dbc0"
+          }
+        ],
+        "font": "1.5",
+        "tests": 1,
+        "log_sha256": "1c187c3397a055c16771e38a6194e4fecabcc9674acb42ef5c4d1e13c162b1cd"
+      }
+    ],
+    "original_font": "1.0",
+    "candidate": "gotactical1",
+    "restored_font": "1.0",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "8f7b4b58f2a7b80395030ded1998321ad8993de04b392134a968642e4a570f4d",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "05c0b69bc2563f2116c36e47d25adcee4342be5e0a3333377ede55da2ad54fae"
+    }
+  },
+  "device_folder": "device-f56bdef4ad1e4ef88ae1bb06b7b74264",
+  "model": "Pixel_7_Pro",
+  "screenshots_reviewed": 6
+}

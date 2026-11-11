@@ -21,7 +21,7 @@ class GoEndgameScreenInstrumentedTest {
         composeRule.activityRule.scenario.onActivity { activity -> activity.setContent {
             GoEndgameScreen(page.value, answers::add, selected::add, {}, {}, {})
         } }
-        composeRule.onNodeWithText("项目自编种子题 · 已完成 0/6").assertExists()
+        composeRule.onNodeWithText("项目自编种子题 · 已完成 0/${GoEndgameLibrary.puzzles.size}").assertExists()
         composeRule.onNodeWithTag("go_endgame_catalog").performClick()
         composeRule.onNodeWithText("2. 边上一口气 · 简单 · 未解锁").assertIsNotEnabled()
         composeRule.onNodeWithText("关闭").performClick()

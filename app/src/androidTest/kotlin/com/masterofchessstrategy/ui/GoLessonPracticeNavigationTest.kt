@@ -108,6 +108,42 @@ class GoLessonPracticeNavigationTest {
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
     }
 
+    @Test fun twoMoveCaptureCompletesOnlyAfterBothTargetsAndPersistsProgress() {
+        val puzzles = GoEndgameLibrary.puzzles
+        val tactical = checkNotNull(GoEndgameLibrary.puzzle("two-corners-two-moves"))
+        val preceding = puzzles.takeWhile { it.id != tactical.id }.map { it.id }
+        val repository = RoomGoEndgameProgressRepository(database)
+        runBlocking { preceding.forEach { repository.complete(it) } }
+        compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag(GO_ENDGAMES_ENTRY_TAG).performScrollTo().performClick()
+        awaitTitle(puzzles.first().title)
+        compose.onNodeWithTag("go_endgame_catalog").performScrollTo().performClick()
+        compose.onNodeWithTag("go_endgame_puzzle_${tactical.id}").performScrollTo().performClick()
+        awaitTitle(tactical.title)
+
+        compose.onNodeWithTag("go_intersection_0_1").performClick()
+        compose.waitUntil(15_000) {
+            compose.onAllNodes(hasTestTag("go_endgame_feedback") and hasText("剩余 1 手", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("go_endgame_completed").assertDoesNotExist()
+        assertEquals(preceding.toSet(), runBlocking { repository.load().completedIds })
+        capture("tactical-first-capture")
+
+        compose.onNodeWithTag("go_intersection_8_7").performClick()
+        awaitTag("go_endgame_completed")
+        val completed = preceding.toSet() + tactical.id
+        assertEquals(completed, runBlocking { repository.load().completedIds })
+        capture("tactical-completed")
+
+        compose.onNodeWithTag("go_endgame_back").performScrollTo().performClick()
+        compose.onNodeWithTag(GO_ENDGAMES_ENTRY_TAG).performScrollTo().performClick()
+        awaitTitle(tactical.title)
+        assertEquals(completed, runBlocking { repository.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        capture("tactical-reopened")
+    }
+
     private fun openLessons() {
         compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
         compose.onNodeWithTag(GO_LEARNING_ENTRY_TAG).performScrollTo().performClick()

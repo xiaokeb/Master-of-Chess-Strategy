@@ -7,15 +7,17 @@ import org.junit.Test
 class GoEndgameLibraryTest {
     @Test fun catalogHasStableUniqueMetadataAndLinearDifficultyOrder() {
         val puzzles = GoEndgameLibrary.puzzles
-        assertEquals(6, puzzles.size); assertEquals(puzzles.size, puzzles.map { it.id }.toSet().size)
+        assertEquals(7, puzzles.size); assertEquals(puzzles.size, puzzles.map { it.id }.toSet().size)
         assertTrue(puzzles.all { it.boardSize == 9 && it.setup.size % 2 == 0 })
-        assertEquals(listOf(GoEndgameLevel.SIMPLE, GoEndgameLevel.MEDIUM), puzzles.map { it.level }.distinct())
+        assertEquals(listOf(GoEndgameLevel.SIMPLE, GoEndgameLevel.MEDIUM, GoEndgameLevel.HARD),
+            puzzles.map { it.level }.distinct())
+        assertEquals("two-corners-two-moves", puzzles.last().id)
         assertEquals(setOf(GoEndgameTheme.CAPTURE, GoEndgameTheme.ESCAPE, GoEndgameTheme.CONNECTION),
             puzzles.map { it.theme }.toSet())
     }
 
     @Test fun everyAuthoredSetupAndAnswerPassThroughRulesEngine() {
-        for (puzzle in GoEndgameLibrary.puzzles) {
+        for (puzzle in GoEndgameLibrary.puzzles.filter { it.maxBlackMoves == 1 }) {
             val plan = GoEndgameLibrary.open(puzzle, factory)
             val session = GoEndgameSession(plan, factory)
             val initial = session.state()
@@ -24,6 +26,21 @@ class GoEndgameLibraryTest {
             assertEquals(GoStone.BLACK.code, solved.stones[puzzle.answer.y * puzzle.boardSize + puzzle.answer.x])
             puzzle.captured.forEach { assertEquals(GoStone.EMPTY.code, solved.stones[it.y * puzzle.boardSize + it.x]) }
         }
+    }
+
+    @Test fun tacticalCatalogPuzzleKeepsPlayingUntilBothCapturesAreComplete() {
+        val puzzle = GoEndgameLibrary.puzzles.last()
+        val session = GoEndgameSession(GoEndgameLibrary.open(puzzle, factory), factory)
+        val initial = session.state()
+        val first = session.answer(puzzle.answer)
+        assertFalse(first.completed)
+        assertEquals(1, first.attempts)
+        assertTrue(first.feedback.contains("剩余 1 手"))
+        assertTrue(initial.stones != first.stones)
+        val completed = session.answer(BoardPosition(8, 7))
+        assertTrue(completed.completed)
+        assertEquals(2, completed.attempts)
+        assertEquals(initial, session.reset())
     }
 
     @Test fun wrongLegalMoveDoesNotMutatePositionAndCorrectRetryCompletes() {

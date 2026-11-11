@@ -3,7 +3,7 @@ package com.masterofchessstrategy.games.go
 import com.masterofchessstrategy.engine.*
 
 enum class GoEndgameTheme(val label: String) { CAPTURE("提子"), ESCAPE("逃出打吃"), CONNECTION("连接") }
-enum class GoEndgameLevel(val label: String) { SIMPLE("简单"), MEDIUM("中等") }
+enum class GoEndgameLevel(val label: String) { SIMPLE("简单"), MEDIUM("中等"), HARD("困难") }
 
 class GoEndgamePuzzle(
     val id: String,
@@ -17,6 +17,7 @@ class GoEndgamePuzzle(
     val answer: BoardPosition,
     captured: Set<BoardPosition> = emptySet(),
     targetStones: Set<BoardPosition> = emptySet(),
+    val maxBlackMoves: Int = 1,
 ) {
     val setup: List<BoardPosition> = java.util.Collections.unmodifiableList(setup.toList())
     val captured: Set<BoardPosition> = java.util.Collections.unmodifiableSet(captured.toSet())
@@ -28,6 +29,7 @@ class GoEndgamePuzzle(
         require((setup + answer + captured + targetStones).all { it.x in 0 until boardSize && it.y in 0 until boardSize })
         require(setup.distinct().size == setup.size && answer !in setup && captured.all(setup::contains))
         require(targetStones.all(setup::contains))
+        require(maxBlackMoves in 1..4 && (maxBlackMoves == 1 || theme == GoEndgameTheme.CAPTURE))
         require(when (theme) {
             GoEndgameTheme.CAPTURE -> captured.isNotEmpty() && targetStones.isEmpty()
             GoEndgameTheme.ESCAPE -> captured.isEmpty() && targetStones.size == 1
@@ -36,7 +38,11 @@ class GoEndgamePuzzle(
     }
 }
 
-class GoEndgamePlan internal constructor(val puzzle: GoEndgamePuzzle, bytes: ByteArray) {
+class GoEndgamePlan internal constructor(
+    val puzzle: GoEndgamePuzzle,
+    bytes: ByteArray,
+    internal val tacticalCapture: GoTacticalCapturePlan? = null,
+) {
     private val initial = bytes.copyOf()
     fun copyInitialBytes() = initial.copyOf()
 }
@@ -81,6 +87,11 @@ object GoEndgameLibrary {
         puzzle("connect-under-pressure", "受压连接", GoEndgameTheme.CONNECTION, GoEndgameLevel.MEDIUM,
             "黑先：连接两颗黑子，同时扩大这组棋的气。", "连接完成，局部棋组可以整体计算气。",
             2 to 2, 1 to 2, 2 to 4, 3 to 2, 8 to 8, 7 to 7, answer = 2 to 3, targets = setOf(2 to 2, 2 to 4)),
+        GoTacticalCaptureLibrary.twoCorners.let { puzzle ->
+            GoEndgamePuzzle(puzzle.id, puzzle.title, GoEndgameTheme.CAPTURE, GoEndgameLevel.HARD,
+                "黑先：两手内提走两个角上的目标白子。", "目标白子已全部提走。", puzzle.boardSize,
+                puzzle.setup, puzzle.firstMove, captured = puzzle.targets, maxBlackMoves = puzzle.maxBlackMoves)
+        },
     )
 
     init { require(puzzles.map { it.id }.toSet().size == puzzles.size) }
@@ -89,6 +100,12 @@ object GoEndgameLibrary {
     fun open(puzzle: GoEndgamePuzzle,
         engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
     ): GoEndgamePlan {
+        if (puzzle.maxBlackMoves > 1) {
+            val capture = GoTacticalCapturePuzzle(puzzle.id, puzzle.title, puzzle.boardSize, puzzle.setup,
+                puzzle.captured, puzzle.answer, puzzle.maxBlackMoves)
+            val plan = GoTacticalCaptureLibrary.open(capture, engineFactory)
+            return GoEndgamePlan(puzzle, plan.copyInitialBytes(), plan)
+        }
         val initial = engineFactory(puzzle.boardSize, 15, 0).use { engine ->
             require(engine.boardSize == puzzle.boardSize && engine.handicapStones == 0 && engine.blackKomiQuarters == 15)
             puzzle.setup.forEach { require(engine.apply(GoAction.Place(it)) == ActionResult.Accepted) {
@@ -121,12 +138,20 @@ class GoEndgameSession(
     private val plan: GoEndgamePlan,
     private val engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
 ) {
+    private val tacticalCapture = plan.tacticalCapture?.let { GoTacticalCaptureSession(it, engineFactory) }
     private var state = initialState()
     fun state() = state.copy(stones = state.stones.toList())
-    fun reset(): GoEndgameState { state = initialState(); return state() }
+    fun reset(): GoEndgameState {
+        state = tacticalCapture?.reset()?.toEndgameState() ?: initialState()
+        return state()
+    }
 
     fun answer(point: BoardPosition): GoEndgameState {
         if (state.completed) return state()
+        tacticalCapture?.let {
+            state = it.answer(point).toEndgameState()
+            return state()
+        }
         val puzzle = plan.puzzle
         var stones: List<Int>? = null
         var accepted = false
@@ -147,9 +172,20 @@ class GoEndgameSession(
         return state()
     }
 
-    private fun initialState(): GoEndgameState = engineFactory(plan.puzzle.boardSize, 15, 0).use { engine ->
-        check(engine.restore(plan.copyInitialBytes()) == RestoreResult.Restored)
-        GoEndgameState(plan.puzzle, snapshot(engine))
+    private fun initialState(): GoEndgameState = tacticalCapture?.state()?.toEndgameState()
+        ?: engineFactory(plan.puzzle.boardSize, 15, 0).use { engine ->
+            check(engine.restore(plan.copyInitialBytes()) == RestoreResult.Restored)
+            GoEndgameState(plan.puzzle, snapshot(engine))
+        }
+
+    private fun GoTacticalCaptureState.toEndgameState(): GoEndgameState {
+        val feedbackText = when {
+            completed -> plan.puzzle.success
+            attempts == 0 -> plan.puzzle.instruction
+            else -> "$feedback 剩余 ${puzzle.maxBlackMoves - blackMoves} 手。"
+        }
+        return GoEndgameState(plan.puzzle, stones, completed, attempts,
+            lastMoveIndex.takeIf { blackMoves > 0 }, feedbackText)
     }
     private fun snapshot(engine: GoRuleEngine) = List(plan.puzzle.boardSize * plan.puzzle.boardSize) { index ->
         engine.stoneAt(BoardPosition(index % plan.puzzle.boardSize, index / plan.puzzle.boardSize)).code
