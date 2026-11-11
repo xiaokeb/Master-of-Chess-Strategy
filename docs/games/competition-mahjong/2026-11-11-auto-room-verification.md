@@ -11,3 +11,5 @@ Room 23→24 新增自动演局表。活动与完成归档按观察者隔离，�
 - 普通字号的 3 项与 150% 字号的 2 项页面用例通过。核看五张独立测试宿主截图，覆盖单步、难度锁定、选盘回放、设置滚动和私有导出确认。观察席暗手可见，其余三席仍显示牌背。
 
 本次只发布源码。正式大厅导航、系统文件选择器、横屏生产入口、后台执行许可、真实跨进程恢复、容量评测和实体设备仍待验收。源码、测试包和截图散列见[发布清单](../../releases/manifests/v0.1.0-competition-mahjong-auto-room.1.json)。
+
+提交 `d5ca56671c9501e04e798364f2555b5d0c3283f1` 已推送到 `main`。[v0.1.0-competition-mahjong-auto-room.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-auto-room.1)
