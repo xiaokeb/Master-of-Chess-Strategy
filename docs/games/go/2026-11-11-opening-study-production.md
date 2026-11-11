@@ -11,3 +11,5 @@
 - 核看六张截图，覆盖线路目录、锁定状态和续弈棋盘。150% 字号下侧栏可滚动查看后续控制。
 
 本次只发布源码。自编线路用于开局方向教学，职业定式、棋力分级和实体设备另行验收。[发布清单](../../releases/manifests/v0.1.0-go-opening-study.1.json)
+
+提交 `dd206003453a1fbee85229cf182de99454ee35da` 已推送到 `main`。[v0.1.0-go-opening-study.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-opening-study.1)
