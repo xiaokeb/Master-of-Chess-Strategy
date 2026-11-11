@@ -43,8 +43,11 @@ internal class RoomGoRankedMatchCreator(
             if (!match.config.automatic && match.config.handicapStones == 0) admitGoRankedStart(match, clock())
             else {
                 val admitted = admitGoAiCheckpoint(match)
-                require(admitted.phase == GoPhase.PLAYING && admitted.eventCount == 0 &&
-                    !match.hasSpecifiedOpening && !match.completionReserved && match.undoUsed == 0 && match.hintUsed == 0 &&
+                val opening = match.copyOpeningBytes()
+                val atStart = if (opening == null) admitted.eventCount == 0 else
+                    match.config.automatic && admitted.eventCount > 0 && opening.contentEquals(match.copyBytes())
+                require(admitted.phase == GoPhase.PLAYING && atStart &&
+                    !match.completionReserved && match.undoUsed == 0 && match.hintUsed == 0 &&
                     !match.autoContinueEnabled && match.autoContinueGameNumber == 1 && match.autoContinueMaxGames == 1 &&
                     GoAiMatchFileCodec.encode(admitted.match()).contentEquals(GoAiMatchFileCodec.encode(match))) {
                     "围棋训练新局必须使用全新初态"

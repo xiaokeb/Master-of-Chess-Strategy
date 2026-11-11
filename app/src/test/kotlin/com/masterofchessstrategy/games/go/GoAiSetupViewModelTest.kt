@@ -31,7 +31,8 @@ class GoAiSetupViewModelTest {
         var read: suspend () -> GoAiEntrySnapshot = { snapshot }
         var write: suspend (GoAiMatchConfig) -> GoAiSavedMatch = { match("new", it) }
         override suspend fun load(): GoAiEntrySnapshot { reads++; return read() }
-        override suspend fun create(config: GoAiMatchConfig, expectedActive: GoAiSavedMatch?, abandonOngoing: Boolean): GoAiSavedMatch {
+        override suspend fun create(config: GoAiMatchConfig, expectedActive: GoAiSavedMatch?, abandonOngoing: Boolean,
+                                    opening: GoAiOpening?): GoAiSavedMatch {
             creates++; expected = expectedActive; abandoned = abandonOngoing
             return write(config)
         }

@@ -37,10 +37,18 @@ internal class RoomGoAiEntryRepository(
         config: GoAiMatchConfig,
         expectedActive: GoAiSavedMatch?,
         abandonOngoing: Boolean,
+        opening: GoAiOpening?,
     ): GoAiSavedMatch = gate.access(ownerEpoch) {
         val match = withContext(worker) {
-            NativeGoEngine(config.boardSize, if (config.handicapStones == 0) 15 else 0, config.handicapStones).use {
-                GoAiSavedMatch(UUID.randomUUID().toString(), config, it.serialize())
+            val id = UUID.randomUUID().toString()
+            if (opening == null) {
+                NativeGoEngine(config.boardSize, if (config.handicapStones == 0) 15 else 0, config.handicapStones).use {
+                    GoAiSavedMatch(id, config, it.serialize())
+                }
+            } else {
+                require(config == opening.config(humanPlayer = null, difficulty = config.difficulty))
+                val bytes = opening.copyBytes()
+                GoAiSavedMatch(id, config, bytes, openingBytes = bytes)
             }
         }
         database.withTransaction {
@@ -48,4 +56,5 @@ internal class RoomGoAiEntryRepository(
             match
         }
     }
+
 }

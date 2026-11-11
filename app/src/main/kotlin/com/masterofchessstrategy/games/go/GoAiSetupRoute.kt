@@ -40,6 +40,6 @@ internal fun GoAiSetupRoute(
     LaunchedEffect(state.readyMatch?.matchId) {
         if (!leaving) model.takeReadyMatch()?.let { onOpen(it.matchId) }
     }
-    GoAiSetupScreen(state, model::requestCreate, model::continueMatch, model::confirmAbandon,
+    GoAiSetupScreen(state, { model.requestCreate(it) }, model::continueMatch, model::confirmAbandon,
         model::dismissAbandon, model::reload, { if (!leaving) onLearning() }, leave)
 }

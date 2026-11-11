@@ -75,6 +75,7 @@ internal object AppDestination {
     const val GO_AI_MATCH = "go/ai/match/{$GO_AI_MATCH_ARGUMENT}"
     const val GO_TUTORIAL = "go/tutorial"
     const val GO_ENDGAMES = "go/endgames"
+    const val GO_OPENING_STUDY = "go/opening-study"
     const val GO_LESSON_ARGUMENT = "goLessonId"
     const val GO_PRACTICE_ARGUMENT = "goPracticeId"
     const val GO_LESSON_PRACTICE = "go/tutorial/{$GO_LESSON_ARGUMENT}/practice/{$GO_PRACTICE_ARGUMENT}"

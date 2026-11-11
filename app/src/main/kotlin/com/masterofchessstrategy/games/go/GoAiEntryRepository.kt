@@ -25,5 +25,6 @@ internal interface GoAiEntryRepository {
         config: GoAiMatchConfig,
         expectedActive: GoAiSavedMatch?,
         abandonOngoing: Boolean = false,
+        opening: GoAiOpening? = null,
     ): GoAiSavedMatch
 }

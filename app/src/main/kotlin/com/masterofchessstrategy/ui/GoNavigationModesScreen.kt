@@ -37,6 +37,7 @@ internal fun GoNavigationModesScreen(
     onRetryProgress: () -> Unit = {},
     onEndgames: (() -> Unit)? = null,
     onAiGame: (() -> Unit)? = null,
+    onOpeningStudy: (() -> Unit)? = null,
 ) {
     Surface(Modifier.fillMaxSize()) {
         Column(
@@ -58,6 +59,11 @@ internal fun GoNavigationModesScreen(
             if (onEndgames != null) {
                 Button(onClick = onEndgames, modifier = Modifier.fillMaxWidth().testTag(GO_ENDGAMES_ENTRY_TAG)) {
                     Text("围棋残局练习")
+                }
+            }
+            if (onOpeningStudy != null) {
+                Button(onClick = onOpeningStudy, modifier = Modifier.fillMaxWidth().testTag("go_navigation_opening_study")) {
+                    Text("围棋开局学习")
                 }
             }
             if (onAiGame != null) {

@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-go-opening-study.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 20,
+  "build": {
+    "candidate": "goopening1",
+    "baseline": "16bb059c115338e6a2cb98bc26fa1a66bc15def8",
+    "release_manifest": "processed",
+    "tests": [
+      {
+        "tests": 11,
+        "name": "com.masterofchessstrategy.games.go.GoAiOpeningTest"
+      },
+      {
+        "tests": 17,
+        "name": "com.masterofchessstrategy.games.go.GoAiSetupViewModelTest"
+      },
+      {
+        "tests": 8,
+        "name": "com.masterofchessstrategy.games.go.GoOpeningStudyLibraryTest"
+      }
+    ],
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiEntryRepository.kt",
+        "sha256": "1636b2612ca3660f66962de343887dc597b5cb910fbd928d225c3690b18d07a9"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiSetupRoute.kt",
+        "sha256": "8866c048ce524e1e372e03ea49e9e61fedd839a39ef572e0a62b4c383ce19422"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiSetupViewModel.kt",
+        "sha256": "00a2f2198d88cd16bccb066a5b9ac0d6fa0b7d4ff1ed8bdebcc0b577aad149b2"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyLibrary.kt",
+        "sha256": "93f8c2962e94018bc7b9897e4ed48587a1cfcf865cd4065dfe4b216ff93972c2"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyRoute.kt",
+        "sha256": "e8e0e7938690d0aa1f20c5020c1cb2871423cee8be00c7c0d3acd01659d30d33"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/data/RoomGoAiEntryRepository.kt",
+        "sha256": "29222c1ed4257f4a073885ec50c6fe7b28f6ecd4cdb851b103f11dcc2e517556"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/data/RoomGoRankedMatchCreator.kt",
+        "sha256": "3dde6e52e85551097d4572ceaa1190d9f6c839a267dbcf970fb1789d3310dfa5"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/GoAiNavigationRoutes.kt",
+        "sha256": "b7d614dc08c369dfc9742d5a91ceac617c99085f21cdc7f59494462aab590602"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/GoNavigationModesScreen.kt",
+        "sha256": "536ec66b76eb29723844c55a15cfdbc167dbcacafe87dd9cc78c4d69e0edc596"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/GoOpeningStudyNavigationRoute.kt",
+        "sha256": "1da55fd578a09cdabbcd3035a5a54ed2bf50d6a4e57413c8a456436193b0468b"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoAiSetupViewModelTest.kt",
+        "sha256": "8db17e39e8e51900eb9100a1a0ff3ffcb05ce649d7eec34d77e2c67b9d16cba7"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyLibraryTest.kt",
+        "sha256": "f2c18ffeb1facef2e33e71c9f54a6c9329f323232ba0fab5c87287e976c72e36"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyNativeInstrumentedTest.kt",
+        "sha256": "32fba4831c1935c03ce96b08eff293eb2204a355732f3b4802f6fe7b99914314"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyScreenInstrumentedTest.kt",
+        "sha256": "13f375fa99c6c71acc3e3656151061c8f9fc353f74291ee5cfcd6f968b40dc36"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoOpeningStudyNavigationTest.kt",
+        "sha256": "839c29574fac498726b42c2ae385928fa2df08013b14288e397d408f28c0d96f"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/navigation/AppNavigationModel.kt",
+        "sha256": "fd46def722155274aa75ee008e66e6f414b75cc4c965e4925f7d53d29f7344e8"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/MasterOfChessStrategyApp.kt",
+        "sha256": "472865dd6146cac488bd5d0145fc6d745ff2e103fb0a409c5de74d8c78648f7b"
+      }
+    ],
+    "lint_warnings": 25,
+    "lint_errors": 0,
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "ced603112b2c156c3cf0a12522763c822d73f9a8e99660788f8a5e7accfb5aca",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "38cd2f53a4168f206a62d05990e34fb34ae9ab1286fb7c32f21544fa1d0e1737"
+    }
+  },
+  "device": {
+    "original_font": "1.0",
+    "runs": [
+      {
+        "images": [
+          {
+            "path": "font-1.0\\142b4898-f6be-4758-b089-aea80a51dd03\\catalog.png",
+            "sha256": "ba8a55263a863444e192bb266600f52f6887fca9c275635a09cc8256fed8ab13"
+          },
+          {
+            "path": "font-1.0\\142b4898-f6be-4758-b089-aea80a51dd03\\locked-endpoint.png",
+            "sha256": "1cddb63637f0f92da99e4add4c841f5bb3e4862db191ac7ba0dd47d354000a63"
+          },
+          {
+            "path": "font-1.0\\e2e38a60-95e4-477c-ad26-02144bb484e9\\katago-training.png",
+            "sha256": "32ba0f1f27429409e97ff8ddbc364c09561fdf7104e7daea4deb8a712a899fd0"
+          }
+        ],
+        "font": "1.0",
+        "log_sha256": "8fe418a0f830bce4c5758aa79a6f856ad24f0349e7eb73118e41efe65ef0784a",
+        "tests": 4
+      },
+      {
+        "images": [
+          {
+            "path": "font-1.5\\483d8f32-ebfd-44bc-adeb-876b9aac1ccb\\katago-training.png",
+            "sha256": "515fc14cc73caecb370cd58c50d34bdf07e1ea3e87457f821662a25539ec9093"
+          },
+          {
+            "path": "font-1.5\\b17619f6-829a-4ad9-b4e4-83418e6a24d5\\catalog.png",
+            "sha256": "7f3ff9c48578e51703fa70740d13ea77f4c87d0e76fbb7082df9cb6d61c86d0a"
+          },
+          {
+            "path": "font-1.5\\b17619f6-829a-4ad9-b4e4-83418e6a24d5\\locked-endpoint.png",
+            "sha256": "803a5a8d92e93d5fd8c78e968ce624d5aa63bd8fd50fe5e3914c50293b64e460"
+          }
+        ],
+        "font": "1.5",
+        "log_sha256": "7ecee78ece01d91d9381ff2728a427c1aa0c30c565326c990007c52456099c70",
+        "tests": 2
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "ced603112b2c156c3cf0a12522763c822d73f9a8e99660788f8a5e7accfb5aca",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "38cd2f53a4168f206a62d05990e34fb34ae9ab1286fb7c32f21544fa1d0e1737"
+    },
+    "candidate": "goopening1",
+    "restored_font": "1.0"
+  },
+  "device_folder": "device-118054fefcdd481b88936ad688dff759",
+  "model": "Pixel_7_Pro",
+  "screenshots_reviewed": 6
+}

@@ -26,6 +26,7 @@ import kotlinx.coroutines.withContext
 internal fun GoProductionModesNavigationRoute(storage: GoLocalStorage, writers: LocalDataWriterRegistry,
     onBack: () -> Unit, onLocalGame: () -> Unit, onLearning: () -> Unit,
     onAiGame: () -> Unit, onEndgames: (() -> Unit)? = null,
+    onOpeningStudy: (() -> Unit)? = null,
 ) {
     val epoch by storage.gate.epoch.collectAsState()
     val repository = remember(storage, epoch) { storage.difficultyEligibilityRepository() }
@@ -39,7 +40,7 @@ internal fun GoProductionModesNavigationRoute(storage: GoLocalStorage, writers: 
     SideEffect { writers.register(model) }
     val state by model.state.collectAsState()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.resume() }
-    GoNavigationModesScreen(onBack, onLocalGame, onLearning, state, model::reload, onEndgames, onAiGame)
+    GoNavigationModesScreen(onBack, onLocalGame, onLearning, state, model::reload, onEndgames, onAiGame, onOpeningStudy)
 }
 
 @Composable

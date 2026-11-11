@@ -477,6 +477,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                     onLocalGame = { navController.navigate(AppDestination.GO_LOCAL_GAME) },
                     onLearning = { navController.navigate(AppDestination.GO_TUTORIAL) },
                     onEndgames = { navController.navigate(AppDestination.GO_ENDGAMES) },
+                    onOpeningStudy = { navController.navigate(AppDestination.GO_OPENING_STUDY) },
                     onAiGame = { navController.navigate(AppDestination.GO_AI_SETUP) },
                 )
             }
@@ -533,6 +534,11 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
             }
             composable(AppDestination.GO_ENDGAMES) {
                 GoEndgameNavigationRoute(goStorage, gameWriters, navController::popBackStack)
+            }
+            composable(AppDestination.GO_OPENING_STUDY) {
+                GoOpeningStudyNavigationRoute(goStorage, gameWriters,
+                    onOpen = { navController.navigate(AppDestination.goAiMatch(it)) },
+                    onBack = navController::popBackStack)
             }
             composable(AppDestination.GO_LESSON_PRACTICE, arguments = listOf(
                 navArgument(AppDestination.GO_LESSON_ARGUMENT) { type = NavType.StringType },

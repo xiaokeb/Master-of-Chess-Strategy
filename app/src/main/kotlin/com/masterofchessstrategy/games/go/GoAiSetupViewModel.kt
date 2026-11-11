@@ -15,6 +15,7 @@ internal data class GoAiSetupState(
     val busy: Boolean = false,
     val snapshot: GoAiEntrySnapshot? = null,
     val pendingConfig: GoAiMatchConfig? = null,
+    val pendingOpening: GoAiOpening? = null,
     val readyMatch: GoAiSavedMatch? = null,
     val error: String? = null,
 )
@@ -73,9 +74,9 @@ internal class GoAiSetupViewModel(
         mutableState.value = current.copy(readyMatch = saved, error = null)
     }
 
-    fun requestCreate(config: GoAiMatchConfig) {
+    fun requestCreate(config: GoAiMatchConfig, opening: GoAiOpening? = null) {
         val current = mutableState.value
-        if (disposed.get() || current.loading || current.busy || current.readyMatch != null) return
+        if (disposed.get() || current.loading || current.busy || current.readyMatch != null || current.pendingConfig != null) return
         if (!repository.isCurrent) { invalidate(); return }
         val snapshot = current.snapshot ?: return
         val difficulty = when (config.difficulty) {
@@ -89,19 +90,20 @@ internal class GoAiSetupViewModel(
         } else if (snapshot.phase == GoPhase.FINISHED && !snapshot.completionStored) {
             mutableState.value = current.copy(error = "请先查看并保存上一局结果，再创建新局")
         } else if (snapshot.active != null && snapshot.phase != GoPhase.FINISHED) {
-            mutableState.value = current.copy(pendingConfig = config, error = null)
-        } else create(config, abandonOngoing = false)
+            mutableState.value = current.copy(pendingConfig = config, pendingOpening = opening, error = null)
+        } else create(config, opening, abandonOngoing = false)
     }
 
     fun dismissAbandon() {
         if (!disposed.get() && !mutableState.value.busy) {
-            mutableState.value = mutableState.value.copy(pendingConfig = null)
+            mutableState.value = mutableState.value.copy(pendingConfig = null, pendingOpening = null)
         }
     }
 
     fun confirmAbandon() {
-        val config = mutableState.value.pendingConfig ?: return
-        if (!disposed.get() && !mutableState.value.busy) create(config, abandonOngoing = true)
+        val current = mutableState.value
+        val config = current.pendingConfig ?: return
+        if (!disposed.get() && !current.busy) create(config, current.pendingOpening, abandonOngoing = true)
     }
 
     /** One Main-thread handoff. A retired owner or replaced epoch cannot dispatch stale navigation. */
@@ -113,16 +115,16 @@ internal class GoAiSetupViewModel(
         return match
     }
 
-    private fun create(config: GoAiMatchConfig, abandonOngoing: Boolean) {
+    private fun create(config: GoAiMatchConfig, opening: GoAiOpening?, abandonOngoing: Boolean) {
         val previous = mutableState.value.snapshot?.active
-        mutableState.value = mutableState.value.copy(busy = true, pendingConfig = null,
+        mutableState.value = mutableState.value.copy(busy = true, pendingConfig = null, pendingOpening = null,
             readyMatch = null, error = null)
         owned {
             try {
                 // Once admitted, a transaction drains before retirement completes. Work still
                 // queued on the worker is rejected when retirement has already sealed this VM.
                 val saved = withContext(worker + NonCancellable) {
-                    if (disposed.get()) null else repository.create(config, previous, abandonOngoing)
+                    if (disposed.get()) null else repository.create(config, previous, abandonOngoing, opening)
                 }
                 if (!disposed.get() && saved != null) {
                     checkCurrent()
@@ -164,7 +166,7 @@ internal class GoAiSetupViewModel(
     override fun beginRetirement(): Deferred<Unit> {
         if (!disposed.compareAndSet(false, true)) return retirementCompletion
         generation++
-        mutableState.value = mutableState.value.copy(readyMatch = null, pendingConfig = null)
+        mutableState.value = mutableState.value.copy(readyMatch = null, pendingConfig = null, pendingOpening = null)
         val draining = tasks.toList()
         draining.forEach { it.cancel() }
         val cleanup = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
