@@ -12,3 +12,5 @@
 - 同一候选的 Android C++ 测试在模拟器执行 7 组断言，包含四盘完整对局及其终局恢复。
 
 本节点覆盖原生单盘和 Kotlin 接口。十六盘调度、正式 Room 存储、后台许可、归档、备份、视觉验收及实体设备均为后续节点。四席策略强度仍需独立评测。本次只发布源码，候选和测试产物散列见[发布清单](../../releases/manifests/v0.1.0-competition-mahjong-auto-native.1.json)。
+
+提交 `85ac7b53f864d01cb0c75a80841b21b03ac830a1` 已推送到 `main`。[v0.1.0-competition-mahjong-auto-native.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-auto-native.1)
