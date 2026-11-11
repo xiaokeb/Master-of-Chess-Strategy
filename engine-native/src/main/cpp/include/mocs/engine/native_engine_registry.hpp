@@ -8,6 +8,7 @@
 #include "mocs/engine/tiger_goat_game.hpp"
 
 #include <cstdint>
+#include <array>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
@@ -15,6 +16,7 @@
 namespace mocs::engine {
 
 using EngineHandle = std::int64_t;
+class CompetitionMahjongAutoSession;
 namespace go_ai { class KataGoRuntime; class GoSearchRequestHandle; }
 
 /** Fixed at creation; public views cannot switch the concealed-hand viewer. */
@@ -61,6 +63,12 @@ public:
     [[nodiscard]] std::shared_ptr<CompetitionMahjongNativeSession> find_competition_mahjong(
         EngineHandle handle) const;
     [[nodiscard]] bool release_competition_mahjong(EngineHandle handle);
+    [[nodiscard]] EngineHandle create_competition_mahjong_auto(
+        std::uint64_t seed, std::uint8_t dealer, std::uint8_t round_wind,
+        std::uint8_t viewer, std::array<std::uint8_t, 4> levels, std::uint64_t decision_seed);
+    [[nodiscard]] std::shared_ptr<CompetitionMahjongAutoSession> find_competition_mahjong_auto(
+        EngineHandle handle) const;
+    [[nodiscard]] bool release_competition_mahjong_auto(EngineHandle handle);
     [[nodiscard]] EngineHandle register_go_search_runtime(std::shared_ptr<go_ai::KataGoRuntime> runtime);
     [[nodiscard]] EngineHandle register_go_search_request(std::shared_ptr<go_ai::GoSearchRequestHandle> request);
     [[nodiscard]] std::shared_ptr<go_ai::KataGoRuntime> find_go_search_runtime(EngineHandle handle) const;
@@ -82,6 +90,8 @@ private:
     std::unordered_map<EngineHandle, std::shared_ptr<TigerGoatHandle>> tiger_goat_engines_;
     std::unordered_map<EngineHandle, std::shared_ptr<CompetitionMahjongNativeSession>>
         competition_mahjong_engines_;
+    std::unordered_map<EngineHandle, std::shared_ptr<CompetitionMahjongAutoSession>>
+        competition_mahjong_auto_engines_;
     std::unordered_map<EngineHandle, std::shared_ptr<go_ai::KataGoRuntime>> go_search_runtimes_;
     std::unordered_map<EngineHandle, std::shared_ptr<go_ai::GoSearchRequestHandle>> go_search_requests_;
 };

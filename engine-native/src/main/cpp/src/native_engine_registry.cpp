@@ -1,4 +1,5 @@
 #include "mocs/engine/native_engine_registry.hpp"
+#include "../games/competition-mahjong/competition_mahjong_auto_session.hpp"
 #include "mocs/engine/go_search_handle.hpp"
 
 #include <limits>
@@ -196,6 +197,34 @@ bool NativeEngineRegistry::release_competition_mahjong(const EngineHandle handle
     return competition_mahjong_engines_.erase(handle) == 1;
 }
 
+EngineHandle NativeEngineRegistry::create_competition_mahjong_auto(
+    const std::uint64_t seed, const std::uint8_t dealer, const std::uint8_t wind,
+    const std::uint8_t viewer, const std::array<std::uint8_t, 4> levels,
+    const std::uint64_t decision_seed) {
+    auto session = std::make_shared<CompetitionMahjongAutoSession>(
+        seed, dealer, wind, viewer, levels, decision_seed);
+    std::lock_guard lock(mutex_);
+    if (next_handle_ == std::numeric_limits<EngineHandle>::max())
+        throw std::overflow_error("Native engine handle space is exhausted");
+    const auto handle = next_handle_++;
+    competition_mahjong_auto_engines_.emplace(handle, std::move(session));
+    return handle;
+}
+
+std::shared_ptr<CompetitionMahjongAutoSession> NativeEngineRegistry::find_competition_mahjong_auto(
+    const EngineHandle handle) const {
+    if (handle <= 0) return {};
+    std::lock_guard lock(mutex_);
+    const auto found = competition_mahjong_auto_engines_.find(handle);
+    return found == competition_mahjong_auto_engines_.end() ? nullptr : found->second;
+}
+
+bool NativeEngineRegistry::release_competition_mahjong_auto(const EngineHandle handle) {
+    if (handle <= 0) return false;
+    std::lock_guard lock(mutex_);
+    return competition_mahjong_auto_engines_.erase(handle) == 1;
+}
+
 EngineHandle NativeEngineRegistry::register_go_search_runtime(std::shared_ptr<go_ai::KataGoRuntime> runtime) {
     if (!runtime) throw std::invalid_argument("Missing Go runtime");
     std::lock_guard lock(mutex_);
@@ -261,7 +290,8 @@ bool NativeEngineRegistry::release(const EngineHandle handle) {
     return chinese_chess_engines_.erase(handle) + go_engines_.erase(handle)
         + fangqi_engines_.erase(handle) + tiger_goat_engines_.erase(handle)
         + lanzhou_mahjong_engines_.erase(handle)
-        + competition_mahjong_engines_.erase(handle) == 1;
+        + competition_mahjong_engines_.erase(handle)
+        + competition_mahjong_auto_engines_.erase(handle) == 1;
 }
 
 }  // namespace mocs::engine

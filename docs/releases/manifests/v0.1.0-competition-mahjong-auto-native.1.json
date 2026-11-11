@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-competition-mahjong-auto-native.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 17,
+  "build": {
+    "lint_errors": 0,
+    "lint_warnings": 24,
+    "tests": [
+      {
+        "tests": 6,
+        "name": "com.masterofchessstrategy.engine.CompetitionMahjongAutoConfigTest"
+      },
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.engine.CompetitionMahjongAutoAdvanceDecoderTest"
+      }
+    ],
+    "baseline": "508d80a650c772028cb3cc94f0f8073818f15dcd",
+    "overlays": [
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_auto_session.hpp",
+        "sha256": "05e453710c96befc099eea72575c0b49b278dd3616e1ac85ccc876258474b4d1"
+      },
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_auto_session.cpp",
+        "sha256": "d0ec0c258b72f7ca6ff4fa29a6b51941545f7b1a443b386cfbbbaab110de4b59"
+      },
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_auto_session_test.cpp",
+        "sha256": "3068f1c8fa00a9cd689e41465d6434dd916eb0ac1abe73a0e8987249f5769f04"
+      },
+      {
+        "path": "engine-native/src/main/cpp/src/jni_competition_mahjong_auto_bridge.cpp",
+        "sha256": "ae049f2c7b0833fb664005cd652e908966d54912a760faa64afac2379e6f4d67"
+      },
+      {
+        "path": "engine-api/src/main/kotlin/com/masterofchessstrategy/engine/games/competition_mahjong/CompetitionMahjongAutoSession.kt",
+        "sha256": "90fdf91a0ba3ee85d9cbb325b92bffbf347a8c5c37703b0b2fade17ee9358604"
+      },
+      {
+        "path": "engine-api/src/test/kotlin/com/masterofchessstrategy/engine/games/competition_mahjong/CompetitionMahjongAutoConfigTest.kt",
+        "sha256": "c59d7dc93954c8ede7e955feabf8390bb27cc8e5e9dc8b4f7fb75b1489943a1c"
+      },
+      {
+        "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/games/competition_mahjong/NativeCompetitionMahjongAutoSession.kt",
+        "sha256": "ad4e00250ffafd27bab58715abbb300f248cc9426a2f2e5745865627743b461e"
+      },
+      {
+        "path": "engine-native/src/main/kotlin/com/masterofchessstrategy/engine/internal/CompetitionMahjongAutoBindings.kt",
+        "sha256": "98ad4f7841354d9bb2f0209a2d1bdd4a31f3086b856c6302dd21a24b14498f1e"
+      },
+      {
+        "path": "engine-native/src/test/kotlin/com/masterofchessstrategy/engine/games/competition_mahjong/CompetitionMahjongAutoAdvanceDecoderTest.kt",
+        "sha256": "0ee1e8d10e31c0e20aef06a2359fc101fe44ae011fb1d9a93efc283e16e41b16"
+      },
+      {
+        "path": "engine-native/src/androidTest/kotlin/com/masterofchessstrategy/engine/games/competition_mahjong/NativeCompetitionMahjongAutoInstrumentedTest.kt",
+        "sha256": "373c5fb94443c5cc659cc78dd8ca714858bd966aaa7f8194116d84ae1723f734"
+      },
+      {
+        "path": "engine-native/src/main/cpp/CMakeLists.txt",
+        "sha256": "f4e8c96b627786de983bd0afd387724caf49996d980f72db48a551da443dabd6"
+      },
+      {
+        "path": "engine-native/src/main/cpp/include/mocs/engine/native_engine_registry.hpp",
+        "sha256": "94071897c9342453f5349be23ae7912e8b9eda8ccd133db269ebe298b007f9af"
+      },
+      {
+        "path": "engine-native/src/main/cpp/src/native_engine_registry.cpp",
+        "sha256": "c097e53483d7bce5045fcc5a7c22fddefa6215f8207652a9aa25f0ba8b5aae5c"
+      },
+      {
+        "path": "engine-native/src/main/cpp/tests/CMakeLists.txt",
+        "sha256": "02698a052a1b65ae77e363e6c1e4d989fb30cf9a5d65793986498407991167d0"
+      }
+    ],
+    "candidate": "cmautocore1",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "97c33893e34a87863640f8b8ac0af06ef5ff1d4ff2646f26d9608c6011cfea6c",
+      "engine-native/build/outputs/apk/androidTest/debug/engine-native-debug-androidTest.apk": "cfc916b15385736aa66663965d565aa2e60ac15cc17bf6f6314212de524d8908"
+    }
+  },
+  "device": {
+    "folder": "device-9ce23f9b75a9496bae303bbbc3beee58",
+    "jni": {
+      "log_sha256": "a630f606ccd5bf6945378947fa1f835bd70b840f4fc130ab51d0cb752bfe39fc",
+      "device": "Pixel_7_Pro",
+      "tests": 8,
+      "apk_sha256": "cfc916b15385736aa66663965d565aa2e60ac15cc17bf6f6314212de524d8908",
+      "candidate": "cmautocore1"
+    },
+    "cpp": {
+      "device": "Pixel_7_Pro",
+      "candidate": "cmautocore1",
+      "complete_games": 4,
+      "groups": 7,
+      "elf_sha256": "3d4957799cf5a52b1fae0c8874181eda016ae4ca84d83d0c6032bdc9fbfd0b0d",
+      "log_sha256": "5c9cedc68c79c54744a5b20190ce1d8c7e0a17b76966ac6eb2948c58cf5f5b66"
+    }
+  }
+}

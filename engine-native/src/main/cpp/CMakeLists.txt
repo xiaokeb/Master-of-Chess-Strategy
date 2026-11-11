@@ -87,6 +87,7 @@ add_library(
     games/competition-mahjong/competition_mahjong_round.cpp
     games/competition-mahjong/competition_mahjong_bot.cpp
     games/competition-mahjong/competition_mahjong_public_view.cpp
+    games/competition-mahjong/competition_mahjong_auto_session.cpp
     src/competition_mahjong_native_session.cpp
     games/competition-mahjong/fan/vendor/fan_calculator.cpp
     games/competition-mahjong/fan/vendor/shanten.cpp
@@ -137,6 +138,7 @@ add_library(
     src/jni_tiger_goat_bridge.cpp
     src/jni_tiger_goat_search_bridge.cpp
     src/jni_competition_mahjong_bridge.cpp
+    src/jni_competition_mahjong_auto_bridge.cpp
     src/jni_go_records_bridge.cpp
     src/jni_go_search_bridge.cpp
 )

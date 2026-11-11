@@ -228,3 +228,9 @@ target_compile_options(mocs_fangqi_history_limit_test PRIVATE
     -Wall -Wextra -Wpedantic -Werror -UNDEBUG)
 target_link_options(mocs_fangqi_history_limit_test PRIVATE -static-libstdc++)
 add_test(NAME mocs_fangqi_history_limit COMMAND mocs_fangqi_history_limit_test)
+
+add_executable(mocs_competition_mahjong_auto_session_test
+    ../games/competition-mahjong/competition_mahjong_auto_session_test.cpp)
+target_link_libraries(mocs_competition_mahjong_auto_session_test PRIVATE mocs_engine_core)
+target_compile_options(mocs_competition_mahjong_auto_session_test PRIVATE -Wall -Wextra -Wpedantic -UNDEBUG)
+add_test(NAME mocs_competition_mahjong_auto_session COMMAND mocs_competition_mahjong_auto_session_test)
