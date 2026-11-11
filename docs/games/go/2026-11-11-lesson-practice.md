@@ -5,3 +5,5 @@
 33 项定向 JVM 测试、Debug 双 ABI、仪器 APK 和 Lint 通过，Lint 有 24 条警告。Pixel 7 Pro 上普通字号通过 3 项，150% 字号通过 2 项。检查了 12 张截图，字号恢复为原设置。首轮两项失败源于仪器测试按完整字符串比对提示语，改为子串匹配后通过，应用 APK 散列一致。
 
 本节点包括现有六道单步练习与三课入口。多步练习、统一奖励及实体设备继续验收。[发布清单](../../releases/manifests/v0.1.0-go-lesson-practice.1.json)
+
+发布提交为 `3c2473f1ec4a3a0edfb9bf9493a08315a292ccb7`。[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-lesson-practice.1)
