@@ -8,3 +8,5 @@
 候选 `gorescue1` 通过 53 项 JVM、NDK 30 双 ABI、Debug APK、仪器 APK 和 Release Manifest，Lint 为 0 错误、25 警告。Pixel 7 Pro 模拟器普通字号执行 4 项，150% 字号执行 1 项，核看 6 张截图。两档字号均从正式入口验证直接长一手后进度仍为 `7/9`，反提通关解锁第九关，采用第二个连接点完成 `9/9`。重进保留进度，人机结果表仍为空。大字号可滚动查看题意、反馈和下一关。[发布清单](../../releases/manifests/v0.1.0-go-rescue-and-connection.1.json)
 
 本次发布源码。统一奖励、大规模题库、四档棋力和实体设备另行验收。
+
+提交 `98e7fd62fb952653408ac56b1d8510b1b461af14` 已推送到 `main`。[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-rescue-and-connection.1)
