@@ -14,3 +14,5 @@
 - 核看 3 张横屏截图，覆盖已导入列表、普通与大字号的导入入口以及取消导出后的回放。
 
 本次发布源码。后台执行、杀进程恢复和实体设备仍需独立验收。[发布清单](../../releases/manifests/v0.1.0-competition-mahjong-mcae.1.json)
+
+提交 `b319fdc747ec4f085531f2357931087610100313` 已推送到 `main`。[v0.1.0-competition-mahjong-mcae.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-mcae.1)
