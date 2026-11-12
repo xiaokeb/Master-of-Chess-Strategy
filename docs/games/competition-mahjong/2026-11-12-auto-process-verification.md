@@ -9,3 +9,5 @@
 候选 `cmautoproc1` 通过 78 项 JVM、NDK 30 双 ABI、Debug APK、仪器 APK 与 Release Manifest 检查。Lint 0 错误、25 警告。设备上通过 1 项夹具测试和两次专用进程终止及恢复，核看盘间、末盘开始、终局与恢复画面共 5 张。视觉复核确认状态文本与牌桌相符，恢复后侧栏回到顶部，下方控件可滚动到达。[发布清单](../../releases/manifests/v0.1.0-competition-mahjong-auto-process.1.json)
 
 本次发布源码。模拟器证据覆盖专用 QA 进程里的生产页面与 Room，生产入口的进程恢复、熄屏后台执行及实体设备另行验收。
+
+提交 `3754424ddb0e49fdcfb6c145abf39aa8410ddda8` 已推送到 `main`。[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-auto-process.1)
