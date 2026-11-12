@@ -23,6 +23,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.core.app.ActivityOptionsCompat
 import androidx.test.platform.app.InstrumentationRegistry
+import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoOpeningLibrary
 import com.masterofchessstrategy.games.competition_mahjong.auto.production.CompetitionMahjongAutoProductionRoute
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoExportCodec
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayInstrumentedTest.Companion.nativeArchive
@@ -82,14 +83,7 @@ class CompetitionMahjongAutoNavigationTest {
     @Test fun learnedViewerStepsReturnsAndResumesExactlyTheSameStoredEvent() {
         val db = database
         val viewer = 2
-        runBlocking {
-            val lessons = RoomCompetitionMahjongLearningProofStore(db, db.competitionMahjongLearningProofDao())
-            CompetitionMahjongLearningProofCatalog.chapterIds.forEachIndexed { index, chapter ->
-                lessons.confirm(CompetitionMahjongLearningProofRequest(
-                    UUID.randomUUID().toString(), chapter, CompetitionMahjongLearningProofCatalog.cardIds(chapter), index.toLong(),
-                ))
-            }
-        }
+        completeTutorial()
         openModes(viewer)
         openAutomatic()
         val reader = RoomCompetitionMahjongAutoStore(db, viewer)
@@ -110,6 +104,52 @@ class CompetitionMahjongAutoNavigationTest {
         assertArrayEquals(saved.engineRecord, resumed.engineRecord)
         assertNull(runBlocking { RoomCompetitionMahjongAutoStore(db, 0).load(0) })
         capture("resumed")
+    }
+
+    @Test fun selectedOpeningBecomesTheImmutableBaselineAndSurvivesReentry() {
+        val db = database
+        val viewer = 2
+        completeTutorial()
+        val store = RoomCompetitionMahjongAutoStore(db, viewer)
+        val opening = CompetitionMahjongAutoOpeningLibrary.load(viewer).single { it.id == "early-exchanges" }
+        openModes(viewer)
+        openAutomatic()
+        val initial = checkNotNull(runBlocking { store.load(viewer) })
+        assertNull(initial.openingRecord)
+
+        val newRun = "competition_mahjong_auto_new"
+        val openingTag = "competition_mahjong_auto_opening_${opening.id}"
+        compose.onNodeWithTag(newRun).performScrollTo().performClick()
+        compose.onNodeWithTag("competition_mahjong_auto_opening_first-discard").performScrollTo().assertIsEnabled()
+        compose.onNodeWithTag(openingTag).performScrollTo().assertIsEnabled().performClick()
+        capture("opening-selected")
+        compose.onNodeWithTag("competition_mahjong_auto_new_cancel").performClick()
+        assertEquals(initial.config.runId, runBlocking { store.load(viewer)?.config?.runId })
+
+        compose.onNodeWithTag(newRun).performScrollTo().performClick()
+        compose.onNodeWithTag(openingTag).performScrollTo().performClick()
+        compose.onNodeWithTag("competition_mahjong_auto_new_confirm").assertIsEnabled().performClick()
+        compose.waitUntil(15_000) { runBlocking { store.load(viewer)?.openingRecord != null } }
+        val selected = checkNotNull(runBlocking { store.load(viewer) })
+        assertNotEquals(initial.config.runId, selected.config.runId)
+        assertArrayEquals(opening.engineRecord, selected.openingRecord)
+        assertArrayEquals(selected.baseline, selected.engineRecord)
+        assertEquals(0, selected.eventsAfterOpening)
+        assertTrue(selected.settings.paused)
+        capture("opening-baseline")
+
+        compose.onNodeWithTag("competition_mahjong_auto_step").performScrollTo().performClick()
+        compose.waitUntil(15_000) { runBlocking { store.load(viewer)?.eventsAfterOpening == 1 } }
+        val saved = checkNotNull(runBlocking { store.load(viewer) })
+        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        awaitTag("competition_auto_entry")
+        openAutomatic()
+        val restored = checkNotNull(runBlocking { store.load(viewer) })
+        assertEquals(saved.config.runId, restored.config.runId)
+        assertArrayEquals(saved.engineRecord, restored.engineRecord)
+        assertArrayEquals(opening.engineRecord, restored.openingRecord)
+        assertTrue(runBlocking { db.matchOutcomeDao().listAll().isEmpty() })
+        capture("opening-resumed")
     }
 
     @Test fun productionArchiveReplaysAndSystemFilePickerCancellationPreservesPrivateArchive() {
@@ -263,6 +303,16 @@ class CompetitionMahjongAutoNavigationTest {
 
     private fun awaitMessage(message: String) = compose.waitUntil(15_000) {
         compose.onAllNodesWithText(message).fetchSemanticsNodes().isNotEmpty()
+    }
+
+    private fun completeTutorial() = runBlocking {
+        val db = database
+        val lessons = RoomCompetitionMahjongLearningProofStore(db, db.competitionMahjongLearningProofDao())
+        CompetitionMahjongLearningProofCatalog.chapterIds.forEachIndexed { index, chapter ->
+            lessons.confirm(CompetitionMahjongLearningProofRequest(
+                UUID.randomUUID().toString(), chapter, CompetitionMahjongLearningProofCatalog.cardIds(chapter), index.toLong(),
+            ))
+        }
     }
 
     private fun openModes(viewer: Int = 0) {

@@ -33,6 +33,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.masterofchessstrategy.data.MocsDatabase
+import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoOpening
+import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoOpeningLibrary
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoPlayViewModel
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoRoute
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoRunConfig
@@ -53,6 +55,7 @@ import kotlinx.coroutines.withContext
 
 private class AutoHostOwner(val host: CompetitionMahjongAutoHost) : ViewModel() {
     var policy by mutableStateOf<CompetitionMahjongPlayPolicy?>(null)
+    var openings = emptyList<CompetitionMahjongAutoOpening>()
     private var document: CompletableDeferred<Uri?>? = null
 
     fun chooseDocument(uri: Uri?) { document?.complete(uri) }
@@ -126,7 +129,11 @@ internal fun CompetitionMahjongAutoProductionRoute(
         try {
             awaitLocalDataWriters(writers.snapshot().filterIsInstance<CompetitionMahjongAutoPlayViewModel>()
                 .filter { it.navigationOwnerKey != host.key }) {}
-            holder.policy = host.loadPolicy()
+            val policy = host.loadPolicy()
+            if (!archiveOnly && policy.allowedBotLevels.isNotEmpty()) {
+                holder.openings = withContext(Dispatchers.Default) { CompetitionMahjongAutoOpeningLibrary.load(viewer) }
+            }
+            holder.policy = policy
         } catch (error: Exception) {
             if (error is CancellationException) throw error
             failure = error.message ?: "无法读取自动演局资格，请重试。"
@@ -154,7 +161,7 @@ internal fun CompetitionMahjongAutoProductionRoute(
                 CompetitionMahjongAutoRunConfig(UUID.randomUUID().toString(),
                     System.nanoTime() and Long.MAX_VALUE, viewer, List(4) { firstLevel })
             }
-            CompetitionMahjongAutoRoute(host.store, onBack, policy, initialConfig = config, ownerKey = host.key,
+            CompetitionMahjongAutoRoute(host.store, onBack, policy, initialConfig = config, openings = holder.openings, ownerKey = host.key,
                 onWriterReady = writers::register)
         }
         else -> {
