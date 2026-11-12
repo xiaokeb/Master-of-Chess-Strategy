@@ -84,12 +84,12 @@ class CompetitionMahjongAutoReplayInstrumentedTest {
         @Volatile private var cachedArchive: CompetitionMahjongAutoArchive? = null
 
         internal fun nativeArchive(): CompetitionMahjongAutoArchive = synchronized(this) {
-            cachedArchive ?: buildNativeArchive().also { cachedArchive = it }
+            cachedArchive ?: buildNativeArchive(CompetitionMahjongAutoRunConfig(
+                "84000000-0000-4000-8000-000000000001", 73, VIEWER, listOf(0, 1, 2, 3), 109,
+            )).also { cachedArchive = it }
         }
 
-        private fun buildNativeArchive(): CompetitionMahjongAutoArchive {
-            val config = CompetitionMahjongAutoRunConfig(
-                "84000000-0000-4000-8000-000000000001", 73, VIEWER, listOf(0, 1, 2, 3), 109)
+        internal fun buildNativeArchive(config: CompetitionMahjongAutoRunConfig): CompetitionMahjongAutoArchive {
             val series = config.seriesConfig(0, false)
             val records = (0 until 16).map { hand ->
                 val handConfig = config.handConfig(0, hand, false)

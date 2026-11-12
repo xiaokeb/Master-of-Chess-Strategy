@@ -52,6 +52,14 @@
             android:screenOrientation="landscape"
             tools:ignore="DiscouragedApi" />
         <activity
+            android:name=".games.competition_mahjong.CompetitionMahjongAutoProcessCheckActivity"
+            android:exported="true"
+            android:permission="android.permission.DUMP"
+            android:process=":competition_mahjong_auto_qa"
+            android:taskAffinity="com.masterofchessstrategy.competition.mahjong.auto.qa"
+            android:screenOrientation="landscape"
+            tools:ignore="DiscouragedApi" />
+        <activity
             android:name=".games.competition_mahjong.CompetitionMahjongFormalProcessCheckActivity"
             android:exported="true"
             android:permission="android.permission.DUMP"

@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-competition-mahjong-auto-process.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 7,
+  "build": {
+    "lint_errors": 0,
+    "overlays": [
+      {
+        "working_sha256": "df569b6a99ce65c501d407740cade3c04c5e0c5d2dbe458bf64919187d755c06",
+        "sha256": "df569b6a99ce65c501d407740cade3c04c5e0c5d2dbe458bf64919187d755c06",
+        "path": "app/src/debug/kotlin/com/masterofchessstrategy/games/competition_mahjong/CompetitionMahjongAutoProcessCheckActivity.kt"
+      },
+      {
+        "working_sha256": "d196ec4baf4c693eb889a8e752d48ebdec8a3a447b2af43669085b56b413d730",
+        "sha256": "d196ec4baf4c693eb889a8e752d48ebdec8a3a447b2af43669085b56b413d730",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoProcessInstrumentedTest.kt"
+      },
+      {
+        "working_sha256": "ef208f63f4337aa82c02dd50050813a7eac71866362131665e62cda0b229374b",
+        "sha256": "ef208f63f4337aa82c02dd50050813a7eac71866362131665e62cda0b229374b",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/replay/CompetitionMahjongAutoReplayInstrumentedTest.kt"
+      },
+      {
+        "working_sha256": "b4c2284e75fe360eae99c67d84ebffc62409f1c3debe251459749fe6eee0b3fc",
+        "sha256": "846f1ac9331dbe63c90103820f57c7a5890d23a680c0190020151a2a1462ea94",
+        "scoped": true,
+        "path": "app/src/debug/AndroidManifest.xml"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "60a43b9aa5b9bf812255ef1967931ca141b6cff368ec7e1f0f9d8c2f682a150a",
+      "app/build/outputs/apk/debug/app-debug.apk": "a0c03c57d3516fcd42ce968792583cd90c3db5013151448cd93f5cb98b3bf97d"
+    },
+    "tests": [
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayControllerTest",
+        "tests": 11
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayViewModelTest",
+        "tests": 12
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoArchiveLibraryTest",
+        "tests": 5
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoCheckpointTest",
+        "tests": 9
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoControllerTest",
+        "tests": 22
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoPlaybackTest",
+        "tests": 12
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoPlayViewModelTest",
+        "tests": 7
+      }
+    ],
+    "candidate": "cmautoproc1",
+    "lint_warnings": 25,
+    "release_manifest": "processed",
+    "baseline": "7a6a3de1fdd25a32c02510849d1fff4d9b497fc9"
+  },
+  "device_folder": "device-2ede297ddf3241f9a01bee0ebd73b399",
+  "device": {
+    "candidate": "cmautoproc1",
+    "model": "Pixel_7_Pro",
+    "kills": 2,
+    "original_font": "1.0",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "60a43b9aa5b9bf812255ef1967931ca141b6cff368ec7e1f0f9d8c2f682a150a",
+      "app/build/outputs/apk/debug/app-debug.apk": "a0c03c57d3516fcd42ce968792583cd90c3db5013151448cd93f5cb98b3bf97d"
+    },
+    "evidence": [
+      {
+        "sha256": "234681da05cb191a820afc24afd449c5ba7973c0b0721603337f33553b2d39d8",
+        "path": "after-first-restart.json"
+      },
+      {
+        "sha256": "b5f2ae9e9727b444d678b0e4b4b3de484c88ca1873df8c9f3af6848d054ced38",
+        "path": "after-hand-15-end.json"
+      },
+      {
+        "sha256": "e2de88a126606fc478142e55ceced2ea3287421b52bc4dbbb0307980fb60055a",
+        "path": "after-second-restart.json"
+      },
+      {
+        "sha256": "5d8f71c55a0fd7ff9011a168b78fdf365134774631854a97c654d5ef0d55456d",
+        "path": "before-hand-15-end.json"
+      },
+      {
+        "sha256": "d7d373100542f42b68f3faa4944ee5efd22ed1d462e5f8203c54566e0f81a183",
+        "path": "between-before-kill.png"
+      },
+      {
+        "sha256": "dfc2f9b29484eb73cb014d032b927ba69ffa25220262afe62caafebc84419e7c",
+        "path": "between-restored.png"
+      },
+      {
+        "sha256": "6b5d5fe2a79105425cfcb4120f4ddd11a213a21994b85429ddd2a56d1d6b652e",
+        "path": "final-before-kill.png"
+      },
+      {
+        "sha256": "e4273de91ee7881a3533a08858981f188628ccc11bee12c7ac3ae4fcdffaf80a",
+        "path": "final-restored.png"
+      },
+      {
+        "sha256": "754f09b3aad532b9e61cf49537a7fd75c45fa642a67ba7b4a55980ce19bd980d",
+        "path": "final.json"
+      },
+      {
+        "sha256": "fbe15744ad9c6b83dfe9fff31ea42ba1f3468ac3b09a1ce7fcb1f65eb2bec2d9",
+        "path": "last-hand-start.json"
+      },
+      {
+        "sha256": "2549c546562f182ba3bace17ab685b4589fb4f4b79f94c7d4619c4ae53668010",
+        "path": "last-hand-start.png"
+      },
+      {
+        "sha256": "234681da05cb191a820afc24afd449c5ba7973c0b0721603337f33553b2d39d8",
+        "path": "resume-after-adb-reconnect.json"
+      },
+      {
+        "sha256": "4441956dbc944298ca6fd7f3468b886768405d5e32ae8ebba393af7f1eb4a1ad",
+        "path": "seed.log"
+      }
+    ],
+    "token": "9a6a928d-abe3-4f9a-ba5f-eac7d4cd3634"
+  },
+  "screenshots_reviewed": 5,
+  "visual_sheet_sha256": "904f84a68d8e045ea0f63efb61fd726f5a91f4d081507d5730637c672ba7dd4e"
+}
