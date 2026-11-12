@@ -144,6 +144,45 @@ class GoLessonPracticeNavigationTest {
         capture("tactical-reopened")
     }
 
+    @Test fun counterCaptureUnlocksDoubleConnectionAndAlternateAnswerPersists() {
+        val puzzles = GoEndgameLibrary.puzzles
+        val escape = checkNotNull(GoEndgameLibrary.puzzle("corner-counter-capture"))
+        val connection = checkNotNull(GoEndgameLibrary.puzzle("connect-between-white-groups"))
+        val preceding = puzzles.takeWhile { it.id != escape.id }.map { it.id }
+        val repository = RoomGoEndgameProgressRepository(database)
+        runBlocking {
+            preceding.forEach { repository.complete(it) }
+            repository.select(escape.id)
+        }
+        compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag(GO_ENDGAMES_ENTRY_TAG).performScrollTo().performClick()
+        awaitTitle(escape.title)
+        compose.onNodeWithTag("go_intersection_1_1").performClick()
+        compose.waitUntil(15_000) {
+            compose.onAllNodes(hasTestTag("go_endgame_feedback") and hasText("没有完成本题目标", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        assertEquals(preceding.toSet(), runBlocking { repository.load().completedIds })
+        capture("escape-direct-extension-rejected")
+        compose.onNodeWithTag("go_intersection_0_1").performClick()
+        awaitTag("go_endgame_completed")
+        compose.onNodeWithTag("go_endgame_completed").performScrollTo().assertIsDisplayed()
+        capture("escape-counter-capture")
+
+        compose.onNodeWithText("下一关").performScrollTo().performClick()
+        awaitTitle(connection.title)
+        compose.onNodeWithTag("go_intersection_9_9").performClick()
+        awaitTag("go_endgame_completed")
+        compose.onNodeWithTag("go_endgame_completed").performScrollTo().assertIsDisplayed()
+        capture("connection-alternate-answer")
+
+        compose.onNodeWithTag("go_endgame_back").performScrollTo().performClick()
+        compose.onNodeWithTag(GO_ENDGAMES_ENTRY_TAG).performScrollTo().performClick()
+        awaitTitle(connection.title)
+        assertEquals(puzzles.map { it.id }.toSet(), runBlocking { repository.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+    }
+
     private fun openLessons() {
         compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
         compose.onNodeWithTag(GO_LEARNING_ENTRY_TAG).performScrollTo().performClick()

@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-go-rescue-and-connection.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 7,
+  "build": {
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "96b4fc3227553ce4156b83b3e591f392dd17722ddab606c5e490f52d5330c63f",
+      "app/build/outputs/apk/debug/app-debug.apk": "5484221c00f0326c5588c262d5986e350bc752aa60e251c9b893231c7e137e76"
+    },
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "tests": [
+      {
+        "name": "com.masterofchessstrategy.games.go.data.RoomGoProgressRepositoriesTest",
+        "tests": 14
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameChallengesTest",
+        "tests": 7
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameLibraryTest",
+        "tests": 12
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameProgressTest",
+        "tests": 9
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameViewModelTest",
+        "tests": 11
+      }
+    ],
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibrary.kt",
+        "sha256": "0c383ccd7c0a468cdf58945d4ef97dc91f115e5908e2a6815d51a84b8d99b337",
+        "working_sha256": "0c383ccd7c0a468cdf58945d4ef97dc91f115e5908e2a6815d51a84b8d99b337"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibraryTest.kt",
+        "sha256": "aabc9e78562d235ac119c25371291ad04a4a47c594f7b04654622a9789b6cd47",
+        "working_sha256": "aabc9e78562d235ac119c25371291ad04a4a47c594f7b04654622a9789b6cd47"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoEndgameNativeInstrumentedTest.kt",
+        "sha256": "334b3381d3d163555d76f9845b7123514341dfa360d907180e074983748e2164",
+        "working_sha256": "334b3381d3d163555d76f9845b7123514341dfa360d907180e074983748e2164"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoLessonPracticeNavigationTest.kt",
+        "sha256": "40e37ad2a42db0838572310a21d23189f9e530830e3669b135001ba04ea05bf4",
+        "working_sha256": "40e37ad2a42db0838572310a21d23189f9e530830e3669b135001ba04ea05bf4"
+      }
+    ],
+    "candidate": "gorescue1",
+    "release_manifest": "processed",
+    "baseline": "b445eaffb7f5cae6f108e422e88d887a37431da5"
+  },
+  "device_folder": "device-3f6d0828457944acb575c91378d95831",
+  "device": {
+    "restored_font": "1.0",
+    "runs": [
+      {
+        "tests": 4,
+        "images": [
+          {
+            "sha256": "f3228af89f937ef3fbe3dbd995b2b74cbf8873933701cca8f709a47fe86b8a78",
+            "path": "font-1.0\\8aca0a5d-094a-4167-8178-eba0b5866882\\connection-alternate-answer.png"
+          },
+          {
+            "sha256": "27594cf5fe8b79bc3b0065aa291502b8941ee4b3a5d6343b45bc5c51d73c7824",
+            "path": "font-1.0\\8aca0a5d-094a-4167-8178-eba0b5866882\\escape-counter-capture.png"
+          },
+          {
+            "sha256": "c0e54b0f66ef3c27e1ed1cf7977c244724e7e0a50b988a7d546cb1b8bdee0d6b",
+            "path": "font-1.0\\8aca0a5d-094a-4167-8178-eba0b5866882\\escape-direct-extension-rejected.png"
+          }
+        ],
+        "log_sha256": "591fd6ba6881ce927455e13af276ae5538c02ef773c1adc4122d864bdd07c958",
+        "font": "1.0"
+      },
+      {
+        "tests": 1,
+        "images": [
+          {
+            "sha256": "e5c3c4e43409ac9932bc26c9d651244755d3b4335c1077682bd263daca42c320",
+            "path": "font-1.5\\46d58841-1ca5-4552-9d0f-d91a3ca6195c\\connection-alternate-answer.png"
+          },
+          {
+            "sha256": "b95e62c650418619c351fa479408c50fc432e07fe18b7542d470ea0594b07ac9",
+            "path": "font-1.5\\46d58841-1ca5-4552-9d0f-d91a3ca6195c\\escape-counter-capture.png"
+          },
+          {
+            "sha256": "5fa5133142282f2e8b7f4db0516d6b7ec0c13d25d7698f001eba3d19979aa4f7",
+            "path": "font-1.5\\46d58841-1ca5-4552-9d0f-d91a3ca6195c\\escape-direct-extension-rejected.png"
+          }
+        ],
+        "log_sha256": "27234a4348d9967f16d1a441689849aeb5632e45ae2d30ca6635a3db2e3f90d7",
+        "font": "1.5"
+      }
+    ],
+    "candidate": "gorescue1",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "96b4fc3227553ce4156b83b3e591f392dd17722ddab606c5e490f52d5330c63f",
+      "app/build/outputs/apk/debug/app-debug.apk": "5484221c00f0326c5588c262d5986e350bc752aa60e251c9b893231c7e137e76"
+    },
+    "original_font": "1.0"
+  },
+  "screenshots_reviewed": 6,
+  "visual_sheet_sha256": "2546bb56ddeb99bb970e088c358e047ac4e41401d6fc56ba256b09d6ca5806fd"
+}

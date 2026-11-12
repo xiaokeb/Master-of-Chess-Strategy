@@ -92,6 +92,16 @@ object GoEndgameLibrary {
                 "黑先：两手内提走两个角上的目标白子。", "目标白子已全部提走。", puzzle.boardSize,
                 puzzle.setup, puzzle.firstMove, captured = puzzle.targets, maxBlackMoves = puzzle.maxBlackMoves)
         },
+        GoEndgamePuzzle("corner-counter-capture", "反提救角", GoEndgameTheme.ESCAPE, GoEndgameLevel.HARD,
+            "黑先：左上边上的黑子只剩一口气。找到一手棋，让它至少有两口气。",
+            "角上的白子被提走，受打吃的黑子获得第二口气。", 13,
+            listOf(p(1, 0), p(0, 0), p(10, 10), p(2, 0), p(10, 9), p(2, 1), p(9, 10), p(1, 2)),
+            p(0, 1), targetStones = setOf(p(1, 0))),
+        GoEndgamePuzzle("connect-between-white-groups", "夹缝双路", GoEndgameTheme.CONNECTION, GoEndgameLevel.HARD,
+            "黑先：在白棋围住的中央，把左右两组黑子连成一组。",
+            "左右黑棋已经连成一组。另一处空点也能完成连接。", 19,
+            listOf(p(8, 8), p(7, 8), p(8, 9), p(7, 9), p(10, 8), p(11, 8), p(10, 9), p(11, 9),
+                p(8, 10), p(9, 10), p(10, 7), p(9, 7)), p(9, 8), targetStones = setOf(p(8, 8), p(10, 8))),
     )
 
     init { require(puzzles.map { it.id }.toSet().size == puzzles.size) }
@@ -197,9 +207,9 @@ internal fun goEndgameGoalReached(puzzle: GoEndgamePuzzle, engine: GoRuleEngine,
 ): Boolean = when (puzzle.theme) {
     GoEndgameTheme.CAPTURE -> puzzle.captured.all { engine.stoneAt(it) == GoStone.EMPTY }
     GoEndgameTheme.ESCAPE -> {
-        val group = goEndgameGroup(engine, puzzle.targetStones.single())
-        engine.stoneAt(puzzle.targetStones.single()) == GoStone.BLACK && move in group &&
-            goEndgameLiberties(engine, group).size >= 2
+        val target = puzzle.targetStones.single()
+        // A capture outside the group can also give the endangered stones a new liberty.
+        engine.stoneAt(target) == GoStone.BLACK && goEndgameLiberties(engine, goEndgameGroup(engine, target)).size >= 2
     }
     GoEndgameTheme.CONNECTION -> {
         val group = goEndgameGroup(engine, move)

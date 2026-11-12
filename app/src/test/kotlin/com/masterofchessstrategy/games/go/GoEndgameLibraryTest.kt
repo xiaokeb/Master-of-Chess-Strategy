@@ -7,11 +7,13 @@ import org.junit.Test
 class GoEndgameLibraryTest {
     @Test fun catalogHasStableUniqueMetadataAndLinearDifficultyOrder() {
         val puzzles = GoEndgameLibrary.puzzles
-        assertEquals(7, puzzles.size); assertEquals(puzzles.size, puzzles.map { it.id }.toSet().size)
-        assertTrue(puzzles.all { it.boardSize == 9 && it.setup.size % 2 == 0 })
+        assertEquals(9, puzzles.size); assertEquals(puzzles.size, puzzles.map { it.id }.toSet().size)
+        assertTrue(puzzles.all { it.setup.size % 2 == 0 })
+        assertEquals(setOf(9, 13, 19), puzzles.map { it.boardSize }.toSet())
         assertEquals(listOf(GoEndgameLevel.SIMPLE, GoEndgameLevel.MEDIUM, GoEndgameLevel.HARD),
             puzzles.map { it.level }.distinct())
-        assertEquals("two-corners-two-moves", puzzles.last().id)
+        assertEquals(listOf("corner-capture", "side-capture", "escape-atari", "bridge-groups", "capture-pair",
+            "connect-under-pressure", "two-corners-two-moves"), puzzles.take(7).map { it.id })
         assertEquals(setOf(GoEndgameTheme.CAPTURE, GoEndgameTheme.ESCAPE, GoEndgameTheme.CONNECTION),
             puzzles.map { it.theme }.toSet())
     }
@@ -29,7 +31,7 @@ class GoEndgameLibraryTest {
     }
 
     @Test fun tacticalCatalogPuzzleKeepsPlayingUntilBothCapturesAreComplete() {
-        val puzzle = GoEndgameLibrary.puzzles.last()
+        val puzzle = checkNotNull(GoEndgameLibrary.puzzle("two-corners-two-moves"))
         val session = GoEndgameSession(GoEndgameLibrary.open(puzzle, factory), factory)
         val initial = session.state()
         val first = session.answer(puzzle.answer)

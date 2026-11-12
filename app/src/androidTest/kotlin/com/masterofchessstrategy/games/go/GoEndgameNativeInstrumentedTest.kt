@@ -2,7 +2,10 @@ package com.masterofchessstrategy.games.go
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.masterofchessstrategy.engine.BoardPosition
+import com.masterofchessstrategy.engine.GoAction
 import com.masterofchessstrategy.engine.GoStone
+import com.masterofchessstrategy.engine.NativeGoEngine
+import com.masterofchessstrategy.engine.RestoreResult
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,6 +27,26 @@ class GoEndgameNativeInstrumentedTest {
             puzzle.captured.forEach { assertEquals(GoStone.EMPTY.code,
                 solved.stones[it.y * puzzle.boardSize + it.x]) }
             assertEquals(initial.stones, session.reset().stones)
+        }
+    }
+
+    @Test fun counterCaptureAndDoubleConnectionAcceptExactlyTheVerifiedPlacements() {
+        val expected = mapOf(
+            "corner-counter-capture" to setOf(BoardPosition(0, 1)),
+            "connect-between-white-groups" to setOf(BoardPosition(9, 8), BoardPosition(9, 9)),
+        )
+        for ((id, solutions) in expected) {
+            val puzzle = checkNotNull(GoEndgameLibrary.puzzle(id))
+            val plan = GoEndgameLibrary.open(puzzle)
+            val moves = NativeGoEngine(puzzle.boardSize).use { engine ->
+                assertEquals(RestoreResult.Restored, engine.restore(plan.copyInitialBytes()))
+                engine.legalActions().filterIsInstance<GoAction.Place>()
+            }
+            val exercise = GoEndgameSession(plan)
+            val accepted = moves.mapNotNull { action ->
+                action.point.takeIf { exercise.answer(it).completed }?.also { exercise.reset() }
+            }
+            assertEquals(id, solutions, accepted.toSet())
         }
     }
 }
