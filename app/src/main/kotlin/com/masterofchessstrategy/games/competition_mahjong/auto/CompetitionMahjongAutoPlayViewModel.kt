@@ -13,6 +13,7 @@ import com.masterofchessstrategy.games.competition_mahjong.competitionMahjongTab
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchSeating
 import com.masterofchessstrategy.games.competition_mahjong.match.policy.CompetitionMahjongDifficultyOption
 import com.masterofchessstrategy.games.competition_mahjong.match.policy.CompetitionMahjongPlayPolicy
+import com.masterofchessstrategy.settings.LocalDataWriterRetirement
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -68,7 +69,8 @@ class CompetitionMahjongAutoPlayViewModel(
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
     parentScope: CoroutineScope? = null,
     waitMillis: suspend (Long) -> Unit = { delay(it) },
-) : ViewModel() {
+    internal val navigationOwnerKey: String? = null,
+) : ViewModel(), LocalDataWriterRetirement {
     private val scope = parentScope ?: viewModelScope
     private val configuration = MutableStateFlow<CompetitionMahjongAutoDisplayConfig?>(null)
     private val options = playPolicy?.options.orEmpty()
@@ -89,6 +91,8 @@ class CompetitionMahjongAutoPlayViewModel(
     private val controller = CompetitionMahjongAutoController(initialConfig, trackingStore, playPolicy, initialSettings,
         openingRecord, sessionFactory, dispatcher)
     private val playback = CompetitionMahjongAutoPlayback(controller, scope, waitMillis)
+    override val retirementCompletion get() = playback.retirementCompletion
+    override fun beginRetirement() = playback.beginRetirement()
     val state = combine(playback.state, configuration) { current, metadata ->
         CompetitionMahjongAutoPlayUiState(current, autoTable(current),
             metadata?.takeIf { it.runId == current.activity.runId && it.seriesIndex == current.activity.seriesIndex &&
@@ -109,8 +113,13 @@ class CompetitionMahjongAutoPlayViewModel(
     fun retryLoad() = scope.launch { playback.open() }
     fun close() = scope.launch { playback.close() }
     fun leave(onReady: () -> Unit) = scope.launch {
-        if (playback.setHost(false, false) && !playback.state.value.activity.needsSave) onReady()
+        if (playback.setHost(false, false) && !playback.state.value.activity.needsSave) {
+            beginRetirement().await()
+            onReady()
+        }
     }
+
+    override fun onCleared() { beginRetirement() }
 
     /** UI calls only after confirmation. Opening strategies remain those of its compatible record. */
     fun newRun(levels: List<Int>, settings: CompetitionMahjongAutoSettings, openingId: String? = null) =

@@ -18,11 +18,12 @@ import java.util.UUID
 internal class RoomCompetitionMahjongAutoStore(
     private val database: MocsDatabase,
     private val viewer: Int,
+    owner: CompetitionMahjongStorageEpochGate.Owner? = null,
     private val now: () -> Long = System::currentTimeMillis,
 ) : CompetitionMahjongAutoStore, CompetitionMahjongAutoArchiveLibrary {
     private val dao = database.competitionMahjongAutoDao()
     private val gate = CompetitionMahjongStorageEpochGate.forDatabase(database)
-    private val owner = gate.captureOwner()
+    private val owner = owner ?: gate.captureOwner()
     private var loaded = false
     private var observed: ByteArray? = null
 

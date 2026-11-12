@@ -34,20 +34,24 @@ fun CompetitionMahjongAutoRoute(
     openingRecord: ByteArray? = null,
     openings: List<CompetitionMahjongAutoOpening> = emptyList(),
     backgroundAuthorized: Boolean = false,
+    ownerKey: String? = null,
+    onWriterReady: (CompetitionMahjongAutoPlayViewModel) -> Unit = {},
 ) {
     val config = remember(initialConfig, playPolicy) { initialConfig ?: CompetitionMahjongAutoRunConfig(
         UUID.randomUUID().toString(), System.nanoTime() and Long.MAX_VALUE,
         playerBotLevels = List(4) { playPolicy?.allowedBotLevels?.firstOrNull() ?: 0 }) }
     val game: CompetitionMahjongAutoPlayViewModel = viewModel(
-        key = "competition-mahjong-auto-${config.viewerPlayerId}",
-        factory = remember(store, config, playPolicy) {
+        key = "competition-mahjong-auto-${ownerKey ?: config.viewerPlayerId}",
+        factory = remember(store, config, playPolicy, ownerKey) {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    CompetitionMahjongAutoPlayViewModel(store, config, playPolicy, initialSettings, openingRecord, openings) as T
+                    CompetitionMahjongAutoPlayViewModel(store, config, playPolicy, initialSettings, openingRecord, openings,
+                        navigationOwnerKey = ownerKey).also(onWriterReady) as T
             }
         },
     )
+    SideEffect { onWriterReady(game) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(game, lifecycle, backgroundAuthorized) {
         val observer = LifecycleEventObserver { _, event ->

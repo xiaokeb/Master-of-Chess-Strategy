@@ -83,6 +83,8 @@ internal object AppDestination {
     const val COMPETITION_MAHJONG_TUTORIAL = "competition-mahjong/tutorial"
     const val COMPETITION_MAHJONG_VIEWER = "competitionViewer"
     const val COMPETITION_MAHJONG_FORMAL = "competition-mahjong/formal/{$COMPETITION_MAHJONG_VIEWER}"
+    const val COMPETITION_MAHJONG_ARCHIVE = "competitionAutoArchive"
+    const val COMPETITION_MAHJONG_AUTO = "competition-mahjong/auto/{$COMPETITION_MAHJONG_VIEWER}/{$COMPETITION_MAHJONG_ARCHIVE}"
     const val LANZHOU_FANGQI_GAME = "lanzhou-fangqi/game"
     const val LANZHOU_FANGQI_LEARNING = "lanzhou-fangqi/learning"
     const val LANZHOU_FANGQI_AI_ENTRY = "lanzhou-fangqi/ai-entry"
@@ -104,6 +106,9 @@ internal object AppDestination {
 
     fun chineseChessAiGame(difficulty: Difficulty): String =
         "chinese-chess/ai-game/" + difficulty.code
+
+    fun competitionMahjongAuto(viewer: Int, archive: Boolean): String =
+        "competition-mahjong/auto/$viewer/$archive"
 
     fun lanzhouFangqiSavedGame(sessionId: String, formal: Boolean): String {
         val bytes = sessionId.toByteArray(Charsets.UTF_8)

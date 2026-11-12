@@ -28,6 +28,7 @@ fun CompetitionMahjongAutoReplayRoute(
     onBack: () -> Unit,
     onExport: suspend (CompetitionMahjongAutoExport) -> Boolean,
     modifier: Modifier = Modifier,
+    onWriterReady: (CompetitionMahjongAutoReplayViewModel) -> Unit = {},
 ) {
     val game: CompetitionMahjongAutoReplayViewModel = viewModel(
         key = "competition-mahjong-auto-replay-" + viewerPlayerId,
@@ -35,10 +36,11 @@ fun CompetitionMahjongAutoReplayRoute(
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    CompetitionMahjongAutoReplayViewModel(library, viewerPlayerId) as T
+                    CompetitionMahjongAutoReplayViewModel(library, viewerPlayerId).also(onWriterReady) as T
             }
         },
     )
+    SideEffect { onWriterReady(game) }
     val state by game.state.collectAsState()
     val back = {
         if (state.selectedKey != null) game.closeReplay() else game.leave(onBack)
@@ -76,7 +78,9 @@ internal fun CompetitionMahjongAutoReplayContent(
             modifier = Modifier.testTag("competition_mahjong_auto_export_dialog"),
             title = { Text("导出完整私有棋谱？") },
             text = {
-                Text("文件包含十六盘完整事件、各席暗牌和牌墙，可用于精确回放。只保存到可信位置，不要当作公开观战文件分享。")
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    Text("文件含各席暗牌和牌墙，以及十六盘完整事件。仅保存到可信位置，请勿公开分享。")
+                }
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -188,14 +192,6 @@ private fun ArchiveCard(
                 SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ROOT).format(Date(entry.savedAtEpochMillis))
             }
             Text("保存时间 " + date + " · 用时 " + (entry.elapsedMillis / 1000) + "秒")
-            Text("四席AI：" + entry.playerBotLevels.mapIndexed { index, level ->
-                val option = playPolicy?.options?.firstOrNull { it.botLevel == level }
-                "玩家" + (index + 1) + " " +
-                    (option?.let { CompetitionMahjongPlayPolicy.difficultyLabel(it.difficulty) } ?: "策略未绑定")
-            }.joinToString("、"))
-            entry.standings.sortedWith(compareBy({ it.rank }, { it.playerId })).forEach { standing ->
-                Text("第" + standing.rank + "名 玩家" + (standing.playerId + 1) + "：" + standing.score)
-            }
             Row(Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Button(onClick = { onSelect(entry.key) }, enabled = !busy,
@@ -208,6 +204,14 @@ private fun ArchiveCard(
                     modifier = Modifier.testTag("competition_mahjong_auto_archive_export_" + entry.key)) { Text("导出") }
                 TextButton(onClick = { onDelete(entry) }, enabled = !busy,
                     modifier = Modifier.testTag("competition_mahjong_auto_archive_delete_" + entry.key)) { Text("删除") }
+            }
+            Text("四席AI：" + entry.playerBotLevels.mapIndexed { index, level ->
+                val option = playPolicy?.options?.firstOrNull { it.botLevel == level }
+                "玩家" + (index + 1) + " " +
+                    (option?.let { CompetitionMahjongPlayPolicy.difficultyLabel(it.difficulty) } ?: "策略未绑定")
+            }.joinToString("、"))
+            entry.standings.sortedWith(compareBy({ it.rank }, { it.playerId })).forEach { standing ->
+                Text("第" + standing.rank + "名 玩家" + (standing.playerId + 1) + "：" + standing.score)
             }
         }
     }
@@ -244,7 +248,8 @@ private fun ReplayContent(
                                 modifier = Modifier.testTag("competition_mahjong_auto_replay_hand_" + hand))
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         OutlinedButton(onClick = { game.backward() },
                             enabled = state.replay.canBackward && !state.busy,
                             modifier = Modifier.testTag("competition_mahjong_auto_replay_previous")) { Text("上一步") }

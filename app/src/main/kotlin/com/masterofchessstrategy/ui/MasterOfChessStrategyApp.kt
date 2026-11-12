@@ -8,6 +8,7 @@ import com.masterofchessstrategy.games.competition_mahjong.learning.RoomCompetit
 import com.masterofchessstrategy.games.competition_mahjong.learning.GatedCompetitionMahjongLearningProofStore
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongStorageEpochGate
 import com.masterofchessstrategy.games.competition_mahjong.match.play.CompetitionMahjongFormalRoute
+import com.masterofchessstrategy.games.competition_mahjong.auto.production.CompetitionMahjongAutoProductionRoute
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -501,6 +502,8 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                     onBack = navController::popBackStack,
                     onLearning = { navController.navigate(AppDestination.COMPETITION_MAHJONG_TUTORIAL) },
                     onFormal = { viewer -> navController.navigate("competition-mahjong/formal/$viewer") },
+                    onAutomatic = { viewer -> navController.navigate(AppDestination.competitionMahjongAuto(viewer, archive = false)) },
+                    onAutomaticArchive = { viewer -> navController.navigate(AppDestination.competitionMahjongAuto(viewer, archive = true)) },
                 )
             }
             composable(AppDestination.COMPETITION_MAHJONG_FORMAL, arguments = listOf(
@@ -527,6 +530,23 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                     onBack = navController::popBackStack,
                     onCompleted = { navController.popBackStack() },
                 )
+            }
+            composable(AppDestination.COMPETITION_MAHJONG_AUTO, arguments = listOf(
+                navArgument(AppDestination.COMPETITION_MAHJONG_VIEWER) { type = NavType.IntType },
+                navArgument(AppDestination.COMPETITION_MAHJONG_ARCHIVE) { type = NavType.BoolType },
+            )) { entry ->
+                val viewer = entry.arguments?.getInt(AppDestination.COMPETITION_MAHJONG_VIEWER)
+                val archive = entry.arguments?.getBoolean(AppDestination.COMPETITION_MAHJONG_ARCHIVE)
+                if (viewer != null && viewer in 0..3 && archive != null) {
+                    CompetitionMahjongAutoProductionRoute(database, viewer, archive, gameWriters,
+                        onLearning = {
+                            navController.navigate(AppDestination.COMPETITION_MAHJONG_TUTORIAL) {
+                                popUpTo(AppDestination.COMPETITION_MAHJONG_MODES)
+                            }
+                        },
+                        onBack = navController::popBackStack,
+                    )
+                }
             }
             composable(AppDestination.GO_TUTORIAL) {
                 GoLearningNavigationRoute(goStorage, gameWriters, navController::popBackStack,

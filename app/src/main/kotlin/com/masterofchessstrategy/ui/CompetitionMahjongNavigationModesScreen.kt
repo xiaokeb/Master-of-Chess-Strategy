@@ -35,6 +35,8 @@ internal fun CompetitionMahjongNavigationModesScreen(
     onBack: () -> Unit,
     onLearning: () -> Unit,
     onFormal: (Int) -> Unit,
+    onAutomatic: ((Int) -> Unit)? = null,
+    onAutomaticArchive: ((Int) -> Unit)? = null,
 ) {
     var seat by rememberSaveable { mutableIntStateOf(0) }
     Surface(Modifier.fillMaxSize()) {
@@ -49,7 +51,7 @@ internal fun CompetitionMahjongNavigationModesScreen(
                 modifier = Modifier.fillMaxWidth().testTag(COMPETITION_MAHJONG_LEARNING_ENTRY_TAG)) {
                 Text(stringResource(R.string.competition_mahjong_navigation_learning))
             }
-            Text("十六盘赛事 · 初始座位")
+            Text("初始座位")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 "东南西北".forEachIndexed { index, label ->
                     FilterChip(selected = seat == index, onClick = { seat = index }, label = { Text(label.toString()) },
@@ -58,6 +60,14 @@ internal fun CompetitionMahjongNavigationModesScreen(
             }
             Button(onClick = { onFormal(seat) },
                 modifier = Modifier.fillMaxWidth().testTag("competition_formal_entry")) { Text("赛事大厅") }
+            if (onAutomatic != null) {
+                Button(onClick = { onAutomatic(seat) },
+                    modifier = Modifier.fillMaxWidth().testTag("competition_auto_entry")) { Text("AI 自动演局") }
+            }
+            if (onAutomaticArchive != null) {
+                OutlinedButton(onClick = { onAutomaticArchive(seat) },
+                    modifier = Modifier.fillMaxWidth().testTag("competition_auto_archive_entry")) { Text("自动赛事棋谱") }
+            }
             OutlinedButton(onClick = onBack, modifier = Modifier.testTag(COMPETITION_MAHJONG_MODES_BACK_TAG)) {
                 Text(stringResource(R.string.go_navigation_back))
             }

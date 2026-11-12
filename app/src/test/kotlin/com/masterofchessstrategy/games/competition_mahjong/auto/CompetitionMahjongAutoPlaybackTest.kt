@@ -66,6 +66,24 @@ class CompetitionMahjongAutoPlaybackTest {
         } finally { harness.close() }
     }
 
+    @Test fun retirementCancelsTheArmedTimerAndClosesNativeBeforeAcknowledging() = runBlocking {
+        val harness = PlaybackHarness(CompetitionMahjongAutoSettings(paused = false))
+        try {
+            assertTrue(harness.playback.setHost(true))
+            assertTrue(harness.playback.open())
+            val active = harness.native.active
+            val timer = harness.timers.next()
+            val completion = harness.playback.beginRetirement()
+            withTimeout(2000) { completion.await() }
+            assertSame(completion, harness.playback.beginRetirement())
+            assertTrue(timer.signal.isCancelled)
+            assertTrue(active.closed)
+            assertEquals(0, active.advanceCalls)
+            assertFalse(harness.playback.step())
+            assertEquals(0, harness.native.store.load(0)?.eventsAfterOpening)
+        } finally { harness.close() }
+    }
+
     @Test fun pauseInvalidatesTimerAndSpeedChangeReplacesDelayWithoutProgress() = runBlocking {
         val harness = PlaybackHarness(CompetitionMahjongAutoSettings(paused = false))
         try {

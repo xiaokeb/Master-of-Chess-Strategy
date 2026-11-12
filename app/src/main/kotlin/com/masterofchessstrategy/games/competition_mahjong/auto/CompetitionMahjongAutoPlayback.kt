@@ -3,6 +3,7 @@ package com.masterofchessstrategy.games.competition_mahjong.auto
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
@@ -55,6 +56,7 @@ class CompetitionMahjongAutoPlayback(
     private val ownerJob = SupervisorJob(parentScope.coroutineContext[Job])
     private val scope = CoroutineScope(parentScope.coroutineContext + ownerJob)
     private val events = Channel<Event>(Channel.UNLIMITED)
+    private val retired = CompletableDeferred<Unit>()
     private val mutableState = MutableStateFlow(CompetitionMahjongAutoPlaybackState(activity = controller.state.value))
     val state = mutableState.asStateFlow()
     private var foreground = false
@@ -115,20 +117,40 @@ class CompetitionMahjongAutoPlayback(
         } finally {
             cancelTimer()
             collector.cancel()
-            withContext(NonCancellable) {
-                try { controller.setExecutionActive(false) } finally { controller.close() }
-            }
-            busy = false
-            publish()
-            events.close()
-            closing?.reply?.complete(true)
-            activeRequest?.reply?.complete(false)
-            while (true) {
-                val pending = events.tryReceive().getOrNull() ?: break
-                if (pending is Event.Request) pending.reply.complete(false)
+            var closed = false
+            try {
+                withContext(NonCancellable) {
+                    try { controller.setExecutionActive(false) } finally { controller.close() }
+                }
+                closed = true
+            } finally {
+                busy = false
+                publish()
+                events.close()
+                closing?.reply?.complete(closed)
+                activeRequest?.reply?.complete(false)
+                while (true) {
+                    val pending = events.tryReceive().getOrNull() ?: break
+                    if (pending is Event.Request) pending.reply.complete(false)
+                }
             }
         }
-    }.also { job -> job.invokeOnCompletion { ownerJob.cancel() } }
+    }.also { job ->
+        job.invokeOnCompletion { error ->
+            ownerJob.cancel()
+            if (error == null || error is CancellationException) retired.complete(Unit)
+            else retired.completeExceptionally(error)
+        }
+    }
+
+    internal val retirementCompletion: Deferred<Unit> get() = retired
+
+    /** Reject queued commands immediately and wait for the entered save and Native release. */
+    internal fun beginRetirement(): Deferred<Unit> {
+        owner.cancel()
+        events.close()
+        return retired
+    }
 
     suspend fun open(): Boolean = submit(Operation.Open)
     suspend fun setHost(foreground: Boolean, backgroundAuthorized: Boolean = false): Boolean =
