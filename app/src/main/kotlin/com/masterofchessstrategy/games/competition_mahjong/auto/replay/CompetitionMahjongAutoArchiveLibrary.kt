@@ -53,6 +53,8 @@ interface CompetitionMahjongAutoArchiveLibrary {
     suspend fun delete(key: String, viewerPlayerId: Int)
 }
 
+enum class CompetitionMahjongAutoImportResult { IMPORTED, ALREADY_PRESENT }
+
 class CompetitionMahjongAutoExport internal constructor(
     val suggestedFileName: String,
     val mimeType: String,

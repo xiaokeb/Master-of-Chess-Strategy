@@ -12,8 +12,12 @@ import com.masterofchessstrategy.data.RoomLocalDataBackupRepository
 import com.masterofchessstrategy.endgame.ChineseChessEndgamePackParser
 import com.masterofchessstrategy.engine.CompetitionMahjongAutoConfig
 import com.masterofchessstrategy.engine.NativeCompetitionMahjongAutoSession
+import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoArchive
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoCheckpoint
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoCheckpointCodec
+import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoRunConfig
+import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoExportCodec
+import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoImportResult
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayInstrumentedTest.Companion.nativeArchive
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongCoordinatedBackupRepository
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongStorageEpochGate
@@ -123,6 +127,62 @@ class CompetitionMahjongAutoRoomInstrumentedTest {
             assertArrayEquals(exported, repository.export(200))
             assertTrue(db.matchOutcomeDao().listAll().isEmpty())
         }
+    }
+
+    @Test fun singleFileImportChecksNativeHistoryAndNeverReplacesExistingRows() = runBlocking {
+        withDatabase(Room.inMemoryDatabaseBuilder(context, MocsDatabase::class.java).build()) { db ->
+            val archive = nativeArchive()
+            val checkpoint = archive.checkpoint
+            val config = checkpoint.config
+            val viewer = config.viewerPlayerId
+            val document = CompetitionMahjongAutoExportCodec.encode(archive)
+            val store = RoomCompetitionMahjongAutoStore(db, viewer) { 100 }
+            val before = initial()
+            store.load(viewer)
+            store.save(before)
+            assertTrue(runCatching { store.importArchive(document) }.isFailure)
+            assertTrue(store.list(viewer).isEmpty())
+            assertArrayEquals(before.engineRecord, store.load(viewer)?.engineRecord)
+
+            val other = CompetitionMahjongAutoRunConfig(UUID.randomUUID().toString(), config.seed, viewer,
+                config.playerBotLevels, config.decisionSeed)
+            store.save(CompetitionMahjongAutoCheckpoint(other, before.settings, 0, 0, emptyList(),
+                before.baseline, before.engineRecord))
+            val activeRow = checkNotNull(db.competitionMahjongAutoDao().find(viewer, ""))
+            val badCrc = document.copyOf().apply { this[lastIndex] = (last().toInt() xor 1).toByte() }
+            assertTrue(runCatching { store.importArchive(badCrc) }.isFailure)
+            val otherViewer = RoomCompetitionMahjongAutoStore(db, (viewer + 1) % 4)
+            assertTrue(runCatching { otherViewer.importArchive(document) }.isFailure)
+
+            val wrongSeed = CompetitionMahjongAutoRunConfig(config.runId, config.seed + 1, viewer,
+                config.playerBotLevels, config.decisionSeed)
+            val forged = CompetitionMahjongAutoExportCodec.encode(copyArchive(archive, wrongSeed, checkpoint.elapsedMillis))
+            assertNotNull(CompetitionMahjongAutoExportCodec.decode(forged, viewer))
+            assertTrue(runCatching { store.importArchive(forged) }.isFailure)
+            assertTrue(store.list(viewer).isEmpty())
+
+            assertEquals(CompetitionMahjongAutoImportResult.IMPORTED, store.importArchive(document))
+            store.setFavorite(archive.key, viewer, true)
+            val anotherOwner = RoomCompetitionMahjongAutoStore(db, viewer) { 200 }
+            assertEquals(CompetitionMahjongAutoImportResult.ALREADY_PRESENT, anotherOwner.importArchive(document))
+            val conflict = CompetitionMahjongAutoExportCodec.encode(copyArchive(archive, config, checkpoint.elapsedMillis + 1))
+            assertTrue(runCatching { anotherOwner.importArchive(conflict) }.isFailure)
+            assertEquals(100L, store.list(viewer).single().savedAtEpochMillis)
+            assertTrue(store.list(viewer).single().favorite)
+            assertArrayEquals(document, CompetitionMahjongAutoExportCodec.encode(checkNotNull(store.load(archive.key, viewer))))
+            assertArrayEquals(activeRow.payload, db.competitionMahjongAutoDao().find(viewer, "")?.payload)
+            assertTrue(otherViewer.list((viewer + 1) % 4).isEmpty())
+            assertTrue(db.matchOutcomeDao().listAll().isEmpty())
+
+            CompetitionMahjongStorageEpochGate.forDatabase(db).exclusive(replacing = true) {}
+            assertTrue(runCatching { store.importArchive(document) }.isFailure)
+        }
+    }
+
+    private fun copyArchive(archive: CompetitionMahjongAutoArchive, config: CompetitionMahjongAutoRunConfig,
+                            elapsedMillis: Long): CompetitionMahjongAutoArchive = archive.checkpoint.let {
+        CompetitionMahjongAutoArchive(CompetitionMahjongAutoCheckpoint(config, it.settings, it.seriesIndex,
+            it.activeHandIndex, it.completedHands, it.baseline, it.engineRecord, it.openingRecord, elapsedMillis))
     }
 
     private fun open(name: String) = Room.databaseBuilder(context, MocsDatabase::class.java, name).build()

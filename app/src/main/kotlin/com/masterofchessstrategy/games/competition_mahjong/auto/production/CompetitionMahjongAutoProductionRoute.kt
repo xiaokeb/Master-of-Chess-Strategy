@@ -37,11 +37,14 @@ import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjo
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoRoute
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoRunConfig
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoExport
+import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoExportCodec
+import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoImportResult
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayRoute
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongStorageEpochGate
 import com.masterofchessstrategy.games.competition_mahjong.match.policy.CompetitionMahjongPlayPolicy
 import com.masterofchessstrategy.settings.LocalDataWriterRegistry
 import com.masterofchessstrategy.settings.awaitLocalDataWriters
+import java.io.ByteArrayOutputStream
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -50,29 +53,53 @@ import kotlinx.coroutines.withContext
 
 private class AutoHostOwner(val host: CompetitionMahjongAutoHost) : ViewModel() {
     var policy by mutableStateOf<CompetitionMahjongPlayPolicy?>(null)
-    private var destination: CompletableDeferred<Uri?>? = null
+    private var document: CompletableDeferred<Uri?>? = null
 
-    fun chooseDestination(uri: Uri?) { destination?.complete(uri) }
+    fun chooseDocument(uri: Uri?) { document?.complete(uri) }
 
-    suspend fun export(context: Context, output: CompetitionMahjongAutoExport, launch: (String) -> Unit): Boolean {
-        check(destination == null)
+    private suspend fun pick(launch: () -> Unit): Uri? {
+        check(document == null)
         val result = CompletableDeferred<Uri?>()
-        destination = result
+        document = result
         try {
-            launch(output.suggestedFileName)
-            val uri = result.await() ?: return false
-            if (!host.isCurrent()) return false
-            return withContext(Dispatchers.IO) {
-                val stream = context.contentResolver.openOutputStream(uri, "wt") ?: return@withContext false
-                stream.use { it.write(output.bytes) }
-                true
-            }
+            launch()
+            return result.await()
         } finally {
-            destination = null
+            document = null
         }
     }
 
-    override fun onCleared() { destination?.cancel() }
+    suspend fun export(context: Context, output: CompetitionMahjongAutoExport, launch: (String) -> Unit): Boolean {
+        val uri = pick { launch(output.suggestedFileName) } ?: return false
+        if (!host.isCurrent()) return false
+        return withContext(Dispatchers.IO) {
+            val stream = context.contentResolver.openOutputStream(uri, "wt") ?: return@withContext false
+            stream.use { it.write(output.bytes) }
+            true
+        }
+    }
+
+    suspend fun importArchive(context: Context, launch: () -> Unit): CompetitionMahjongAutoImportResult? {
+        val uri = pick(launch) ?: return null
+        val bytes = withContext(Dispatchers.IO) {
+            val stream = checkNotNull(context.contentResolver.openInputStream(uri)) { "无法打开棋谱文件" }
+            stream.use { input ->
+                val output = ByteArrayOutputStream()
+                val buffer = ByteArray(8192)
+                val limit = CompetitionMahjongAutoExportCodec.MAX_BYTES
+                while (true) {
+                    val count = input.read(buffer, 0, minOf(buffer.size, limit + 1 - output.size()))
+                    if (count < 0) break
+                    require(count > 0 && output.size() + count <= limit) { "棋谱文件超出大小限制或无法读取" }
+                    output.write(buffer, 0, count)
+                }
+                output.toByteArray()
+            }
+        }
+        return host.store.importArchive(bytes)
+    }
+
+    override fun onCleared() { document?.cancel() }
 }
 
 /** Each route owns a single observer and shares the full-backup writer barrier. */
@@ -111,10 +138,16 @@ internal fun CompetitionMahjongAutoProductionRoute(
         current && policy != null && archiveOnly -> {
             val context = LocalContext.current.applicationContext
             val launcher = rememberLauncherForActivityResult(
-                ActivityResultContracts.CreateDocument(CompetitionMahjongAutoExport.MIME_TYPE), holder::chooseDestination,
+                ActivityResultContracts.CreateDocument(CompetitionMahjongAutoExport.MIME_TYPE), holder::chooseDocument,
             )
+            val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument(), holder::chooseDocument)
             CompetitionMahjongAutoReplayRoute(host.store, viewer, policy, onBack,
-                onExport = { holder.export(context, it) { name -> launcher.launch(name) } }, onWriterReady = writers::register)
+                onExport = { holder.export(context, it) { name -> launcher.launch(name) } }, onWriterReady = writers::register,
+                onImport = {
+                    holder.importArchive(context) {
+                        importer.launch(arrayOf(CompetitionMahjongAutoExport.MIME_TYPE, "application/octet-stream"))
+                    }
+                })
         }
         current && policy != null && firstLevel != null -> {
             val config = remember(host, firstLevel) {

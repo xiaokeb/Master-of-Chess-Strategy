@@ -163,6 +163,17 @@ class CompetitionMahjongAutoReplayViewModel(
         true
     }
 
+    fun importArchive(source: suspend () -> CompetitionMahjongAutoImportResult?): Job = operation {
+        val result = source() ?: return@operation true
+        entries = checkedEntries(library.list(viewerPlayerId))
+        favoritesOnly = false
+        notice = when (result) {
+            CompetitionMahjongAutoImportResult.IMPORTED -> "棋谱已导入"
+            CompetitionMahjongAutoImportResult.ALREADY_PRESENT -> "棋谱已存在"
+        }
+        true
+    }
+
     fun export(key: String, sink: suspend (CompetitionMahjongAutoExport) -> Boolean): Job = scope.launch {
         mutex.withLock {
             if (closed) return@withLock

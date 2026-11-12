@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-competition-mahjong-mcae.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 10,
+  "build": {
+    "baseline": "c670591b53f718ad667812f80c7fa40de8a7315d",
+    "tests": [
+      {
+        "tests": 11,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayControllerTest"
+      },
+      {
+        "tests": 12,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayViewModelTest"
+      },
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoArchiveLibraryTest"
+      },
+      {
+        "tests": 9,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoCheckpointTest"
+      },
+      {
+        "tests": 22,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoControllerTest"
+      },
+      {
+        "tests": 12,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoPlaybackTest"
+      },
+      {
+        "tests": 7,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoPlayViewModelTest"
+      }
+    ],
+    "lint_errors": 0,
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "db1ea523c9553b94eae7978b43876d83052cadaf071a9d7b3a9efaba3d1de156",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "5254f24a0b3c4b87316251f9a907f61a52e2e8d9e3edc59878dc9c4bd9ab18a9"
+    },
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/production/CompetitionMahjongAutoProductionRoute.kt",
+        "sha256": "0ba279a56c853006568778bb6feac5a2721de1d0c83a3ebd95aff33f09202e3d"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/replay/CompetitionMahjongAutoArchiveLibrary.kt",
+        "sha256": "78db1800272d6e026c148e700cbd54924a5b650bb4eb489b3197d85a959c0648"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/replay/CompetitionMahjongAutoReplayRoute.kt",
+        "sha256": "8307afaeaf3739736362e43cae37157c368f14ecc3cb0d2e5012fdebb7318996"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/replay/CompetitionMahjongAutoReplayViewModel.kt",
+        "sha256": "ac0f005c9d9ebb04601796092149c1e720bd520929e90fd89014d5ee83ec0530"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/storage/RoomCompetitionMahjongAutoStore.kt",
+        "sha256": "c5f9efba269638cc8ac2452dcac55a00d2bb7dc42d254dc2e289a2c6afd8d311"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/storage/CompetitionMahjongAutoRoomInstrumentedTest.kt",
+        "sha256": "643f3c57c92b8d826b9618fc6a8fc55b9d1dde74a834e73901fec58bff3bcc5b"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongAutoNavigationTest.kt",
+        "sha256": "b8d0bb02c7344b4468cdd25bc9874c15fdbed7b12e0d7bc3b3e135a26b22a0d5"
+      }
+    ],
+    "lint_warnings": 25,
+    "build_label": "mcae-size-bound",
+    "candidate": "cmautofile1",
+    "release_manifest": "processed"
+  },
+  "device": {
+    "candidate": "cmautofile1",
+    "original_font": "1.0",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "db1ea523c9553b94eae7978b43876d83052cadaf071a9d7b3a9efaba3d1de156",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "5254f24a0b3c4b87316251f9a907f61a52e2e8d9e3edc59878dc9c4bd9ab18a9"
+    },
+    "runs": [
+      {
+        "font": "1.0",
+        "tests": 3,
+        "images": [
+          {
+            "path": "font-1.0\\8d6d193d-9658-4816-9f02-fe9dcef48ad1\\mcae-imported.png",
+            "sha256": "8dd9edf708d4f1495d97dc5561be7b47f2a0c678e28e5a546248b1b2f19d4bcd"
+          },
+          {
+            "path": "font-1.0\\b59a0678-815c-4516-ada3-e1f84898c808\\archive-replay.png",
+            "sha256": "7e7b9674b011676b766b1b9b322f69a5f400fd312086f60e2616c55868095162"
+          }
+        ],
+        "log_sha256": "004ab2024cf819d85f97893e3788eefb2e2a28d83ab8ae505bbae769aa3488ec"
+      },
+      {
+        "font": "1.5",
+        "tests": 1,
+        "images": [
+          {
+            "path": "font-1.5\\6985796f-62dc-4290-a546-295e7599f70e\\mcae-imported.png",
+            "sha256": "52b054cafcc9011a8bae12da01d8a4b766b3208019cbd1d8986e8ebd92b68c91"
+          }
+        ],
+        "log_sha256": "7fa3ad6dbc168ab8e4f829d09dbafa3ebcb336148fdb4e1ecbdb72c2c50ca3b5"
+      }
+    ],
+    "restored_font": "1.0"
+  },
+  "device_folder": "device-22c62e73d3b3473c9b160d47100cb0f3",
+  "model": "Pixel_7_Pro",
+  "screenshots_reviewed": 3
+}

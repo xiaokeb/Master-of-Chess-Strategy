@@ -19,7 +19,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/** Private automatic-series library. SAF writing remains an injected coordinator responsibility. */
+/** Private automatic-series library with document access supplied by its host. */
 @Composable
 fun CompetitionMahjongAutoReplayRoute(
     library: CompetitionMahjongAutoArchiveLibrary,
@@ -29,6 +29,7 @@ fun CompetitionMahjongAutoReplayRoute(
     onExport: suspend (CompetitionMahjongAutoExport) -> Boolean,
     modifier: Modifier = Modifier,
     onWriterReady: (CompetitionMahjongAutoReplayViewModel) -> Unit = {},
+    onImport: (suspend () -> CompetitionMahjongAutoImportResult?)? = null,
 ) {
     val game: CompetitionMahjongAutoReplayViewModel = viewModel(
         key = "competition-mahjong-auto-replay-" + viewerPlayerId,
@@ -48,7 +49,7 @@ fun CompetitionMahjongAutoReplayRoute(
     }
     BackHandler(onBack = back)
     CompetitionMahjongAutoReplayContent(game, playPolicy, onBack = back, onExport = onExport,
-        modifier = modifier)
+        modifier = modifier, onImport = onImport)
 }
 
 @Composable
@@ -58,6 +59,7 @@ internal fun CompetitionMahjongAutoReplayContent(
     onBack: () -> Unit,
     onExport: suspend (CompetitionMahjongAutoExport) -> Boolean,
     modifier: Modifier = Modifier,
+    onImport: (suspend () -> CompetitionMahjongAutoImportResult?)? = null,
 ) {
     val state by game.state.collectAsState()
     var exportTarget by remember { mutableStateOf<CompetitionMahjongAutoArchiveSummary?>(null) }
@@ -67,7 +69,9 @@ internal fun CompetitionMahjongAutoReplayContent(
         if (state.selectedKey == null) {
             ArchiveList(state, playPolicy, onBack, game::showFavorites, game::refresh, game::select,
                 { entry -> game.setFavorite(entry.key, !entry.favorite) },
-                { exportTarget = it }, { deleteTarget = it })
+                { exportTarget = it }, { deleteTarget = it }, onImport?.let { source ->
+                    { game.importArchive(source) }
+                })
         } else {
             ReplayContent(state, game, onBack, { replaySettings = true })
         }
@@ -142,6 +146,7 @@ private fun ArchiveList(
     onFavorite: (CompetitionMahjongAutoArchiveSummary) -> Unit,
     onExport: (CompetitionMahjongAutoArchiveSummary) -> Unit,
     onDelete: (CompetitionMahjongAutoArchiveSummary) -> Unit,
+    onImport: (() -> Unit)?,
 ) {
     Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -156,6 +161,10 @@ private fun ArchiveList(
                 modifier = Modifier.testTag("competition_mahjong_auto_archive_all"))
             FilterChip(state.favoritesOnly, { onFavorites(true) }, label = { Text("精彩收藏") },
                 modifier = Modifier.testTag("competition_mahjong_auto_archive_favorites"))
+            if (onImport != null) {
+                OutlinedButton(onClick = onImport, enabled = !state.busy,
+                    modifier = Modifier.testTag("competition_mahjong_auto_archive_import")) { Text("导入棋谱") }
+            }
         }
         if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         state.notice?.let { Text(it, color = MaterialTheme.colorScheme.primary) }

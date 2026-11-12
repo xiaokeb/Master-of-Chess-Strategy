@@ -2,11 +2,29 @@ package com.masterofchessstrategy.ui
 
 import android.accessibilityservice.AccessibilityService
 import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
 import android.os.SystemClock
+import android.provider.DocumentsContract
+import android.view.accessibility.AccessibilityNodeInfo
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.core.app.ActivityOptionsCompat
 import androidx.test.platform.app.InstrumentationRegistry
+import com.masterofchessstrategy.games.competition_mahjong.auto.production.CompetitionMahjongAutoProductionRoute
+import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoExportCodec
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayInstrumentedTest.Companion.nativeArchive
 import com.masterofchessstrategy.games.competition_mahjong.auto.storage.RoomCompetitionMahjongAutoStore
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningProofCatalog
@@ -14,6 +32,7 @@ import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionM
 import com.masterofchessstrategy.games.competition_mahjong.learning.RoomCompetitionMahjongLearningProofStore
 import com.masterofchessstrategy.settings.LocalDataWriterRegistry
 import com.masterofchessstrategy.settings.awaitLocalDataWriters
+import com.masterofchessstrategy.ui.theme.MocsTheme
 import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
@@ -27,6 +46,7 @@ class CompetitionMahjongAutoNavigationTest {
     @get:Rule val compose = createAndroidComposeRule<GoLocalDataCheckActivity>()
     private val database get() = compose.activity.ownedDatabase
     private val instrumentation get() = InstrumentationRegistry.getInstrumentation()
+    @Volatile private var createdDocument: Uri? = null
     private val images by lazy {
         File(instrumentation.targetContext.getExternalFilesDir(null), "competition-auto-navigation-qa/${UUID.randomUUID()}")
             .apply { check(mkdirs()) }
@@ -36,12 +56,16 @@ class CompetitionMahjongAutoNavigationTest {
         val db = database
         val name = compose.activity.ownedDatabaseName
         val legacy = compose.activity.ownedLegacyDirectory
-        compose.activityRule.scenario.close()
-        runBlocking { awaitLocalDataWriters(LocalDataWriterRegistry.forDatabase(db).snapshot()) {} }
-        GoLocalDataCheckActivity.closeOwnedDatabase(name)
-        assertTrue(instrumentation.targetContext.deleteDatabase(name))
-        assertTrue(legacy.listFiles()!!.isEmpty())
-        assertTrue(legacy.delete())
+        try {
+            createdDocument?.let { assertTrue(DocumentsContract.deleteDocument(instrumentation.targetContext.contentResolver, it)) }
+        } finally {
+            compose.activityRule.scenario.close()
+            runBlocking { awaitLocalDataWriters(LocalDataWriterRegistry.forDatabase(db).snapshot()) {} }
+            GoLocalDataCheckActivity.closeOwnedDatabase(name)
+            assertTrue(instrumentation.targetContext.deleteDatabase(name))
+            assertTrue(legacy.listFiles()!!.isEmpty())
+            assertTrue(legacy.delete())
+        }
     }
 
     @Test fun lockedViewerCanReachTheTutorialWithoutCreatingActivity() {
@@ -135,6 +159,110 @@ class CompetitionMahjongAutoNavigationTest {
                 .fetchSemanticsNodes().isNotEmpty()
         }
         capture("archive-replay")
+    }
+
+    @Test fun productionArchiveWritesAndReimportsExactMcaeThroughSystemPickers() {
+        val db = database
+        val archive = nativeArchive()
+        val viewer = archive.checkpoint.config.viewerPlayerId
+        val store = RoomCompetitionMahjongAutoStore(db, viewer)
+        runBlocking {
+            store.load(viewer)
+            store.save(archive.checkpoint, archive)
+        }
+        compose.activityRule.scenario.onActivity { activity ->
+            val registry = RecordingRegistry(activity.activityResultRegistry)
+            val owner = object : ActivityResultRegistryOwner { override val activityResultRegistry = registry }
+            activity.setContent {
+                CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
+                    MocsTheme {
+                        Box(Modifier.safeDrawingPadding()) {
+                            CompetitionMahjongAutoProductionRoute(db, viewer, archiveOnly = true,
+                                writers = LocalDataWriterRegistry.forDatabase(db), onLearning = {}, onBack = {})
+                        }
+                    }
+                }
+            }
+        }
+
+        val fileName = "mocs-mahjong-qa-${UUID.randomUUID()}.mcae"
+        val export = "competition_mahjong_auto_archive_export_${archive.key}"
+        awaitTag(export)
+        compose.onNodeWithTag(export).performScrollTo().assertIsEnabled().performClick()
+        compose.onNodeWithTag("competition_mahjong_auto_export_confirm").performClick()
+        val fileField = awaitDocumentNode { it.className == "android.widget.EditText" }
+        assertTrue(fileField.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
+            putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, fileName)
+        }))
+        clickDocumentNode(awaitDocumentNode {
+            it.isEnabled && (it.viewIdResourceName?.endsWith(":id/action_menu_select") == true ||
+                it.text?.toString() in setOf("SAVE", "Save", "保存"))
+        })
+        awaitMessage("棋谱已导出")
+        val uri = checkNotNull(createdDocument)
+        val resolver = instrumentation.targetContext.contentResolver
+        val written = checkNotNull(resolver.openInputStream(uri)).use { it.readBytes() }
+        assertArrayEquals(CompetitionMahjongAutoExportCodec.encode(archive), written)
+
+        compose.onNodeWithTag("competition_mahjong_auto_archive_delete_${archive.key}").performScrollTo().performClick()
+        compose.onNodeWithTag("competition_mahjong_auto_delete_confirm").performClick()
+        awaitTag("competition_mahjong_auto_archive_empty")
+        compose.onNodeWithTag("competition_mahjong_auto_archive_import").assertIsEnabled().performClick()
+        clickDocumentNode(awaitDocumentNode { it.text?.toString() == fileName })
+        awaitMessage("棋谱已导入")
+        val restored = checkNotNull(runBlocking { store.load(archive.key, viewer) })
+        assertArrayEquals(written, CompetitionMahjongAutoExportCodec.encode(restored))
+        assertArrayEquals(archive.checkpoint.engineRecord, runBlocking { store.load(viewer)?.engineRecord })
+        assertTrue(runBlocking { db.matchOutcomeDao().listAll().isEmpty() })
+        capture("mcae-imported")
+
+        checkNotNull(resolver.openOutputStream(uri, "wt")).use {
+            it.write(ByteArray(CompetitionMahjongAutoExportCodec.MAX_BYTES + 1))
+        }
+        compose.onNodeWithTag("competition_mahjong_auto_archive_import").assertIsEnabled().performClick()
+        clickDocumentNode(awaitDocumentNode { it.text?.toString() == fileName })
+        awaitMessage("棋谱文件超出大小限制或无法读取")
+        assertArrayEquals(written, CompetitionMahjongAutoExportCodec.encode(checkNotNull(runBlocking { store.load(archive.key, viewer) })))
+    }
+
+    private inner class RecordingRegistry(private val base: ActivityResultRegistry) : ActivityResultRegistry() {
+        override fun <I, O> onLaunch(requestCode: Int, contract: ActivityResultContract<I, O>,
+                                     input: I, options: ActivityOptionsCompat?) {
+            val launcher = base.register("mcae-qa-${UUID.randomUUID()}", contract) { result ->
+                if (contract is ActivityResultContracts.CreateDocument && result is Uri) createdDocument = result
+                dispatchResult(requestCode, result)
+            }
+            launcher.launch(input, options)
+        }
+    }
+
+    private fun awaitDocumentNode(predicate: (AccessibilityNodeInfo) -> Boolean): AccessibilityNodeInfo {
+        fun search(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+            if (predicate(node)) return node
+            for (index in 0 until node.childCount) node.getChild(index)?.let { search(it)?.let { found -> return found } }
+            return null
+        }
+        val automation = instrumentation.uiAutomation
+        val deadline = SystemClock.elapsedRealtime() + 15_000
+        while (SystemClock.elapsedRealtime() < deadline) {
+            if (Build.VERSION.SDK_INT >= 34) automation.clearCache()
+            val root = automation.rootInActiveWindow
+            if (root?.packageName?.toString()?.contains("documentsui", ignoreCase = true) == true) {
+                search(root)?.let { return it }
+            }
+            SystemClock.sleep(100)
+        }
+        error("未找到系统文件选择器控件")
+    }
+
+    private fun clickDocumentNode(node: AccessibilityNodeInfo) {
+        var target: AccessibilityNodeInfo? = node
+        while (target != null && !target.isClickable) target = target.parent
+        assertTrue(checkNotNull(target).performAction(AccessibilityNodeInfo.ACTION_CLICK))
+    }
+
+    private fun awaitMessage(message: String) = compose.waitUntil(15_000) {
+        compose.onAllNodesWithText(message).fetchSemanticsNodes().isNotEmpty()
     }
 
     private fun openModes(viewer: Int = 0) {

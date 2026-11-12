@@ -2,6 +2,7 @@ package com.masterofchessstrategy.games.competition_mahjong.auto.storage
 
 import androidx.room.withTransaction
 import com.masterofchessstrategy.data.MocsDatabase
+import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoAdmission
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoArchive
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoCheckpoint
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoCheckpointCodec
@@ -9,10 +10,14 @@ import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjo
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoStore
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoArchiveLibrary
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoArchiveSummary
+import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoExportCodec
+import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoImportResult
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.summary
 import com.masterofchessstrategy.games.competition_mahjong.auto.storage.CompetitionMahjongAutoRow.Companion.ACTIVE_KEY
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongStorageEpochGate
 import java.util.UUID
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /** One navigation owner holds one observer slot across the lifetime of its controller. */
 internal class RoomCompetitionMahjongAutoStore(
@@ -73,6 +78,36 @@ internal class RoomCompetitionMahjongAutoStore(
     override suspend fun load(key: String, viewerPlayerId: Int): CompetitionMahjongAutoArchive? = access(viewerPlayerId) {
         requireArchiveKey(key)
         dao.find(viewer, key)?.archive()
+    }
+
+    suspend fun importArchive(document: ByteArray): CompetitionMahjongAutoImportResult {
+        val (archive, payload) = withContext(Dispatchers.Default) {
+            val decoded = requireNotNull(CompetitionMahjongAutoExportCodec.decode(document, viewer)) {
+                "无法读取棋谱。请确认文件完整，且与当前初始座位一致。"
+            }
+            CompetitionMahjongAutoAdmission().validateHistory(decoded.checkpoint)
+            decoded to CompetitionMahjongAutoCheckpointCodec.encode(decoded.checkpoint)
+        }
+        return access(viewer) {
+            database.withTransaction {
+                val existing = dao.find(viewer, archive.key)
+                if (existing != null) {
+                    require(existing.archive().sameContent(archive)) { "同一赛事已有不同的归档，原记录已保留" }
+                    CompetitionMahjongAutoImportResult.ALREADY_PRESENT
+                } else {
+                    val active = dao.find(viewer, ACTIVE_KEY)?.checkpoint()
+                    if (active != null && active.config.runId == archive.checkpoint.config.runId &&
+                        active.seriesIndex == archive.checkpoint.seriesIndex) {
+                        require(active.ledger.isComplete && CompetitionMahjongAutoArchive(active).sameContent(archive)) {
+                            "棋谱与当前演局冲突，原记录已保留"
+                        }
+                    }
+                    val savedAt = now().also { require(it >= 0) }
+                    dao.insert(CompetitionMahjongAutoRow(viewer, archive.key, savedAt, false, payload))
+                    CompetitionMahjongAutoImportResult.IMPORTED
+                }
+            }
+        }
     }
 
     override suspend fun setFavorite(key: String, viewerPlayerId: Int, favorite: Boolean): Unit = access(viewerPlayerId) {
