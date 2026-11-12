@@ -13,3 +13,5 @@
 - 核看 8 张截图。棋谱按钮移至卡片上部，回放操作在窄侧栏内换行。两档字号均以实际点击验证了回放从事件 0 推进到事件 1。
 
 源码预发布范围包括正式入口、活动恢复及系统选择器接入。成功写出和单文件导入、后台执行、跨进程恢复及实体设备仍需独立验收。[发布清单](../../releases/manifests/v0.1.0-competition-mahjong-auto-entry.1.json)
+
+提交 `6d65ba1296397ef3567b6216e78ec80bbf5e64d3` 已推送到 `main`。[v0.1.0-competition-mahjong-auto-entry.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-auto-entry.1)
