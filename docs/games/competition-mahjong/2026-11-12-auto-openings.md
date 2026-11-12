@@ -7,3 +7,5 @@
 候选 `cmautoopening1` 通过 78 项 JVM、NDK 30 双 ABI、Debug APK、仪器 APK 和 Release Manifest。Lint 0 错误、25 警告。Pixel 7 Pro 普通字号通过 3 项，150% 字号通过 1 项，核看 9 张截图。正式入口验证教程锁定、标准发牌、两种开局选项、取消及从第八步起点推进一事件后的精确重进。确认按钮在两档字号均可用，说明与选项可滚动查看。[发布清单](../../releases/manifests/v0.1.0-competition-mahjong-auto-openings.1.json)
 
 本次发布源码。实际设备证据覆盖第八步开局的活动重进。跨赛事复用已由控制器实现，本轮未在生产入口连续运行两个赛事。熄屏后台与实体设备另行验收。
+
+提交 `aea6ba004cd1f764c1cd760257e15bccb2f2cc98` 已推送到 `main`。[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-auto-openings.1)
