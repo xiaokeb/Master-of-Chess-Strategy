@@ -50,7 +50,10 @@ internal data class PlayerAchievement(
     val isUnlocked: Boolean,
 )
 
-internal data class EndgameRewardTotals(val completedCount: Int = 0, val stars: Int = 0, val score: Int = 0)
+internal data class EndgameRewardTotals(val completedCount: Int = 0, val stars: Int = 0, val score: Int = 0) {
+    operator fun plus(other: EndgameRewardTotals) =
+        EndgameRewardTotals(completedCount + other.completedCount, stars + other.stars, score + other.score)
+}
 
 internal data class PlayerGrowthSummary(
     val rank: PlayerRank,

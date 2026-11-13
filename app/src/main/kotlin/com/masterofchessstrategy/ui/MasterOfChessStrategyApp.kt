@@ -9,6 +9,8 @@ import com.masterofchessstrategy.games.competition_mahjong.learning.GatedCompeti
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongStorageEpochGate
 import com.masterofchessstrategy.games.competition_mahjong.match.play.CompetitionMahjongFormalRoute
 import com.masterofchessstrategy.games.competition_mahjong.auto.production.CompetitionMahjongAutoProductionRoute
+import com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeProductionRoute
+import com.masterofchessstrategy.games.competition_mahjong.challenge.observeCompetitionChallengeRewards
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -296,10 +298,12 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
         )
         val goEndgameRewards by remember(goStorage) { goStorage.observeEndgameRewards() }
             .collectAsState(initial = EndgameRewardTotals())
+        val competitionChallengeRewards by remember(database) { observeCompetitionChallengeRewards(database) }
+            .collectAsState(initial = EndgameRewardTotals())
         val growthSummary = PlayerGrowthSummary.create(
             statistics = statisticsViewModel.uiState.statistics,
             endgameProgress = endgameViewModel.uiState.progress,
-            additionalEndgameRewards = goEndgameRewards,
+            additionalEndgameRewards = goEndgameRewards + competitionChallengeRewards,
         )
         // A restored navigation stack must not create a new game using unloaded defaults.
         if (settingsViewModel.uiState.isLoading) {
@@ -509,7 +513,11 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                     onFormal = { viewer -> navController.navigate("competition-mahjong/formal/$viewer") },
                     onAutomatic = { viewer -> navController.navigate(AppDestination.competitionMahjongAuto(viewer, archive = false)) },
                     onAutomaticArchive = { viewer -> navController.navigate(AppDestination.competitionMahjongAuto(viewer, archive = true)) },
+                    onChallenge = { navController.navigate(AppDestination.COMPETITION_MAHJONG_CHALLENGE) },
                 )
+            }
+            composable(AppDestination.COMPETITION_MAHJONG_CHALLENGE) {
+                CompetitionMahjongChallengeProductionRoute(database, gameWriters, navController::popBackStack)
             }
             composable(AppDestination.COMPETITION_MAHJONG_FORMAL, arguments = listOf(
                 navArgument(AppDestination.COMPETITION_MAHJONG_VIEWER) { type = NavType.IntType },

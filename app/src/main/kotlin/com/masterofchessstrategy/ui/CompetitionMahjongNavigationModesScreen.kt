@@ -37,6 +37,7 @@ internal fun CompetitionMahjongNavigationModesScreen(
     onFormal: (Int) -> Unit,
     onAutomatic: ((Int) -> Unit)? = null,
     onAutomaticArchive: ((Int) -> Unit)? = null,
+    onChallenge: (() -> Unit)? = null,
 ) {
     var seat by rememberSaveable { mutableIntStateOf(0) }
     Surface(Modifier.fillMaxSize()) {
@@ -50,6 +51,11 @@ internal fun CompetitionMahjongNavigationModesScreen(
             Button(onClick = onLearning,
                 modifier = Modifier.fillMaxWidth().testTag(COMPETITION_MAHJONG_LEARNING_ENTRY_TAG)) {
                 Text(stringResource(R.string.competition_mahjong_navigation_learning))
+            }
+            if (onChallenge != null) {
+                OutlinedButton(onClick = onChallenge, modifier = Modifier.fillMaxWidth().testTag("competition_challenge_entry")) {
+                    Text("牌型训练")
+                }
             }
             Text("初始座位")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

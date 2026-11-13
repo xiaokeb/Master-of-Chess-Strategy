@@ -23,6 +23,7 @@ internal object BackupStorageInventory {
         database.backupStorageInventoryDao().competitionFormalGameTypeCodes(),
         database.backupStorageInventoryDao().competitionLearningGameTypeCodes(),
         database.backupStorageInventoryDao().competitionAutoGameTypeCodes(),
+        database.backupStorageInventoryDao().competitionChallengeGameTypeCodes(),
     )
 
     fun fromCodes(
@@ -39,6 +40,7 @@ internal object BackupStorageInventory {
         competitionFormalCodes: List<Int> = emptyList(),
         competitionLearningCodes: List<Int> = emptyList(),
         competitionAutoCodes: List<Int> = emptyList(),
+        competitionChallengeCodes: List<Int> = emptyList(),
     ): Set<BackupStorageSlot> {
         require(activeCodes.distinct().size == activeCodes.size && competitionCodes.distinct().size == competitionCodes.size &&
             goLocalCodes.distinct().size == goLocalCodes.size &&
@@ -61,6 +63,7 @@ internal object BackupStorageInventory {
             fangqiRecordCodes.map { BackupStorageSlot(BackupStorageTable.FANGQI_RECORD, gameType(it)) } +
             competitionFormalCodes.map { BackupStorageSlot(BackupStorageTable.COMPETITION_FORMAL, gameType(it)) } +
             competitionLearningCodes.map { BackupStorageSlot(BackupStorageTable.COMPETITION_LEARNING, gameType(it)) } +
-            competitionAutoCodes.map { BackupStorageSlot(BackupStorageTable.COMPETITION_AUTO, gameType(it)) }
+            competitionAutoCodes.map { BackupStorageSlot(BackupStorageTable.COMPETITION_AUTO, gameType(it)) } +
+            competitionChallengeCodes.map { BackupStorageSlot(BackupStorageTable.COMPETITION_CHALLENGE, gameType(it)) }
     }
 }

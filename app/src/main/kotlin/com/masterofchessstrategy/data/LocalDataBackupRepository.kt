@@ -11,6 +11,7 @@ import com.masterofchessstrategy.games.go.data.requireGoAiProjectionParents
 import com.masterofchessstrategy.games.go.data.requireGoRankedParents
 import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalBackupBundle
 import com.masterofchessstrategy.games.competition_mahjong.auto.storage.CompetitionMahjongAutoBackupAdapter
+import com.masterofchessstrategy.games.competition_mahjong.challenge.readCompetitionChallengeProgress
 import com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalBackupAdapter
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningBackupAdapter
 
@@ -133,6 +134,7 @@ internal class RoomLocalDataBackupRepository(
             CompetitionMahjongFormalBackupAdapter.requireStoredTarget(database)
             CompetitionMahjongLearningBackupAdapter.requireStoredProof(database)
             CompetitionMahjongAutoBackupAdapter.requireStoredRecords(database)
+            readCompetitionChallengeProgress(database.competitionMahjongChallengeProgressDao())
             clearAll()
             // A pre-migration/Go-free backup must not resurrect data from any old disk source.
             // These tombstones share this transaction and survive only a successful replacement.
@@ -209,6 +211,7 @@ internal class RoomLocalDataBackupRepository(
         database.lanzhouMahjongLearningProgressDao().deleteAll()
         database.competitionMahjongLearningProofDao().deleteAll()
         database.competitionMahjongAutoDao().deleteAll()
+        database.competitionMahjongChallengeProgressDao().deleteAll()
         database.competitionMahjongMatchDao().deleteAll()
         database.activeGameDao().deleteAll()
         database.lastSelectionDao().deleteAll()
