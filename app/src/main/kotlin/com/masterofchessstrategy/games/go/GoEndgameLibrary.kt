@@ -5,7 +5,7 @@ import com.masterofchessstrategy.progress.EndgameRewardTotals
 
 enum class GoEndgameTheme(val label: String) { CAPTURE("提子"), ESCAPE("逃出打吃"), CONNECTION("连接") }
 enum class GoEndgameLevel(val label: String, internal val firstClearScore: Int) {
-    SIMPLE("简单", 10), MEDIUM("中等", 20), HARD("困难", 40),
+    SIMPLE("简单", 10), MEDIUM("中等", 20), HARD("困难", 40), MASTER("大师", 80),
 }
 
 class GoEndgamePuzzle(
@@ -105,6 +105,11 @@ object GoEndgameLibrary {
             "左右黑棋已经连成一组。另一处空点也能完成连接。", 19,
             listOf(p(8, 8), p(7, 8), p(8, 9), p(7, 9), p(10, 8), p(11, 8), p(10, 9), p(11, 9),
                 p(8, 10), p(9, 10), p(10, 7), p(9, 7)), p(9, 8), targetStones = setOf(p(8, 8), p(10, 8))),
+        GoTacticalCaptureLibrary.cornerLibertyRace.let { puzzle ->
+            GoEndgamePuzzle(puzzle.id, puzzle.title, GoEndgameTheme.CAPTURE, GoEndgameLevel.MASTER,
+                "黑先：三手内提走标记的两颗白子。注意右下角白棋的两口气。", "目标白子已全部提走。",
+                puzzle.boardSize, puzzle.setup, puzzle.firstMove, captured = puzzle.targets, maxBlackMoves = puzzle.maxBlackMoves)
+        },
     )
 
     init { require(puzzles.map { it.id }.toSet().size == puzzles.size) }

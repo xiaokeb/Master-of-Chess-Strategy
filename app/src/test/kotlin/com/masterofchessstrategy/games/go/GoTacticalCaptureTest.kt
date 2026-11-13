@@ -40,6 +40,17 @@ class GoTacticalCaptureTest {
         assertArrayEquals(beforeRepeat, session.copyCheckpointBytes())
     }
 
+    @Test fun masterCaptureChoosesADefenseThatRequiresTheThirdBlackMove() {
+        val master = GoTacticalCaptureLibrary.cornerLibertyRace
+        val plan = GoTacticalCaptureLibrary.open(master, factory)
+        val session = GoTacticalCaptureSession(plan, factory)
+        assertEquals(1, session.answer(master.firstMove).blackMoves)
+        val second = session.answer(BoardPosition(8, 7))
+        assertEquals(2, second.blackMoves)
+        assertFalse(second.completed)
+        assertTrue(session.answer(BoardPosition(7, 8)).completed)
+    }
+
     @Test fun alternativeWinningFirstCaptureIsAcceptedWithoutScriptCoordinateMatching() {
         val session = GoTacticalCaptureSession(GoTacticalCaptureLibrary.open(engineFactory = factory), factory)
         val first = session.answer(BoardPosition(8, 7))

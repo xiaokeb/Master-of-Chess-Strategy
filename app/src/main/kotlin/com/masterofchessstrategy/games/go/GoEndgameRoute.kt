@@ -91,6 +91,8 @@ fun GoEndgameScreen(
                 else GoBoard(exercise.puzzle.boardSize, exercise.stones,
                     { x, y -> onAnswer(BoardPosition(x, y)) }, boardModifier,
                     lastMoveIndex = exercise.lastMoveIndex,
+                    highlightedPoints = exercise.puzzle.captured.map { it.y * exercise.puzzle.boardSize + it.x }
+                        .filter { exercise.stones[it] == GoStone.WHITE.code }.toSet(),
                     interactionEnabled = state.canOperate && !exercise.completed)
             }
             val controls: @Composable (Modifier) -> Unit = { controlsModifier ->

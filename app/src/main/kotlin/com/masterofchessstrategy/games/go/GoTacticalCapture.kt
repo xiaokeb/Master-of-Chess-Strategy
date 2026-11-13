@@ -2,6 +2,8 @@ package com.masterofchessstrategy.games.go
 
 import com.masterofchessstrategy.engine.*
 
+private fun captureProofLimit(blackMoves: Int) = if (blackMoves <= 2) 10_000 else 60_000
+
 class GoTacticalCapturePuzzle(
     val id: String,
     val title: String,
@@ -39,7 +41,7 @@ class GoCaptureAnalysis internal constructor(
 class GoCaptureSolver(
     private val puzzle: GoTacticalCapturePuzzle,
     private val engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
-    private val nodeLimit: Int = 10_000,
+    private val nodeLimit: Int = captureProofLimit(puzzle.maxBlackMoves),
 ) {
     init { require(nodeLimit in 1..100_000) }
     private class LimitReached : RuntimeException()
@@ -61,6 +63,7 @@ class GoCaptureSolver(
         if (replies.isEmpty()) return@restored GoCaptureAnalysis(GoCaptureProofResult.REFUTED, nodes, 0, null)
         var chosen: GoAction? = null
         var continuation: ByteArray? = null
+        var chosenNeedsMoreThanOneMove = false
         var count = 0
         for (reply in replies) {
             val next = restored(bytes) { candidate ->
@@ -70,7 +73,15 @@ class GoCaptureSolver(
             count++
             if (!blackCanWin(next, remaining)) return@restored GoCaptureAnalysis(
                 GoCaptureProofResult.REFUTED, nodes, count, reply)
-            if (chosen == null) { chosen = reply; continuation = next }
+            // Prefer a defense that makes the player demonstrate the full tactic.
+            if (!chosenNeedsMoreThanOneMove) {
+                val needsMoreThanOneMove = remaining > 1 && !blackCanWin(next, 1)
+                if (chosen == null || needsMoreThanOneMove) {
+                    chosen = reply
+                    continuation = next
+                    chosenNeedsMoreThanOneMove = needsMoreThanOneMove
+                }
+            }
         }
         GoCaptureAnalysis(GoCaptureProofResult.PROVEN, nodes, count, chosen, continuation)
     }
@@ -79,8 +90,7 @@ class GoCaptureSolver(
         if (goal(engine)) return@restored true
         if (remaining <= 0 || engine.phase != GoPhase.PLAYING || engine.currentPlayer.value != GoPlayer.BLACK.code)
             return@restored false
-        var candidates = moves(engine)
-        if (remaining == 1) {
+        val candidates = if (remaining == 1) {
             // A single placement can only capture target groups whose sole liberty is that point.
             val groups = puzzle.targets.filter { engine.stoneAt(it) == GoStone.WHITE }
                 .map { goEndgameGroup(engine, it) }.distinct()
@@ -88,11 +98,13 @@ class GoCaptureSolver(
             val liberties = groups.map { goEndgameLiberties(engine, it) }
             if (liberties.any { it.size != 1 }) return@restored false
             val finalPoints = liberties.reduce { a, b -> a.intersect(b) }
-            candidates = candidates.filter { it is GoAction.Place && it.point in finalPoints }
-        }
+            finalPoints.map(GoAction::Place)
+        } else moves(engine)
         for (move in candidates) {
             val won = restored(bytes) { candidate ->
-                check(candidate.apply(move) == ActionResult.Accepted) { "引擎列出的玩家着不合法。" }
+                val accepted = candidate.apply(move) == ActionResult.Accepted
+                check(accepted || remaining == 1) { "引擎列出的玩家着不合法。" }
+                if (!accepted) return@restored false
                 if (goal(candidate)) true else whiteReplies(candidate.serialize(), remaining - 1).result == GoCaptureProofResult.PROVEN
             }
             if (won) return@restored true
@@ -134,9 +146,14 @@ object GoTacticalCaptureLibrary {
             7 to 8, 5 to 4, 8 to 6, 4 to 5, 7 to 7, 5 to 5).map { BoardPosition(it.first, it.second) },
         setOf(BoardPosition(0, 0), BoardPosition(8, 8)), BoardPosition(0, 1), 2)
 
+    val cornerLibertyRace = GoTacticalCapturePuzzle("corner-liberty-race", "双角紧气", 9,
+        listOf(1 to 0, 0 to 0, 0 to 2, 8 to 8, 1 to 1, 5 to 1,
+            7 to 7, 6 to 1, 6 to 8, 5 to 2, 8 to 6, 6 to 2).map { BoardPosition(it.first, it.second) },
+        setOf(BoardPosition(0, 0), BoardPosition(8, 8)), BoardPosition(0, 1), 3)
+
     fun open(puzzle: GoTacticalCapturePuzzle = twoCorners,
         engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
-        nodeLimit: Int = 10_000,
+        nodeLimit: Int = captureProofLimit(puzzle.maxBlackMoves),
     ): GoTacticalCapturePlan {
         val solver = GoCaptureSolver(puzzle, engineFactory, nodeLimit)
         var afterFirst: ByteArray? = null
@@ -173,7 +190,7 @@ data class GoTacticalCaptureState(
 class GoTacticalCaptureSession(
     private val plan: GoTacticalCapturePlan,
     private val engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
-    private val nodeLimit: Int = 10_000,
+    private val nodeLimit: Int = captureProofLimit(plan.puzzle.maxBlackMoves),
 ) {
     private var checkpoint = plan.copyInitialBytes()
     private var current = snapshot(checkpoint)

@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-go-master-capture.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 12,
+  "build": {
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibrary.kt",
+        "working_sha256": "57ef30ec269fdcff2d65a4af4900668a877ff2ba648f5bd1516971d4ddc6ecc9",
+        "sha256": "57ef30ec269fdcff2d65a4af4900668a877ff2ba648f5bd1516971d4ddc6ecc9"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoTacticalCapture.kt",
+        "working_sha256": "559088bafb7cd5f528d8b7adcfa3f0155afe53eef5e8d36e41b5f7a34c5d8ff0",
+        "sha256": "559088bafb7cd5f528d8b7adcfa3f0155afe53eef5e8d36e41b5f7a34c5d8ff0"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameRoute.kt",
+        "working_sha256": "ab784ebbd41e79ecdb4543eaf039df5e8bd5ebbabbda6393ec660ef9dc0c37e2",
+        "sha256": "ab784ebbd41e79ecdb4543eaf039df5e8bd5ebbabbda6393ec660ef9dc0c37e2"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibraryTest.kt",
+        "working_sha256": "67b1b2100e9bcf272857451ed152fc6979dced0edcaa9d052281d33f9085180c",
+        "sha256": "67b1b2100e9bcf272857451ed152fc6979dced0edcaa9d052281d33f9085180c"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoTacticalCaptureTest.kt",
+        "working_sha256": "35f049e7fa34bebf32d450b894e10f727988c878285031f6e968a70f16670ec3",
+        "sha256": "35f049e7fa34bebf32d450b894e10f727988c878285031f6e968a70f16670ec3"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoEndgameNativeInstrumentedTest.kt",
+        "working_sha256": "979eb353280ab39cde641b6e18dde07da5113622356f7a476d719365a5026ba1",
+        "sha256": "979eb353280ab39cde641b6e18dde07da5113622356f7a476d719365a5026ba1"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoTacticalCaptureNativeInstrumentedTest.kt",
+        "working_sha256": "e8f816686f25b5ecf4eb98e798f74580dc4840afb877559620e8138a249dd22a",
+        "sha256": "e8f816686f25b5ecf4eb98e798f74580dc4840afb877559620e8138a249dd22a"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoLessonPracticeNavigationTest.kt",
+        "working_sha256": "1e19049f530dea46fc018e440899e1732bb90b32e0462d41a1a3486f68703abf",
+        "sha256": "1e19049f530dea46fc018e440899e1732bb90b32e0462d41a1a3486f68703abf"
+      },
+      {
+        "sha256": "436d41c0f1731f819431eb8dc39ba501110e4f9b79fbbcb53e7c9be8a2056308",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameChallengesTest.kt",
+        "working_sha256": "436d41c0f1731f819431eb8dc39ba501110e4f9b79fbbcb53e7c9be8a2056308"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "903a651afd07886ea313868752e20a503b8cdb9fb70eaac1c368da5eb0d305fe",
+      "app/build/outputs/apk/debug/app-debug.apk": "b1022be26b7550e397ebf21a2944c83b83c5c8e63196b1ed9b46982d3478751a"
+    },
+    "lint_errors": 0,
+    "baseline": "0e4253bb8044375f2800865599235cce8e7bfee7",
+    "tests": [
+      {
+        "tests": 14,
+        "name": "com.masterofchessstrategy.games.go.data.RoomGoProgressRepositoriesTest"
+      },
+      {
+        "tests": 7,
+        "name": "com.masterofchessstrategy.games.go.GoEndgameChallengesTest"
+      },
+      {
+        "tests": 13,
+        "name": "com.masterofchessstrategy.games.go.GoEndgameLibraryTest"
+      },
+      {
+        "tests": 9,
+        "name": "com.masterofchessstrategy.games.go.GoEndgameProgressTest"
+      },
+      {
+        "tests": 11,
+        "name": "com.masterofchessstrategy.games.go.GoEndgameViewModelTest"
+      },
+      {
+        "tests": 11,
+        "name": "com.masterofchessstrategy.games.go.GoTacticalCaptureTest"
+      }
+    ],
+    "candidate": "gomaster1",
+    "release_manifest": "processed",
+    "lint_warnings": 25,
+    "build_label": "catalog"
+  },
+  "device_folder": "device-21084e2ad17646aa9d0d89c57af74215",
+  "device": {
+    "restored_font": "1.0",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "903a651afd07886ea313868752e20a503b8cdb9fb70eaac1c368da5eb0d305fe",
+      "app/build/outputs/apk/debug/app-debug.apk": "b1022be26b7550e397ebf21a2944c83b83c5c8e63196b1ed9b46982d3478751a"
+    },
+    "original_font": "1.0",
+    "candidate": "gomaster1",
+    "runs": [
+      {
+        "font": "1.0",
+        "images": [
+          {
+            "path": "font-1.0\\6affdaa5-4fde-408c-ad13-0c61af10df0a\\master-first-clear.png",
+            "sha256": "0359c0f5c81eb84b2779f38177d9b31d4a33091db1fb9d220fec9f4a5741e4bb"
+          },
+          {
+            "path": "font-1.0\\6affdaa5-4fde-408c-ad13-0c61af10df0a\\master-initial.png",
+            "sha256": "491422e05c8b51a9d45862da1da9ed0e9ccf38e5cb5cff486ddbd35baaa78203"
+          },
+          {
+            "path": "font-1.0\\6affdaa5-4fde-408c-ad13-0c61af10df0a\\master-second-move.png",
+            "sha256": "e197b9c295491e97096cfc911c9da37da2e3a1e0f4361e950f80b9c32a900990"
+          }
+        ],
+        "tests": 5,
+        "log_sha256": "ce853ee8bfba3b725df6d4202dabdf5596f9a92555025c0fd671a39b27553deb"
+      },
+      {
+        "font": "1.5",
+        "images": [
+          {
+            "path": "font-1.5\\b039b01e-c234-40b6-98f4-538f9a12d04d\\master-first-clear.png",
+            "sha256": "acdb07822d6a8d44f083abbb31a4e48dc032da53567068029d5f86d1eb376ed1"
+          },
+          {
+            "path": "font-1.5\\b039b01e-c234-40b6-98f4-538f9a12d04d\\master-initial.png",
+            "sha256": "5013b331fff949ddb41b0b6b591e3c63658111747017bb28b85940a8eda5685a"
+          },
+          {
+            "path": "font-1.5\\b039b01e-c234-40b6-98f4-538f9a12d04d\\master-second-move.png",
+            "sha256": "445c4df7ddeb0cc90e40417a51c1714091ccc4a59ca76ad2839446c72d32fad0"
+          }
+        ],
+        "tests": 1,
+        "log_sha256": "54db7dcf2cb58a74a2be6f149f1a0fd252c136cf9994cb3e24ea636044fb9b97"
+      }
+    ]
+  },
+  "screenshots_reviewed": 6,
+  "visual_sheet_sha256": "875d6854f1944e4c20a4310bd80a680a05211c3896f72d61c6aaace35961f73f"
+}

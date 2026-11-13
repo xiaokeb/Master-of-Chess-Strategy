@@ -8,13 +8,13 @@ import org.junit.Test
 class GoEndgameLibraryTest {
     @Test fun catalogHasStableUniqueMetadataAndLinearDifficultyOrder() {
         val puzzles = GoEndgameLibrary.puzzles
-        assertEquals(9, puzzles.size); assertEquals(puzzles.size, puzzles.map { it.id }.toSet().size)
+        assertEquals(10, puzzles.size); assertEquals(puzzles.size, puzzles.map { it.id }.toSet().size)
         assertTrue(puzzles.all { it.setup.size % 2 == 0 })
         assertEquals(setOf(9, 13, 19), puzzles.map { it.boardSize }.toSet())
-        assertEquals(listOf(GoEndgameLevel.SIMPLE, GoEndgameLevel.MEDIUM, GoEndgameLevel.HARD),
-            puzzles.map { it.level }.distinct())
+        assertEquals(GoEndgameLevel.entries, puzzles.map { it.level }.distinct())
         assertEquals(listOf("corner-capture", "side-capture", "escape-atari", "bridge-groups", "capture-pair",
-            "connect-under-pressure", "two-corners-two-moves"), puzzles.take(7).map { it.id })
+            "connect-under-pressure", "two-corners-two-moves", "corner-counter-capture", "connect-between-white-groups"),
+            puzzles.take(9).map { it.id })
         assertEquals(setOf(GoEndgameTheme.CAPTURE, GoEndgameTheme.ESCAPE, GoEndgameTheme.CONNECTION),
             puzzles.map { it.theme }.toSet())
     }
@@ -36,7 +36,8 @@ class GoEndgameLibraryTest {
         val older = GoEndgameProgress(puzzles.take(7).map { it.id }.toSet())
         val decoded = checkNotNull(GoEndgameProgressCodec.decode(GoEndgameProgressCodec.encode(older)))
         assertEquals(EndgameRewardTotals(7, 7, 120), GoEndgameLibrary.rewards(decoded.completedIds))
-        assertEquals(EndgameRewardTotals(9, 9, 200), GoEndgameLibrary.rewards(puzzles.map { it.id }.toSet()))
+        assertEquals(EndgameRewardTotals(9, 9, 200), GoEndgameLibrary.rewards(puzzles.take(9).map { it.id }.toSet()))
+        assertEquals(EndgameRewardTotals(10, 10, 280), GoEndgameLibrary.rewards(puzzles.map { it.id }.toSet()))
         assertEquals(EndgameRewardTotals(), GoEndgameLibrary.rewards(setOf("unknown")))
         assertEquals(GoEndgameLibrary.rewards(older.completedIds),
             GoEndgameLibrary.rewards(older.complete(puzzles.first().id).completedIds))

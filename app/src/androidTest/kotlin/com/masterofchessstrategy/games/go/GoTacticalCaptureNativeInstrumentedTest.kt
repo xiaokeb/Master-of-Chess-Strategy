@@ -5,6 +5,23 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class GoTacticalCaptureNativeInstrumentedTest {
+    @Test fun masterOpeningProvesEveryDefenseAndTwoDifferentFirstMoves() {
+        val puzzle = GoTacticalCaptureLibrary.cornerLibertyRace
+        val plan = GoTacticalCaptureLibrary.open(puzzle)
+        NativeGoEngine(9).use { engine ->
+            val solver = GoCaptureSolver(puzzle)
+            for (point in listOf(puzzle.firstMove, BoardPosition(8, 7))) {
+                assertEquals(RestoreResult.Restored, engine.restore(plan.copyInitialBytes()))
+                assertEquals(ActionResult.Accepted, engine.apply(GoAction.Place(point)))
+                val replies = engine.legalActions()
+                val proof = solver.afterBlackMove(engine.serialize(), 2)
+                assertTrue(GoAction.Pass in replies)
+                assertEquals(GoCaptureProofResult.PROVEN, proof.result)
+                assertEquals(replies.size, proof.defenses)
+            }
+        }
+    }
+
     @Test fun nativeFullDefenseProofAndBothFirstCapturesCompleteInTwoBlackMoves() {
         val plan = GoTacticalCaptureLibrary.open()
         val puzzle = plan.puzzle

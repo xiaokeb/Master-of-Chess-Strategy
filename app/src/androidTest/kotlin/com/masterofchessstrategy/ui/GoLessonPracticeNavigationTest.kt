@@ -179,7 +179,7 @@ class GoLessonPracticeNavigationTest {
         compose.onNodeWithTag("go_endgame_back").performScrollTo().performClick()
         compose.onNodeWithTag(GO_ENDGAMES_ENTRY_TAG).performScrollTo().performClick()
         awaitTitle(connection.title)
-        assertEquals(puzzles.map { it.id }.toSet(), runBlocking { repository.load().completedIds })
+        assertEquals(preceding.toSet() + escape.id + connection.id, runBlocking { repository.load().completedIds })
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
     }
 
@@ -218,6 +218,38 @@ class GoLessonPracticeNavigationTest {
         compose.activityRule.scenario.recreate()
         checkProfile()
         capture("go-profile-reward")
+    }
+
+    @Test fun masterPuzzleRequiresThreeMovesAndAwardsEightyPointsOnce() {
+        val puzzle = checkNotNull(GoEndgameLibrary.puzzle("corner-liberty-race"))
+        val preceding = GoEndgameLibrary.puzzles.takeWhile { it.id != puzzle.id }.map { it.id }.toSet()
+        val repository = RoomGoEndgameProgressRepository(database)
+        runBlocking {
+            preceding.forEach { repository.complete(it) }
+            repository.select(puzzle.id)
+        }
+        compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag(GO_ENDGAMES_ENTRY_TAG).performScrollTo().performClick()
+        awaitTitle(puzzle.title)
+        val rewards = compose.onNodeWithTag("go_endgame_rewards")
+        rewards.performScrollTo().assertTextEquals("残局奖励 9 星 · 200 分")
+        capture("master-initial")
+        for ((point, remaining) in listOf("0_1" to 2, "8_7" to 1)) {
+            compose.onNodeWithTag("go_intersection_$point").performClick()
+            compose.waitUntil(15_000) {
+                compose.onAllNodes(hasTestTag("go_endgame_feedback") and hasText("剩余 $remaining 手", substring = true))
+                    .fetchSemanticsNodes().isNotEmpty()
+            }
+            assertEquals(preceding, runBlocking { repository.load().completedIds })
+        }
+        compose.onNodeWithTag("go_endgame_feedback").performScrollTo().assertIsDisplayed()
+        capture("master-second-move")
+        compose.onNodeWithTag("go_intersection_7_8").performClick()
+        awaitTag("go_endgame_completed")
+        rewards.performScrollTo().assertTextEquals("残局奖励 10 星 · 280 分")
+        assertEquals(preceding + puzzle.id, runBlocking { repository.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        capture("master-first-clear")
     }
 
     private fun openLessons() {
