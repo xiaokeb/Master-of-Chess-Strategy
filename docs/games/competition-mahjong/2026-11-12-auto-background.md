@@ -12,3 +12,5 @@
 - 核看 8 张截图，覆盖两档字号下的牌桌控制、系统通知、返回与暂停。早期失败记录保留，最终候选由演局所有者持有授权，覆盖了熄屏导致界面重建的情况。[发布清单](../../releases/manifests/v0.1.0-competition-mahjong-auto-background.1.json)
 
 本次发布源码。强制 Doze、厂商省电策略、长时功耗和实体设备另行验收。
+
+提交 `95b4768d541f26fac0acb453d4df4bbc29cc55ae` 已推送到 `main`。[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-auto-background.1)
