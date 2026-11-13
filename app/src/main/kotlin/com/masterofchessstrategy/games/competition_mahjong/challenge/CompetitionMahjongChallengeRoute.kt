@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.masterofchessstrategy.games.competition_mahjong.MahjongTile
 
 @Composable
 fun CompetitionMahjongChallengeRoute(
@@ -94,6 +95,13 @@ internal fun CompetitionMahjongChallengeScreen(
                         Text("${exercise.challenge.level.label} · ${exercise.challenge.theme.label}")
                         Text(exercise.challenge.prompt,
                             modifier = Modifier.testTag("competition_mahjong_challenge_prompt"))
+                        if (exercise.visibleHand.isNotEmpty()) {
+                            FlowRow(Modifier.testTag("competition_mahjong_challenge_hand"),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                exercise.visibleHand.forEach { MahjongTile(it, faceUp = true) }
+                            }
+                        }
                         Text("规则索引：官方番种 ID " + exercise.challenge.sourceFanIds.sorted().joinToString("、"),
                             style = MaterialTheme.typography.bodySmall)
                     } else Text(if (state.loading) "正在读取牌型题…" else "牌型题暂不可用")

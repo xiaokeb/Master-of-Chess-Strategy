@@ -125,8 +125,12 @@ class CompetitionMahjongChallengeViewModel(
         publish(progress = progress, needsSave = false)
     }
 
-    private fun createSession(id: String) = CompetitionMahjongChallengeSession(
-        checkNotNull(CompetitionMahjongChallengeLibrary.challenge(id)) { "牌型题不存在" })
+    private fun createSession(id: String): CompetitionMahjongChallengeSession {
+        val challenge = checkNotNull(CompetitionMahjongChallengeLibrary.challenge(id)) { "牌型题不存在" }
+        val hand = if (id == CompetitionMahjongPracticePosition.PUZZLE_ID) CompetitionMahjongPracticePosition.verifySevenPairs()
+            else emptyList()
+        return CompetitionMahjongChallengeSession(challenge, hand)
+    }
 
     private fun operation(message: String, block: suspend () -> Unit): Job = scope.launch {
         withContext(worker + NonCancellable) {

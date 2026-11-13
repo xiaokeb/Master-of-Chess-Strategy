@@ -231,7 +231,7 @@ private fun SeatPanel(
 }
 
 @Composable
-private fun MahjongTile(tile: Int?, faceUp: Boolean) {
+internal fun MahjongTile(tile: Int?, faceUp: Boolean) {
     val visible = faceUp && tile != null
     val shape = RoundedCornerShape(4.dp)
     Box(

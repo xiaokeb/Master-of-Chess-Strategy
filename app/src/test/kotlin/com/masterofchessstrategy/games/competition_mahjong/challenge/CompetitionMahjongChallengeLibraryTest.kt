@@ -9,10 +9,10 @@ import kotlin.random.Random
 class CompetitionMahjongChallengeLibraryTest {
     @Test fun catalogHasFourLevelsThemesAndTraceableOfficialFanIds() {
         val values = CompetitionMahjongChallengeLibrary.challenges
-        assertEquals(12, values.size)
+        assertEquals(13, values.size)
         assertEquals(values.size, values.map { it.id }.toSet().size)
         CompetitionMahjongChallengeLevel.entries.forEach { level ->
-            assertEquals(3, values.count { it.level == level })
+            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 4 else 3, values.count { it.level == level })
         }
         CompetitionMahjongChallengeTheme.entries.forEach { theme ->
             assertTrue(values.any { it.theme == theme })

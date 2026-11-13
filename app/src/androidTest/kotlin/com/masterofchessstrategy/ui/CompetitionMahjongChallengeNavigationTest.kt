@@ -5,6 +5,8 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
+import com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeLibrary
+import com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongPracticePosition
 import com.masterofchessstrategy.games.competition_mahjong.challenge.RoomCompetitionMahjongChallengeProgress
 import com.masterofchessstrategy.settings.LocalDataWriterRegistry
 import com.masterofchessstrategy.settings.awaitLocalDataWriters
@@ -76,6 +78,35 @@ class CompetitionMahjongChallengeNavigationTest {
 
     private fun waitFor(tag: String) = compose.waitUntil(15_000) {
         compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty()
+    }
+
+    @Test fun nativeSevenPairsShowsOnlyTheLocalHandAndAwardsFirstClear() {
+        assertEquals(14, CompetitionMahjongPracticePosition.verifySevenPairs().size)
+        val store = RoomCompetitionMahjongChallengeProgress(database)
+        val puzzleId = CompetitionMahjongPracticePosition.PUZZLE_ID
+        val prerequisites = CompetitionMahjongChallengeLibrary.challenges.takeWhile { it.id != puzzleId }.map { it.id }
+        runBlocking {
+            prerequisites.forEach { store.complete(it) }
+            store.select(puzzleId)
+        }
+        compose.onNodeWithTag(HOME_COMPETITION_MAHJONG_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag("competition_challenge_entry").performScrollTo().performClick()
+        waitFor("competition_mahjong_challenge_hand")
+        compose.onNodeWithTag("competition_mahjong_challenge_hand").performScrollTo().assertIsDisplayed()
+        compose.onAllNodesWithContentDescription("东", useUnmergedTree = true).assertCountEquals(2)
+        compose.onAllNodesWithContentDescription("牌背", useUnmergedTree = true).assertCountEquals(0)
+        capture("native-local-hand")
+        compose.onNodeWithTag("competition_mahjong_challenge_choice_b").performScrollTo().performClick()
+        compose.onNodeWithTag("competition_mahjong_challenge_completed").assertDoesNotExist()
+        assertEquals(prerequisites.toSet(), runBlocking { store.load().completedIds })
+        capture("native-wrong-fan")
+        compose.onNodeWithTag("competition_mahjong_challenge_choice_a").performScrollTo().performClick()
+        waitFor("competition_mahjong_challenge_completed")
+        compose.onNodeWithTag("competition_mahjong_challenge_feedback").performScrollTo()
+            .assertTextContains("七对计 24 番", substring = true)
+        assertEquals(prerequisites.toSet() + puzzleId, runBlocking { store.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        capture("native-verified-fan")
     }
 
     private fun capture(name: String) {

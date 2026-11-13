@@ -43,13 +43,15 @@ data class CompetitionMahjongChallengeState(
     val selectedChoiceId: String? = null,
     val completed: Boolean = false,
     val feedback: String = "请选择答案。",
+    val visibleHand: List<Int> = emptyList(),
 )
 
-class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjongChallenge) {
-    private var current = CompetitionMahjongChallengeState(challenge)
+class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjongChallenge, hand: List<Int> = emptyList()) {
+    private val initial = CompetitionMahjongChallengeState(challenge, visibleHand = Collections.unmodifiableList(hand.toList()))
+    private var current = initial
     fun state(): CompetitionMahjongChallengeState = current
     fun reset(): CompetitionMahjongChallengeState {
-        current = CompetitionMahjongChallengeState(challenge)
+        current = initial
         return current
     }
     fun answer(choiceId: String): CompetitionMahjongChallengeState {
@@ -139,11 +141,16 @@ object CompetitionMahjongChallengeLibrary {
             "门清同一花色具1112345678999，再以该花色任一序数牌成和，对应哪项88番和型？", "c",
             "这一门清同花色基础结构为九莲宝灯，按88番计。", setOf(4, 22),
             choice("a", "清龙"), choice("b", "连七对"), choice("c", "九莲宝灯")),
+        challenge(CompetitionMahjongPracticePosition.PUZZLE_ID, "七对起手", CompetitionMahjongChallengeTheme.PATTERN,
+            CompetitionMahjongChallengeLevel.MASTER,
+            "你坐东家，摸完起手牌。根据当前手牌，选择能成立的和牌方式。", "a",
+            "Native 裁定自摸成立，七对计 24 番，已达到八番起和门槛。", setOf(19),
+            choice("a", "自摸，七对"), choice("b", "自摸，碰碰和"), choice("c", "不能和牌，继续出牌")),
     ))
 
     init {
         require(challenges.map { it.id }.toSet().size == challenges.size)
-        require(CompetitionMahjongChallengeLevel.entries.all { level -> challenges.count { it.level == level } == 3 })
+        require(CompetitionMahjongChallengeLevel.entries.all { level -> challenges.any { it.level == level } })
         require(CompetitionMahjongChallengeTheme.entries.all { theme -> challenges.any { it.theme == theme } })
     }
 
