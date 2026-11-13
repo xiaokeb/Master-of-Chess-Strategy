@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-competition-mahjong-auto-background.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 11,
+  "build": {
+    "build_label": "retained-owner",
+    "release_manifest": "processed",
+    "tests": [
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayControllerTest",
+        "tests": 11
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayViewModelTest",
+        "tests": 12
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoArchiveLibraryTest",
+        "tests": 5
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoCheckpointTest",
+        "tests": 9
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoControllerTest",
+        "tests": 22
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoPlaybackTest",
+        "tests": 13
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoPlayViewModelTest",
+        "tests": 7
+      }
+    ],
+    "baseline": "a148c5c709c2329a85be5cab865390ab3022e34b",
+    "lint_warnings": 25,
+    "overlays": [
+      {
+        "sha256": "63cb4783613ba6f944525e085aeac0b4c06676c22bdfb2d84b2ed8476f8c5823",
+        "working_sha256": "63cb4783613ba6f944525e085aeac0b4c06676c22bdfb2d84b2ed8476f8c5823",
+        "path": "app/src/main/AndroidManifest.xml"
+      },
+      {
+        "sha256": "ef6193d329431d382729c668f9d2862f218187c22d64a437738abcc458906963",
+        "working_sha256": "ef6193d329431d382729c668f9d2862f218187c22d64a437738abcc458906963",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/production/CompetitionMahjongAutoBackgroundService.kt"
+      },
+      {
+        "sha256": "9d43a49432d18df9aede2065c8c225bb356089a9e95f387f76ac928141e3b2b9",
+        "working_sha256": "9d43a49432d18df9aede2065c8c225bb356089a9e95f387f76ac928141e3b2b9",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/production/CompetitionMahjongAutoProductionRoute.kt"
+      },
+      {
+        "sha256": "f07a6df49e1b9134ca1957ae6acea846f26375fc88b24cc1c8b6c156ffe3ced5",
+        "working_sha256": "f07a6df49e1b9134ca1957ae6acea846f26375fc88b24cc1c8b6c156ffe3ced5",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoPlayRoute.kt"
+      },
+      {
+        "sha256": "d3a050a3ffd1baea4738ecde5f9e2d1defebf98154da47c18fdcf6b872ff80b8",
+        "working_sha256": "d3a050a3ffd1baea4738ecde5f9e2d1defebf98154da47c18fdcf6b872ff80b8",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoPlayback.kt"
+      },
+      {
+        "sha256": "a173f9ac9cfcc70e4f93e945660f45d31fca970ff94debe1cb49ac04bf94711f",
+        "working_sha256": "a173f9ac9cfcc70e4f93e945660f45d31fca970ff94debe1cb49ac04bf94711f",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoPlayViewModel.kt"
+      },
+      {
+        "sha256": "8ab3a89a04b9b4abf38105adbedad214840ba88208a3a0f5239c66ea744b94bb",
+        "working_sha256": "8ab3a89a04b9b4abf38105adbedad214840ba88208a3a0f5239c66ea744b94bb",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/CompetitionMahjongAutoPlaybackTest.kt"
+      },
+      {
+        "sha256": "89b010cbce27952f8871df4e12f3923c3bcb46ec52cec48f54ca3f5b0b7198e6",
+        "working_sha256": "89b010cbce27952f8871df4e12f3923c3bcb46ec52cec48f54ca3f5b0b7198e6",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongAutoNavigationTest.kt"
+      }
+    ],
+    "candidate": "cmautobg1",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "5c286ed5473aaaa52d0e8d596e1b3651fc9ebe8800f369f6b8fabf699f9cca2f",
+      "app/build/outputs/apk/debug/app-debug.apk": "d75f4f5d44c378694747c5116d34abc049856d19b80e188501630f7d6889989a"
+    },
+    "lint_errors": 0
+  },
+  "device_folder": "device-17bdfc2fcea34e12a4e00f6decf8ae50",
+  "device": {
+    "original_notification_granted": false,
+    "restored_app_op": "ignore",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "5c286ed5473aaaa52d0e8d596e1b3651fc9ebe8800f369f6b8fabf699f9cca2f",
+      "app/build/outputs/apk/debug/app-debug.apk": "d75f4f5d44c378694747c5116d34abc049856d19b80e188501630f7d6889989a"
+    },
+    "runs": [
+      {
+        "log_sha256": "7ee9f710d340ed239a9b58844da05b30a1957f20a67f788b6fcee802c8ce4674",
+        "images": [
+          {
+            "sha256": "c1b06188bf68c1b1920c19b86044e674cfe22919515571ed1f1a09c6eed49df4",
+            "path": "font-1.0\\86dec78d-d01f-46d4-848e-6e99d37961c2\\background-enabled.png"
+          },
+          {
+            "sha256": "375dd2426cef11ebd86338f2d825a34e7d974ec0efcad0bf47ec04b3870dff84",
+            "path": "font-1.0\\86dec78d-d01f-46d4-848e-6e99d37961c2\\background-notification.png"
+          },
+          {
+            "sha256": "44e03c870d94aad2c0faf3a64469445bc3995630e88171e4d85f205bc2124575",
+            "path": "font-1.0\\86dec78d-d01f-46d4-848e-6e99d37961c2\\background-returned.png"
+          },
+          {
+            "sha256": "55e80507dd67568db3f6200d44a1f22fa2d082ef606c8399be0ce35c6e158be8",
+            "path": "font-1.0\\86dec78d-d01f-46d4-848e-6e99d37961c2\\background-stopped.png"
+          }
+        ],
+        "font": "1.0",
+        "tests": 1
+      },
+      {
+        "log_sha256": "c77839d99b936661ccb2d9c86656f4cba220fec9df59eaacb6c550c0a0f9a872",
+        "images": [
+          {
+            "sha256": "7dd96f9d805b8fe0d144ecee267a9a19118d647c8515e948e678bb6996b528dc",
+            "path": "font-1.5\\d1d0ea7d-54b8-4954-bc43-d7b1dc66d281\\background-enabled.png"
+          },
+          {
+            "sha256": "585ce30398dbb326fd89969f6f5f9dab6fb92c475533505e5672e61f343d1997",
+            "path": "font-1.5\\d1d0ea7d-54b8-4954-bc43-d7b1dc66d281\\background-notification.png"
+          },
+          {
+            "sha256": "351b59d5e245ba78fdfd45e66ab92b59c63f7c4e877a3bd91f21f1b60a7f2904",
+            "path": "font-1.5\\d1d0ea7d-54b8-4954-bc43-d7b1dc66d281\\background-returned.png"
+          },
+          {
+            "sha256": "9257d11421fbd7b5a2a51fc9548a21de4a036a48ebe6b24101cd9c9ebfde2e42",
+            "path": "font-1.5\\d1d0ea7d-54b8-4954-bc43-d7b1dc66d281\\background-stopped.png"
+          }
+        ],
+        "font": "1.5",
+        "tests": 1
+      }
+    ],
+    "restored_font": "1.0",
+    "candidate": "cmautobg1",
+    "original_font": "1.0",
+    "restored_notification_granted": false,
+    "original_app_op": "ignore"
+  },
+  "screen_off_intervals_ms": [
+    2493,
+    2495
+  ],
+  "extra_evidence": [
+    {
+      "path": "screen-off-intervals.log",
+      "sha256": "a2ccc494122975414e490c13b13f306e0d38bd218078b9826709f1527fcc0e63"
+    },
+    {
+      "path": "activity-timeline.log",
+      "sha256": "321f7e15dca57a71756bdd21bc74a9a5ef3b658b9d451fa64356f8e0124145fa"
+    }
+  ],
+  "screenshots_reviewed": 8,
+  "visual_sheet_sha256": "287a9858d7bd88714cb6d36c6782835dc1bd157ba0b54474259f25d2ec0b89ed"
+}

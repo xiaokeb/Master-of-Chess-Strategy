@@ -157,6 +157,25 @@ class CompetitionMahjongAutoPlaybackTest {
         } finally { harness.close() }
     }
 
+    @Test fun notificationStopPausesOnlyItsRunAndCancelsTheBackgroundTimer() = runBlocking {
+        val harness = PlaybackHarness(CompetitionMahjongAutoSettings(paused = false, backgroundEnabled = true))
+        try {
+            harness.playback.setHost(false, true)
+            assertTrue(harness.playback.open())
+            harness.timers.next()
+            assertTrue(harness.playback.pauseForBackgroundStop("retired-run"))
+            assertTrue(harness.playback.state.value.backgroundAuthorized)
+            assertFalse(checkNotNull(harness.native.store.load(0)).settings.paused)
+            val armed = harness.timers.next()
+            assertTrue(harness.playback.pauseForBackgroundStop(checkNotNull(harness.playback.state.value.activity.runId)))
+            assertTrue(armed.signal.isCancelled)
+            assertFalse(harness.playback.state.value.backgroundAuthorized)
+            assertFalse(harness.timers.hasActive())
+            assertTrue(checkNotNull(harness.native.store.load(0)).settings.paused)
+            assertEquals(0, harness.native.active.advanceCalls)
+        } finally { harness.close() }
+    }
+
     @Test fun nextHandSaveFailureDoesNotCreateAutomaticRetryLoop() = runBlocking {
         val harness = PlaybackHarness(CompetitionMahjongAutoSettings(paused = false))
         try {

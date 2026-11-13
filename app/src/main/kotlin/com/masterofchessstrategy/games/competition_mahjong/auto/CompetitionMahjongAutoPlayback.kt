@@ -46,6 +46,7 @@ class CompetitionMahjongAutoPlayback(
         data object Open : Operation
         data class Host(val foreground: Boolean, val backgroundAuthorized: Boolean) : Operation
         data class Settings(val value: CompetitionMahjongAutoSettings) : Operation
+        data class StopBackground(val runId: String) : Operation
         data object Step : Operation
         data object Undo : Operation
         data object Retry : Operation
@@ -156,6 +157,7 @@ class CompetitionMahjongAutoPlayback(
     suspend fun setHost(foreground: Boolean, backgroundAuthorized: Boolean = false): Boolean =
         submit(Operation.Host(foreground, backgroundAuthorized))
     suspend fun updateSettings(value: CompetitionMahjongAutoSettings): Boolean = submit(Operation.Settings(value))
+    internal suspend fun pauseForBackgroundStop(runId: String): Boolean = submit(Operation.StopBackground(runId))
     suspend fun step(): Boolean = submit(Operation.Step)
     suspend fun undo(): Boolean = submit(Operation.Undo)
     suspend fun retrySave(): Boolean = submit(Operation.Retry)
@@ -176,6 +178,13 @@ class CompetitionMahjongAutoPlayback(
         Operation.Open -> controller.open().also { if (it) { halted = false; failure = null } }
         is Operation.Host -> { foreground = operation.foreground; backgroundAuthorized = operation.backgroundAuthorized; true }
         is Operation.Settings -> controller.updateSettings(operation.value).also { if (it) { halted = false; failure = null } }
+        is Operation.StopBackground -> {
+            val current = controller.state.value
+            if (current.runId != operation.runId) true else {
+                backgroundAuthorized = false
+                current.settings.paused || current.finished || controller.updateSettings(current.settings.copy(paused = true))
+            }
+        }
         Operation.Step -> {
             (if (!pauseForManual()) false else controller.state.value.let { controller.step(it.seriesIndex, it.handIndex) })
                 .also { if (it) { halted = false; failure = null } }

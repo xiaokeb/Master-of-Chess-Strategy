@@ -1,6 +1,15 @@
 package com.masterofchessstrategy.games.competition_mahjong.auto
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -8,9 +17,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModel
@@ -18,11 +30,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongTableScreen
+import com.masterofchessstrategy.games.competition_mahjong.auto.production.CompetitionMahjongAutoBackground
 import com.masterofchessstrategy.games.competition_mahjong.match.policy.CompetitionMahjongPlayPolicy
 import java.util.Locale
 import java.util.UUID
 
-/** Production store and trusted permission are injected; the route creates no fallback persistence/service. */
+/** Production storage and qualification are supplied by the navigation owner. */
 @Composable
 fun CompetitionMahjongAutoRoute(
     store: CompetitionMahjongAutoStore,
@@ -36,6 +49,7 @@ fun CompetitionMahjongAutoRoute(
     backgroundAuthorized: Boolean = false,
     ownerKey: String? = null,
     onWriterReady: (CompetitionMahjongAutoPlayViewModel) -> Unit = {},
+    useBackgroundService: Boolean = false,
 ) {
     val config = remember(initialConfig, playPolicy) { initialConfig ?: CompetitionMahjongAutoRunConfig(
         UUID.randomUUID().toString(), System.nanoTime() and Long.MAX_VALUE,
@@ -53,28 +67,48 @@ fun CompetitionMahjongAutoRoute(
     )
     SideEffect { onWriterReady(game) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(game, lifecycle, backgroundAuthorized) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_START) game.setHost(true, backgroundAuthorized)
-            if (event == Lifecycle.Event.ON_STOP) game.setHost(false, backgroundAuthorized)
+    val power = LocalContext.current.getSystemService(PowerManager::class.java)
+    val serviceOwner = if (useBackgroundService) checkNotNull(ownerKey) else null
+    DisposableEffect(game, lifecycle, serviceOwner, backgroundAuthorized, power) {
+        val host = Any()
+        var lastVisible: Boolean? = null
+        if (serviceOwner != null) game.attachBackgroundHost(host)
+        fun synchronize() {
+            val started = lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
+            val visible = started && (serviceOwner == null || power.isInteractive)
+            if (visible != lastVisible) {
+                lastVisible = visible
+                if (serviceOwner != null) game.updateBackgroundHost(host, visible)
+                else game.setHost(visible, backgroundAuthorized)
+            }
         }
+        val observer = LifecycleEventObserver { _, _ -> synchronize() }
         lifecycle.addObserver(observer)
-        game.setHost(lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED), backgroundAuthorized)
-        onDispose { lifecycle.removeObserver(observer); game.setHost(false, false) }
+        synchronize()
+        onDispose {
+            lifecycle.removeObserver(observer)
+            if (serviceOwner != null) game.detachBackgroundHost(host) else game.setHost(false, false)
+        }
     }
-    BackHandler { game.leave(onBack) }
-    CompetitionMahjongAutoContent(game, { game.leave(onBack) }, modifier)
+    val leave = {
+        serviceOwner?.let(CompetitionMahjongAutoBackground::stopOwner)
+        game.leave(onBack)
+        Unit
+    }
+    BackHandler(onBack = leave)
+    CompetitionMahjongAutoContent(game, leave, modifier, serviceOwner)
 }
 
 @Composable
-internal fun CompetitionMahjongAutoContent(game: CompetitionMahjongAutoPlayViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
+internal fun CompetitionMahjongAutoContent(game: CompetitionMahjongAutoPlayViewModel, onBack: () -> Unit,
+    modifier: Modifier = Modifier, serviceOwner: String? = null) {
     val state by game.state.collectAsState()
     var settingsOpen by remember { mutableStateOf(false) }
     var newRunOpen by remember { mutableStateOf(false) }
     val activity = state.playback.activity
     BoxWithConstraints(modifier.fillMaxSize().testTag("competition_mahjong_auto_content")) {
         val controls: @Composable (Modifier) -> Unit = { controlsModifier ->
-            AutoControls(state, game, onBack, { settingsOpen = true }, { newRunOpen = true }, controlsModifier)
+            AutoControls(state, game, onBack, { settingsOpen = true }, { newRunOpen = true }, controlsModifier, serviceOwner)
         }
         val table: @Composable (Modifier) -> Unit = { tableModifier ->
             state.table?.let { tableState ->
@@ -108,7 +142,7 @@ internal fun CompetitionMahjongAutoContent(game: CompetitionMahjongAutoPlayViewM
 
 @Composable
 private fun AutoControls(state: CompetitionMahjongAutoPlayUiState, game: CompetitionMahjongAutoPlayViewModel,
-    onBack: () -> Unit, onSettings: () -> Unit, onNew: () -> Unit, modifier: Modifier) {
+    onBack: () -> Unit, onSettings: () -> Unit, onNew: () -> Unit, modifier: Modifier, serviceOwner: String?) {
     val playback = state.playback
     val activity = playback.activity
     Card(modifier.padding(8.dp).testTag("competition_mahjong_auto_controls")) {
@@ -161,6 +195,9 @@ private fun AutoControls(state: CompetitionMahjongAutoPlayUiState, game: Competi
                         modifier = Modifier.testTag("competition_mahjong_auto_toggle")) {
                         Text(if (activity.settings.paused || playback.halted) "继续演局" else "暂停演局")
                     }
+                    if (serviceOwner != null && activity.settings.backgroundEnabled && !activity.finished) {
+                        AutoBackgroundControls(serviceOwner, playback, game::pauseForBackgroundStop)
+                    }
                     OutlinedButton(onClick = { game.step() }, enabled = playback.canStep,
                         modifier = Modifier.testTag("competition_mahjong_auto_step")) {
                         Text(if (activity.frame.isAutoTerminal()) if (activity.handIndex == 15) "下一赛事" else "下一盘" else "单步前进")
@@ -172,6 +209,51 @@ private fun AutoControls(state: CompetitionMahjongAutoPlayUiState, game: Competi
             }
             OutlinedButton(onClick = onNew, enabled = !playback.busy && !activity.needsSave && state.difficultyOptions.any { it.unlocked },
                 modifier = Modifier.testTag("competition_mahjong_auto_new")) { Text("新开演局") }
+        }
+    }
+}
+
+@Composable
+private fun AutoBackgroundControls(owner: String, playback: CompetitionMahjongAutoPlaybackState, pause: (String) -> Unit) {
+    val context = LocalContext.current
+    val returnTo = LocalActivity.current?.componentName
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val current by CompetitionMahjongAutoBackground.lease.collectAsState()
+    val own = current?.takeIf { it.owner == owner }
+    var message by remember(owner) { mutableStateOf<String?>(null) }
+    fun start() {
+        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) ||
+            !CompetitionMahjongAutoBackground.start(context, owner, playback, returnTo, pause)) {
+            message = "后台演局未启动，请在牌桌可见时重试。"
+        }
+    }
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) start() else message = "请开启通知，以便从通知中停止后台演局。"
+    }
+    OutlinedButton(onClick = {
+        message = null
+        if (own != null) CompetitionMahjongAutoBackground.requestStop(own.token)
+        else if (CompetitionMahjongAutoBackground.notificationsAllowed(context)) start()
+        else if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context,
+            Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else message = "请开启通知，以便从通知中停止后台演局。"
+    }, enabled = own != null || (!playback.busy && CompetitionMahjongAutoBackground.eligible(playback)),
+        modifier = Modifier.testTag("competition_mahjong_auto_background_toggle")) {
+        Text(if (own != null) "停止后台演局" else "启动后台演局")
+    }
+    if (own != null) Text(if (own.ready) "后台演局已启用" else "正在启动后台演局",
+        modifier = Modifier.testTag("competition_mahjong_auto_background_status"))
+    else if (playback.activity.settings.paused) Text("继续演局后可启动后台执行。")
+    message?.let {
+        Text(it)
+        if (!CompetitionMahjongAutoBackground.notificationsAllowed(context)) {
+            TextButton(onClick = {
+                val intent = if (Build.VERSION.SDK_INT >= 26) Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                else Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri())
+                context.startActivity(intent)
+            }) { Text("通知设置") }
         }
     }
 }
@@ -207,7 +289,9 @@ private fun AutoSettingsDialog(state: CompetitionMahjongAutoPlayUiState, onDismi
                 AutoCheck("自动续赛事", draft.autoContinue, "auto_continue") { draft = draft.copy(autoContinue = it) }
                 AutoNumber("最多连续赛事（1–1000，每赛事16盘）", maxSeries, { maxSeries = it }, "max_series")
                 AutoCheck("允许后台演局", draft.backgroundEnabled, "background") { draft = draft.copy(backgroundEnabled = it) }
-                if (!state.playback.backgroundAuthorized) Text("后台执行尚未启用，离开前台将暂停推进。")
+                if (draft.backgroundEnabled && !state.playback.backgroundAuthorized) {
+                    Text("保存后，在牌桌继续演局并启动后台执行。")
+                }
                 AutoNumber("后台最小间隔（毫秒，2000–60000）", backgroundDelay, { backgroundDelay = it }, "background_delay")
                 Text("完成赛事的保存条件", style = MaterialTheme.typography.titleSmall)
                 AutoCheck("保存全部完成赛事", draft.archiveAll, "archive_all") { draft = draft.copy(archiveAll = it) }

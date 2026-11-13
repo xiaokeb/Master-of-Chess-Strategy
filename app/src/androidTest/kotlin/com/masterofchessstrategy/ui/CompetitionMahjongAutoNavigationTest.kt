@@ -1,10 +1,15 @@
 package com.masterofchessstrategy.ui
 
+import android.Manifest
 import android.accessibilityservice.AccessibilityService
+import android.app.Notification
+import android.app.NotificationManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
+import android.os.PowerManager
 import android.os.SystemClock
 import android.provider.DocumentsContract
 import android.view.accessibility.AccessibilityNodeInfo
@@ -23,7 +28,13 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.core.app.ActivityOptionsCompat
 import androidx.test.platform.app.InstrumentationRegistry
+import com.masterofchessstrategy.engine.NativeCompetitionMahjongAutoSession
+import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoCheckpoint
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoOpeningLibrary
+import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoRunConfig
+import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoSettings
+import com.masterofchessstrategy.games.competition_mahjong.auto.production.CompetitionMahjongAutoBackground
+import com.masterofchessstrategy.games.competition_mahjong.auto.production.CompetitionMahjongAutoBackgroundService
 import com.masterofchessstrategy.games.competition_mahjong.auto.production.CompetitionMahjongAutoProductionRoute
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoExportCodec
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayInstrumentedTest.Companion.nativeArchive
@@ -36,7 +47,10 @@ import com.masterofchessstrategy.settings.awaitLocalDataWriters
 import com.masterofchessstrategy.ui.theme.MocsTheme
 import java.io.File
 import java.util.UUID
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Rule
@@ -151,6 +165,131 @@ class CompetitionMahjongAutoNavigationTest {
         assertTrue(runBlocking { db.matchOutcomeDao().listAll().isEmpty() })
         capture("opening-resumed")
     }
+
+    @Test fun notificationControlsScreenOffPlaybackAndCommitsThePause() {
+        check(Build.HARDWARE in setOf("ranchu", "goldfish"))
+        val context = instrumentation.targetContext
+        val notifications = context.getSystemService(NotificationManager::class.java)
+        val power = context.getSystemService(PowerManager::class.java)
+        val store = RoomCompetitionMahjongAutoStore(database, 0)
+        val run = CompetitionMahjongAutoRunConfig(UUID.randomUUID().toString(), 20261112)
+        val start = NativeCompetitionMahjongAutoSession(run.handConfig(0, 0, false)).use { it.serialize() }
+        val settings = CompetitionMahjongAutoSettings(stepDelayMillis = 700, backgroundEnabled = true,
+            backgroundDelayMillis = 2500)
+        completeTutorial()
+        runBlocking {
+            assertNull(store.load(0))
+            store.save(CompetitionMahjongAutoCheckpoint(run, settings, 0, 0, emptyList(), start, start))
+        }
+        fun notification() = notifications.activeNotifications
+            .singleOrNull { it.id == CompetitionMahjongAutoBackgroundService.NOTIFICATION_ID }?.notification
+        fun saved() = checkNotNull(runBlocking { store.load(0) })
+        fun await(stage: String, predicate: () -> Boolean) = runBlocking {
+            try {
+                withTimeout(20_000) { while (!predicate()) delay(60) }
+            } catch (failure: TimeoutCancellationException) {
+                val lease = CompetitionMahjongAutoBackground.lease.value
+                throw AssertionError("$stage: interactive=${power.isInteractive}, notification=${notification() != null}, " +
+                    "leaseReady=${lease?.ready}, foreground=${lease?.foreground}, events=${saved().eventsAfterOpening}, " +
+                    "paused=${saved().settings.paused}", failure)
+            }
+        }
+        fun wakeHeld() = backgroundShell("dumpsys power").substringAfter("Wake Locks:").substringBefore("Suspend Blockers:")
+            .contains("MasterofChessStrategy:CompetitionMahjongAuto")
+        fun wakeScreen() {
+            backgroundShell("input keyevent 224")
+            backgroundShell("wm dismiss-keyguard")
+        }
+        val button = "competition_mahjong_auto_background_toggle"
+        try {
+            wakeScreen()
+            assertFalse(notifications.areNotificationsEnabled())
+            openModes()
+            openAutomatic()
+            compose.onNodeWithTag(button).performScrollTo().assertIsNotEnabled()
+            compose.onNodeWithTag("competition_mahjong_auto_toggle").performScrollTo().performClick()
+            compose.waitUntil(15_000) { compose.onAllNodes(hasTestTag(button) and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithTag(button).performScrollTo().performClick()
+            val deadline = SystemClock.elapsedRealtime() + 4_000
+            while (SystemClock.elapsedRealtime() < deadline) {
+                val root = instrumentation.uiAutomation.rootInActiveWindow
+                val deny = listOf("com.google.android.permissioncontroller", "com.android.permissioncontroller")
+                    .firstNotNullOfOrNull { pkg -> root?.findAccessibilityNodeInfosByViewId("$pkg:id/permission_deny_button")?.firstOrNull() }
+                if (deny?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true) break
+                SystemClock.sleep(80)
+            }
+            compose.onNodeWithText("通知设置").performScrollTo().assertIsDisplayed()
+            assertNull(CompetitionMahjongAutoBackground.lease.value)
+            assertNull(notification())
+
+            instrumentation.uiAutomation.grantRuntimePermission(context.packageName, Manifest.permission.POST_NOTIFICATIONS)
+            backgroundShell("cmd appops set --uid ${context.packageName} POST_NOTIFICATION allow")
+            await("runtime notification grant") { notifications.areNotificationsEnabled() }
+            compose.onNodeWithTag(button).performScrollTo().performClick()
+            await("foreground service started") { CompetitionMahjongAutoBackground.lease.value?.ready == true && notification() != null }
+            compose.onNodeWithTag("competition_mahjong_auto_background_status").performScrollTo().assertTextEquals("后台演局已启用")
+            capture("background-enabled")
+            val notice = checkNotNull(notification())
+            assertTrue(notice.flags and Notification.FLAG_ONGOING_EVENT != 0)
+            assertEquals(CompetitionMahjongAutoBackground.CHANNEL, notice.channelId)
+            assertEquals("停止后台演局", notice.actions.single().title.toString())
+            backgroundShell("cmd statusbar expand-notifications")
+            try {
+                SystemClock.sleep(800)
+                captureFailure("background-notification")
+            } finally { backgroundShell("cmd statusbar collapse") }
+
+            backgroundShell("input keyevent 223")
+            await("screen-off lease and wake lock") {
+                !power.isInteractive && CompetitionMahjongAutoBackground.lease.value?.foreground == false && wakeHeld()
+            }
+            val atSleep = saved().eventsAfterOpening
+            await("first screen-off event") { saved().eventsAfterOpening > atSleep }
+            val first = saved().eventsAfterOpening
+            val firstAt = SystemClock.elapsedRealtime()
+            await("second screen-off event") { saved().eventsAfterOpening > first }
+            val interval = SystemClock.elapsedRealtime() - firstAt
+            assertTrue("Measured background interval $interval ms", interval >= 2200)
+            val background = saved()
+            assertEquals(run.runId, background.config.runId)
+            println("MAHJONG_BACKGROUND events=$atSleep/$first/${background.eventsAfterOpening} interval_ms=$interval")
+
+            wakeScreen()
+            notice.contentIntent.send()
+            await("notification returns to the visible owner") {
+                power.isInteractive && CompetitionMahjongAutoBackground.lease.value?.foreground == true && !wakeHeld()
+            }
+            assertEquals(run.runId, saved().config.runId)
+            capture("background-returned")
+
+            backgroundShell("input keyevent 223")
+            await("second screen-off lease") {
+                !power.isInteractive && CompetitionMahjongAutoBackground.lease.value?.foreground == false && wakeHeld()
+            }
+            notice.actions.single().actionIntent.send()
+            await("notification stop commits pause") {
+                CompetitionMahjongAutoBackground.lease.value == null && notification() == null && !wakeHeld() && saved().settings.paused
+            }
+            val stopped = saved()
+            SystemClock.sleep(settings.backgroundDelayMillis + 400)
+            assertArrayEquals(stopped.engineRecord, saved().engineRecord)
+            assertEquals(run.runId, saved().config.runId)
+            assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+            wakeScreen()
+            compose.onNodeWithTag("competition_mahjong_auto_toggle").performScrollTo().assertTextEquals("继续演局")
+            capture("background-stopped")
+        } finally {
+            instrumentation.runOnMainSync { CompetitionMahjongAutoBackground.lease.value?.let {
+                CompetitionMahjongAutoBackground.release(it.token)
+            } }
+            wakeScreen()
+            backgroundShell("cmd appops set --uid ${context.packageName} POST_NOTIFICATION allow")
+        }
+    }
+
+    private fun backgroundShell(command: String): String = ParcelFileDescriptor.AutoCloseInputStream(
+        instrumentation.uiAutomation.executeShellCommand(command),
+    ).use { it.readBytes().toString(Charsets.UTF_8) }
 
     @Test fun productionArchiveReplaysAndSystemFilePickerCancellationPreservesPrivateArchive() {
         val archive = nativeArchive()

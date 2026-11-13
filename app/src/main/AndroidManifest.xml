@@ -23,6 +23,13 @@
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="User-started offline chess games: continue bounded AI turns and timed play with visible stop controls while the screen is off." />
         </service>
+        <service
+            android:name=".games.competition_mahjong.auto.production.CompetitionMahjongAutoBackgroundService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="User-started offline Mahjong AI demonstration with slower screen-off play and a visible stop action." />
+        </service>
         <activity
             android:name=".MainActivity"
             android:exported="true"

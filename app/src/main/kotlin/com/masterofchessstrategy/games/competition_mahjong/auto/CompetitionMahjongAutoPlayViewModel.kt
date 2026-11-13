@@ -10,17 +10,23 @@ import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongRes
 import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongSeatUi
 import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongTableUiState
 import com.masterofchessstrategy.games.competition_mahjong.competitionMahjongTableState
+import com.masterofchessstrategy.games.competition_mahjong.auto.production.CompetitionMahjongAutoBackground
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchSeating
 import com.masterofchessstrategy.games.competition_mahjong.match.policy.CompetitionMahjongDifficultyOption
 import com.masterofchessstrategy.games.competition_mahjong.match.policy.CompetitionMahjongPlayPolicy
 import com.masterofchessstrategy.settings.LocalDataWriterRetirement
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Collections
@@ -91,8 +97,15 @@ class CompetitionMahjongAutoPlayViewModel(
     private val controller = CompetitionMahjongAutoController(initialConfig, trackingStore, playPolicy, initialSettings,
         openingRecord, sessionFactory, dispatcher)
     private val playback = CompetitionMahjongAutoPlayback(controller, scope, waitMillis)
+    private val backgroundForeground = MutableStateFlow(false)
+    private var backgroundBinding: Job? = null
+    private var visibleHost: Any? = null
     override val retirementCompletion get() = playback.retirementCompletion
-    override fun beginRetirement() = playback.beginRetirement()
+    override fun beginRetirement(): Deferred<Unit> {
+        navigationOwnerKey?.let(CompetitionMahjongAutoBackground::stopOwner)
+        backgroundBinding?.cancel()
+        return playback.beginRetirement()
+    }
     val state = combine(playback.state, configuration) { current, metadata ->
         CompetitionMahjongAutoPlayUiState(current, autoTable(current),
             metadata?.takeIf { it.runId == current.activity.runId && it.seriesIndex == current.activity.seriesIndex &&
@@ -100,9 +113,41 @@ class CompetitionMahjongAutoPlayViewModel(
     }.stateIn(scope, SharingStarted.Eagerly, CompetitionMahjongAutoPlayUiState(difficultyOptions = options, openings = openingOptions))
     init { scope.launch { playback.open() } }
 
+    /** The navigation owner keeps its lease while Android recreates the Activity. */
+    internal fun attachBackgroundHost(host: Any) {
+        val owner = checkNotNull(navigationOwnerKey)
+        visibleHost = host
+        if (backgroundBinding != null) return
+        backgroundBinding = scope.launch {
+            coroutineScope {
+                launch {
+                    combine(playback.state, backgroundForeground) { state, foreground -> state to foreground }
+                        .collect { (state, foreground) -> CompetitionMahjongAutoBackground.update(owner, state, foreground) }
+                }
+                launch {
+                    val permission = CompetitionMahjongAutoBackground.lease.map { it != null && it.owner == owner && it.ready }
+                        .distinctUntilChanged()
+                    combine(backgroundForeground, permission) { foreground, authorized -> foreground to authorized }
+                        .collect { (foreground, authorized) -> playback.setHost(foreground, authorized) }
+                }
+            }
+        }
+    }
+
+    internal fun updateBackgroundHost(host: Any, foreground: Boolean) {
+        if (visibleHost === host) backgroundForeground.value = foreground
+    }
+
+    internal fun detachBackgroundHost(host: Any) {
+        if (visibleHost !== host) return
+        visibleHost = null
+        backgroundForeground.value = false
+    }
+
     fun setHost(foreground: Boolean, backgroundAuthorized: Boolean = false) =
         scope.launch { playback.setHost(foreground, backgroundAuthorized) }
     fun updateSettings(value: CompetitionMahjongAutoSettings) = scope.launch { playback.updateSettings(value) }
+    internal fun pauseForBackgroundStop(runId: String) { scope.launch { playback.pauseForBackgroundStop(runId) } }
     fun togglePlayback() = scope.launch {
         val current = playback.state.value
         playback.updateSettings(current.activity.settings.copy(paused = !(current.activity.settings.paused || current.halted)))

@@ -162,7 +162,7 @@ internal fun CompetitionMahjongAutoProductionRoute(
                     System.nanoTime() and Long.MAX_VALUE, viewer, List(4) { firstLevel })
             }
             CompetitionMahjongAutoRoute(host.store, onBack, policy, initialConfig = config, openings = holder.openings, ownerKey = host.key,
-                onWriterReady = writers::register)
+                onWriterReady = writers::register, useBackgroundService = true)
         }
         else -> {
             BackHandler(onBack = onBack)
