@@ -109,6 +109,42 @@ class CompetitionMahjongChallengeNavigationTest {
         capture("native-verified-fan")
     }
 
+    @Test fun discardTrainingReplaysEveryChoiceAndSavesOnlyAfterConfirmedWin() {
+        val hand = CompetitionMahjongPracticePosition.discardOpeningHand()
+        assertEquals(14, hand.size)
+        val winningDiscards = hand.distinct().filter { CompetitionMahjongPracticePosition.discardAndDraw(it) != null }
+        assertEquals(listOf(31), winningDiscards)
+        val store = RoomCompetitionMahjongChallengeProgress(database)
+        val puzzleId = CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID
+        val prerequisites = CompetitionMahjongChallengeLibrary.challenges.takeWhile { it.id != puzzleId }.map { it.id }.toSet()
+        runBlocking {
+            prerequisites.forEach { store.complete(it) }
+            store.select(puzzleId)
+        }
+        compose.onNodeWithTag(HOME_COMPETITION_MAHJONG_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag("competition_challenge_entry").performScrollTo().performClick()
+        waitFor("competition_mahjong_challenge_hand")
+        compose.onNodeWithTag("competition_mahjong_challenge_discard_27").performScrollTo().performClick()
+        compose.onNodeWithTag("competition_mahjong_challenge_feedback").performScrollTo()
+            .assertTextContains("无法和牌", substring = true)
+        assertEquals(prerequisites, runBlocking { store.load().completedIds })
+        capture("discard-rejected")
+
+        compose.onNodeWithTag("competition_mahjong_challenge_discard_31").performScrollTo().performClick()
+        waitFor("competition_mahjong_challenge_confirm_win")
+        compose.onNodeWithText("本次摸牌 东").performScrollTo().assertIsDisplayed()
+        assertEquals(prerequisites, runBlocking { store.load().completedIds })
+        capture("discard-next-draw")
+
+        compose.onNodeWithTag("competition_mahjong_challenge_confirm_win").performScrollTo().performClick()
+        waitFor("competition_mahjong_challenge_completed")
+        assertEquals(prerequisites + puzzleId, runBlocking { store.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        compose.onNodeWithTag("competition_mahjong_challenge_rewards").performScrollTo()
+            .assertTextEquals("训练奖励 14 星 · 610 分")
+        capture("discard-win")
+    }
+
     private fun capture(name: String) {
         compose.waitForIdle()
         val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()

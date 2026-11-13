@@ -9,17 +9,18 @@ import kotlin.random.Random
 class CompetitionMahjongChallengeLibraryTest {
     @Test fun catalogHasFourLevelsThemesAndTraceableOfficialFanIds() {
         val values = CompetitionMahjongChallengeLibrary.challenges
-        assertEquals(13, values.size)
+        assertEquals(14, values.size)
         assertEquals(values.size, values.map { it.id }.toSet().size)
         CompetitionMahjongChallengeLevel.entries.forEach { level ->
-            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 4 else 3, values.count { it.level == level })
+            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 5 else 3, values.count { it.level == level })
         }
         CompetitionMahjongChallengeTheme.entries.forEach { theme ->
             assertTrue(values.any { it.theme == theme })
         }
         values.forEach { challenge ->
             assertTrue(challenge.sourceFanIds.all { it in 1..81 })
-            assertEquals(1, challenge.choices.count { it.id == challenge.correctChoiceId })
+            val expected = if (challenge.id == CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID) 0 else 1
+            assertEquals(expected, challenge.choices.count { it.id == challenge.correctChoiceId })
         }
     }
 

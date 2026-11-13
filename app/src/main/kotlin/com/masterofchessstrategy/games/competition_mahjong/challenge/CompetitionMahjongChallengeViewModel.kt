@@ -92,11 +92,18 @@ class CompetitionMahjongChallengeViewModel(
             publish(progress = progress, exercise = candidate.state())
         }
 
-    fun answer(choiceId: String): Job = operation("牌型题操作失败，题面已保留") {
+    fun answer(choiceId: String): Job = answerWith { it.answer(choiceId) }
+
+    internal fun discard(tile: Int): Job = answerWith { it.discard(tile) }
+
+    internal fun confirmWin(): Job = answerWith { it.confirmWin() }
+
+    private fun answerWith(answer: (CompetitionMahjongChallengeSession) -> CompetitionMahjongChallengeState): Job =
+        operation("牌型题操作失败，题面已保留") {
         val active = checkNotNull(session)
         val previous = active.state()
         require(!previous.completed && !mutableState.value.needsSave)
-        val result = active.answer(choiceId)
+        val result = answer(active)
         if (result.completed && result.challenge.id !in mutableState.value.completedIds) {
             pendingCompletion = result.challenge.id
             publish(exercise = result, needsSave = true)
@@ -127,8 +134,11 @@ class CompetitionMahjongChallengeViewModel(
 
     private fun createSession(id: String): CompetitionMahjongChallengeSession {
         val challenge = checkNotNull(CompetitionMahjongChallengeLibrary.challenge(id)) { "牌型题不存在" }
-        val hand = if (id == CompetitionMahjongPracticePosition.PUZZLE_ID) CompetitionMahjongPracticePosition.verifySevenPairs()
-            else emptyList()
+        val hand = when (id) {
+            CompetitionMahjongPracticePosition.PUZZLE_ID -> CompetitionMahjongPracticePosition.verifySevenPairs()
+            CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID -> CompetitionMahjongPracticePosition.discardOpeningHand()
+            else -> emptyList()
+        }
         return CompetitionMahjongChallengeSession(challenge, hand)
     }
 

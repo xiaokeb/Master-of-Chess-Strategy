@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.masterofchessstrategy.games.competition_mahjong.MahjongTile
+import com.masterofchessstrategy.games.competition_mahjong.competitionMahjongTileName
 
 @Composable
 fun CompetitionMahjongChallengeRoute(
@@ -45,6 +46,8 @@ fun CompetitionMahjongChallengeRoute(
         onRetry = { game.retry() },
         onBack = onBack,
         modifier = modifier,
+        onDiscard = { game.discard(it) },
+        onConfirmWin = { game.confirmWin() },
     )
 }
 
@@ -60,6 +63,8 @@ internal fun CompetitionMahjongChallengeScreen(
     onRetry: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onDiscard: (Int) -> Unit = {},
+    onConfirmWin: () -> Unit = {},
 ) {
     var catalogOpen by remember { mutableStateOf(false) }
     var theme by remember { mutableStateOf<CompetitionMahjongChallengeTheme?>(null) }
@@ -102,6 +107,7 @@ internal fun CompetitionMahjongChallengeScreen(
                                 exercise.visibleHand.forEach { MahjongTile(it, faceUp = true) }
                             }
                         }
+                        exercise.drawnTile?.let { tile -> Text("本次摸牌 ${competitionMahjongTileName(tile)}") }
                         Text("规则索引：官方番种 ID " + exercise.challenge.sourceFanIds.sorted().joinToString("、"),
                             style = MaterialTheme.typography.bodySmall)
                     } else Text(if (state.loading) "正在读取牌型题…" else "牌型题暂不可用")
@@ -110,6 +116,20 @@ internal fun CompetitionMahjongChallengeScreen(
             val answers: @Composable (Modifier) -> Unit = { panel ->
                 Column(panel.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     if (exercise != null) {
+                        if (exercise.discardTraining && !exercise.completed) {
+                            if (exercise.chosenDiscard == null) {
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    exercise.visibleHand.distinct().forEach { tile ->
+                                        OutlinedButton(onClick = { onDiscard(tile) }, enabled = state.canOperate,
+                                            modifier = Modifier.testTag("competition_mahjong_challenge_discard_$tile")) {
+                                            Text("打出${competitionMahjongTileName(tile)}")
+                                        }
+                                    }
+                                }
+                            } else Button(onClick = onConfirmWin, enabled = state.canOperate,
+                                modifier = Modifier.testTag("competition_mahjong_challenge_confirm_win")) { Text("自摸") }
+                        }
                         exercise.challenge.choices.forEach { choice ->
                             val selected = exercise.selectedChoiceId == choice.id
                             if (selected) Button(onClick = { onAnswer(choice.id) },

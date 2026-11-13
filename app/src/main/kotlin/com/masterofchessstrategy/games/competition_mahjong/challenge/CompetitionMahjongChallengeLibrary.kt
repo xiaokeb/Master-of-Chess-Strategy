@@ -31,8 +31,12 @@ class CompetitionMahjongChallenge(
     init {
         require(id.matches(Regex("[a-z0-9-]{1,48}")) && title.isNotBlank())
         require(prompt.isNotBlank() && explanation.isNotBlank())
-        require(choices.size in 2..4 && choices.map { it.id }.toSet().size == choices.size)
-        require(choices.any { it.id == correctChoiceId })
+        if (id == CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID) {
+            require(choices.isEmpty() && correctChoiceId.isEmpty())
+        } else {
+            require(choices.size in 2..4 && choices.map { it.id }.toSet().size == choices.size)
+            require(choices.any { it.id == correctChoiceId })
+        }
         require(sourceFanIds.isNotEmpty() && sourceFanIds.all { it in 1..81 })
     }
 }
@@ -44,10 +48,15 @@ data class CompetitionMahjongChallengeState(
     val completed: Boolean = false,
     val feedback: String = "请选择答案。",
     val visibleHand: List<Int> = emptyList(),
+    val discardTraining: Boolean = false,
+    val chosenDiscard: Int? = null,
+    val drawnTile: Int? = null,
 )
 
 class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjongChallenge, hand: List<Int> = emptyList()) {
-    private val initial = CompetitionMahjongChallengeState(challenge, visibleHand = Collections.unmodifiableList(hand.toList()))
+    private val discardTraining = challenge.id == CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID
+    private val initial = CompetitionMahjongChallengeState(challenge, visibleHand = Collections.unmodifiableList(hand.toList()),
+        discardTraining = discardTraining, feedback = if (discardTraining) "请选择要打出的手牌。" else "请选择答案。")
     private var current = initial
     fun state(): CompetitionMahjongChallengeState = current
     fun reset(): CompetitionMahjongChallengeState {
@@ -56,6 +65,7 @@ class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjo
     }
     fun answer(choiceId: String): CompetitionMahjongChallengeState {
         if (current.completed) return current
+        require(!discardTraining)
         require(challenge.choices.any { it.id == choiceId }) { "答案不属于当前牌型题" }
         val correct = choiceId == challenge.correctChoiceId
         current = current.copy(
@@ -64,6 +74,24 @@ class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjo
             completed = correct,
             feedback = if (correct) challenge.explanation else "这项不符合题面条件，请结合番种定义和排斥关系再判断。",
         )
+        return current
+    }
+
+    internal fun discard(tile: Int): CompetitionMahjongChallengeState {
+        require(discardTraining && !current.completed && current.chosenDiscard == null && tile in current.visibleHand)
+        val next = CompetitionMahjongPracticePosition.discardAndDraw(tile)
+        current = if (next == null) current.copy(attempts = current.attempts + 1,
+            feedback = "按题目给定的摸打继续后无法和牌。请重新选择弃牌。")
+        else current.copy(attempts = current.attempts + 1, visibleHand = Collections.unmodifiableList(next.hand),
+            chosenDiscard = tile, drawnTile = next.drawnTile, feedback = "三家按题目走完一轮，你已摸到东风。请确认自摸。")
+        return current
+    }
+
+    internal fun confirmWin(): CompetitionMahjongChallengeState {
+        require(discardTraining && !current.completed)
+        val turn = checkNotNull(CompetitionMahjongPracticePosition.discardAndDraw(checkNotNull(current.chosenDiscard), settle = true))
+        check(turn.hand == current.visibleHand && turn.drawnTile == current.drawnTile)
+        current = current.copy(completed = true, feedback = challenge.explanation)
         return current
     }
 }
@@ -146,6 +174,10 @@ object CompetitionMahjongChallengeLibrary {
             "你坐东家，摸完起手牌。根据当前手牌，选择能成立的和牌方式。", "a",
             "Native 裁定自摸成立，七对计 24 番，已达到八番起和门槛。", setOf(19),
             choice("a", "自摸，七对"), choice("b", "自摸，碰碰和"), choice("c", "不能和牌，继续出牌")),
+        challenge(CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID, "留东听七对", CompetitionMahjongChallengeTheme.PATTERN,
+            CompetitionMahjongChallengeLevel.MASTER,
+            "打出一张牌，保留六对及一张东风。本题中三家依次摸切，过一轮后轮到你摸牌。", "",
+            "七对自摸成立，七对计 24 番。", setOf(19)),
     ))
 
     init {
