@@ -4,11 +4,15 @@ import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.masterofchessstrategy.engine.*
+import com.masterofchessstrategy.game.ChineseChessSoundCue
 import com.masterofchessstrategy.settings.LocalDataWriterRetirement
 import com.masterofchessstrategy.settings.LocalDataWriterFailure
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -32,6 +36,8 @@ class GoAiMatchViewModel(
     private val completedSink: GoAiCompletedMatchSink? = null,
     private val specifiedOpening: GoAiOpening? = null,
     private val completeHumanImmediately: Boolean = false,
+    private val completeAutomaticImmediately: Boolean = false,
+    private val loadSpeed: () -> Float = { 1f },
     private val engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
 ) : ViewModel(), LocalDataWriterRetirement {
     internal var navigationOwnerKey: String? = null
@@ -43,6 +49,9 @@ class GoAiMatchViewModel(
     private val disposed = AtomicBoolean(false)
     private val mutableState = MutableStateFlow(GoAiMatchPageState())
     val state: StateFlow<GoAiMatchPageState> = mutableState.asStateFlow()
+    private val mutableSounds = MutableSharedFlow<ChineseChessSoundCue>(extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    internal val sounds = mutableSounds.asSharedFlow()
     private var opening: Job? = null
     private var engineOwner: GoAiMatchEngineOwner? = null
     private var session: GoAiMatchSession? = null
@@ -67,8 +76,12 @@ class GoAiMatchViewModel(
                 ensureActive()
                 if (disposed.get()) return@launch
                 val owned = checkNotNull(candidate)
+                val initialSpeed = withContext(worker) { loadSpeed() }
+                if (disposed.get()) return@launch
                 val next = GoAiMatchSession(viewModelScope, repository, config, owned, worker, specifiedOpening,
-                    completedSink, completeHumanImmediately = completeHumanImmediately, engineFactory = engineFactory)
+                    completedSink, completeHumanImmediately = completeHumanImmediately,
+                    completeAutomaticImmediately = completeAutomaticImmediately, initialSpeed = initialSpeed,
+                    onSound = { mutableSounds.tryEmit(it) }, engineFactory = engineFactory)
                 engineOwner = owned; candidate = null
                 session = next
                 next.state.collect { match ->
@@ -111,6 +124,9 @@ class GoAiMatchViewModel(
     fun resume() { if (!disposed.get()) session?.resume() }
     fun retrySearch() { if (!disposed.get()) session?.retrySearch() }
     fun setSpeed(speed: Float) { if (!disposed.get()) session?.setSpeed(speed) }
+    internal fun persistSpeed(save: (Float) -> Unit) {
+        if (!disposed.get()) session?.state?.value?.speed?.let(save)
+    }
 
     /** One independent cleanup survives viewModelScope cancellation and remains awaitable. */
     @MainThread

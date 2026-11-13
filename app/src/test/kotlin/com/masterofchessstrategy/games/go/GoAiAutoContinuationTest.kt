@@ -163,6 +163,56 @@ class GoAiAutoContinuationTest {
         } finally { session.closeAndJoin() }
     }
 
+    @Test fun standaloneAutomaticTerminalRetriesArchiveInPlaceAndSurvivesOwnerReopen() = runTest {
+        val config = GoAiMatchConfig(9, humanPlayer = null)
+        val search = GoAiMatchSessionTest.Search().apply {
+            answers.trySend(move(GoAction.Pass)); answers.trySend(move(GoAction.Pass))
+        }
+        val repository = GoAiMatchSessionTest.Repository()
+        val archived = mutableMapOf<String, ByteArray>()
+        var attempts = 0
+        val sink = GoAiCompletedMatchSink { match ->
+            if (++attempts <= 2) throw IOException("projection failure")
+            assertTrue(match.completionReserved)
+            val existing = archived.putIfAbsent(match.matchId, match.copyBytes())
+            if (existing != null) assertArrayEquals(existing, match.copyBytes())
+        }
+        val active = session(repository, search, sink, config, completeAutomaticImmediately = true)
+        val id: String
+        try {
+            runCurrent()
+            id = active.state.value.matchId
+            active.resume()
+            advanceTimeBy(2_000); runCurrent()
+            assertEquals(GoPhase.SCORING, active.state.value.game.phase)
+            assertTrue(active.humanAction(GoAction.ConfirmScore(GoPlayer.BLACK, 1))); runCurrent()
+            assertEquals(0, attempts)
+            assertTrue(active.humanAction(GoAction.ConfirmScore(GoPlayer.WHITE, 1))); runCurrent()
+            assertTrue(active.state.value.completionPending)
+            assertTrue(repository.saved!!.completionReserved)
+            assertFalse(active.undo())
+            assertFalse(active.restart())
+            assertTrue(archived.isEmpty())
+        } finally { active.closeAndJoin() }
+
+        val reopened = session(repository, sink = sink, config = config, completeAutomaticImmediately = true)
+        try {
+            runCurrent()
+            assertEquals(2, attempts)
+            assertTrue(reopened.state.value.completionPending)
+            assertTrue(reopened.retryCompletion()); runCurrent()
+            assertEquals(setOf(id), archived.keys)
+            assertEquals(3, attempts)
+            assertTrue(reopened.state.value.completionStored)
+            assertEquals(id, reopened.state.value.matchId)
+            assertTrue(reopened.state.value.paused)
+            assertFalse(reopened.retryCompletion())
+            assertTrue(reopened.restart()); runCurrent()
+            assertNotEquals(id, reopened.state.value.matchId)
+            assertEquals(3, attempts)
+        } finally { reopened.closeAndJoin() }
+    }
+
     @Test fun specifiedOpeningContinuationReturnsToExactEndpointAndPreservesTrainingSource() = runTest {
         val openingBytes = byteArrayOf(9, 0, 0, 1)
         val repository = GoAiMatchSessionTest.Repository().apply {
@@ -232,8 +282,11 @@ class GoAiAutoContinuationTest {
         search: GoAiSearchEngine = GoAiMatchSessionTest.Search(),
         sink: GoAiCompletedMatchSink? = null,
         config: GoAiMatchConfig = GoAiMatchConfig(9, humanPlayer = null),
+        completeAutomaticImmediately: Boolean = false,
     ) = GoAiMatchSession(this, repository, config, search, StandardTestDispatcher(testScheduler),
-        completedSink = sink) { size, _, handicap -> GoAiMatchSessionTest.Rules(size, handicap) }
+        completedSink = sink, completeAutomaticImmediately = completeAutomaticImmediately) { size, _, handicap ->
+        GoAiMatchSessionTest.Rules(size, handicap)
+    }
 
     private fun move(action: GoAction) = GoAiSearchOutcome.Move(GoAiSuggestion(action, 1, 1.0, 0.5, 0.0))
 }

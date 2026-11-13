@@ -50,7 +50,7 @@ class GoFormalProcessCheckActivity : ComponentActivity() {
         }
         val storage = GoLocalStorage(db, context)
         val writers = LocalDataWriterRegistry.forDatabase(db)
-        setContent { MocsAppWindow { GoAiPlayNavigationRoute(storage, writers, matchId, ::finish) } }
+        setContent { MocsAppWindow { GoAiPlayNavigationRoute(storage, writers, matchId, onBack = ::finish) } }
         val directory = File(filesDir, "go-formal-process-qa")
         check(directory.isDirectory || directory.mkdir())
         val proof = AtomicFile(File(directory, name.removeSuffix(".db") + ".json"))

@@ -1,18 +1,23 @@
 package com.masterofchessstrategy.games.go
 
-import androidx.activity.compose.rememberLauncherForActivityResult
+import android.content.Context
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.edit
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.currentStateAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.masterofchessstrategy.engine.GoPlayer
+import com.masterofchessstrategy.ui.ChineseChessSoundEffect
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -34,20 +39,29 @@ fun GoAiMatchRoute(
     expectedMatchId: String? = null,
     onWriterReady: (GoAiMatchViewModel) -> Unit = {},
     onMatchIdentity: (String) -> Unit = {},
+    soundEnabled: Boolean = true,
+    completeAutomaticImmediately: Boolean = false,
 ) {
     val context = LocalContext.current.applicationContext
+    // Playback cadence is a local preference and does not participate in match or archive identity.
+    val speedPreferences = remember(context) { context.getSharedPreferences("go-auto-playback-v1", Context.MODE_PRIVATE) }
     val storage = remember(context, repository, expectedMatchId) {
         val source = repository ?: GoAiMatchFileRepository(context)
         if (expectedMatchId == null) source
         else GoAiExistingMatchRepository(source as? GoAiFormalMatchRepository
             ?: error("Production Go resume requires formal storage"), expectedMatchId)
     }
-    val model: GoAiMatchViewModel = viewModel(key = "go-ai-$routeKey", factory = remember(storage, config, loadEngine, completedSink, opening, completeHumanImmediately) {
+    val model: GoAiMatchViewModel = viewModel(key = "go-ai-$routeKey", factory = remember(storage, config, loadEngine,
+        completedSink, opening, completeHumanImmediately, completeAutomaticImmediately, speedPreferences) {
         object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T = GoAiMatchViewModel(storage, config, loadEngine,
                 completedSink = completedSink, specifiedOpening = opening,
-                completeHumanImmediately = completeHumanImmediately).also {
+                completeHumanImmediately = completeHumanImmediately,
+                completeAutomaticImmediately = completeAutomaticImmediately, loadSpeed = {
+                    val stored = speedPreferences.all["speed"] as? Float
+                    stored?.takeIf { it in 0.5f..4f } ?: 1f
+                }).also {
                     it.bindNavigationOwner(routeKey)
                     onWriterReady(it)
                 } as T
@@ -64,6 +78,8 @@ fun GoAiMatchRoute(
     val scope = rememberCoroutineScope()
     var leaving by rememberSaveable(routeKey) { mutableStateOf(false) }
     var retirementError by remember(model) { mutableStateOf<String?>(null) }
+    val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
+    ChineseChessSoundEffect(model.sounds, soundEnabled && !leaving && lifecycleState.isAtLeast(Lifecycle.State.STARTED))
     SideEffect { onWriterReady(model) }
     val leave: () -> Unit = {
         if (!leaving) {
@@ -127,5 +143,7 @@ fun GoAiMatchRoute(
                 pendingOpening = null
                 openingMessage = null
             } else openingMessage = "当前对局正在处理其他操作，请稍后重试。"
-        }, onRetryCompletion = { model.retryCompletion() })
+        }, onRetryCompletion = { model.retryCompletion() }, onSpeedChangeFinished = {
+            model.persistSpeed { speed -> speedPreferences.edit { putFloat("speed", speed) } }
+        })
 }

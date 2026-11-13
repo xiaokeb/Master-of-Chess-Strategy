@@ -52,7 +52,13 @@ internal class RoomGoAiCompletionRepository(
                     "围棋人机首次完成与已固定活动状态不符"
                 }
             }
-            insertOrVerify(projection)
+            val favorite = if (existing == null) {
+                val mask = database.appSettingsDao().find()?.highlightConditionsMask ?: 0
+                withContext(worker) {
+                    GoAiHighlightPolicy.matches(projection, admitted.match().config.boardSize, admitted.openingEventCount, mask)
+                }
+            } else false
+            insertOrVerify(projection.copy(isFavorite = favorite))
             if (outcome != null) {
                 val row = outcome.toMatchOutcomeEntity()
                 database.matchOutcomeDao().insert(row)

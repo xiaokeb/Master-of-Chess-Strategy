@@ -58,7 +58,7 @@ private data class GoAiPlayEntry(val loading: Boolean = true, val match: GoAiSav
 /** Read the actual checkpoint before loading the model. No route argument supplies a new config. */
 @Composable
 internal fun GoAiPlayNavigationRoute(storage: GoLocalStorage, writers: LocalDataWriterRegistry,
-    matchId: String?, onBack: () -> Unit,
+    matchId: String?, soundEnabled: Boolean = true, onBack: () -> Unit,
 ) {
     val epoch by storage.gate.epoch.collectAsState()
     val repository = remember(storage, epoch) { storage.formalAiRepository() }
@@ -103,7 +103,7 @@ internal fun GoAiPlayNavigationRoute(storage: GoLocalStorage, writers: LocalData
         GoAiMatchRoute(ownerKey, saved.config, loadEngine, onBack,
             repository = repository, completedSink = completed, completeHumanImmediately = true,
             expectedMatchId = saved.matchId, onWriterReady = writers::register,
-            onMatchIdentity = { ownedMatchId = it })
+            onMatchIdentity = { ownedMatchId = it }, soundEnabled = soundEnabled, completeAutomaticImmediately = true)
     } else Surface(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(if (entry.loading) "正在读取围棋活动对局…" else entry.error ?: "活动对局已变更，返回设置…")

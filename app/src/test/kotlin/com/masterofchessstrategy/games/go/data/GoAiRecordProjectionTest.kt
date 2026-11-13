@@ -169,6 +169,52 @@ class GoAiRecordProjectionTest {
         }
     }
 
+    @Test fun automaticHighlightThresholdsUseOnlyEnabledConditionsAndSkipHistoryWhenDecided() {
+        val source = archive(match(GoAiMatchConfig(9, humanPlayer = null), opening = true))
+        val record = projectGoAiRecord(source, factory)
+        val master = HighlightCondition.MASTER.bit
+        val longGame = HighlightCondition.LONG_GAME.bit
+        val comeback = HighlightCondition.COMEBACK.bit
+        val noReplay: (Int) -> GoRecordEngine = { error("This condition does not need to replay captures") }
+        assertTrue(GoAiHighlightPolicy.matches(record.copy(difficulty = Difficulty.MASTER), 9, 1, master, noReplay))
+        assertFalse(GoAiHighlightPolicy.matches(record.copy(difficulty = Difficulty.MASTER), 9, 1, 0, noReplay))
+        assertFalse(GoAiHighlightPolicy.matches(record.copy(moveCount = 159), 9, 1, longGame, noReplay))
+        assertTrue(GoAiHighlightPolicy.matches(record.copy(moveCount = 160), 9, 1, longGame, noReplay))
+        assertFalse(GoAiHighlightPolicy.matches(record.copy(mode = StoredGameMode.HUMAN_VS_AI, moveCount = 160),
+            9, 1, longGame, noReplay))
+        assertFalse(GoAiHighlightPolicy.matches(record.copy(result = GameResult.DRAW), 9, 1, comeback, noReplay))
+    }
+
+    @Test fun comebackCountsTheWinnersLargestLiveCaptureDeficitAndIgnoresScoringAndOpeningEvents() {
+        val record = projectGoAiRecord(archive(match(GoAiMatchConfig(9, humanPlayer = null))), factory)
+        val comeback = HighlightCondition.COMEBACK.bit
+        // Black captures two, White captures seven, then Black captures three after a dispute.
+        val captures = listOf(2, -7, null, 3, null)
+        val stones = listOf(9 to 9, 10 to 7, 3 to 8, 3 to 8, 4 to 5, 4 to 5)
+        val engineFactory: (Int) -> GoRecordEngine = { size ->
+            object : GoRecordEngine by Rules(size, 0) {
+                var cursor = captures.size
+                override fun eventHistory() = listOf(GoAction.Place(BoardPosition(0, 0)), GoAction.Place(BoardPosition(1, 0)),
+                    GoAction.ResumePlay(GoPlayer.BLACK), GoAction.Place(BoardPosition(2, 0)), GoAction.ConfirmScore(GoPlayer.WHITE, 1))
+                override fun restore(data: ByteArray) = RestoreResult.Restored
+                override fun undo(): Boolean = (--cursor >= 0)
+                override val currentPlayer: PlayerId get() = PlayerId(if (captures[cursor]!! >= 0) 0 else 1)
+                override fun stoneAt(point: BoardPosition): GoStone {
+                    val index = point.y * size + point.x
+                    val (black, white) = stones[cursor]
+                    return when {
+                        index < black -> GoStone.BLACK
+                        index < black + white -> GoStone.WHITE
+                        else -> GoStone.EMPTY
+                    }
+                }
+            }
+        }
+        assertTrue(GoAiHighlightPolicy.matches(record, 9, 0, comeback, engineFactory))
+        assertFalse(GoAiHighlightPolicy.matches(record, 9, 2, comeback, engineFactory))
+        assertFalse(GoAiHighlightPolicy.matches(record.copy(result = GameResult.SECOND_PLAYER_WIN), 9, 0, comeback, engineFactory))
+    }
+
     private val terminalEvents = listOf(GoAction.Place(BoardPosition(0, 0)), GoAction.Pass, GoAction.Pass,
         GoAction.ConfirmScore(GoPlayer.BLACK, 1), GoAction.ConfirmScore(GoPlayer.WHITE, 1))
 

@@ -504,7 +504,8 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                 navArgument(AppDestination.GO_AI_MATCH_ARGUMENT) { type = NavType.StringType },
             )) { entry ->
                 GoAiPlayNavigationRoute(goStorage, gameWriters,
-                    entry.arguments?.getString(AppDestination.GO_AI_MATCH_ARGUMENT), navController::popBackStack)
+                    entry.arguments?.getString(AppDestination.GO_AI_MATCH_ARGUMENT),
+                    soundEnabled = settingsViewModel.uiState.settings.soundEnabled, onBack = navController::popBackStack)
             }
             composable(AppDestination.COMPETITION_MAHJONG_MODES) {
                 CompetitionMahjongNavigationModesScreen(

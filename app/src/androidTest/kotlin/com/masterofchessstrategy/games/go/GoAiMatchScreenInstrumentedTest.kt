@@ -1,6 +1,9 @@
 package com.masterofchessstrategy.games.go
 
+import android.content.Context
 import android.graphics.Bitmap
+import android.os.ParcelFileDescriptor
+import android.os.SystemClock
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -8,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.lifecycle.ViewModelStore
@@ -248,7 +252,9 @@ class GoAiMatchScreenInstrumentedTest {
     }
 
     @Test fun autoRemainsPausedThenDoublePassRequiresBothConfirmations() {
-        withMatch(GoAiMatchConfig(13, humanPlayer = null), passOnly = true) { repository, pictures ->
+        val stored = CompletableDeferred<GoAiSavedMatch>()
+        withMatch(GoAiMatchConfig(13, humanPlayer = null), passOnly = true,
+            completedSink = GoAiCompletedMatchSink { stored.complete(it) }) { repository, pictures ->
             waitPhase("AI 已暂停")
             assertEquals(0, runBlocking { nativeEventCount(repository) })
             capture(pictures, "auto-paused")
@@ -262,11 +268,72 @@ class GoAiMatchScreenInstrumentedTest {
             composeRule.onNodeWithText("白方确认").performScrollTo().performClick()
             waitPhase("白方获胜")
             assertEquals(GameResult.SECOND_PLAYER_WIN, runBlocking { nativeResult(repository) })
+            val completion = runBlocking { withTimeout(5_000) { stored.await() } }
+            assertTrue(completion.completionReserved)
+            composeRule.onNodeWithTag("go_ai_completion_status").performScrollTo().assertIsDisplayed()
+                .assertTextEquals("完成棋谱已保存。")
             capture(pictures, "auto-final")
         }
     }
 
+    @Test fun automaticPlaybackKeepsLocalSpeedAcrossNewOwnersAndStartsPaused() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val preferences = context.getSharedPreferences("go-auto-playback-v1", Context.MODE_PRIVATE)
+        val previous = preferences.all["speed"]
+        val config = GoAiMatchConfig(9, humanPlayer = null)
+        try {
+            preferences.edit().putFloat("speed", Float.NaN).apply()
+            withMatch(config, passOnly = true) { repository, pictures ->
+                waitPhase("AI 已暂停")
+                composeRule.onNodeWithText("演局速度 1x").performScrollTo().assertIsDisplayed()
+                composeRule.onNodeWithTag("go_ai_speed").performScrollTo()
+                    .performSemanticsAction(SemanticsActions.SetProgress) { it(4f) }
+                composeRule.onNodeWithText("演局速度 4x").performScrollTo().assertIsDisplayed()
+                assertEquals(4f, preferences.getFloat("speed", 0f))
+                assertEquals(0, runBlocking { nativeEventCount(repository) })
+                capture(pictures, "auto-speed-changed")
+            }
+            withMatch(config, passOnly = true) { repository, pictures ->
+                waitPhase("AI 已暂停")
+                composeRule.onNodeWithText("演局速度 4x").performScrollTo().assertIsDisplayed()
+                assertEquals(0, runBlocking { nativeEventCount(repository) })
+                capture(pictures, "auto-speed-restored")
+            }
+        } finally {
+            preferences.edit().apply {
+                if (previous is Float) putFloat("speed", previous) else remove("speed")
+            }.apply()
+        }
+    }
+
+    @Test fun nativeMoveSoundsRespectLiveSettingAndReleaseOnExit() {
+        val enabled = mutableStateOf(false)
+        var playerId = ""
+        withMatch(GoAiMatchConfig(9), passOnly = false, soundEnabled = { enabled.value }) { repository, _ ->
+            waitPhase("轮到你行棋")
+            playerId = checkNotNull(APP_SOUND_PLAYER.findAll(dumpAudio()).lastOrNull()).groupValues[1]
+            val start = "player piid:$playerId event:started"
+            val initialStarts = dumpAudio().lineSequence().count { start in it }
+
+            composeRule.onNodeWithTag("go_intersection_0_0").performClick()
+            waitUntilRecord(repository) { it.eventHistory().size == 2 }
+            waitPhase("轮到你行棋")
+            SystemClock.sleep(400)
+            assertEquals(initialStarts, dumpAudio().lineSequence().count { start in it })
+
+            composeRule.runOnIdle { enabled.value = true }
+            composeRule.waitForIdle()
+            assertEquals(initialStarts, dumpAudio().lineSequence().count { start in it })
+            composeRule.onNodeWithTag("go_intersection_2_0").performClick()
+            waitUntilRecord(repository) { it.eventHistory().size == 4 }
+            composeRule.waitUntil(5_000) { dumpAudio().lineSequence().count { start in it } > initialStarts }
+        }
+        composeRule.waitUntil(5_000) { "releasing player piid:$playerId" in dumpAudio() }
+    }
+
     private fun withMatch(config: GoAiMatchConfig, passOnly: Boolean, opening: GoAiOpening? = null,
+        soundEnabled: () -> Boolean = { false },
+        completedSink: GoAiCompletedMatchSink? = null,
         block: (GoAiMatchFileRepository, File) -> Unit) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val directory = File(context.cacheDir, "go-ai-page-qa-${UUID.randomUUID()}")
@@ -277,13 +344,17 @@ class GoAiMatchScreenInstrumentedTest {
         val store = ViewModelStore()
         val storeOwner = object : ViewModelStoreOwner { override val viewModelStore = store }
         val driver = ScriptedOwner(passOnly)
+        var mounted by mutableStateOf(true)
         composeRule.activityRule.scenario.onActivity { activity ->
             activity.setContent { CompositionLocalProvider(LocalViewModelStoreOwner provides storeOwner) {
-                GoAiMatchRoute("qa", config, { driver }, {}, repository = repository, opening = opening)
+                if (mounted) GoAiMatchRoute("qa", config, { driver }, {}, repository = repository, opening = opening,
+                    soundEnabled = soundEnabled(), completedSink = completedSink,
+                    completeAutomaticImmediately = completedSink != null)
             } }
         }
         try { block(repository, pictures) } finally {
-            composeRule.activityRule.scenario.onActivity { store.clear() }
+            composeRule.activityRule.scenario.onActivity { mounted = false; store.clear() }
+            composeRule.waitForIdle()
             runBlocking { withTimeout(15_000) { driver.closed.await() } }
             assertFalse(driver.running)
             for (owned in listOf(file, File(directory, "match.bin.new"), File(directory, "match.bin.bak"))) {
@@ -321,6 +392,14 @@ class GoAiMatchScreenInstrumentedTest {
             assertTrue("Production Activity must render landscape", bitmap.width > bitmap.height)
             File(directory, "$name.png").outputStream().use { assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) }
         } finally { bitmap.recycle() }
+    }
+
+    private fun dumpAudio(): String = ParcelFileDescriptor.AutoCloseInputStream(
+        InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("dumpsys audio"),
+    ).bufferedReader().use { it.readText() }
+
+    private companion object {
+        val APP_SOUND_PLAYER = Regex("new player piid:(\\d+)[^\\r\\n]*package:com\\.masterofchessstrategy[^\\r\\n]*")
     }
 
     private class ScriptedOwner(private val passOnly: Boolean) : GoAiMatchEngineOwner {

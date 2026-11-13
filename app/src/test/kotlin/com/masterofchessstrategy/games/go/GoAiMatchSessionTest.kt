@@ -1,6 +1,7 @@
 package com.masterofchessstrategy.games.go
 
 import com.masterofchessstrategy.engine.*
+import com.masterofchessstrategy.game.ChineseChessSoundCue
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.*
@@ -142,6 +143,75 @@ class GoAiMatchSessionTest {
         assertEquals(GoPhase.FINISHED, session.state.value.game.phase)
         assertEquals(GameResult.FIRST_PLAYER_WIN, session.state.value.game.result)
         session.closeAndJoin()
+    }
+
+    @Test fun restoredSpeedReschedulesWaitingTurnWithoutInterruptingNativeSearch() = runTest {
+        val config = GoAiMatchConfig(9, humanPlayer = null)
+        val saved = GoAiSavedMatch("auto-pace", config, byteArrayOf(9, 0))
+        val repository = Repository().apply { this.saved = saved }
+        val search = Search()
+        val session = GoAiMatchSession(this, repository, config, search, StandardTestDispatcher(testScheduler),
+            initialSpeed = 0.5f) { size, _, handicap -> Rules(size, handicap) }
+        try {
+            runCurrent()
+            assertTrue(session.state.value.paused)
+            assertEquals(0.5f, session.state.value.speed)
+            session.resume()
+            advanceTimeBy(1_000)
+            runCurrent()
+            assertTrue(search.requests.isEmpty())
+
+            session.setSpeed(4f)
+            advanceTimeBy(249)
+            runCurrent()
+            assertTrue(search.requests.isEmpty())
+            advanceTimeBy(1)
+            runCurrent()
+            val request = search.requests.single()
+            session.setSpeed(2f)
+            advanceTimeBy(1_000)
+            runCurrent()
+            assertSame(request, search.requests.single())
+            assertFalse(request.cancellation.isCancelled)
+            assertTrue(repository.history.isEmpty())
+        } finally { session.closeAndJoin() }
+    }
+
+    @Test fun restoredMovesAndFailedWritesAreSilentButAnAcknowledgedMoveEmitsOnce() = runTest {
+        val config = GoAiMatchConfig(9)
+        val repository = Repository().apply { saved = GoAiSavedMatch("audible", config, byteArrayOf(9, 0, 0, 1)) }
+        val sounds = mutableListOf<ChineseChessSoundCue>()
+        val session = GoAiMatchSession(this, repository, config, Search(), StandardTestDispatcher(testScheduler),
+            onSound = { sounds.add(it) }) { size, _, handicap -> Rules(size, handicap) }
+        try {
+            runCurrent()
+            assertTrue(sounds.isEmpty())
+            repository.fail = true
+            assertTrue(session.humanAction(place(2)))
+            runCurrent()
+            assertTrue(sounds.isEmpty())
+            repository.fail = false
+            assertTrue(session.humanAction(place(2)))
+            runCurrent()
+            assertEquals(listOf(ChineseChessSoundCue.MOVE), sounds)
+            assertTrue(session.undo())
+            runCurrent()
+            assertEquals(listOf(ChineseChessSoundCue.MOVE), sounds)
+        } finally { session.closeAndJoin() }
+    }
+
+    @Test fun audioDistinguishesCapturesAndReportsTerminalWinsFromThePlayersSide() {
+        val previous = GoAiMatchUiState(GoAiMatchConfig(9, humanPlayer = GoPlayer.WHITE),
+            GoGameUiState(boardSize = 9, stones = List(81) { if (it == 1) GoStone.BLACK.code else GoStone.EMPTY.code }))
+        val captured = previous.game.copy(stones = List(81) { if (it == 0) GoStone.WHITE.code else GoStone.EMPTY.code })
+        assertEquals(ChineseChessSoundCue.CAPTURE, goAiSoundCue(place(0), previous, captured))
+        assertNull(goAiSoundCue(GoAction.Pass, previous, previous.game))
+        val confirm = GoAction.ConfirmScore(GoPlayer.WHITE, 1)
+        assertEquals(ChineseChessSoundCue.DEFEAT,
+            goAiSoundCue(confirm, previous, captured.copy(result = GameResult.FIRST_PLAYER_WIN)))
+        assertEquals(ChineseChessSoundCue.VICTORY,
+            goAiSoundCue(confirm, previous, captured.copy(result = GameResult.SECOND_PLAYER_WIN)))
+        assertEquals(ChineseChessSoundCue.DRAW, goAiSoundCue(confirm, previous, captured.copy(result = GameResult.DRAW)))
     }
 
     @Test fun undoRestoresHumanTurnAndDurableDifficultyAllowance() = runTest {

@@ -138,6 +138,25 @@ class GoAiCompletionScreenInstrumentedTest {
         compose.runOnIdle { assertEquals(1, callbacks.autoRetries); assertEquals(0, callbacks.retries) }
     }
 
+    @Test fun standaloneAutomaticGameOffersRetryAndBlocksReplacementUntilSaved() {
+        val callbacks = Callbacks()
+        val pending = finished(completionReserved = true, completionPending = true).let {
+            it.copy(config = it.config.copy(humanPlayer = null), automaticUsed = true, immediateAutomaticCompletion = true)
+        }
+        val state = mutableStateOf(page(pending))
+        showState(state, callbacks, fontScale = 1.5f)
+        compose.onNodeWithTag("go_ai_completion_retry").performScrollTo().assertIsEnabled().performClick()
+        assertReplacementDisabled()
+        compose.runOnIdle {
+            assertEquals(1, callbacks.retries)
+            assertEquals(0, callbacks.autoRetries)
+            state.value = page(pending.copy(completionPending = false, completionStored = true))
+        }
+        compose.onNodeWithTag("go_ai_completion_status").performScrollTo().assertTextEquals("完成棋谱已保存。")
+        compose.onNodeWithTag("go_ai_completion_retry").assertDoesNotExist()
+        compose.onNodeWithTag("go_ai_restart").performScrollTo().assertIsEnabled()
+    }
+
     private fun assertReplacementDisabled() {
         compose.onNodeWithTag("go_ai_undo").performScrollTo().assertIsNotEnabled()
         compose.onNodeWithTag("go_ai_restart").performScrollTo().assertIsNotEnabled()

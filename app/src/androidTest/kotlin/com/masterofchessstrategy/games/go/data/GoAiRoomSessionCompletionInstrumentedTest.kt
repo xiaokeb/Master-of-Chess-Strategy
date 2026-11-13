@@ -2,7 +2,11 @@ package com.masterofchessstrategy.games.go.data
 
 import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
+import com.masterofchessstrategy.data.AppSettings
+import com.masterofchessstrategy.data.HighlightCondition
 import com.masterofchessstrategy.data.MocsDatabase
+import com.masterofchessstrategy.data.RoomAppSettingsRepository
+import com.masterofchessstrategy.data.toGameRecord
 import com.masterofchessstrategy.engine.*
 import com.masterofchessstrategy.games.go.*
 import java.io.IOException
@@ -101,6 +105,81 @@ class GoAiRoomSessionCompletionInstrumentedTest {
                 assertEquals(2, database.goAiProjectionDao().listAll().size)
                 assertTrue(database.matchOutcomeDao().listAll().isEmpty())
             } finally { session.closeAndJoin() }
+        }
+    }
+
+    @Test fun standaloneAutomaticGamePublishesOneReplayBeforeRestartAndAwardsNoRankedGrowth() = runBlocking {
+        val scope = this
+        withOwned { database, bundle ->
+            val config = GoAiMatchConfig(9, humanPlayer = null)
+            val readyForScoring = NativeGoEngine(9).use { rules ->
+                repeat(2) { assertEquals(ActionResult.Accepted, rules.apply(GoAction.Pass)) }
+                GoAiSavedMatch("auto-single-replay", config, rules.serialize())
+            }
+            val repository = bundle.formalAiRepository()
+            repository.save(readyForScoring)
+            val sink = bundle.completedMatchSink()
+            repeat(2) { openCount ->
+                val session = GoAiMatchSession(scope, repository, config, noSearch, completedSink = sink,
+                    completeAutomaticImmediately = true)
+                try {
+                    await(session) { it.game.canOperate }
+                    if (openCount == 0) {
+                        assertTrue(database.gameRecordDao().listAll().isEmpty())
+                        confirmBoth(session)
+                    }
+                    val settled = await(session) { it.completionStored && it.game.canOperate }
+                    assertEquals(readyForScoring.matchId, settled.matchId)
+                    assertTrue(repository.load()!!.completionReserved)
+                    val row = database.gameRecordDao().listAll().single()
+                    assertNotNull(GoStoredRecordLoader(database).load(row.recordId).aiSource)
+                    assertEquals(1, database.goAiProjectionDao().listAll().size)
+                    assertTrue(database.matchOutcomeDao().listAll().isEmpty())
+                } finally { session.closeAndJoin() }
+            }
+        }
+    }
+
+    @Test fun nativeComebackUsesLiveCaptureHistoryAndRespectsManualUnfavoriteOnRetry() = runBlocking {
+        withOwned { database, bundle ->
+            val config = GoAiMatchConfig(9, humanPlayer = null)
+            val match = NativeGoEngine(9).use { rules ->
+                fun place(x: Int, y: Int) {
+                    assertEquals(ActionResult.Accepted, rules.apply(GoAction.Place(BoardPosition(x, y))))
+                }
+                for (column in 0..4) {
+                    place(column, 0)
+                    place(column, 1)
+                }
+                place(8, 8)
+                place(5, 0) // White captures all five connected Black stones.
+                assertEquals(GoStone.EMPTY, rules.stoneAt(BoardPosition(0, 0)))
+                repeat(2) { assertEquals(ActionResult.Accepted, rules.apply(GoAction.Pass)) }
+                for (point in listOf(BoardPosition(0, 1), BoardPosition(5, 0))) {
+                    assertEquals(ActionResult.Accepted, rules.apply(GoAction.ToggleDeadGroup(point, GoPlayer.BLACK)))
+                }
+                val revision = rules.scoringState().proposalRevision
+                for (player in GoPlayer.entries) {
+                    assertEquals(ActionResult.Accepted, rules.apply(GoAction.ConfirmScore(player, revision)))
+                }
+                assertEquals(GameResult.FIRST_PLAYER_WIN, rules.gameResult())
+                GoAiSavedMatch("native-auto-highlight", config, rules.serialize(), completionReserved = true)
+            }
+            val settings = RoomAppSettingsRepository(database.appSettingsDao())
+            val comeback = HighlightCondition.COMEBACK.bit
+            settings.save(AppSettings.DEFAULT.copy(highlightConditionsMask = comeback))
+            bundle.aiRepository().save(match)
+            val sink = bundle.completedMatchSink()
+            sink.storeCompleted(match)
+            val row = database.gameRecordDao().listAll().single()
+            assertTrue(row.isFavorite)
+            val record = checkNotNull(row.toGameRecord())
+            assertFalse(GoAiHighlightPolicy.matches(record, 9, openingEventCount = 12, conditions = comeback))
+            assertFalse(GoAiHighlightPolicy.matches(record.copy(result = GameResult.SECOND_PLAYER_WIN), 9, 0, comeback))
+            assertEquals(1, database.gameRecordDao().setFavorite(row.recordId, false))
+            sink.storeCompleted(match)
+            assertFalse(database.gameRecordDao().listAll().single().isFavorite)
+            assertTrue(database.matchOutcomeDao().listAll().isEmpty())
         }
     }
 

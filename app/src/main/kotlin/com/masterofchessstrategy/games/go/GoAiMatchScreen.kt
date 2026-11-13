@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import com.masterofchessstrategy.engine.*
+import java.util.Locale
 import kotlin.math.abs
 
 @Composable
@@ -39,6 +40,7 @@ fun GoAiMatchScreen(
     onDismissOpening: () -> Unit,
     onConfirmOpening: () -> Unit,
     onRetryCompletion: () -> Unit = {},
+    onSpeedChangeFinished: () -> Unit = {},
 ) {
     var restartDialog by remember { mutableStateOf(false) }
     Surface(modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -76,7 +78,7 @@ fun GoAiMatchScreen(
                         Text(goAiMatchPhaseLabel(match), modifier = Modifier.testTag("go_ai_phase"))
                         if (game.loading) Text("正在恢复对局…")
                         if (game.saving) Text("正在保存对局…")
-                        if (match.usesImmediateHumanCompletion() && game.phase == GoPhase.FINISHED &&
+                        if (match.savesTerminalImmediately && game.phase == GoPhase.FINISHED &&
                             (match.completionReserved || match.completionPending || match.completionStored)) {
                             if (match.completionReserved || match.completionStored)
                                 Text("本局结果已固定，不能再悔棋。", modifier = Modifier.testTag("go_ai_completion_fixed"))
@@ -91,7 +93,7 @@ fun GoAiMatchScreen(
                             if (match.completionPending && !match.completionStored) OutlinedButton(onRetryCompletion,
                                 enabled = !match.closed && game.canOperate,
                                 modifier = Modifier.testTag("go_ai_completion_retry")) { Text("重试保存本局") }
-                            Text("棋谱保存不代表已计入人机胜场，成长以正式来源与结算为准。")
+                            if (!match.config.automatic) Text("棋谱保存不代表已计入人机胜场，成长以正式来源与结算为准。")
                         }
                         game.error?.let {
                             Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("go_ai_error"))
@@ -125,9 +127,10 @@ fun GoAiMatchScreen(
                             if (!match.config.automatic && match.config.difficulty.hintLimit != Int.MAX_VALUE)
                                 Text("剩余提示：${(match.config.difficulty.hintLimit - match.hintUsed).coerceAtLeast(0)}次")
                             if (match.config.automatic) {
-                                Text("演局速度 ${match.speed}x")
+                                val multiplier = String.format(Locale.ROOT, "%.2f", match.speed).trimEnd('0').trimEnd('.')
+                                Text("演局速度 ${multiplier}x")
                                 Slider(match.speed, onSpeed, valueRange = 0.5f..4f, enabled = !match.closed,
-                                    modifier = Modifier.testTag("go_ai_speed"))
+                                    modifier = Modifier.testTag("go_ai_speed"), onValueChangeFinished = onSpeedChangeFinished)
                             }
                         }
                         if (game.phase == GoPhase.SCORING) {
@@ -194,7 +197,7 @@ fun GoAiMatchScreen(
                             TextButton(onDisplayMode) { Text(if (displayMode == GoScoreDisplayMode.STONES) "切换点目" else "切换数子") }
                         }
                         OutlinedButton(onUndo, enabled = match.canUndo &&
-                            (!match.usesImmediateHumanCompletion() || !match.completionStored),
+                            (!match.savesTerminalImmediately || !match.completionStored),
                             modifier = Modifier.testTag("go_ai_undo")) { Text("悔棋") }
                         if (match.config.difficulty.undoLimit != Int.MAX_VALUE) Text("剩余悔棋：${(match.config.difficulty.undoLimit - match.undoUsed).coerceAtLeast(0)}次")
                         OutlinedButton({ onPause(); restartDialog = true },
@@ -255,12 +258,10 @@ fun GoAiMatchScreen(
     ) }
 }
 
-private fun GoAiMatchUiState.usesImmediateHumanCompletion() = immediateHumanCompletion && !config.automatic
-
 /** Recheck dialogs too, without turning a legacy save-on-restart into immediate completion. */
 private fun GoAiMatchPageState.canReplaceAiMatch(): Boolean = match?.let {
     !it.closed && it.game.canOperate && !it.completionPending &&
-        (!it.usesImmediateHumanCompletion() || !it.completionReserved || it.completionStored) &&
+        (!it.savesTerminalImmediately || !it.completionReserved || it.completionStored) &&
         (it.game.phase != GoPhase.FINISHED || completedStorageReady)
 } == true
 
