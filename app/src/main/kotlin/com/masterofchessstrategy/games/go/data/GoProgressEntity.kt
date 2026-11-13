@@ -6,11 +6,13 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.masterofchessstrategy.data.GoLegacyImportScopes
+import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.games.go.GoEndgameLibrary
 import com.masterofchessstrategy.games.go.GoEndgameProgress
 import com.masterofchessstrategy.games.go.GoEndgameProgressCodec
 import com.masterofchessstrategy.games.go.GoLearningLibrary
 import com.masterofchessstrategy.games.go.GoLearningProgress
+import kotlinx.coroutines.flow.Flow
 
 internal enum class GoProgressKind(val code: Int, val legacyScope: String) {
     LEARNING(0, GoLegacyImportScopes.LEARNING), ENDGAME(1, GoLegacyImportScopes.ENDGAME);
@@ -44,7 +46,10 @@ internal data class GoProgressEntity(
     val contentVersion: Int,
     val payload: ByteArray,
     val updatedAtEpochMillis: Long,
-)
+) {
+    fun matches(kind: GoProgressKind) = gameTypeCode == GameType.GO.code && kindCode == kind.code &&
+        formatVersion == 1 && contentVersion == kind.contentVersion && updatedAtEpochMillis >= 0
+}
 
 @Dao
 internal interface GoProgressDao {
@@ -53,6 +58,9 @@ internal interface GoProgressDao {
 
     @Query("SELECT * FROM go_progress WHERE gameTypeCode = :gameTypeCode AND kindCode = :kindCode")
     suspend fun find(gameTypeCode: Int, kindCode: Int): GoProgressEntity?
+
+    @Query("SELECT * FROM go_progress WHERE gameTypeCode = :gameTypeCode AND kindCode = :kindCode")
+    fun observe(gameTypeCode: Int, kindCode: Int): Flow<GoProgressEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun save(entity: GoProgressEntity)

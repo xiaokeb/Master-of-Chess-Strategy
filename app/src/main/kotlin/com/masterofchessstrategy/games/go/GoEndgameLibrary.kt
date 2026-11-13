@@ -1,9 +1,12 @@
 package com.masterofchessstrategy.games.go
 
 import com.masterofchessstrategy.engine.*
+import com.masterofchessstrategy.progress.EndgameRewardTotals
 
 enum class GoEndgameTheme(val label: String) { CAPTURE("提子"), ESCAPE("逃出打吃"), CONNECTION("连接") }
-enum class GoEndgameLevel(val label: String) { SIMPLE("简单"), MEDIUM("中等"), HARD("困难") }
+enum class GoEndgameLevel(val label: String, internal val firstClearScore: Int) {
+    SIMPLE("简单", 10), MEDIUM("中等", 20), HARD("困难", 40),
+}
 
 class GoEndgamePuzzle(
     val id: String,
@@ -106,6 +109,11 @@ object GoEndgameLibrary {
 
     init { require(puzzles.map { it.id }.toSet().size == puzzles.size) }
     fun puzzle(id: String): GoEndgamePuzzle? = puzzles.firstOrNull { it.id == id }
+
+    internal fun rewards(completedIds: Set<String>): EndgameRewardTotals {
+        val completed = puzzles.filter { it.id in completedIds }
+        return EndgameRewardTotals(completed.size, completed.size, completed.sumOf { it.level.firstClearScore })
+    }
 
     fun open(puzzle: GoEndgamePuzzle,
         engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },

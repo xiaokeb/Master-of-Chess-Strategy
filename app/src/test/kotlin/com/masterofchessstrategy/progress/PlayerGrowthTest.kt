@@ -78,4 +78,14 @@ class PlayerGrowthTest {
         assertTrue(summary.achievements.first { it.id == "hard-winner" }.isUnlocked)
         assertFalse(summary.achievements.first { it.id == "master-winner" }.isUnlocked)
     }
+
+    @Test fun otherEndgameRewardsJoinRankAndAchievementsWithoutMatchCredits() {
+        val summary = PlayerGrowthSummary.create(PlayerStatistics(), EndgameProgress(), EndgameRewardTotals(5, 5, 60))
+        assertEquals(PlayerRank.APPRENTICE, summary.rank)
+        assertEquals(5, summary.totalStars)
+        assertEquals(60, summary.totalScore)
+        assertEquals(0, summary.statistics.totalWins)
+        assertTrue(summary.achievements.single { it.id == "endgame-scholar" }.isUnlocked)
+        assertFalse(summary.achievements.single { it.id == "first-win" }.isUnlocked)
+    }
 }

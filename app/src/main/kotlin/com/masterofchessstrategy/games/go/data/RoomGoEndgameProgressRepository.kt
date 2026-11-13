@@ -7,7 +7,7 @@ import com.masterofchessstrategy.games.go.GoEndgameProgressCodec
 import com.masterofchessstrategy.games.go.GoEndgameProgressRepository
 import java.time.LocalDate
 
-/** Reuses GEP1's contiguous unlock and fixed-daily semantics without granting shared rewards. */
+/** Commits the contiguous completion set used by unlocks and first-clear rewards. */
 internal class RoomGoEndgameProgressRepository(
     store: GoProgressStore,
     legacy: GoEndgameLegacySource? = null,

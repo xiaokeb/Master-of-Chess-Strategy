@@ -183,6 +183,43 @@ class GoLessonPracticeNavigationTest {
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
     }
 
+    @Test fun firstClearRewardsReachProfileOnceAndSurviveRecreation() {
+        compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag(GO_ENDGAMES_ENTRY_TAG).performScrollTo().performClick()
+        awaitTitle("角上一口气")
+        val rewards = compose.onNodeWithTag("go_endgame_rewards")
+        rewards.performScrollTo().assertTextEquals("残局奖励 0 星 · 0 分")
+        compose.onNodeWithTag("go_intersection_0_1").performClick()
+        awaitTag("go_endgame_completed")
+        rewards.performScrollTo().assertTextEquals("残局奖励 1 星 · 10 分")
+        capture("go-first-clear-reward")
+
+        compose.onNodeWithText("重置本关").performScrollTo().performClick()
+        compose.waitUntil(15_000) { compose.onAllNodesWithTag("go_endgame_completed").fetchSemanticsNodes().isEmpty() }
+        compose.onNodeWithTag("go_intersection_0_1").performClick()
+        awaitTag("go_endgame_completed")
+        rewards.performScrollTo().assertTextEquals("残局奖励 1 星 · 10 分")
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        capture("go-repeat-clear-reward")
+
+        compose.onNodeWithTag("go_endgame_back").performScrollTo().performClick()
+        awaitTag(GO_ENDGAMES_ENTRY_TAG)
+        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        awaitTag(HOME_PROFILE_TAG)
+        compose.onNodeWithTag(HOME_PROFILE_TAG).performScrollTo().performClick()
+        fun checkProfile() {
+            compose.waitUntil(15_000) {
+                compose.onAllNodesWithText("累计星级 1 · 累计积分 10").fetchSemanticsNodes().isNotEmpty()
+            }
+            compose.onNodeWithText("累计星级 1 · 累计积分 10").performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText("总胜场：0").performScrollTo().assertIsDisplayed()
+        }
+        checkProfile()
+        compose.activityRule.scenario.recreate()
+        checkProfile()
+        capture("go-profile-reward")
+    }
+
     private fun openLessons() {
         compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
         compose.onNodeWithTag(GO_LEARNING_ENTRY_TAG).performScrollTo().performClick()

@@ -24,10 +24,7 @@ internal class RoomGoProgressStore(private val database: MocsDatabase) : GoProgr
     private inner class Access : GoProgressTransaction {
         override suspend fun read(kind: GoProgressKind): ByteArray? {
             val row = database.goProgressDao().find(GameType.GO.code, kind.code) ?: return null
-            require(row.gameTypeCode == GameType.GO.code && row.kindCode == kind.code &&
-                row.formatVersion == 1 && row.contentVersion == kind.contentVersion && row.updatedAtEpochMillis >= 0) {
-                "Incompatible Go progress row"
-            }
+            require(row.matches(kind)) { "Incompatible Go progress row" }
             return kind.normalize(row.payload.copyOf())
         }
 

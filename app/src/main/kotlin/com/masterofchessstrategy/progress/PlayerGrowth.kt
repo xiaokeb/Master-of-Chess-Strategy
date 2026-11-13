@@ -50,6 +50,8 @@ internal data class PlayerAchievement(
     val isUnlocked: Boolean,
 )
 
+internal data class EndgameRewardTotals(val completedCount: Int = 0, val stars: Int = 0, val score: Int = 0)
+
 internal data class PlayerGrowthSummary(
     val rank: PlayerRank,
     val totalStars: Int,
@@ -73,9 +75,10 @@ internal data class PlayerGrowthSummary(
         fun create(
             statistics: PlayerStatistics,
             endgameProgress: EndgameProgress,
+            additionalEndgameRewards: EndgameRewardTotals = EndgameRewardTotals(),
         ): PlayerGrowthSummary {
-            val totalStars = statistics.netStars + endgameProgress.totalStars
-            val totalScore = statistics.score + endgameProgress.totalScore
+            val totalStars = statistics.netStars + endgameProgress.totalStars + additionalEndgameRewards.stars
+            val totalScore = statistics.score + endgameProgress.totalScore + additionalEndgameRewards.score
             val rank = PlayerRank.entries.last { candidate ->
                 statistics.totalWins >= candidate.minimumWins ||
                     totalStars >= candidate.minimumStars ||
@@ -84,7 +87,7 @@ internal data class PlayerGrowthSummary(
             val chineseChess = statistics.byGame[GameType.CHINESE_CHESS] ?: GameStatistics()
             val hardWins = statistics.winsAt(GameType.CHINESE_CHESS, Difficulty.HARD)
             val masterWins = statistics.winsAt(GameType.CHINESE_CHESS, Difficulty.MASTER)
-            val endgameCount = endgameProgress.completedById.size
+            val endgameCount = endgameProgress.completedById.size + additionalEndgameRewards.completedCount
             val achievements = listOf(
                 PlayerAchievement(
                     id = "first-win",
@@ -101,13 +104,13 @@ internal data class PlayerGrowthSummary(
                 PlayerAchievement(
                     id = "endgame-breaker",
                     title = "残局破阵",
-                    description = "首次通关中国象棋残局",
+                    description = "首次通关一题残局",
                     isUnlocked = endgameCount >= 1,
                 ),
                 PlayerAchievement(
                     id = "endgame-scholar",
                     title = "残局研习",
-                    description = "通关 5 道中国象棋残局",
+                    description = "通关 5 道残局",
                     isUnlocked = endgameCount >= 5,
                 ),
                 PlayerAchievement(

@@ -113,6 +113,9 @@ fun GoEndgameScreen(
                             modifier = Modifier.testTag("go_endgame_required_mainline")) { Text("先做前置主线") }
                     }
                     Text("项目自编种子题 · 已完成 ${state.completedIds.size}/${GoEndgameLibrary.puzzles.size}")
+                    val rewards = GoEndgameLibrary.rewards(state.completedIds)
+                    Text("残局奖励 ${rewards.stars} 星 · ${rewards.score} 分",
+                        modifier = Modifier.testTag("go_endgame_rewards"))
                     Text(state.mode.label + if (state.mode == GoEndgameChallengeMode.DAILY) " · ${state.dailyDate}" else "",
                         modifier = Modifier.testTag("go_endgame_mode"))
                     OutlinedButton(onClick = { catalog = true }, enabled = state.canOperate,
@@ -127,6 +130,8 @@ fun GoEndgameScreen(
                         Text(exercise.puzzle.title, style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.testTag("go_endgame_title"))
                         Text("${exercise.puzzle.level.label} · ${exercise.puzzle.theme.label}")
+                        Text(if (exercise.puzzle.id in state.completedIds) "首通奖励已计入"
+                            else "首通奖励 1 星 · ${exercise.puzzle.level.firstClearScore} 分")
                         Text(exercise.puzzle.instruction)
                         Text(exercise.feedback, modifier = Modifier.testTag("go_endgame_feedback"))
                         Text("尝试 ${exercise.attempts} 次")

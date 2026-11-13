@@ -38,6 +38,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -110,6 +111,7 @@ import com.masterofchessstrategy.navigation.QuickStartDestination
 import com.masterofchessstrategy.navigation.chineseChessDifficulties
 import com.masterofchessstrategy.progress.PlayerStatisticsViewModel
 import com.masterofchessstrategy.progress.PlayerGrowthSummary
+import com.masterofchessstrategy.progress.EndgameRewardTotals
 import com.masterofchessstrategy.records.ChineseChessReplayViewModel
 import com.masterofchessstrategy.records.GameRecordsViewModel
 import com.masterofchessstrategy.records.ChineseChessHighlightPolicy
@@ -292,9 +294,12 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
             tutorialCompleted = tutorialViewModel.uiState.progress.isCompleted,
             winsByDifficulty = chineseChessWins,
         )
+        val goEndgameRewards by remember(goStorage) { goStorage.observeEndgameRewards() }
+            .collectAsState(initial = EndgameRewardTotals())
         val growthSummary = PlayerGrowthSummary.create(
             statistics = statisticsViewModel.uiState.statistics,
             endgameProgress = endgameViewModel.uiState.progress,
+            additionalEndgameRewards = goEndgameRewards,
         )
         // A restored navigation stack must not create a new game using unloaded defaults.
         if (settingsViewModel.uiState.isLoading) {

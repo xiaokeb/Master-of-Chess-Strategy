@@ -49,9 +49,7 @@ class GoEndgameProgress(
     }
 }
 
-/** Atomic read/merge/write operations prevent a stale screen from erasing another screen's progress.
- * Completion progress grants no stars, points, match wins or rank unlocks.
- */
+/** Committed first completions supply puzzle rewards and unlocks. */
 interface GoEndgameProgressRepository {
     suspend fun load(): GoEndgameProgress
     suspend fun select(id: String, mode: GoEndgameChallengeMode = GoEndgameChallengeMode.MAINLINE): GoEndgameProgress

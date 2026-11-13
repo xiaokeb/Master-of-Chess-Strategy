@@ -1,6 +1,7 @@
 package com.masterofchessstrategy.games.go
 
 import com.masterofchessstrategy.engine.*
+import com.masterofchessstrategy.progress.EndgameRewardTotals
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -28,6 +29,17 @@ class GoEndgameLibraryTest {
             assertEquals(GoStone.BLACK.code, solved.stones[puzzle.answer.y * puzzle.boardSize + puzzle.answer.x])
             puzzle.captured.forEach { assertEquals(GoStone.EMPTY.code, solved.stones[it.y * puzzle.boardSize + it.x]) }
         }
+    }
+
+    @Test fun rewardsUseKnownFirstClearIdsAndTheirVersionedDifficultyValues() {
+        val puzzles = GoEndgameLibrary.puzzles
+        val older = GoEndgameProgress(puzzles.take(7).map { it.id }.toSet())
+        val decoded = checkNotNull(GoEndgameProgressCodec.decode(GoEndgameProgressCodec.encode(older)))
+        assertEquals(EndgameRewardTotals(7, 7, 120), GoEndgameLibrary.rewards(decoded.completedIds))
+        assertEquals(EndgameRewardTotals(9, 9, 200), GoEndgameLibrary.rewards(puzzles.map { it.id }.toSet()))
+        assertEquals(EndgameRewardTotals(), GoEndgameLibrary.rewards(setOf("unknown")))
+        assertEquals(GoEndgameLibrary.rewards(older.completedIds),
+            GoEndgameLibrary.rewards(older.complete(puzzles.first().id).completedIds))
     }
 
     @Test fun tacticalCatalogPuzzleKeepsPlayingUntilBothCapturesAreComplete() {
