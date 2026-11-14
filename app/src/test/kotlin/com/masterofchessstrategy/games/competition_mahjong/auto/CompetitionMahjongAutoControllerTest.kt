@@ -1,10 +1,43 @@
 package com.masterofchessstrategy.games.competition_mahjong.auto
 
+import com.masterofchessstrategy.game.ChineseChessSoundCue
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Test
 
 class CompetitionMahjongAutoControllerTest {
+    @Test fun terminalCueWaitsForSaveAndDoesNotPlayOnRestoreOrUndo() = runBlocking {
+        val harness = AutoHarness()
+        val heard = mutableListOf<ChineseChessSoundCue>()
+        val listening = launch(Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) {
+            harness.controller.sounds.collect { heard += it }
+        }
+        try {
+            assertTrue(harness.controller.open())
+            repeat(2) { assertTrue(harness.step()) }
+            harness.store.failNext = true
+            assertFalse(harness.step())
+            assertTrue(heard.isEmpty())
+            assertTrue(harness.controller.retrySave())
+            assertEquals(listOf(ChineseChessSoundCue.DRAW), heard)
+            assertFalse(harness.controller.retrySave())
+            harness.controller.close()
+
+            val restored = AutoHarness(store = harness.store)
+            val observing = launch(Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) {
+                restored.controller.sounds.collect { heard += it }
+            }
+            try {
+                assertTrue(restored.controller.open())
+                assertEquals(1, heard.size)
+                assertTrue(restored.controller.undo(0, 0))
+                assertEquals(1, heard.size)
+            } finally { observing.cancel(); restored.controller.close() }
+        } finally { listening.cancel(); harness.controller.close() }
+    }
     @Test fun scheduledTickNeedsCurrentStateExecutionPermissionAndUnpausedSettings() = runBlocking {
         val harness = AutoHarness(settings = CompetitionMahjongAutoSettings(paused = false))
         assertTrue(harness.controller.open())

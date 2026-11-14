@@ -4,13 +4,18 @@ import com.masterofchessstrategy.engine.CompetitionMahjongAutoConfig
 import com.masterofchessstrategy.engine.CompetitionMahjongAutoSession
 import com.masterofchessstrategy.engine.CompetitionMahjongPublicView
 import com.masterofchessstrategy.engine.NativeCompetitionMahjongAutoSession
+import com.masterofchessstrategy.game.ChineseChessSoundCue
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchLedger
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongPlayerScores
+import com.masterofchessstrategy.games.competition_mahjong.match.play.competitionMahjongLiveSound
 import com.masterofchessstrategy.games.competition_mahjong.match.policy.CompetitionMahjongPlayPolicy
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -52,6 +57,9 @@ class CompetitionMahjongAutoController(
     private val initialOpening = openingRecord?.copyOf()
     private val mutableState = MutableStateFlow(CompetitionMahjongAutoState(settings = initialSettings))
     val state = mutableState.asStateFlow()
+    private val mutableSounds = MutableSharedFlow<ChineseChessSoundCue>(extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    internal val sounds = mutableSounds.asSharedFlow()
     private var config = initialConfig
     private var settings = initialSettings
     private var opening = initialOpening
@@ -61,6 +69,7 @@ class CompetitionMahjongAutoController(
     private var baseline = byteArrayOf()
     private var lastRecord = byteArrayOf()
     private var frame: CompetitionMahjongPublicView? = null
+    private var pendingSound: ChineseChessSoundCue? = null
     private var session: CompetitionMahjongAutoSession? = null
     private var elapsed = 0L
     private var needsSave = false
@@ -125,9 +134,12 @@ class CompetitionMahjongAutoController(
         }
         return try {
             accrueTime()
+            val previous = checkNotNull(frame)
             val result = checkNotNull(session).advance(1)
-            frame = checkNotNull(session).snapshot()
-            check(result.acceptedActions == 1 && result.terminal == checkNotNull(frame).isAutoTerminal())
+            val next = checkNotNull(session).snapshot()
+            check(result.acceptedActions == 1 && result.terminal == next.isAutoTerminal())
+            frame = next
+            pendingSound = competitionMahjongLiveSound(previous, next, spectator = true)
             accrueTime()
             persist()
         } catch (failure: Exception) {
@@ -259,6 +271,9 @@ class CompetitionMahjongAutoController(
             needsSave = false
             updateClock()
             publish()
+            // A failed save retains the cue for that action's successful retry.
+            pendingSound?.let(mutableSounds::tryEmit)
+            pendingSound = null
             true
         } catch (failure: Exception) { failUnsaved(failure); false }
     }

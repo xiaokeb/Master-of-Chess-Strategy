@@ -120,6 +120,56 @@ class CompetitionMahjongAutoNavigationTest {
         capture("resumed")
     }
 
+    @Test fun liveAutomaticStepPlaysAfterSaveButArchivePlaybackStaysSilent() {
+        completeTutorial()
+        val archive = nativeArchive()
+        val viewer = archive.checkpoint.config.viewerPlayerId
+        val store = RoomCompetitionMahjongAutoStore(database, viewer)
+        val run = CompetitionMahjongAutoRunConfig(UUID.randomUUID().toString(), 20261114, viewer)
+        val start = NativeCompetitionMahjongAutoSession(run.handConfig(0, 0, false)).use { it.serialize() }
+        runBlocking {
+            assertNull(store.load(viewer))
+            store.save(archive.checkpoint, archive)
+            store.save(CompetitionMahjongAutoCheckpoint(run, CompetitionMahjongAutoSettings(paused = true),
+                0, 0, emptyList(), start, start))
+        }
+        openModes(viewer)
+        val initial = audioPlayers()
+        openAutomatic()
+        val id = awaitAudioPlayer(initial)
+        val step = compose.onNodeWithTag("competition_mahjong_auto_step")
+        val checkpoint = checkNotNull(runBlocking { store.load(viewer) })
+        for (attempt in 0 until 36) {
+            if (audioStarts(id) > 0) break
+            compose.waitUntil(10_000) {
+                compose.onAllNodes(hasTestTag("competition_mahjong_auto_step") and isEnabled())
+                    .fetchSemanticsNodes().isNotEmpty()
+            }
+            step.performScrollTo().performClick()
+            compose.waitForIdle()
+        }
+        compose.waitUntil(5_000) { audioStarts(id) > 0 }
+        val saved = checkNotNull(runBlocking { store.load(viewer) })
+        assertEquals(checkpoint.config.runId, saved.config.runId)
+        assertFalse(saved.engineRecord.contentEquals(checkpoint.engineRecord))
+        capture("automatic-live-sound")
+        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        awaitTag("competition_auto_entry")
+        compose.waitUntil(5_000) { "releasing player piid:$id" in backgroundShell("dumpsys audio") }
+        val beforeReplay = audioPlayers()
+        compose.onNodeWithTag("competition_auto_archive_entry").performScrollTo().performClick()
+        val replay = compose.onNodeWithTag("competition_mahjong_auto_archive_replay_${archive.key}")
+        replay.performScrollTo().assertIsEnabled().performClick()
+        awaitTag("competition_mahjong_auto_replay_position")
+        compose.onNodeWithTag("competition_mahjong_auto_replay_next").performScrollTo().performClick()
+        compose.waitUntil(15_000) {
+            compose.onAllNodes(hasTestTag("competition_mahjong_auto_replay_position") and hasText("事件 1 /", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        assertTrue((audioPlayers() - beforeReplay).isEmpty())
+        capture("automatic-archive-silent")
+    }
+
     @Test fun selectedOpeningBecomesTheImmutableBaselineAndSurvivesReentry() {
         val db = database
         val viewer = 2
@@ -205,7 +255,9 @@ class CompetitionMahjongAutoNavigationTest {
             wakeScreen()
             assertFalse(notifications.areNotificationsEnabled())
             openModes()
+            val previousPlayers = audioPlayers()
             openAutomatic()
+            val backgroundPlayer = awaitAudioPlayer(previousPlayers)
             compose.onNodeWithTag(button).performScrollTo().assertIsNotEnabled()
             compose.onNodeWithTag("competition_mahjong_auto_toggle").performScrollTo().performClick()
             compose.waitUntil(15_000) { compose.onAllNodes(hasTestTag(button) and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
@@ -243,6 +295,8 @@ class CompetitionMahjongAutoNavigationTest {
             await("screen-off lease and wake lock") {
                 !power.isInteractive && CompetitionMahjongAutoBackground.lease.value?.foreground == false && wakeHeld()
             }
+            SystemClock.sleep(350)
+            val startsAtSleep = audioStarts(backgroundPlayer)
             val atSleep = saved().eventsAfterOpening
             await("first screen-off event") { saved().eventsAfterOpening > atSleep }
             val first = saved().eventsAfterOpening
@@ -252,6 +306,7 @@ class CompetitionMahjongAutoNavigationTest {
             assertTrue("Measured background interval $interval ms", interval >= 2200)
             val background = saved()
             assertEquals(run.runId, background.config.runId)
+            assertEquals(startsAtSleep, audioStarts(backgroundPlayer))
             println("MAHJONG_BACKGROUND events=$atSleep/$first/${background.eventsAfterOpening} interval_ms=$interval")
 
             wakeScreen()
@@ -290,6 +345,21 @@ class CompetitionMahjongAutoNavigationTest {
     private fun backgroundShell(command: String): String = ParcelFileDescriptor.AutoCloseInputStream(
         instrumentation.uiAutomation.executeShellCommand(command),
     ).use { it.readBytes().toString(Charsets.UTF_8) }
+
+    private fun audioPlayers() = Regex("new player piid:(\\d+)[^\\r\\n]*package:com\\.masterofchessstrategy[^\\r\\n]*")
+        .findAll(backgroundShell("dumpsys audio")).map { it.groupValues[1] }.toSet()
+
+    private fun audioStarts(player: String) = backgroundShell("dumpsys audio").lineSequence()
+        .count { "player piid:$player event:started" in it }
+
+    private fun awaitAudioPlayer(before: Set<String>): String {
+        var player: String? = null
+        compose.waitUntil(5_000) {
+            player = (audioPlayers() - before).singleOrNull()
+            player != null
+        }
+        return checkNotNull(player)
+    }
 
     @Test fun productionArchiveReplaysAndSystemFilePickerCancellationPreservesPrivateArchive() {
         val archive = nativeArchive()

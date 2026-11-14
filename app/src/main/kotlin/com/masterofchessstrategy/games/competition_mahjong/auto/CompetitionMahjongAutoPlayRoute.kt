@@ -28,10 +28,13 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.currentStateAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongTableScreen
 import com.masterofchessstrategy.games.competition_mahjong.auto.production.CompetitionMahjongAutoBackground
 import com.masterofchessstrategy.games.competition_mahjong.match.policy.CompetitionMahjongPlayPolicy
+import com.masterofchessstrategy.ui.ChineseChessSoundEffect
+import kotlinx.coroutines.flow.filter
 import java.util.Locale
 import java.util.UUID
 
@@ -50,6 +53,7 @@ fun CompetitionMahjongAutoRoute(
     ownerKey: String? = null,
     onWriterReady: (CompetitionMahjongAutoPlayViewModel) -> Unit = {},
     useBackgroundService: Boolean = false,
+    soundEnabled: Boolean = true,
 ) {
     val config = remember(initialConfig, playPolicy) { initialConfig ?: CompetitionMahjongAutoRunConfig(
         UUID.randomUUID().toString(), System.nanoTime() and Long.MAX_VALUE,
@@ -68,6 +72,11 @@ fun CompetitionMahjongAutoRoute(
     SideEffect { onWriterReady(game) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val power = LocalContext.current.getSystemService(PowerManager::class.java)
+    val lifecycleState by lifecycle.currentStateAsState()
+    val sounds = remember(game, power, lifecycle) {
+        game.sounds.filter { power.isInteractive && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) }
+    }
+    ChineseChessSoundEffect(sounds, soundEnabled && lifecycleState.isAtLeast(Lifecycle.State.STARTED))
     val serviceOwner = if (useBackgroundService) checkNotNull(ownerKey) else null
     DisposableEffect(game, lifecycle, serviceOwner, backgroundAuthorized, power) {
         val host = Any()

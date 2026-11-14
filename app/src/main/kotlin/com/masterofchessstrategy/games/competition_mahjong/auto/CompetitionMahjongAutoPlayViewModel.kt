@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -97,6 +98,7 @@ class CompetitionMahjongAutoPlayViewModel(
     private val controller = CompetitionMahjongAutoController(initialConfig, trackingStore, playPolicy, initialSettings,
         openingRecord, sessionFactory, dispatcher)
     private val playback = CompetitionMahjongAutoPlayback(controller, scope, waitMillis)
+    internal val sounds = controller.sounds.filter { playback.state.value.foreground }
     private val backgroundForeground = MutableStateFlow(false)
     private var backgroundBinding: Job? = null
     private var visibleHost: Any? = null

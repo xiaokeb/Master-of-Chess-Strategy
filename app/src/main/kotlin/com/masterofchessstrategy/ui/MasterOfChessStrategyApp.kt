@@ -554,6 +554,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                 val archive = entry.arguments?.getBoolean(AppDestination.COMPETITION_MAHJONG_ARCHIVE)
                 if (viewer != null && viewer in 0..3 && archive != null) {
                     CompetitionMahjongAutoProductionRoute(database, viewer, archive, gameWriters,
+                        soundEnabled = settingsViewModel.uiState.settings.soundEnabled,
                         onLearning = {
                             navController.navigate(AppDestination.COMPETITION_MAHJONG_TUTORIAL) {
                                 popUpTo(AppDestination.COMPETITION_MAHJONG_MODES)

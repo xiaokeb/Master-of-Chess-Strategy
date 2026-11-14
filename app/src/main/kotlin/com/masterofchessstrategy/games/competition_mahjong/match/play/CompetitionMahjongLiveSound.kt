@@ -6,16 +6,17 @@ import com.masterofchessstrategy.engine.CompetitionMahjongRoundActionKind
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundPhase
 import com.masterofchessstrategy.game.ChineseChessSoundCue
 
-/** Derives one short cue from an accepted action or a saved batch of public bot actions. */
+/** Derives one short cue from an accepted action and the change in public state. */
 internal fun competitionMahjongLiveSound(
     before: CompetitionMahjongPublicView,
     after: CompetitionMahjongPublicView,
     action: CompetitionMahjongAction? = null,
     falseWin: Boolean = false,
+    spectator: Boolean = false,
 ): ChineseChessSoundCue? {
     if (before.phase != after.phase) {
         when (after.phase) {
-            CompetitionMahjongRoundPhase.WON -> return if (after.winnerSeat == after.viewerSeat) {
+            CompetitionMahjongRoundPhase.WON -> return if (spectator || after.winnerSeat == after.viewerSeat) {
                 ChineseChessSoundCue.VICTORY
             } else ChineseChessSoundCue.DEFEAT
             CompetitionMahjongRoundPhase.EXHAUSTIVE_DRAW -> return ChineseChessSoundCue.DRAW

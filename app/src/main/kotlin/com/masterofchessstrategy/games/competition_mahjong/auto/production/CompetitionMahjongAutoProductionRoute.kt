@@ -113,6 +113,7 @@ internal fun CompetitionMahjongAutoProductionRoute(
     archiveOnly: Boolean,
     writers: LocalDataWriterRegistry,
     onLearning: () -> Unit,
+    soundEnabled: Boolean = true,
     onBack: () -> Unit,
 ) {
     val holder: AutoHostOwner = viewModel(factory = viewModelFactory {
@@ -162,7 +163,7 @@ internal fun CompetitionMahjongAutoProductionRoute(
                     System.nanoTime() and Long.MAX_VALUE, viewer, List(4) { firstLevel })
             }
             CompetitionMahjongAutoRoute(host.store, onBack, policy, initialConfig = config, openings = holder.openings, ownerKey = host.key,
-                onWriterReady = writers::register, useBackgroundService = true)
+                onWriterReady = writers::register, useBackgroundService = true, soundEnabled = soundEnabled)
         }
         else -> {
             BackHandler(onBack = onBack)
