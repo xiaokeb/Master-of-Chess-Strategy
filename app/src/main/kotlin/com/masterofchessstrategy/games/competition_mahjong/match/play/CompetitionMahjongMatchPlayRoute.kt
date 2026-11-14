@@ -42,6 +42,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.currentStateAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.masterofchessstrategy.games.competition_mahjong.COMPETITION_MAHJONG_AUTO_SPEEDS
 import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongDeclarationContent
@@ -55,6 +56,7 @@ import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahj
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchSummary
 import com.masterofchessstrategy.games.competition_mahjong.match.policy.CompetitionMahjongPlayPolicy
 import com.masterofchessstrategy.settings.LocalDataWriterRegistry
+import com.masterofchessstrategy.ui.ChineseChessSoundEffect
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -72,6 +74,7 @@ internal fun CompetitionMahjongMatchRoute(
     ownerIsCurrent: (() -> Boolean)? = null,
     writers: LocalDataWriterRegistry? = null,
     policyProvider: (() -> CompetitionMahjongPlayPolicy)? = null,
+    soundEnabled: Boolean = true,
 ) {
     val config = remember(initialConfig, playPolicy) {
         initialConfig ?: CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(),
@@ -108,6 +111,8 @@ internal fun CompetitionMahjongMatchRoute(
         }
     }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val lifecycleState by lifecycle.currentStateAsState()
+    ChineseChessSoundEffect(game.sounds, soundEnabled && !leaving && lifecycleState.isAtLeast(Lifecycle.State.STARTED))
     DisposableEffect(lifecycle, game) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {

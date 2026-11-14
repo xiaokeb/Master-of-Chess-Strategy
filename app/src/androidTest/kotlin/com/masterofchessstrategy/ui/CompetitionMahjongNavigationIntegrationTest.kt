@@ -1,6 +1,8 @@
 package com.masterofchessstrategy.ui
 
 import android.graphics.Bitmap
+import android.os.ParcelFileDescriptor
+import android.os.SystemClock
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
@@ -9,6 +11,8 @@ import androidx.room.withTransaction
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.filters.LargeTest
 import com.masterofchessstrategy.data.GameBackupPreparationContext
+import com.masterofchessstrategy.data.AppSettings
+import com.masterofchessstrategy.data.RoomAppSettingsRepository
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.CompetitionMahjongMatchArchive
 import com.masterofchessstrategy.data.TutorialProgressEntity
@@ -126,6 +130,81 @@ class CompetitionMahjongNavigationIntegrationTest {
         assertEquals(start.config.botStrategy, activeMatch()?.config?.botStrategy)
         capture("formal-resumed")
         assertOtherGamesUntouched()
+    }
+
+    @Test fun formalTableHonorsSoundSettingAndReleasesPlayerOnExit() {
+        runBlocking {
+            val lessons = RoomCompetitionMahjongLearningProofStore(database, database.competitionMahjongLearningProofDao())
+            for (chapter in CompetitionMahjongLearningProofCatalog.chapterIds) {
+                lessons.confirm(CompetitionMahjongLearningProofRequest(UUID.randomUUID().toString(), chapter,
+                    CompetitionMahjongLearningProofCatalog.cardIds(chapter), 1))
+            }
+            RoomAppSettingsRepository(database.appSettingsDao()).save(AppSettings.DEFAULT.copy(soundEnabled = true))
+        }
+        fun audio() = ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand("dumpsys audio"))
+            .bufferedReader().use { it.readText() }
+        val playerPattern = Regex("new player piid:(\\d+)[^\\r\\n]*package:com\\.masterofchessstrategy[^\\r\\n]*")
+        val baseline = playerPattern.findAll(audio()).map { it.groupValues[1] }.toSet()
+        enterModes()
+        clickReady("competition_formal_entry")
+        clickReady("competition_formal_play")
+        val discard = hasText("出 ", substring = true) and hasClickAction() and isEnabled()
+        compose.waitUntil(10_000) { compose.onAllNodes(discard).fetchSemanticsNodes().isNotEmpty() }
+        val first = checkNotNull(activeMatch())
+        var player: String? = null
+        compose.waitUntil(5_000) {
+            player = playerPattern.findAll(audio()).map { it.groupValues[1] }.firstOrNull { it !in baseline }
+            player != null
+        }
+        val id = checkNotNull(player)
+        compose.onNodeWithTag("competition_mahjong_action_bar").performScrollTo()
+        compose.onAllNodes(discard).onFirst().performScrollTo().assertIsDisplayed().performTouchInput { click() }
+        compose.waitUntil(10_000) { activeMatch()?.engineRecord?.contentEquals(first.engineRecord) == false }
+        compose.waitUntil(5_000) { "player piid:$id event:started" in audio() }
+        capture("formal-audio-table")
+        val owner = LocalDataWriterRegistry.forDatabase(database).snapshot()
+            .filterIsInstance<CompetitionMahjongMatchPlayViewModel>().single()
+        compose.waitUntil(20_000) { owner.state.value.canOperate }
+        compose.onNodeWithText("返回").performScrollTo().performClick()
+        waitForTag("competition_formal_summary")
+        compose.waitUntil(5_000) { "releasing player piid:$id" in audio() }
+        compose.onNodeWithText("返回").performScrollTo().performClick()
+        compose.onNodeWithTag(COMPETITION_MAHJONG_MODES_BACK_TAG).performScrollTo().performClick()
+        clickReady(HOME_SETTINGS_TAG)
+        val mute = compose.onNodeWithTag(SETTINGS_SOUND_TAG)
+        mute.performScrollTo().assertIsOn().performClick()
+        compose.waitUntil(5_000) {
+            (runBlocking { database.appSettingsDao().find()?.soundEnabled }) == false
+        }
+        mute.assertIsOff()
+        compose.onNodeWithText("返回").performScrollTo().performClick()
+        val beforeReopen = playerPattern.findAll(audio()).map { it.groupValues[1] }.toSet()
+        enterModes()
+        clickReady("competition_formal_entry")
+        clickReady("competition_formal_play")
+        waitForTag("competition_mahjong_table")
+        var reopened: String? = null
+        compose.waitUntil(5_000) {
+            reopened = playerPattern.findAll(audio()).map { it.groupValues[1] }.firstOrNull { it !in beforeReopen }
+            reopened != null
+        }
+        assertEquals(first.config.matchId, activeMatch()?.config?.matchId)
+        assertFalse("player piid:${checkNotNull(reopened)} event:started" in audio())
+        // A saved discard may reopen at a claim prompt. Start at the dealer's
+        // first turn to exercise the same action under the new sound setting.
+        compose.onNodeWithText("设置").performScrollTo().performClick()
+        waitForTag("competition_mahjong_match_settings")
+        compose.onNodeWithTag("competition_mahjong_match_confirm_new").assertIsDisplayed().assertIsEnabled()
+            .performTouchInput { click() }
+        compose.waitUntil(15_000) { activeMatch()?.config?.matchId?.let { it != first.config.matchId } == true }
+        val beforeMutedMove = checkNotNull(activeMatch())
+        compose.waitUntil(10_000) { compose.onAllNodes(discard).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("competition_mahjong_action_bar").performScrollTo()
+        compose.onAllNodes(discard).onFirst().performScrollTo().assertIsDisplayed().performTouchInput { click() }
+        compose.waitUntil(10_000) { activeMatch()?.engineRecord?.contentEquals(beforeMutedMove.engineRecord) == false }
+        SystemClock.sleep(350)
+        assertFalse("player piid:${checkNotNull(reopened)} event:started" in audio())
+        capture("formal-audio-reopened")
     }
 
     @LargeTest

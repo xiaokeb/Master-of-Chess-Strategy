@@ -55,6 +55,7 @@ internal fun CompetitionMahjongFormalRoute(
     viewer: Int,
     writers: LocalDataWriterRegistry,
     onBack: () -> Unit,
+    soundEnabled: Boolean = true,
 ) {
     val holder: FormalHostViewModel = viewModel(factory = viewModelFactory {
         initializer { FormalHostViewModel(CompetitionMahjongFormalHost(database, viewer)) }
@@ -85,7 +86,7 @@ internal fun CompetitionMahjongFormalRoute(
         }
     }
     if (ready != null) {
-        CompetitionMahjongFormalDestinations(host, ready.session, writers, onBack)
+        CompetitionMahjongFormalDestinations(host, ready.session, writers, onBack, soundEnabled)
     } else {
         BackHandler(enabled = !confirming || error != null, onBack = onBack)
         Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -130,6 +131,7 @@ private fun CompetitionMahjongFormalDestinations(
     session: CompetitionMahjongFormalHost.Session,
     writers: LocalDataWriterRegistry,
     onBack: () -> Unit,
+    soundEnabled: Boolean,
 ) {
     val navigator = rememberNavController()
     val viewer = host.viewerPlayerId
@@ -167,6 +169,7 @@ private fun CompetitionMahjongFormalDestinations(
                     policyProvider = { session.policy },
                     ownerKey = host.ownerKey, ownerIsCurrent = host::isCurrent, writers = writers,
                     onBack = { navigator.popBackStack() },
+                    soundEnabled = soundEnabled,
                 )
             } else {
                 LaunchedEffect(Unit) { navigator.popBackStack() }

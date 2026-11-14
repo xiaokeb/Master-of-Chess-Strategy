@@ -5,6 +5,8 @@ import com.masterofchessstrategy.engine.CompetitionMahjongAction
 import com.masterofchessstrategy.engine.CompetitionMahjongApplyResult
 import com.masterofchessstrategy.engine.CompetitionMahjongFanEntry
 import com.masterofchessstrategy.engine.CompetitionMahjongFanView
+import com.masterofchessstrategy.engine.CompetitionMahjongMeldKind
+import com.masterofchessstrategy.engine.CompetitionMahjongPublicMeld
 import com.masterofchessstrategy.engine.CompetitionMahjongPublicView
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundActionKind
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundError
@@ -14,6 +16,7 @@ import com.masterofchessstrategy.engine.CompetitionMahjongSeatView
 import com.masterofchessstrategy.engine.EngineError
 import com.masterofchessstrategy.engine.RestoreResult
 import com.masterofchessstrategy.engine.Difficulty
+import com.masterofchessstrategy.game.ChineseChessSoundCue
 import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongMatchConfig
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongCompetitionConfig
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpoint
@@ -26,6 +29,7 @@ import com.masterofchessstrategy.games.competition_mahjong.match.hint.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -55,6 +59,58 @@ class CompetitionMahjongMatchPlayViewModelTest {
         owners.forEach(ViewModelStore::clear)
         dispatcher.scheduler.advanceUntilIdle()
         Dispatchers.resetMain()
+    }
+
+    @Test fun liveSoundWaitsForAcceptedSaveAndNeverReplaysOnRestore() = runTest(dispatcher) {
+        val harness = Harness()
+        val game = harness.game()
+        val heard = mutableListOf<ChineseChessSoundCue>()
+        val listening = backgroundScope.launch { game.sounds.collect { heard += it } }
+        runCurrent()
+        advanceUntilIdle()
+        assertTrue(heard.isEmpty())
+        harness.store.failWrite = true
+        game.performAction(DISCARD_ID, 0)
+        advanceUntilIdle()
+        assertTrue(game.state.value.series.needsSave)
+        assertTrue(heard.isEmpty())
+        harness.store.failWrite = false
+        game.retrySave()
+        advanceUntilIdle()
+        runCurrent()
+        assertEquals(listOf(ChineseChessSoundCue.MOVE), heard)
+        game.retrySave()
+        advanceUntilIdle()
+        assertEquals(1, heard.size)
+        listening.cancel()
+        harness.owner.clear()
+        advanceUntilIdle()
+
+        val reopened = harness.game()
+        backgroundScope.launch { reopened.sounds.collect { heard += it } }
+        runCurrent()
+        advanceUntilIdle()
+        assertFalse(reopened.state.value.loading)
+        assertEquals(1, heard.size)
+        reopened.performAction(WIN_ID, 0)
+        advanceUntilIdle()
+        runCurrent()
+        assertEquals(listOf(ChineseChessSoundCue.MOVE, ChineseChessSoundCue.VICTORY), heard)
+    }
+
+    @Test fun botBatchSoundUsesPublicMeldsAndPrioritizesTerminalResults() {
+        val before = SessionDouble(CompetitionMahjongCompetitionConfig(ID, 10).handConfig(0)).snapshot()
+        val seats = before.seats.toMutableList()
+        seats[1] = seats[1].copy(melds = listOf(CompetitionMahjongPublicMeld(CompetitionMahjongMeldKind.PUNG,
+            tile = 0, fromSeat = 0, claimedPosition = 0, addedKong = false)))
+        val claimed = before.copy(seats = seats)
+        assertEquals(ChineseChessSoundCue.CAPTURE, competitionMahjongLiveSound(before, claimed))
+        assertEquals(ChineseChessSoundCue.DEFEAT, competitionMahjongLiveSound(before,
+            claimed.copy(phase = CompetitionMahjongRoundPhase.WON, winnerSeat = 1)))
+        assertEquals(ChineseChessSoundCue.DRAW, competitionMahjongLiveSound(before,
+            before.copy(phase = CompetitionMahjongRoundPhase.EXHAUSTIVE_DRAW)))
+        assertEquals(ChineseChessSoundCue.DEFEAT, competitionMahjongLiveSound(before, before, falseWin = true))
+        assertNull(competitionMahjongLiveSound(before, before, CompetitionMahjongAction(CompetitionMahjongRoundActionKind.PASS)))
     }
 
     @Test fun retirementDrainsAcceptedSaveThenClosesExactlyOnce() = runTest(dispatcher) {

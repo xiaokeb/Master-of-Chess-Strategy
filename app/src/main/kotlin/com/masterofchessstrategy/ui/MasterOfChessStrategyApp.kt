@@ -525,10 +525,11 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
             )) { entry ->
                 val viewer = entry.arguments?.getInt(AppDestination.COMPETITION_MAHJONG_VIEWER)
                 if (viewer != null && viewer in 0..3) {
-                    CompetitionMahjongFormalRoute(database, viewer, gameWriters, onBack = {
-                        statisticsViewModel.loadStatistics()
-                        navController.popBackStack()
-                    })
+                    CompetitionMahjongFormalRoute(database, viewer, gameWriters,
+                        soundEnabled = settingsViewModel.uiState.settings.soundEnabled, onBack = {
+                            statisticsViewModel.loadStatistics()
+                            navController.popBackStack()
+                        })
                 }
             }
             composable(AppDestination.COMPETITION_MAHJONG_TUTORIAL) {

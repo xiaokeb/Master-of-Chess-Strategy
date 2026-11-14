@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "tag": "v0.1.0-competition-mahjong-formal-sound.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 11,
+  "build": {
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "837057b2b4085ac8e4873232d4b90dd1a9006e7c1bb95f54aad8ac5b02320bf2",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "d1dd7630e1ca8187def1dec7bca0e883470ac174b819a31d938ba86b3ea70818"
+    },
+    "lint_warnings": 25,
+    "release_manifest": "processed",
+    "baseline": "994951f5fc8dece96861443bf2a47961ddc350ae",
+    "lint_errors": 0,
+    "overlays": [
+      {
+        "sha256": "08649f04752f85834d687435ec088a273d5733a8cab30f47afd1d820279bd33c",
+        "working_sha256": "08649f04752f85834d687435ec088a273d5733a8cab30f47afd1d820279bd33c",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/play/CompetitionMahjongFormalRoute.kt"
+      },
+      {
+        "sha256": "c3ced96325a5ed72d4d8e3f26bd838bc73fae29ac5d3af7b76275ae4be37619f",
+        "working_sha256": "c3ced96325a5ed72d4d8e3f26bd838bc73fae29ac5d3af7b76275ae4be37619f",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/play/CompetitionMahjongMatchPlayRoute.kt"
+      },
+      {
+        "sha256": "84256fd8a54e4d540b316623261f5032b74ef6ee45128ed6051fd30e7f1cbac7",
+        "working_sha256": "84256fd8a54e4d540b316623261f5032b74ef6ee45128ed6051fd30e7f1cbac7",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/play/CompetitionMahjongMatchPlayViewModel.kt"
+      },
+      {
+        "sha256": "10d1e18a4f2fb4492874c91779e41021a147f1a24f52154a297e9fa90ecedf11",
+        "working_sha256": "10d1e18a4f2fb4492874c91779e41021a147f1a24f52154a297e9fa90ecedf11",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/play/CompetitionMahjongLiveSound.kt"
+      },
+      {
+        "sha256": "71aa45180a8791398583df8749ac6d5e3a3d46e3cf1de6877e6b7f2e324d26f0",
+        "working_sha256": "71aa45180a8791398583df8749ac6d5e3a3d46e3cf1de6877e6b7f2e324d26f0",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/play/CompetitionMahjongMatchPlayViewModelTest.kt"
+      },
+      {
+        "sha256": "d3ace72596da93d27837a84ab34c2c8eb066791d2e1339cedbb4545c3b1d14c1",
+        "working_sha256": "d3ace72596da93d27837a84ab34c2c8eb066791d2e1339cedbb4545c3b1d14c1",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongNavigationIntegrationTest.kt"
+      },
+      {
+        "sha256": "80f8f335702b073ba71cb04b55167c5dc7add15d4ca9485843f8d0201c933f0b",
+        "partial": true,
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/MasterOfChessStrategyApp.kt"
+      }
+    ],
+    "tests": [
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.match.play.CompetitionMahjongMatchPlayViewModelTest",
+        "tests": 53
+      }
+    ],
+    "candidate": "cm-audio1"
+  },
+  "device_folder": "device-489e8b2f7ca24a78a7f1bb4f5773a8b8",
+  "device": {
+    "restored_font": "1.0",
+    "runs": [
+      {
+        "tests": 1,
+        "font": "1.0",
+        "log_sha256": "855de7da537c093240765197c27bbed139df060a9f645f81c0009250b2c8c238",
+        "images": [
+          {
+            "path": "font-1.0\\072ca773-6338-44af-afb1-e383db8f1f79\\formal-audio-reopened.png",
+            "sha256": "97c39d76991442e2ae0446bbaa14f08886fb4b611c54f76febb36b97917b6e01"
+          },
+          {
+            "path": "font-1.0\\072ca773-6338-44af-afb1-e383db8f1f79\\formal-audio-table.png",
+            "sha256": "a83b6c72761ccd10f032467c5292a2f3c088cc0d1ca4adc72c1be5855cf8295e"
+          }
+        ],
+        "selector": "com.masterofchessstrategy.ui.CompetitionMahjongNavigationIntegrationTest#formalTableHonorsSoundSettingAndReleasesPlayerOnExit"
+      },
+      {
+        "tests": 1,
+        "font": "1.5",
+        "log_sha256": "0aa55ae96776394425db0fcb67a4c2d2640acd37fb53cea1337ef54f75111a2d",
+        "images": [
+          {
+            "path": "font-1.5\\0dd5e40b-b78c-4a1d-8b85-3a5562d2d09e\\formal-audio-reopened.png",
+            "sha256": "b5194953068bcacdd120536fc8e96ffbbfeb6cd16b38806fe0894fbd77ecc396"
+          },
+          {
+            "path": "font-1.5\\0dd5e40b-b78c-4a1d-8b85-3a5562d2d09e\\formal-audio-table.png",
+            "sha256": "8b57da25575175138207406b77db160e9b9906c2b7faa052d8b676b25ddd8304"
+          }
+        ],
+        "selector": "com.masterofchessstrategy.ui.CompetitionMahjongNavigationIntegrationTest#formalTableHonorsSoundSettingAndReleasesPlayerOnExit"
+      }
+    ],
+    "original_font": "1.0",
+    "candidate": "cm-audio1",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "837057b2b4085ac8e4873232d4b90dd1a9006e7c1bb95f54aad8ac5b02320bf2",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "d1dd7630e1ca8187def1dec7bca0e883470ac174b819a31d938ba86b3ea70818"
+    }
+  },
+  "screenshots_reviewed": 4,
+  "visual_sheet_sha256": "0acee371fd4be794112fe093f1e52c6573c37d7a5954c4d92ec9586a7209c8ad",
+  "physical_device": "not-tested",
+  "tested_baseline": "994951f5fc8dece96861443bf2a47961ddc350ae",
+  "intended_parent": "994951f5fc8dece96861443bf2a47961ddc350ae"
+}

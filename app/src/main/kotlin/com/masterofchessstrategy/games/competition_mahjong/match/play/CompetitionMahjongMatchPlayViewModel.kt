@@ -8,6 +8,7 @@ import com.masterofchessstrategy.engine.CompetitionMahjongRoundActionKind
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundPhase
 import com.masterofchessstrategy.engine.CompetitionMahjongRuleSession
 import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
+import com.masterofchessstrategy.game.ChineseChessSoundCue
 import com.masterofchessstrategy.games.competition_mahjong.COMPETITION_MAHJONG_AUTO_SPEEDS
 import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongAutoPlayUi
 import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongMatchConfig
@@ -37,8 +38,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -89,6 +93,9 @@ internal class CompetitionMahjongMatchPlayViewModel(
 ) : ViewModel(), LocalDataWriterRetirement {
     private val mutableState = MutableStateFlow(CompetitionMahjongMatchPlayState(botLevel = initialConfig.botLevel))
     val state = mutableState.asStateFlow()
+    private val mutableSounds = MutableSharedFlow<ChineseChessSoundCue>(extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val sounds = mutableSounds.asSharedFlow()
     private val transaction = Mutex()
     private val pendingTransactions = AtomicInteger(0)
     private val disposed = AtomicBoolean(false)
@@ -103,6 +110,7 @@ internal class CompetitionMahjongMatchPlayViewModel(
     private var loadedSavedSession = false
     private var assistance: CompetitionMahjongAssistanceUsage? = null
     private var hintReceipt: CompetitionMahjongHintReceipt? = null
+    private var pendingSound: ChineseChessSoundCue? = null
     private val trackedStore = object : CompetitionMahjongMatchStore {
         override suspend fun load(viewerPlayerId: Int): CompetitionMahjongMatchCheckpoint? {
             requireCurrentOwner()
@@ -288,6 +296,7 @@ internal class CompetitionMahjongMatchPlayViewModel(
         if (!state.value.series.needsSave || !begin(allowUnsaved = true)) return
         launchTransaction {
             if (controller.retrySave()) {
+                playPendingSound()
                 if (assistance?.undoInProgress == true) completeUndo(controller.state.value.activeHandIndex)
                 else advanceOtherSeats()
             }
@@ -342,8 +351,10 @@ internal class CompetitionMahjongMatchPlayViewModel(
         feedback = competitionMahjongApplyFeedback(result)
         if (!result.accepted) { hintReceipt = oldHint; return }
         hasUndo = true
+        val after = controller.state.value.table ?: return
+        pendingSound = competitionMahjongLiveSound(before, after, action, result.falseWin)
+        if (!controller.state.value.needsSave) playPendingSound()
         if (result.falseWin) {
-            val after = controller.state.value.table ?: return
             val penalty = before.netScores[before.viewerSeat].toLong() - after.netScores[after.viewerSeat].toLong()
             feedback = "错和：向其他三家各付${penalty / 3}分，本盘停和。可继续摸打和吃碰杠。"
         }
@@ -397,6 +408,10 @@ internal class CompetitionMahjongMatchPlayViewModel(
                 frame.isTerminal() || current.legalActions.isNotEmpty()) return
             hintReceipt = null
             val moved = controller.advanceOtherSeats(current.activeHandIndex, competitionMahjongPublicBotSeed(frame), BOT_BATCH_SIZE)
+            val after = controller.state.value.table
+            if (after != null && (moved > 0 || controller.state.value.needsSave)) {
+                pendingSound = competitionMahjongLiveSound(frame, after)
+            }
             if (controller.state.value.needsSave) return
             if (moved == 0) {
                 botPaused.set(true)
@@ -405,6 +420,7 @@ internal class CompetitionMahjongMatchPlayViewModel(
                 return
             }
             hasUndo = true
+            playPendingSound()
             render(busy = true)
             val next = controller.state.value
             if (next.table?.isTerminal() == true || next.legalActions.isNotEmpty()) return
@@ -413,6 +429,12 @@ internal class CompetitionMahjongMatchPlayViewModel(
         botPaused.set(true)
         feedback = "AI已达到本次推进上限并暂停，可继续推进。"
         controller.saveCurrent()
+    }
+
+    private fun playPendingSound() {
+        val cue = pendingSound
+        pendingSound = null
+        if (cue != null && foreground.get() && !disposed.get()) mutableSounds.tryEmit(cue)
     }
 
     private fun begin(requireTable: Boolean = true, allowUnsaved: Boolean = false, handIndex: Int? = null): Boolean {
