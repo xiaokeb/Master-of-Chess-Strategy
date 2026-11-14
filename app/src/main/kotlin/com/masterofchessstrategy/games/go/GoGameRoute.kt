@@ -45,6 +45,7 @@ fun GoGameRoute(
     repository: GoSessionRepository? = null,
     viewModelKey: String = "go-local-game",
     soundEnabled: Boolean = true,
+    newGameLimitMinutes: Int? = null,
     onWriterReady: (ViewModel) -> Unit = {},
 ) {
     val context = LocalContext.current.applicationContext
@@ -53,7 +54,7 @@ fun GoGameRoute(
         object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                GoGameViewModel(sessions).also(onWriterReady) as T
+                GoGameViewModel(sessions, initialLimitMinutes = newGameLimitMinutes).also(onWriterReady) as T
         }
     })
     onWriterReady(game) // Retained owners must also be registered after activity recreation.
@@ -141,7 +142,7 @@ fun GoGameRoute(
             onDismiss = { showSetup = false },
             onStart = { size, handicap ->
                 showSetup = false
-                game.newGame(size, handicap)
+                game.newGame(size, handicap, newGameLimitMinutes)
             },
         )
     }

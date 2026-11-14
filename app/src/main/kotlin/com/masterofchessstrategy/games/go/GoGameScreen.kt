@@ -104,6 +104,11 @@ fun GoGameScreen(
                     if (recordMessage != null) Text(recordMessage, modifier = Modifier.testTag("go_record_message"))
                     Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("go_phase"))
                     state.resignedBy?.let { Text("${goReplayPlayer(it)}方认输", modifier = Modifier.testTag("go_resigned")) }
+                    state.timedOutBy?.let { Text("${goReplayPlayer(it)}方超时", modifier = Modifier.testTag("go_timeout")) }
+                    state.timeRemainingMillis?.let { (black, white) ->
+                        Text("黑 ${goClockText(black)} · 白 ${goClockText(white)}",
+                            modifier = Modifier.testTag("go_clock"))
+                    }
                     if (state.handicapStones > 0) Text("让 ${state.handicapStones} 子 · 白方先行")
                     if (state.phase == GoPhase.PLAYING) {
                         TextButton(onClick = onLegalPointsToggle, enabled = state.canAct) {
@@ -111,7 +116,7 @@ fun GoGameScreen(
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(onClick = onPass, enabled = state.canAct) { Text("虚着") }
-                            OutlinedButton(onClick = onUndo, enabled = state.canOperate) { Text("悔棋") }
+                            OutlinedButton(onClick = onUndo, enabled = state.canOperate && state.timedOutBy == null) { Text("悔棋") }
                         }
                     } else {
                         val score = state.previewScore
@@ -160,7 +165,7 @@ fun GoGameScreen(
                                 }
                             }
                         }
-                        OutlinedButton(onClick = onUndo, enabled = state.canOperate) { Text("悔棋") }
+                        OutlinedButton(onClick = onUndo, enabled = state.canOperate && state.timedOutBy == null) { Text("悔棋") }
                     }
                     if (state.canAct && onResign != null) {
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -6,6 +6,7 @@ import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.GoAction
 import com.masterofchessstrategy.engine.GoPhase
+import com.masterofchessstrategy.engine.GoPlayer
 import com.masterofchessstrategy.engine.NativeGoEngine
 import com.masterofchessstrategy.engine.RestoreResult
 import com.masterofchessstrategy.games.go.GoSavedSession
@@ -22,7 +23,7 @@ internal class GoAdmittedLocalSession(
 
     init {
         GoSessionFileCodec.encode(owned)
-        require(owned.engineState.getOrNull(4)?.toInt() in 3..4 &&
+        require(owned.engineState.getOrNull(4)?.toInt() in 3..5 &&
             GameRecordPayloadPolicy.accepts(GameType.GO, owned.engineState[4].toInt(), owned.engineState))
         require((phase == GoPhase.FINISHED) == (result != GameResult.ONGOING))
         require(moveCount in 0..GameRecord.MAX_MOVE_COUNT)
@@ -41,8 +42,15 @@ internal fun admitLocalGoSession(session: GoSavedSession): GoAdmittedLocalSessio
     NativeGoEngine(session.boardSize).use { engine ->
         require(engine.restore(state) == RestoreResult.Restored) { "Invalid Go session history" }
         val events = engine.eventHistory()
-        val resigned = events.lastOrNull() is GoAction.Resign
-        require((engine.phase == GoPhase.FINISHED) == (engine.finalScore() != null || resigned))
+        val terminal = events.lastOrNull()
+        val timeout = terminal as? GoAction.Timeout
+        val clock = session.clock
+        require((engine.phase == GoPhase.FINISHED) ==
+            (engine.finalScore() != null || terminal is GoAction.Resign || timeout != null))
+        if (clock != null) {
+            require(clock.active == if (engine.phase == GoPhase.PLAYING) GoPlayer.entries[engine.currentPlayer.value] else null)
+        }
+        require(timeout == null || clock?.remaining(timeout.actor, 0) == 0L)
         val last = events.filterIsInstance<GoAction.Place>().lastOrNull()?.point
         return GoAdmittedLocalSession(
             session.copy(engineState = engine.serialize(), lastMoveIndex = last?.let {

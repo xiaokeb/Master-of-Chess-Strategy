@@ -11,6 +11,7 @@ namespace mocs::engine {
 namespace {
 constexpr std::uint8_t scored_format_version = 3;
 constexpr std::uint8_t resignation_format_version = 4;
+constexpr std::uint8_t timeout_format_version = 5;
 constexpr std::size_t legacy_header_size = 10;
 constexpr std::size_t v2_header_size = 11;
 constexpr std::size_t header_size = 16;
@@ -67,6 +68,10 @@ EngineAction make_go_resume_play(const std::uint8_t first_player) noexcept {
 
 EngineAction make_go_resign(const std::uint8_t player) noexcept {
     return {go_resign_action_kind, {player, 0, 0, 0}};
+}
+
+EngineAction make_go_timeout(const std::uint8_t player) noexcept {
+    return {go_timeout_action_kind, {player, 0, 0, 0}};
 }
 
 GoEngine::GoEngine(const std::uint8_t size, const std::int32_t black_komi_quarters,
@@ -203,10 +208,14 @@ ActionResult GoEngine::apply(const EngineAction& action) {
         (actions_.size() >= max_events && action.kind != go_confirm_score_action_kind)) {
         return {false, EngineError::invalid_state};
     }
-    if (action.kind == go_resign_action_kind) {
+    if (action.kind == go_resign_action_kind || action.kind == go_timeout_action_kind) {
         if (action.arguments[0] < 0 || action.arguments[0] > 1 ||
             action.arguments[1] != 0 || action.arguments[2] != 0 || action.arguments[3] != 0) {
             return {false, EngineError::illegal_action};
+        }
+        if (action.kind == go_timeout_action_kind &&
+            (phase() != GoPhase::playing || action.arguments[0] != current_player())) {
+            return {false, EngineError::invalid_state};
         }
         auto next = positions_.back();
         next.phase = GoPhase::finished;
@@ -381,8 +390,11 @@ std::vector<EngineAction> GoEngine::legal_actions() const {
 GameResult GoEngine::game_result() const noexcept { return positions_.back().result; }
 
 std::vector<std::uint8_t> GoEngine::serialize() const {
-    const auto version = !actions_.empty() && actions_.back().kind == go_resign_action_kind
-        ? resignation_format_version : scored_format_version;
+    auto version = scored_format_version;
+    if (!actions_.empty()) {
+        if (actions_.back().kind == go_resign_action_kind) version = resignation_format_version;
+        if (actions_.back().kind == go_timeout_action_kind) version = timeout_format_version;
+    }
     std::vector<std::uint8_t> result{'M', 'O', 'C', 'G', version, size_,
                                   static_cast<std::uint8_t>(black_komi_quarters_),
                                   handicap_stones_};
@@ -403,7 +415,7 @@ std::vector<std::uint8_t> GoEngine::serialize() const {
 RestoreResult GoEngine::restore(const std::vector<std::uint8_t>& data) {
     if (data.size() < legacy_header_size || data[0] != 'M' || data[1] != 'O' ||
         data[2] != 'C' || data[3] != 'G' || data[4] < 1 ||
-        data[4] > resignation_format_version ||
+        data[4] > timeout_format_version ||
         data[5] != size_) {
         return {false, EngineError::corrupted_data};
     }
@@ -442,7 +454,8 @@ RestoreResult GoEngine::restore(const std::vector<std::uint8_t>& data) {
         } else {
             return {false, EngineError::corrupted_data};
         }
-        if (action.kind == go_resign_action_kind && data[4] != resignation_format_version) {
+        if ((action.kind == go_resign_action_kind && data[4] != resignation_format_version) ||
+            (action.kind == go_timeout_action_kind && data[4] != timeout_format_version)) {
             return {false, EngineError::corrupted_data};
         }
         const bool new_proposal = action.kind == go_toggle_dead_action_kind ||
@@ -463,6 +476,10 @@ RestoreResult GoEngine::restore(const std::vector<std::uint8_t>& data) {
     }
     if (data[4] == resignation_format_version &&
         (candidate.actions_.empty() || candidate.actions_.back().kind != go_resign_action_kind)) {
+        return {false, EngineError::corrupted_data};
+    }
+    if (data[4] == timeout_format_version &&
+        (candidate.actions_.empty() || candidate.actions_.back().kind != go_timeout_action_kind)) {
         return {false, EngineError::corrupted_data};
     }
     if (has_revisions) {

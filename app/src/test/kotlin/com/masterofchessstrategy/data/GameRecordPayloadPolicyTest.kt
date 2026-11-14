@@ -25,12 +25,12 @@ class GameRecordPayloadPolicyTest {
     }
 
     @Test fun allGoVersionsKeepTheirExactHeaderAndEventWidths() {
-        for (version in 1..4) {
+        for (version in 1..5) {
             val bytes = frame(version, 2)
             assertTrue(GameRecordPayloadPolicy.accepts(GameType.GO, version, bytes))
             assertFalse(GameRecordPayloadPolicy.accepts(GameType.GO, version, bytes + 0))
             assertFalse(GameRecordPayloadPolicy.accepts(GameType.GO, version, bytes.copyOf(bytes.size - 1)))
-            assertFalse(GameRecordPayloadPolicy.accepts(GameType.GO, version % 4 + 1, bytes))
+            assertFalse(GameRecordPayloadPolicy.accepts(GameType.GO, version % 5 + 1, bytes))
         }
         assertTrue(GameRecordPayloadPolicy.accepts(GameType.GO, 1, frame(1, 4_096)))
         assertFalse(GameRecordPayloadPolicy.accepts(GameType.GO, 1, frame(1, 4_097)))

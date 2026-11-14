@@ -105,4 +105,5 @@ internal fun goReplayEventLabel(action: GoAction?): String = when (action) {
     is GoAction.ConfirmScore -> "${goReplayPlayer(action.actor)}方确认死子提议"
     is GoAction.ResumePlay -> "争议续弈，${goReplayPlayer(action.firstPlayer)}方先行"
     is GoAction.Resign -> "${goReplayPlayer(action.actor)}方认输"
+    is GoAction.Timeout -> "${goReplayPlayer(action.actor)}方超时"
 }

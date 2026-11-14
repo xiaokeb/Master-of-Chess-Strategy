@@ -6,6 +6,7 @@ data class GoSavedSession(
     val displayMode: GoScoreDisplayMode,
     val lastMoveIndex: Int? = null,
     val identity: GoSessionIdentity = GoSessionIdentity.create(),
+    val clock: GoTurnClock? = null,
 )
 
 /** The engine validates rule bytes after the repository validates its envelope. */

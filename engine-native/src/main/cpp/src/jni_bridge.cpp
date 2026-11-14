@@ -484,7 +484,7 @@ Java_com_masterofchessstrategy_engine_internal_NativeBindings_applyGoAction(
 ) noexcept {
     return guard_jni<jint>(env, 2, [=] {
         if (kind < mocs::engine::go_place_action_kind ||
-            kind > mocs::engine::go_resign_action_kind) {
+            kind > mocs::engine::go_timeout_action_kind) {
             return static_cast<jint>(mocs::engine::EngineError::illegal_action);
         }
         const mocs::engine::EngineAction action{

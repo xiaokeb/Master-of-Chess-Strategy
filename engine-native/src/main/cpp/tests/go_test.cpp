@@ -24,6 +24,7 @@ using mocs::engine::make_go_toggle_dead;
 using mocs::engine::make_go_confirm_score;
 using mocs::engine::make_go_resume_play;
 using mocs::engine::make_go_resign;
+using mocs::engine::make_go_timeout;
 
 void play(GoEngine& game, const EngineAction& action) {
     assert(game.apply(action).accepted);
@@ -423,6 +424,22 @@ void resignation_preserves_board_and_round_trips_without_area_scoring() {
         assert(restored.undo() && restored.serialize() == before);
     }
 }
+
+void timeout_only_ends_the_active_turn_and_round_trips() {
+    GoEngine game(9);
+    assert(game.apply(make_go_timeout(1)).error == EngineError::invalid_state);
+    play(game, make_go_place(0, 0));
+    play(game, make_go_timeout(1));
+    const auto ending = game.serialize();
+    assert(ending[4] == 5 && game.game_result() == GameResult::first_player_win);
+    assert(!game.final_score().has_value() && game.stone_at(0, 0) == GoStone::black);
+    GoEngine restored(9);
+    assert(restored.restore(ending).restored && restored.serialize() == ending);
+    assert(restored.undo() && restored.serialize()[4] == 3);
+    play(restored, make_go_pass());
+    play(restored, make_go_pass());
+    assert(restored.apply(make_go_timeout(restored.current_player())).error == EngineError::invalid_state);
+}
 }  // namespace
 
 int main() {
@@ -438,4 +455,5 @@ int main() {
     dispute_resume_does_not_erase_ko_history();
     malformed_agreement_and_legacy_restore_are_atomic();
     resignation_preserves_board_and_round_trips_without_area_scoring();
+    timeout_only_ends_the_active_turn_and_round_trips();
 }

@@ -132,6 +132,7 @@ class NativeGoEngine(
         }
         is GoAction.ResumePlay -> intArrayOf(5, action.firstPlayer.code, 0, 0, 0)
         is GoAction.Resign -> intArrayOf(6, action.actor.code, 0, 0, 0)
+        is GoAction.Timeout -> intArrayOf(7, action.actor.code, 0, 0, 0)
     }
 
     private fun decodeAction(fields: List<Int>): GoAction = when (fields[0]) {
@@ -142,6 +143,7 @@ class NativeGoEngine(
         4 -> GoAction.ConfirmScore(decodePlayer(fields[1]), fields[2])
         5 -> GoAction.ResumePlay(decodePlayer(fields[1]))
         6 -> GoAction.Resign(decodePlayer(fields[1]))
+        7 -> GoAction.Timeout(decodePlayer(fields[1]))
         else -> error("Native Go returned an unknown action")
     }
 

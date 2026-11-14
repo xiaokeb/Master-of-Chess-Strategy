@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineDispatcher
@@ -35,11 +37,15 @@ class GoGameViewModel(
         NativeGoEngine(size, komi, handicap)
     },
     private val recordDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val nowMillis: () -> Long = System::currentTimeMillis,
+    initialLimitMinutes: Int? = null,
 ) : ViewModel() {
     private val mutex = Mutex()
     private var engine: GoRuleEngine? = null
     private var identity = GoSessionIdentity.create()
     private var disposed = false
+    private var clock: GoTurnClock? = null
+    private var clockJob: Job? = null
     private val mutableState = MutableStateFlow(GoGameUiState(boardSize = initialSize))
     val state: StateFlow<GoGameUiState> = mutableState
     private val mutableSounds = MutableSharedFlow<ChineseChessSoundCue>(
@@ -64,10 +70,14 @@ class GoGameViewModel(
                             "围棋存档中的规则状态无效"
                         }
                         identity = saved.identity
+                        clock = saved.clock
                     }
                     engine = candidate
                     candidate = null
                     if (saved == null) {
+                        clock = initialLimitMinutes?.let { minutes ->
+                            GoTurnClock.start(minutes * 60_000L, checkNotNull(clockPlayer(checkNotNull(engine))), nowMillis())
+                        }
                         persist(checkNotNull(engine), mode = GoScoreDisplayMode.STONES)
                     } else {
                         mutableState.value = snapshot(
@@ -75,6 +85,7 @@ class GoGameViewModel(
                             mode = saved.displayMode,
                             lastMove = saved.lastMoveIndex,
                         )
+                        if (!expireClock(checkNotNull(engine), nowMillis())) ensureClockTicker()
                     }
                 } catch (error: Exception) {
                     if (error is CancellationException) throw error
@@ -111,11 +122,13 @@ class GoGameViewModel(
     fun resume(actor: GoPlayer) = perform(GoAction.ResumePlay(actor))
 
     fun undo() {
-        if (!mutableState.value.canOperate) return
+        if (!mutableState.value.canOperate || mutableState.value.timedOutBy != null) return
         viewModelScope.launch {
             mutex.withLock {
                 val current = engine ?: return@withLock
-                if (!mutableState.value.canOperate) return@withLock
+                if (!mutableState.value.canOperate || mutableState.value.timedOutBy != null) return@withLock
+                val now = nowMillis()
+                if (expireClock(current, now)) return@withLock
                 val nextIdentity = if (current.phase == GoPhase.FINISHED) {
                     try { identity.afterTerminalUndo() } catch (error: IllegalStateException) {
                         mutableState.value = mutableState.value.copy(error = error.message)
@@ -123,6 +136,7 @@ class GoGameViewModel(
                     }
                 } else identity
                 if (!current.undo()) return@withLock
+                clock = clock?.advance(now, clockPlayer(current))
                 identity = nextIdentity
                 persist(current, lastMove = null)
             }
@@ -159,7 +173,7 @@ class GoGameViewModel(
         }
     }
 
-    fun newGame(size: Int, handicap: Int) {
+    fun newGame(size: Int, handicap: Int, limitMinutes: Int? = null) {
         if (mutableState.value.loading || mutableState.value.saving ||
             mutableState.value.importing || mutableState.value.needsSave) return
         viewModelScope.launch {
@@ -170,18 +184,24 @@ class GoGameViewModel(
                 mutableState.value = previous.copy(saving = true, error = null)
                 var candidate: GoRuleEngine? = null
                 try {
-                    candidate = engineFactory(size, if (handicap == 0) 15 else 0, handicap)
-                    val next = snapshot(candidate, GoScoreDisplayMode.STONES).copy(
-                        scoringActor = GoPlayer.BLACK, showLegalPoints = false,
+                    val prepared = engineFactory(size, if (handicap == 0) 15 else 0, handicap)
+                    candidate = prepared
+                    val newClock = limitMinutes?.let {
+                        GoTurnClock.start(it * 60_000L, checkNotNull(clockPlayer(prepared)), nowMillis())
+                    }
+                    val next = snapshot(prepared, GoScoreDisplayMode.STONES).copy(
+                        scoringActor = GoPlayer.BLACK, showLegalPoints = false, timeRemainingMillis = remaining(newClock),
                     )
                     val nextIdentity = GoSessionIdentity.create(GoSessionOrigin.LOCAL)
-                    repository.save(GoSavedSession(size, candidate.serialize(), GoScoreDisplayMode.STONES,
-                        identity = nextIdentity))
+                    repository.save(GoSavedSession(size, prepared.serialize(), GoScoreDisplayMode.STONES,
+                        identity = nextIdentity, clock = newClock))
                     identity = nextIdentity
+                    clock = newClock
                     engine?.close()
-                    engine = candidate
+                    engine = prepared
                     candidate = null
                     mutableState.value = next
+                    ensureClockTicker()
                 } catch (error: Exception) {
                     if (error is CancellationException) throw error
                     mutableState.value = previous.copy(
@@ -226,13 +246,16 @@ class GoGameViewModel(
                         }
                     }
                     val imported = checkNotNull(candidate) { "SGF 棋谱无效或不支持该主线" }
-                    val next = snapshot(imported, previous.displayMode).copy(showLegalPoints = false)
+                    val next = snapshot(imported, previous.displayMode).copy(showLegalPoints = false, timeRemainingMillis = null)
                     val nextIdentity = GoSessionIdentity.create(GoSessionOrigin.SGF_IMPORT)
                     // Finish the save/swap even if the page closes during the AtomicFile write.
                     withContext(NonCancellable) {
                         repository.save(GoSavedSession(imported.boardSize, imported.serialize(),
                             previous.displayMode, next.lastMoveIndex, nextIdentity))
                         identity = nextIdentity
+                        clock = null
+                        clockJob?.cancel()
+                        clockJob = null
                         engine?.close()
                         if (disposed) imported.close() else {
                             engine = imported
@@ -258,8 +281,13 @@ class GoGameViewModel(
             mutex.withLock {
                 val current = engine ?: return@withLock
                 if (!mutableState.value.canAct) return@withLock
+                val now = nowMillis()
+                if (expireClock(current, now)) return@withLock
                 when (current.apply(action)) {
-                    ActionResult.Accepted -> persist(current, lastMove = lastMove, liveAction = action)
+                    ActionResult.Accepted -> {
+                        clock = clock?.advance(now, clockPlayer(current))
+                        persist(current, lastMove = lastMove, liveAction = action)
+                    }
                     is ActionResult.Rejected -> {
                         mutableState.value = mutableState.value.copy(error = "该操作不符合当前围棋规则")
                     }
@@ -279,16 +307,52 @@ class GoGameViewModel(
         if (liveAction != null) pendingSound = goLiveSoundCue(liveAction, previous, proposed)
         mutableState.value = proposed
         try {
-            repository.save(GoSavedSession(current.boardSize, current.serialize(), mode, proposed.lastMoveIndex, identity))
+            repository.save(GoSavedSession(current.boardSize, current.serialize(), mode, proposed.lastMoveIndex, identity, clock))
             mutableState.value = proposed.copy(saving = false)
             pendingSound?.let(mutableSounds::tryEmit)
             pendingSound = null
+            ensureClockTicker()
         } catch (error: Exception) {
             if (error is CancellationException) throw error
             mutableState.value = proposed.copy(
                 saving = false, needsSave = true,
                 error = error.message ?: "围棋对局保存失败，请重试",
             )
+        }
+    }
+
+    private fun clockPlayer(engine: GoRuleEngine): GoPlayer? = GoPlayer.entries[engine.currentPlayer.value]
+        .takeIf { engine.phase == GoPhase.PLAYING }
+
+    private fun remaining(clock: GoTurnClock?, now: Long = nowMillis()): Pair<Long, Long>? =
+        clock?.let { it.remaining(GoPlayer.BLACK, now) to it.remaining(GoPlayer.WHITE, now) }
+
+    private suspend fun expireClock(engine: GoRuleEngine, now: Long): Boolean {
+        val running = clock ?: return false
+        val expired = running.expired(now) ?: return false
+        val action = GoAction.Timeout(expired)
+        check(engine.apply(action) == ActionResult.Accepted)
+        clock = running.advance(now, null)
+        persist(engine, liveAction = action)
+        return true
+    }
+
+    private fun ensureClockTicker() {
+        if (clock?.active == null || clockJob?.isActive == true) return
+        clockJob = viewModelScope.launch {
+            while (true) {
+                val nextDelay = mutex.withLock {
+                    val current = engine ?: return@withLock null
+                    val running = clock ?: return@withLock null
+                    val active = running.active ?: return@withLock null
+                    if (!mutableState.value.canAct) return@withLock 250L
+                    val now = nowMillis()
+                    if (expireClock(current, now)) return@withLock null
+                    mutableState.value = mutableState.value.copy(timeRemainingMillis = remaining(running, now))
+                    running.remaining(active, now).coerceIn(1L, 250L)
+                } ?: break
+                delay(nextDelay)
+            }
         }
     }
 
@@ -328,6 +392,8 @@ class GoGameViewModel(
             recordAvailable = engine is GoRecordEngine,
             loading = false,
             resignedBy = (history?.lastOrNull() as? GoAction.Resign)?.actor,
+            timedOutBy = (history?.lastOrNull() as? GoAction.Timeout)?.actor,
+            timeRemainingMillis = remaining(clock),
         )
     }
 

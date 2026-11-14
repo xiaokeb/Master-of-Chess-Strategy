@@ -34,13 +34,14 @@ internal class RoomGoLocalSessionStore(private val database: MocsDatabase) : GoL
     private inner class Access : GoLocalSessionTransaction {
         override suspend fun readActive(): ByteArray? {
             val row = database.goLocalSessionDao().find(GameType.GO.code) ?: return null
-            require(row.gameTypeCode == GameType.GO.code && row.envelopeVersion == 3 && row.updatedAtEpochMillis >= 0)
+            require(row.gameTypeCode == GameType.GO.code && row.envelopeVersion in 3..4 &&
+                row.checkpoint.getOrNull(4)?.toInt() == row.envelopeVersion && row.updatedAtEpochMillis >= 0)
             return row.checkpoint.copyOf()
         }
 
         override suspend fun writeActive(envelope: ByteArray, updatedAtEpochMillis: Long) {
             database.goLocalSessionDao().save(GoLocalSessionEntity(
-                GameType.GO.code, 3, envelope.copyOf(), updatedAtEpochMillis,
+                GameType.GO.code, envelope[4].toInt(), envelope.copyOf(), updatedAtEpochMillis,
             ))
         }
 

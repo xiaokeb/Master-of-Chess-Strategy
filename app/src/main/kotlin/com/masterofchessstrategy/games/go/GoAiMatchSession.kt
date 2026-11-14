@@ -231,6 +231,7 @@ class GoAiMatchSession(
             is GoAction.Place, GoAction.Pass -> current.humanCanPlay
             is GoAction.ToggleDeadGroup, is GoAction.ConfirmScore, is GoAction.ResumePlay -> current.canReviewScore
             is GoAction.Resign -> !current.closed && current.game.canAct && current.config.humanPlayer == action.actor
+            is GoAction.Timeout -> false // Only a running match clock may submit a timeout.
         }
         if (!allowed || !lifetime.isActive) return false
         invalidateSearch()

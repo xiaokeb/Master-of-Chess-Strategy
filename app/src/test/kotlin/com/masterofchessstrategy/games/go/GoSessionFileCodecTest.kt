@@ -1,5 +1,6 @@
 package com.masterofchessstrategy.games.go
 
+import com.masterofchessstrategy.engine.GoPlayer
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -10,6 +11,18 @@ import java.nio.ByteOrder
 import java.util.zip.CRC32
 
 class GoSessionFileCodecTest {
+    @Test fun timedSessionRoundTripsWithAnIndependentEnvelopeVersion() {
+        val original = GoSavedSession(9, byteArrayOf(1), GoScoreDisplayMode.STONES,
+            clock = GoTurnClock.start(300_000, GoPlayer.WHITE, 42))
+        val bytes = GoSessionFileCodec.encode(original)
+        assertEquals(4, bytes[4].toInt())
+        val restored = checkNotNull(GoSessionFileCodec.decode(bytes))
+        assertEquals(original.clock, restored.clock)
+        assertArrayEquals(bytes, GoSessionFileCodec.encode(restored))
+        assertNull(GoSessionFileCodec.decode(bytes.copyOf(bytes.size - 1)))
+        assertEquals(3, GoSessionFileCodec.encode(original.copy(clock = null))[4].toInt())
+    }
+
     @Test fun sessionRoundTripPreservesEngineBytesAndDisplayMode() {
         val original = GoSavedSession(13, byteArrayOf(0, 1, 2, -1), GoScoreDisplayMode.POINTS, 42)
         val decoded = GoSessionFileCodec.decode(GoSessionFileCodec.encode(original))!!

@@ -16,9 +16,10 @@ internal fun requireCompletedGoRecord(record: GameRecord) {
     NativeGoEngine(boardSize = state[5].toInt() and 0xff).use { engine ->
         require(engine.restore(state) == RestoreResult.Restored) { "Invalid Go record history" }
         val history = engine.eventHistory()
+        val terminal = history.lastOrNull()
         require(engine.phase == GoPhase.FINISHED &&
-            (engine.finalScore() != null || history.lastOrNull() is GoAction.Resign)) {
-            "Go record has no terminal scoring or resignation event"
+            (engine.finalScore() != null || terminal is GoAction.Resign || terminal is GoAction.Timeout)) {
+            "Go record has no valid terminal event"
         }
         require(engine.gameResult() == record.result) { "Go record result differs from its history" }
         val moves = history.count { it is GoAction.Place || it == GoAction.Pass }

@@ -8,6 +8,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import com.masterofchessstrategy.data.toGameRecord
+import com.masterofchessstrategy.data.sealGoLegacySourcesForRestore
 import com.masterofchessstrategy.engine.*
 import com.masterofchessstrategy.games.go.*
 import com.masterofchessstrategy.games.go.data.*
@@ -142,6 +143,49 @@ class GoLessonPracticeNavigationTest {
         compose.onNodeWithTag(GO_LOCAL_ENTRY_TAG).performScrollTo().performClick()
         awaitTag("go_resigned")
         assertEquals(1, runBlocking { database.gameRecordDao().listAll().size })
+    }
+
+    @Test fun localClockUsesGlobalSettingAndEndsAnExpiredRestoredTurn() {
+        runBlocking {
+            database.localDataMigrationDao().sealGoLegacySourcesForRestore()
+        }
+        compose.onNodeWithTag(HOME_SETTINGS_TAG).performScrollTo().performClick()
+        val duration = compose.onNodeWithTag("settings_game_duration_toggle")
+        duration.performScrollTo().assertIsOff().performClick()
+        compose.waitUntil(10_000) { runBlocking { database.appSettingsDao().find()?.gameDurationMinutes } == 30 }
+        compose.onNodeWithText("返回").performScrollTo().performClick()
+        fun openLocal() {
+            compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
+            compose.onNodeWithTag(GO_LOCAL_ENTRY_TAG).performScrollTo().performClick()
+        }
+        openLocal()
+        awaitTag("go_clock")
+        val repository = RoomGoSessionRepository(database)
+        val first = checkNotNull(runBlocking { repository.load() })
+        assertEquals(1_800_000L, first.clock?.limitMillis)
+        compose.onNodeWithTag("go_intersection_0_0").performClick()
+        compose.waitUntil(10_000) {
+            runBlocking { repository.load()?.clock?.active } == GoPlayer.WHITE
+        }
+        val after = checkNotNull(runBlocking { repository.load() })
+        capture("go-clock-running")
+        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        awaitTag(GO_LOCAL_ENTRY_TAG)
+        runBlocking {
+            val expired = checkNotNull(after.clock).copy(startedAtMillis = System.currentTimeMillis() - 3_600_000L)
+            repository.save(after.copy(clock = expired))
+        }
+        compose.onNodeWithTag(GO_LOCAL_ENTRY_TAG).performScrollTo().performClick()
+        awaitTag("go_timeout")
+        compose.onNodeWithTag("go_timeout").performScrollTo().assertTextEquals("白方超时")
+        val record = checkNotNull(runBlocking { database.gameRecordDao().listAll() }.single().toGameRecord())
+        assertEquals(GameResult.FIRST_PLAYER_WIN, record.result)
+        assertEquals(5, record.engineFormatVersion)
+        GoReplaySession.openSnapshot(record.engineState).use {
+            assertEquals(GoAction.Timeout(GoPlayer.WHITE), it.seek(2).lastEvent)
+        }
+        assertEquals(0L, runBlocking { repository.load()?.clock?.whiteMillis })
+        capture("go-clock-expired")
     }
 
     @Test fun correspondingCaptureAndActivityRecreationPreserveTheOriginalCourseEntry() {

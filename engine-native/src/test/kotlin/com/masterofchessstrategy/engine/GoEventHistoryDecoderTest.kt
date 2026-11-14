@@ -16,6 +16,8 @@ class GoEventHistoryDecoderTest {
             ), GoEventHistoryDecoder.decode(intArrayOf(1, 6,
                 1, size - 1, 0, 0, 0, 2, 0, 0, 0, 0,
                 3, 0, size - 1, 1, 0, 4, 0, Int.MAX_VALUE, 0, 0, 5, 1, 0, 0, 0, 6, 0, 0, 0, 0), size))
+            assertEquals(listOf(GoAction.Timeout(GoPlayer.WHITE)),
+                GoEventHistoryDecoder.decode(frame(7, 1, 0, 0, 0), size))
         }
     }
 
@@ -29,7 +31,7 @@ class GoEventHistoryDecoderTest {
     }
 
     @Test fun invalidKindsCoordinatesActorsAndRevisionAreRejected() {
-        for (kind in listOf(0, 7, Int.MAX_VALUE)) rejected(frame(kind, 0, 0, 0, 0))
+        for (kind in listOf(0, 8, Int.MAX_VALUE)) rejected(frame(kind, 0, 0, 0, 0))
         for (bad in listOf(-1, 9, Int.MAX_VALUE)) {
             rejected(frame(1, bad, 0, 0, 0))
             rejected(frame(3, 0, bad, 0, 0))
@@ -45,7 +47,7 @@ class GoEventHistoryDecoderTest {
     }
 
     @Test fun allUnusedArgumentSlotsMustBeZero() {
-        for (kind in 1..6) rejected(frame(kind, 0, 0, 0, 1))
+        for (kind in 1..7) rejected(frame(kind, 0, 0, 0, 1))
         rejected(frame(1, 0, 0, 1, 0))
         for (offset in 3..5) rejected(frame(2, 0, 0, 0, 0).also { it[offset] = 1 })
         rejected(frame(4, 0, 0, 1, 0))

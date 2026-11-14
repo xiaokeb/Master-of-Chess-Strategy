@@ -47,7 +47,8 @@ internal class GoLocalSessionBackupAdapter(
     internal fun encodeRows(rows: List<GoLocalSessionEntity>): List<GameBackupRecord> {
         require(rows.size <= 1)
         return rows.map { row ->
-            require(row.gameTypeCode == GameType.GO.code && row.envelopeVersion == 3 && row.updatedAtEpochMillis >= 0)
+            require(row.gameTypeCode == GameType.GO.code && row.envelopeVersion in 3..4 &&
+                row.checkpoint.getOrNull(4)?.toInt() == row.envelopeVersion && row.updatedAtEpochMillis >= 0)
             record(row.checkpoint.copyOf(), row.updatedAtEpochMillis).also { decode(it) }
         }
     }
@@ -69,7 +70,7 @@ internal class GoLocalSessionBackupAdapter(
     private fun decode(record: GameBackupRecord): Pair<GoSavedSession, Long> {
         GoBackupWire.header(record, KIND, 4)
         val bytes = GoBackupWire.unhex(record.fields[3], GoSessionFileCodec.MAX_FILE_BYTES)
-        require(bytes.size > 4 && bytes[4] == 3.toByte()) { "Go backup requires GOS1 v3" }
+        require(bytes.size > 4 && bytes[4].toInt() in 3..4) { "Invalid Go backup envelope version" }
         val session = requireNotNull(GoSessionFileCodec.decode(bytes))
         require(GoSessionFileCodec.encode(session).contentEquals(bytes))
         return session to GoBackupWire.time(record.fields[2])
@@ -87,8 +88,8 @@ internal class PreparedGoLocalBackup internal constructor(
 ) : PreparedGameBackup {
     override val storageSlot = BackupStorageSlot(BackupStorageTable.GO_LOCAL_SESSION, GameType.GO)
     override suspend fun write(database: MocsDatabase) {
-        database.goLocalSessionDao().save(GoLocalSessionEntity(GameType.GO.code, 3,
-            GoSessionFileCodec.encode(admitted.session()), time))
+        val envelope = GoSessionFileCodec.encode(admitted.session())
+        database.goLocalSessionDao().save(GoLocalSessionEntity(GameType.GO.code, envelope[4].toInt(), envelope, time))
     }
 }
 

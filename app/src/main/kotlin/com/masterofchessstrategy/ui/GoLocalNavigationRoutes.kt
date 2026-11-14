@@ -17,12 +17,12 @@ import com.masterofchessstrategy.settings.LocalDataWriterRegistry
 /** NavBackStackEntry owns each VM; restored data always receives a fresh epoch-specific owner. */
 @Composable
 internal fun GoLocalNavigationRoute(storage: GoLocalStorage, writers: LocalDataWriterRegistry,
-    soundEnabled: Boolean, onBack: () -> Unit,
+    soundEnabled: Boolean, newGameLimitMinutes: Int?, onBack: () -> Unit,
 ) {
     val epoch by storage.gate.epoch.collectAsState()
     val repository = remember(storage, epoch) { storage.sessionRepository() }
     GoGameRoute(onBack, repository = repository, viewModelKey = "go-local-$epoch",
-        soundEnabled = soundEnabled, onWriterReady = writers::register)
+        soundEnabled = soundEnabled, newGameLimitMinutes = newGameLimitMinutes, onWriterReady = writers::register)
 }
 
 @Composable

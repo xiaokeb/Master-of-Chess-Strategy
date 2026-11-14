@@ -398,6 +398,7 @@ private fun DurationSetting(
                     checked = duration != null,
                     onCheckedChange = onTimeLimitEnabled,
                     enabled = state.isInteractionEnabled,
+                    modifier = Modifier.testTag("settings_game_duration_toggle"),
                 )
             }
             if (duration != null) {

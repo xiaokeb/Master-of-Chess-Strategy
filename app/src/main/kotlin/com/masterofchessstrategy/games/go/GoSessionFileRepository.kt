@@ -2,6 +2,7 @@ package com.masterofchessstrategy.games.go
 
 import android.content.Context
 import android.util.AtomicFile
+import com.masterofchessstrategy.engine.GoPlayer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
@@ -22,8 +23,9 @@ internal object GoSessionFileCodec {
     private const val LEGACY_HEADER_BYTES = 16
     private const val HEADER_BYTES = 20
     private const val V3_HEADER_BYTES = 29
+    private const val CLOCK_BYTES = 33
     private const val MAX_ENGINE_BYTES = 1_048_576
-    internal const val MAX_FILE_BYTES = V3_HEADER_BYTES + GoSessionIdentity.MAX_ID_BYTES + MAX_ENGINE_BYTES
+    internal const val MAX_FILE_BYTES = V3_HEADER_BYTES + CLOCK_BYTES + GoSessionIdentity.MAX_ID_BYTES + MAX_ENGINE_BYTES
 
     fun encode(session: GoSavedSession): ByteArray {
         require(session.boardSize in setOf(9, 13, 19))
@@ -31,10 +33,11 @@ internal object GoSessionFileCodec {
         require(session.lastMoveIndex == null || session.lastMoveIndex in 0 until session.boardSize * session.boardSize)
         val state = session.engineState.copyOf()
         val id = session.identity.sessionId.toByteArray(Charsets.US_ASCII)
-        val result = ByteBuffer.allocate(V3_HEADER_BYTES + id.size + state.size)
+        val clock = session.clock
+        val result = ByteBuffer.allocate(V3_HEADER_BYTES + (if (clock == null) 0 else CLOCK_BYTES) + id.size + state.size)
             .order(ByteOrder.LITTLE_ENDIAN)
         result.putInt(MAGIC)
-        result.put(3.toByte()) // envelope version; independent of native MOCG version
+        result.put(if (clock == null) 3.toByte() else 4.toByte())
         result.put(session.boardSize.toByte())
         result.put(session.displayMode.ordinal.toByte())
         result.put(0.toByte()) // reserved
@@ -45,6 +48,8 @@ internal object GoSessionFileCodec {
         result.put(byteArrayOf(0, 0, 0))
         result.putInt(session.identity.archiveRevision)
         result.put(id.size.toByte())
+        if (clock != null) result.putLong(clock.limitMillis).putLong(clock.blackMillis).putLong(clock.whiteMillis)
+            .putLong(clock.startedAtMillis).put((clock.active?.code ?: 255).toByte())
         result.put(id)
         result.put(state)
         return result.array().also { result.putInt(12, checksumV3(it)) }
@@ -55,7 +60,13 @@ internal object GoSessionFileCodec {
         val input = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
         if (input.int != MAGIC) return null
         val version = input.get().toInt()
-        val header = when (version) { 1 -> LEGACY_HEADER_BYTES; 2 -> HEADER_BYTES; 3 -> V3_HEADER_BYTES; else -> return null }
+        val header = when (version) {
+            1 -> LEGACY_HEADER_BYTES
+            2 -> HEADER_BYTES
+            3 -> V3_HEADER_BYTES
+            4 -> V3_HEADER_BYTES + CLOCK_BYTES
+            else -> return null
+        }
         if (bytes.size < header) return null
         val size = input.get().toInt() and 0xff
         val mode = input.get().toInt() and 0xff
@@ -65,13 +76,28 @@ internal object GoSessionFileCodec {
         val checksum = input.int
         val lastMove = if (version >= 2) input.int else -1
         if (lastMove < -1 || lastMove >= size * size) return null
-        val identity = if (version == 3) {
+        var clock: GoTurnClock? = null
+        val identity = if (version >= 3) {
             if (checksum != checksumV3(bytes)) return null
             val originCode = input.get().toInt() and 255
             val origin = GoSessionOrigin.entries.singleOrNull { it.code == originCode } ?: return null
             if (List(3) { input.get().toInt() }.any { it != 0 }) return null
             val revision = input.int
             val idLength = input.get().toInt() and 255
+            if (version == 4) {
+                val limit = input.long
+                val black = input.long
+                val white = input.long
+                val started = input.long
+                val player = when (input.get().toInt() and 255) {
+                    0 -> GoPlayer.BLACK
+                    1 -> GoPlayer.WHITE
+                    255 -> null
+                    else -> return null
+                }
+                clock = try { GoTurnClock(limit, black, white, player, started) }
+                catch (_: IllegalArgumentException) { return null }
+            }
             if (revision < 0 || idLength !in 1..GoSessionIdentity.MAX_ID_BYTES || idLength > input.remaining()) return null
             val id = ByteArray(idLength).also(input::get).toString(Charsets.US_ASCII)
             try { GoSessionIdentity(id, origin, revision) } catch (_: IllegalArgumentException) { return null }
@@ -81,7 +107,7 @@ internal object GoSessionFileCodec {
         input.get(engineState)
         if (version < 3 && CRC32().apply { update(engineState) }.value.toInt() != checksum) return null
         return GoSavedSession(size, engineState, GoScoreDisplayMode.entries[mode],
-            lastMove.takeIf { it >= 0 }, identity ?: GoSessionIdentity.fromLegacy(bytes))
+            lastMove.takeIf { it >= 0 }, identity ?: GoSessionIdentity.fromLegacy(bytes), clock)
     }
 
     private fun checksumV3(bytes: ByteArray) = CRC32().apply {

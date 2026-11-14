@@ -106,7 +106,7 @@ internal class RoomGoSessionRepository(
     }
 
     private fun decode(bytes: ByteArray): GoSavedSession {
-        require(bytes.size > 4 && bytes[4].toInt() == 3) { "Invalid Go Room envelope version" }
+        require(bytes.size > 4 && bytes[4].toInt() in 3..4) { "Invalid Go Room envelope version" }
         return requireNotNull(GoSessionFileCodec.decode(bytes)) { "Invalid Go Room checkpoint" }
     }
 }

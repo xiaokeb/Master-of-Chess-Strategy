@@ -493,7 +493,8 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
             }
             composable(AppDestination.GO_LOCAL_GAME) {
                 GoLocalNavigationRoute(goStorage, gameWriters,
-                    settingsViewModel.uiState.settings.soundEnabled, navController::popBackStack)
+                    settingsViewModel.uiState.settings.soundEnabled, settingsViewModel.uiState.settings.gameDurationMinutes,
+                    navController::popBackStack)
             }
             composable(AppDestination.GO_AI_SETUP) {
                 GoAiSetupNavigationRoute(goStorage, gameWriters,

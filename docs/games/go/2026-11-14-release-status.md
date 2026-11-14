@@ -17,3 +17,4 @@
 | 国标麻将 | 四档策略诊断基线 | `0875dba` | [v0.1.0-competition-mahjong-strength-diagnostic.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-strength-diagnostic.1) |
 | 围棋 | 正式认输 | `7a70e2b` | [v0.1.0-go-resignation.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-resignation.1) |
 | 围棋 | 认输备份和真实进程恢复 | `5e8c525` | [v0.1.0-go-resignation-recovery.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-resignation-recovery.1) |
+| 国标麻将 | 两组策略训练对照 | `5a4e9bb` | [v0.1.0-competition-mahjong-strength-tuning.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-strength-tuning.1) |

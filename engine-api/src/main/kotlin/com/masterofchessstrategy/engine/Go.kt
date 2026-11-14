@@ -15,6 +15,7 @@ sealed interface GoAction : GameAction {
     data class ConfirmScore(val actor: GoPlayer, val proposalRevision: Int) : GoAction
     data class ResumePlay(val firstPlayer: GoPlayer) : GoAction
     data class Resign(val actor: GoPlayer) : GoAction
+    data class Timeout(val actor: GoPlayer) : GoAction
 }
 
 data class GoScoringState(
