@@ -1,0 +1,59 @@
+{
+  "build": {
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "c4a75373f86e1ab6f369a7b654f683421430bc3901160f48ad801f4b87a459b3",
+      "app/build/outputs/apk/debug/app-debug.apk": "200759b596066c6cadafd4cc5332af664b2118f14b13dbc69d3fc810458a17e9"
+    },
+    "candidate": "go-resign-persistence1",
+    "baseline": "7a70e2b318cdd14aad9942b468f4d9d70ddb40fb",
+    "lint_warnings": 25,
+    "release_manifest": "processed",
+    "overlays": [
+      {
+        "sha256": "4a010e7b23f313933890f207a472e86549d95a986892285520f966cae124e8c6",
+        "working_sha256": "4a010e7b23f313933890f207a472e86549d95a986892285520f966cae124e8c6",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/data/GoAiProjectionIntegrationInstrumentedTest.kt"
+      },
+      {
+        "sha256": "7e1ea4447be87e45e8aa1a4f3ef1fa60cb753078b70ee6cc76bdaa6535b8381f",
+        "working_sha256": "7e1ea4447be87e45e8aa1a4f3ef1fa60cb753078b70ee6cc76bdaa6535b8381f",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/data/GoFormalProcessCheckpointInstrumentedTest.kt"
+      },
+      {
+        "sha256": "c76607aa52b343216fee4232cfce249ea99dc96ad071bde93cd082f476bf7ccb",
+        "working_sha256": "c76607aa52b343216fee4232cfce249ea99dc96ad071bde93cd082f476bf7ccb",
+        "path": "app/src/debug/kotlin/com/masterofchessstrategy/ui/GoFormalProcessCheckActivity.kt"
+      }
+    ],
+    "lint_errors": 0
+  },
+  "expected_changed_paths": 6,
+  "tag": "v0.1.0-go-resignation-recovery.1",
+  "distribution": "source-only",
+  "schema_version": 1,
+  "device": {
+    "receipts": [
+      {
+        "sha256": "998232bb3ce69dbbba48678d04b0dcebeecadd68359c5444667da4f4fd2f54c7",
+        "name": "backup.log"
+      },
+      {
+        "sha256": "3d697188ddfc881cfeac3eaafc11c1f6dc413ae92fa6284f824aeef34434081f",
+        "name": "resignation-seed.log"
+      },
+      {
+        "sha256": "3bf40bcd0c9115a7b985c9e723393b50a6ab8dc9ed59f9700a044e3e350e7b3a",
+        "name": "resignation-before.json"
+      },
+      {
+        "sha256": "99d4741a1a1accc517f3b183b49167b430848d4a0223fb1750fc7309bf7e0991",
+        "name": "resignation-after.json"
+      }
+    ],
+    "after_pid": 29875,
+    "folder": "device-840a8a52dd9241c894e082e0f7262da9",
+    "verified_tests": 2,
+    "before_pid": 29785,
+    "avd": "Pixel_7_Pro"
+  }
+}

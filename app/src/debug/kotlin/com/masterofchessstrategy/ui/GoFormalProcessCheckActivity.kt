@@ -68,6 +68,8 @@ class GoFormalProcessCheckActivity : ComponentActivity() {
                         saved.undoUsed == match.undoUsed && saved.hintUsed == match.hintUsed) {
                         val value = JSONObject().put("database", name).put("pid", Process.myPid())
                             .put("match_id", saved.matchId).put("phase", match.game.phase.name)
+                            .put("result", match.game.result.name)
+                            .put("resigned_by", match.game.resignedBy?.name ?: JSONObject.NULL)
                             .put("event_count", match.eventCount).put("opening_event_count", match.openingEventCount)
                             .put("checkpoint_sha256", sha256(GoAiMatchFileCodec.encode(saved)))
                             .put("opening_sha256", saved.copyOpeningBytes()?.let(::sha256) ?: JSONObject.NULL)
@@ -77,6 +79,7 @@ class GoFormalProcessCheckActivity : ComponentActivity() {
                             .put("auto_continue", saved.autoContinueEnabled).put("series_game", saved.autoContinueGameNumber)
                             .put("series_limit", saved.autoContinueMaxGames).put("completion_stored", match.completionStored)
                             .put("black_confirmed", match.game.blackConfirmed).put("white_confirmed", match.game.whiteConfirmed)
+                            .put("archive_count", withContext(Dispatchers.IO) { db.goAiCheckpointDao().listArchives().size })
                             .toString()
                         if (value != last) {
                             withContext(Dispatchers.IO) {

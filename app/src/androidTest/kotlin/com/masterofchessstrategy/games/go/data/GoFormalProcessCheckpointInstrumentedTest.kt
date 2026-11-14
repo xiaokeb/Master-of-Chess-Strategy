@@ -28,7 +28,7 @@ class GoFormalProcessCheckpointInstrumentedTest {
         val token = externalToken ?: UUID.randomUUID().toString()
         val mode = args.getString("go_process_case") ?: "standard"
         require(UUID.fromString(token).toString() == token)
-        require(mode in setOf("standard", "opening", "continuation", "long19"))
+        require(mode in setOf("standard", "opening", "continuation", "long19", "resignation"))
         val name = "go-formal-process-qa-$token.db"
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         check(!context.getDatabasePath(name).exists())
@@ -40,19 +40,20 @@ class GoFormalProcessCheckpointInstrumentedTest {
                 GoAiLegacySource { null })
             val longGame = mode == "long19"
             val automatic = longGame || mode == "continuation"
+            val ranked = mode == "standard" || mode == "resignation"
             val config = GoAiMatchConfig(if (longGame) 19 else 9,
                 humanPlayer = if (automatic) null else GoPlayer.BLACK)
             val repository = bundle.formalAiRepository()
             val saved = NativeGoEngine(config.boardSize).use { native ->
                 if (longGame) return@use GoAiSavedMatch(matchId, config, native.serialize(),
                     autoContinueEnabled = true, autoContinueMaxGames = 2, autoContinueGameNumber = 2)
-                if (mode == "standard") {
+                if (ranked) {
                     RoomGoLearningProgressRepository(db).save(GoLearningProgress(GoLearningLibrary.lessons.map { it.id }.toSet()))
                     bundle.rankedMatchCreator().create(GoAiSavedMatch(matchId, config, native.serialize()))
                 }
                 assertEquals(ActionResult.Accepted, native.apply(GoAction.Place(BoardPosition(0, 0))))
                 assertEquals(ActionResult.Accepted, native.apply(GoAction.Place(BoardPosition(1, 0))))
-                val opening = native.serialize().takeIf { mode != "standard" }
+                val opening = native.serialize().takeIf { !ranked }
                 if (mode == "continuation") {
                     assertEquals(ActionResult.Accepted, native.apply(GoAction.Pass))
                     assertEquals(ActionResult.Accepted, native.apply(GoAction.Pass))
@@ -61,14 +62,21 @@ class GoFormalProcessCheckpointInstrumentedTest {
                 } else if (mode == "opening") {
                     assertEquals(ActionResult.Accepted, native.apply(GoAction.Place(BoardPosition(2, 0))))
                     assertEquals(ActionResult.Accepted, native.apply(GoAction.Place(BoardPosition(3, 0))))
+                } else if (mode == "resignation") {
+                    assertEquals(ActionResult.Accepted, native.apply(GoAction.Resign(GoPlayer.BLACK)))
                 }
                 GoAiSavedMatch(matchId, config, native.serialize(), openingBytes = opening,
+                    completionReserved = mode == "resignation",
                     autoContinueEnabled = automatic, autoContinueMaxGames = if (automatic) 3 else 1,
                     autoContinueGameNumber = if (automatic) 2 else 1)
             }
             repository.save(saved)
             assertArrayEquals(GoAiMatchFileCodec.encode(saved), GoAiMatchFileCodec.encode(checkNotNull(repository.load())))
-            assertEquals(if (mode == "standard") 1 else 0, db.goRankedDao().starts().size)
+            assertEquals(if (ranked) 1 else 0, db.goRankedDao().starts().size)
+            if (mode == "resignation") {
+                bundle.completedMatchSink().storeCompleted(saved)
+                assertEquals(1, db.gameRecordDao().listAll().size)
+            }
             println("GO_PROCESS_FIXTURE $name $matchId $mode")
         } finally {
             db.close()

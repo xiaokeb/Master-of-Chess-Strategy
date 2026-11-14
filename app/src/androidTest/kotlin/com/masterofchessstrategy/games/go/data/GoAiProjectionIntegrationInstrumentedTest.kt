@@ -62,6 +62,51 @@ class GoAiProjectionIntegrationInstrumentedTest {
         }
     }
 
+    @Test fun fullGoBundleRoundTripsLocalAndHumanResignations() = runBlocking {
+        withOwned { source -> withOwned { target ->
+            val sourceBundle = bundle(source)
+            val targetBundle = bundle(target)
+            val local = GoSessionIdentity.create()
+            fun resigned(actor: GoPlayer) = NativeGoEngine(9).use { engine ->
+                assertEquals(ActionResult.Accepted, engine.apply(GoAction.Place(BoardPosition(0, 0))))
+                assertEquals(ActionResult.Accepted, engine.apply(GoAction.Resign(actor)))
+                engine.serialize()
+            }
+            val localBytes = resigned(GoPlayer.WHITE)
+            RoomGoSessionRepository(source).save(GoSavedSession(9, localBytes, GoScoreDisplayMode.STONES, identity = local))
+            val aiBytes = resigned(GoPlayer.BLACK)
+            val match = GoAiSavedMatch("resignation-backup", GoAiMatchConfig(9), aiBytes, completionReserved = true)
+            sourceBundle.aiRepository().save(match)
+            sourceBundle.completedMatchSink().storeCompleted(match)
+            val aiId = admitGoAiCheckpoint(match).recordId
+            assertEquals(1, source.gameRecordDao().setFavorite(aiId, true))
+
+            fun productionBackup(db: MocsDatabase, owner: GoCompleteStorageBundle) =
+                owner.backupRepository { delegate(db, GameBackupRegistry(it)) }
+            val bytes = productionBackup(source, sourceBundle).export(400)
+            val targetBackup = productionBackup(target, targetBundle)
+            assertEquals(2, targetBackup.restore(bytes).gameRecordCount)
+            assertArrayEquals(localBytes, checkNotNull(RoomGoSessionRepository(target).load()).engineState)
+            assertArrayEquals(aiBytes, checkNotNull(targetBundle.aiRepository().load()).copyBytes())
+            val loader = GoStoredRecordLoader(target)
+            val localRecord = loader.load(local.recordId).record
+            val aiRecord = loader.load(aiId).record
+            assertEquals(GameResult.FIRST_PLAYER_WIN, localRecord.result)
+            assertEquals(GameResult.SECOND_PLAYER_WIN, aiRecord.result)
+            assertTrue(aiRecord.isFavorite)
+            for ((record, actor) in listOf(localRecord to GoPlayer.WHITE, aiRecord to GoPlayer.BLACK)) {
+                assertEquals(4, record.engineFormatVersion)
+                GoReplaySession.openSnapshot(record.engineState).use { replay ->
+                    val terminal = replay.seek(2)
+                    assertEquals(GoAction.Resign(actor), terminal.lastEvent)
+                    assertNull(terminal.finalScore)
+                    assertEquals(record.result, terminal.result)
+                }
+            }
+            assertArrayEquals(bytes, targetBackup.export(400))
+        } }
+    }
+
     @Test fun missingRawMissingRecordOrMismatchedFirstTimeRejectBeforeReplacingData() = runBlocking {
         withOwned { database ->
             val bundle = bundle(database)
