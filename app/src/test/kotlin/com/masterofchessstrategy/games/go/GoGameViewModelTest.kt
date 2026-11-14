@@ -12,6 +12,7 @@ import com.masterofchessstrategy.engine.GoScoringState
 import com.masterofchessstrategy.engine.GoStone
 import com.masterofchessstrategy.engine.PlayerId
 import com.masterofchessstrategy.engine.RestoreResult
+import com.masterofchessstrategy.game.ChineseChessSoundCue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,6 +44,8 @@ class GoGameViewModelTest {
         val repository = MemoryRepository()
         val engine = SessionDouble(9)
         val game = GoGameViewModel(repository, 9, engineFactory = { _, _, _ -> engine })
+        val sounds = mutableListOf<ChineseChessSoundCue>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { game.sounds.toList(sounds) }
         advanceUntilIdle()
         repository.failSave = true
         game.play(0, 0)
@@ -50,6 +53,7 @@ class GoGameViewModelTest {
         assertTrue(game.state.value.needsSave)
         assertFalse(game.state.value.canAct)
         assertEquals(1, game.state.value.stones[0])
+        assertTrue(sounds.isEmpty())
         game.play(1, 0)
         advanceUntilIdle()
         assertEquals(1, engine.acceptedActions)
@@ -59,6 +63,10 @@ class GoGameViewModelTest {
         assertFalse(game.state.value.needsSave)
         assertTrue(game.state.value.canAct)
         assertEquals(1, repository.saved!!.engineState[0].toInt())
+        assertEquals(listOf(ChineseChessSoundCue.MOVE), sounds)
+        game.retrySave()
+        advanceUntilIdle()
+        assertEquals(listOf(ChineseChessSoundCue.MOVE), sounds)
     }
 
     @Test fun initialPlayableStateIsPublishedOnlyAfterCheckpointCommits() = runTest(dispatcher) {

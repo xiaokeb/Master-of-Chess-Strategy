@@ -233,17 +233,17 @@ class GoAiMatchSessionTest {
     }
 
     @Test fun audioDistinguishesCapturesAndReportsTerminalWinsFromThePlayersSide() {
-        val previous = GoAiMatchUiState(GoAiMatchConfig(9, humanPlayer = GoPlayer.WHITE),
-            GoGameUiState(boardSize = 9, stones = List(81) { if (it == 1) GoStone.BLACK.code else GoStone.EMPTY.code }))
-        val captured = previous.game.copy(stones = List(81) { if (it == 0) GoStone.WHITE.code else GoStone.EMPTY.code })
-        assertEquals(ChineseChessSoundCue.CAPTURE, goAiSoundCue(place(0), previous, captured))
-        assertNull(goAiSoundCue(GoAction.Pass, previous, previous.game))
+        val previous = GoGameUiState(boardSize = 9,
+            stones = List(81) { if (it == 1) GoStone.BLACK.code else GoStone.EMPTY.code })
+        val captured = previous.copy(stones = List(81) { if (it == 0) GoStone.WHITE.code else GoStone.EMPTY.code })
+        assertEquals(ChineseChessSoundCue.CAPTURE, goLiveSoundCue(place(0), previous, captured))
+        assertNull(goLiveSoundCue(GoAction.Pass, previous, previous))
         val confirm = GoAction.ConfirmScore(GoPlayer.WHITE, 1)
         assertEquals(ChineseChessSoundCue.DEFEAT,
-            goAiSoundCue(confirm, previous, captured.copy(result = GameResult.FIRST_PLAYER_WIN)))
+            goLiveSoundCue(confirm, previous, captured.copy(result = GameResult.FIRST_PLAYER_WIN), GoPlayer.WHITE))
         assertEquals(ChineseChessSoundCue.VICTORY,
-            goAiSoundCue(confirm, previous, captured.copy(result = GameResult.SECOND_PLAYER_WIN)))
-        assertEquals(ChineseChessSoundCue.DRAW, goAiSoundCue(confirm, previous, captured.copy(result = GameResult.DRAW)))
+            goLiveSoundCue(confirm, previous, captured.copy(result = GameResult.FIRST_PLAYER_WIN)))
+        assertEquals(ChineseChessSoundCue.DRAW, goLiveSoundCue(confirm, previous, captured.copy(result = GameResult.DRAW)))
     }
 
     @Test fun undoRestoresHumanTurnAndDurableDifficultyAllowance() = runTest {

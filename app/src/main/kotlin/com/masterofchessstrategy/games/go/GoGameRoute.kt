@@ -1,5 +1,6 @@
 package com.masterofchessstrategy.games.go
 
+import android.os.PowerManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,11 +23,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.currentStateAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.masterofchessstrategy.ui.ChineseChessSoundEffect
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -38,6 +44,7 @@ fun GoGameRoute(
     modifier: Modifier = Modifier,
     repository: GoSessionRepository? = null,
     viewModelKey: String = "go-local-game",
+    soundEnabled: Boolean = true,
     onWriterReady: (ViewModel) -> Unit = {},
 ) {
     val context = LocalContext.current.applicationContext
@@ -51,6 +58,13 @@ fun GoGameRoute(
     })
     onWriterReady(game) // Retained owners must also be registered after activity recreation.
     val state by game.state.collectAsState()
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val lifecycleState by lifecycle.currentStateAsState()
+    val power = remember(context) { context.getSystemService(PowerManager::class.java) }
+    val sounds = remember(game, power, lifecycle) {
+        game.sounds.filter { power.isInteractive && lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) }
+    }
+    ChineseChessSoundEffect(sounds, soundEnabled && lifecycleState.isAtLeast(Lifecycle.State.STARTED))
     var showSetup by remember { mutableStateOf(false) }
     var showImportConfirmation by remember { mutableStateOf(false) }
     var recordMessage by remember { mutableStateOf<String?>(null) }

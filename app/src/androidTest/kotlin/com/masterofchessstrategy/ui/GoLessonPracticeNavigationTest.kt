@@ -1,6 +1,8 @@
 package com.masterofchessstrategy.ui
 
 import android.graphics.Bitmap
+import android.os.ParcelFileDescriptor
+import android.os.SystemClock
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -66,6 +68,50 @@ class GoLessonPracticeNavigationTest {
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
         assertNull(runBlocking { database.tutorialProgressDao().find(GameType.GO.code) })
         capture("original-lesson-returned")
+    }
+
+    @Test fun localGamePlaysSavedMovesAndHonorsGlobalMuteAfterReentry() {
+        fun audio() = ParcelFileDescriptor.AutoCloseInputStream(
+            InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("dumpsys audio"),
+        ).bufferedReader().use { it.readText() }
+        val pattern = Regex("new player piid:(\\d+)[^\\r\\n]*package:com\\.masterofchessstrategy[^\\r\\n]*")
+        fun players() = pattern.findAll(audio()).map { it.groupValues[1] }.toSet()
+        fun open(): String {
+            val before = players()
+            compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
+            compose.onNodeWithTag(GO_LOCAL_ENTRY_TAG).performScrollTo().performClick()
+            awaitTag("go_phase")
+            compose.waitUntil(5_000) { (players() - before).size == 1 }
+            return (players() - before).single()
+        }
+        fun awaitTurn(text: String) {
+            compose.waitUntil(10_000) {
+                compose.onAllNodes(hasTestTag("go_phase") and hasText(text)).fetchSemanticsNodes().isNotEmpty() &&
+                    compose.onAllNodesWithText("正在保存对局…").fetchSemanticsNodes().isEmpty()
+            }
+        }
+        val first = open()
+        awaitTurn("黑方行棋")
+        compose.onNodeWithTag("go_intersection_0_0").performClick()
+        awaitTurn("白方行棋")
+        compose.waitUntil(5_000) { "player piid:$first event:started" in audio() }
+        capture("local-go-sound")
+        compose.onNodeWithText("返回").performScrollTo().performClick()
+        compose.waitUntil(5_000) { "releasing player piid:$first" in audio() }
+        compose.onNodeWithTag(GO_MODES_BACK_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag(HOME_SETTINGS_TAG).performScrollTo().performClick()
+        val setting = compose.onNodeWithTag(SETTINGS_SOUND_TAG)
+        setting.performScrollTo().assertIsOn().performClick()
+        compose.waitUntil(5_000) { runBlocking { database.appSettingsDao().find()?.soundEnabled } == false }
+        setting.assertIsOff()
+        compose.onNodeWithText("返回").performScrollTo().performClick()
+        val second = open()
+        awaitTurn("白方行棋")
+        compose.onNodeWithTag("go_intersection_1_0").performClick()
+        awaitTurn("黑方行棋")
+        SystemClock.sleep(350)
+        assertFalse("player piid:$second event:started" in audio())
+        capture("local-go-muted")
     }
 
     @Test fun correspondingCaptureAndActivityRecreationPreserveTheOriginalCourseEntry() {

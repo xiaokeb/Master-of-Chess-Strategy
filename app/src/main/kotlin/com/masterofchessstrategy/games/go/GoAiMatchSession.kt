@@ -806,7 +806,7 @@ class GoAiMatchSession(
                     eventCount = committedEventCount, thinking = false, matchId = committedMatchId,
                     completionReserved = committedReserved, completionStored = completionStored,
                     completionPending = committedReserved && !completionStored)
-                goAiSoundCue(action, previous, publishedGame)?.let(onSound)
+                goLiveSoundCue(action, previous.game, publishedGame, previous.config.humanPlayer)?.let(onSound)
                 if (mutableState.value.game.phase != GoPhase.PLAYING) {
                     mutableState.value = mutableState.value.copy(paused = true)
                     if (mutableState.value.game.phase == GoPhase.FINISHED) maybeAutoContinue()
@@ -908,19 +908,23 @@ class GoAiMatchSession(
 }
 
 /** Called for a published live action after its checkpoint has been acknowledged. */
-internal fun goAiSoundCue(action: GoAction?, previous: GoAiMatchUiState, next: GoGameUiState): ChineseChessSoundCue? {
+internal fun goLiveSoundCue(
+    action: GoAction?,
+    previous: GoGameUiState,
+    next: GoGameUiState,
+    human: GoPlayer? = null,
+): ChineseChessSoundCue? {
     if (action == null) return null // Undo does not replay the historical move.
     return when (next.result) {
         GameResult.DRAW -> ChineseChessSoundCue.DRAW
         GameResult.FIRST_PLAYER_WIN, GameResult.SECOND_PLAYER_WIN -> {
             val winner = if (next.result == GameResult.FIRST_PLAYER_WIN) GoPlayer.BLACK else GoPlayer.WHITE
-            val human = previous.config.humanPlayer
             if (human != null && human != winner) ChineseChessSoundCue.DEFEAT
             else ChineseChessSoundCue.VICTORY
         }
         GameResult.ONGOING -> if (action is GoAction.Place) {
-            val captured = previous.game.stones.indices.any { index ->
-                previous.game.stones[index] != GoStone.EMPTY.code && next.stones[index] == GoStone.EMPTY.code
+            val captured = previous.stones.indices.any { index ->
+                previous.stones[index] != GoStone.EMPTY.code && next.stones[index] == GoStone.EMPTY.code
             }
             if (captured) ChineseChessSoundCue.CAPTURE else ChineseChessSoundCue.MOVE
         } else null

@@ -11,6 +11,10 @@ import com.masterofchessstrategy.engine.GoRuleEngine
 import com.masterofchessstrategy.engine.GoRecordEngine
 import com.masterofchessstrategy.engine.NativeGoEngine
 import com.masterofchessstrategy.engine.RestoreResult
+import com.masterofchessstrategy.game.ChineseChessSoundCue
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +42,11 @@ class GoGameViewModel(
     private var disposed = false
     private val mutableState = MutableStateFlow(GoGameUiState(boardSize = initialSize))
     val state: StateFlow<GoGameUiState> = mutableState
+    private val mutableSounds = MutableSharedFlow<ChineseChessSoundCue>(
+        extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+    internal val sounds = mutableSounds.asSharedFlow()
+    private var pendingSound: ChineseChessSoundCue? = null
 
     init {
         require(initialSize in setOf(9, 13, 19))
@@ -248,7 +257,7 @@ class GoGameViewModel(
                 val current = engine ?: return@withLock
                 if (!mutableState.value.canAct) return@withLock
                 when (current.apply(action)) {
-                    ActionResult.Accepted -> persist(current, lastMove = lastMove)
+                    ActionResult.Accepted -> persist(current, lastMove = lastMove, liveAction = action)
                     is ActionResult.Rejected -> {
                         mutableState.value = mutableState.value.copy(error = "该操作不符合当前围棋规则")
                     }
@@ -261,12 +270,17 @@ class GoGameViewModel(
         current: GoRuleEngine,
         mode: GoScoreDisplayMode = mutableState.value.displayMode,
         lastMove: Int? = mutableState.value.lastMoveIndex,
+        liveAction: GoAction? = null,
     ) {
+        val previous = mutableState.value
         val proposed = snapshot(current, mode, lastMove).copy(saving = true)
+        if (liveAction != null) pendingSound = goLiveSoundCue(liveAction, previous, proposed)
         mutableState.value = proposed
         try {
             repository.save(GoSavedSession(current.boardSize, current.serialize(), mode, proposed.lastMoveIndex, identity))
             mutableState.value = proposed.copy(saving = false)
+            pendingSound?.let(mutableSounds::tryEmit)
+            pendingSound = null
         } catch (error: Exception) {
             if (error is CancellationException) throw error
             mutableState.value = proposed.copy(
