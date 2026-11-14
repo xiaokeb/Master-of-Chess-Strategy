@@ -230,6 +230,7 @@ class GoAiMatchSession(
         val allowed = when (action) {
             is GoAction.Place, GoAction.Pass -> current.humanCanPlay
             is GoAction.ToggleDeadGroup, is GoAction.ConfirmScore, is GoAction.ResumePlay -> current.canReviewScore
+            is GoAction.Resign -> !current.closed && current.game.canAct && current.config.humanPlayer == action.actor
         }
         if (!allowed || !lifetime.isActive) return false
         invalidateSearch()
@@ -896,14 +897,16 @@ class GoAiMatchSession(
     private fun player(source: GoRecordEngine) = GoPlayer.entries.first { it.code == source.currentPlayer.value }
     private fun snapshot(source: GoRecordEngine): GoGameUiState {
         val scoring = source.scoringState()
-        val last = source.eventHistory().filterIsInstance<GoAction.Place>().lastOrNull()?.point
+        val history = source.eventHistory()
+        val last = history.filterIsInstance<GoAction.Place>().lastOrNull()?.point
         return GoGameUiState(boardSize = source.boardSize, handicapStones = source.handicapStones,
             stones = List(source.boardSize * source.boardSize) { source.stoneAt(BoardPosition(it % source.boardSize, it / source.boardSize)).code },
             currentPlayer = player(source), phase = scoring.phase, result = source.gameResult(),
             deadStoneIndices = scoring.deadStones.map { it.y * source.boardSize + it.x }.toSet(),
             lastMoveIndex = last?.let { it.y * source.boardSize + it.x }, proposalRevision = scoring.proposalRevision,
             blackConfirmed = scoring.blackConfirmed, whiteConfirmed = scoring.whiteConfirmed, previewScore = source.previewScore(),
-            sessionReady = true, loading = false, recordAvailable = true)
+            sessionReady = true, loading = false, recordAvailable = true,
+            resignedBy = (history.lastOrNull() as? GoAction.Resign)?.actor)
     }
 }
 

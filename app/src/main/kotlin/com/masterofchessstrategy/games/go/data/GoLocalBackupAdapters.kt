@@ -24,7 +24,7 @@ internal interface GoLocalBackupAdapter : GameBackupAdapter, GameBackupSnapshotG
             if (checkpoint.admitted.phase == GoPhase.FINISHED) {
                 requireNotNull(archived) { "Go terminal checkpoint has no matching archive" }
                 val record = archived.record()
-                require(archived.source == session.identity && record.engineFormatVersion == 3 &&
+                require(archived.source == session.identity && record.engineFormatVersion == session.engineState[4].toInt() &&
                     record.engineState.contentEquals(session.engineState) &&
                     record.moveCount == checkpoint.admitted.moveCount && record.result == checkpoint.admitted.result) {
                     "Go terminal checkpoint differs from its archive or provenance"

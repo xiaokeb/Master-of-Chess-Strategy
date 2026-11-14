@@ -15,11 +15,13 @@ internal fun requireCompletedGoRecord(record: GameRecord) {
         GameRecordPayloadPolicy.accepts(GameType.GO, record.engineFormatVersion, state))
     NativeGoEngine(boardSize = state[5].toInt() and 0xff).use { engine ->
         require(engine.restore(state) == RestoreResult.Restored) { "Invalid Go record history" }
-        require(engine.phase == GoPhase.FINISHED && engine.finalScore() != null) {
-            "Go record has no agreed terminal score"
+        val history = engine.eventHistory()
+        require(engine.phase == GoPhase.FINISHED &&
+            (engine.finalScore() != null || history.lastOrNull() is GoAction.Resign)) {
+            "Go record has no terminal scoring or resignation event"
         }
         require(engine.gameResult() == record.result) { "Go record result differs from its history" }
-        val moves = engine.eventHistory().count { it is GoAction.Place || it == GoAction.Pass }
+        val moves = history.count { it is GoAction.Place || it == GoAction.Pass }
         require(moves == record.moveCount) { "Go record move count differs from its history" }
     }
 }

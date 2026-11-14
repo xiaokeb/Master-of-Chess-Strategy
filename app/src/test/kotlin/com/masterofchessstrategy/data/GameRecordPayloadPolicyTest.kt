@@ -24,13 +24,13 @@ class GameRecordPayloadPolicyTest {
         assertFalse(GameRecordPayloadPolicy.accepts(GameType.CHINESE_CHESS, 2, frame(3, 16_386)))
     }
 
-    @Test fun allThreeGoVersionsKeepTheirExactHeaderAndEventWidths() {
-        for (version in 1..3) {
+    @Test fun allGoVersionsKeepTheirExactHeaderAndEventWidths() {
+        for (version in 1..4) {
             val bytes = frame(version, 2)
             assertTrue(GameRecordPayloadPolicy.accepts(GameType.GO, version, bytes))
             assertFalse(GameRecordPayloadPolicy.accepts(GameType.GO, version, bytes + 0))
             assertFalse(GameRecordPayloadPolicy.accepts(GameType.GO, version, bytes.copyOf(bytes.size - 1)))
-            assertFalse(GameRecordPayloadPolicy.accepts(GameType.GO, version % 3 + 1, bytes))
+            assertFalse(GameRecordPayloadPolicy.accepts(GameType.GO, version % 4 + 1, bytes))
         }
         assertTrue(GameRecordPayloadPolicy.accepts(GameType.GO, 1, frame(1, 4_096)))
         assertFalse(GameRecordPayloadPolicy.accepts(GameType.GO, 1, frame(1, 4_097)))

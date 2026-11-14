@@ -45,11 +45,15 @@ internal fun admitGoAiCheckpoint(
         val phase = candidate.phase
         val result = candidate.gameResult()
         val finalScore = candidate.finalScore()
+        val history = candidate.eventHistory()
+        val resignation = history.lastOrNull() as? GoAction.Resign
+        require(resignation == null || resignation.actor == config.humanPlayer) {
+            "围棋人机认输方与本局真人执色不符"
+        }
         require((phase == GoPhase.FINISHED) == (result != GameResult.ONGOING) &&
-            (phase == GoPhase.FINISHED) == (finalScore != null)) { "围棋人机终局状态与双方确认不符" }
+            (phase == GoPhase.FINISHED) == (finalScore != null || resignation != null)) { "围棋人机终局状态与历史不符" }
         require(finalScore == null || finalScore.result == result) { "围棋人机最终分数与胜负不符" }
         require(!match.completionReserved || phase == GoPhase.FINISHED) { "未终结的围棋人机局不能固定完成结果" }
-        val history = candidate.eventHistory()
         require(history.size <= 16_386)
         val canonical = GoAiSavedMatch(match.matchId, config, candidate.serialize(), match.undoUsed, match.hintUsed,
             match.completionReserved, match.rememberedHuman, match.automaticUsed, opening?.copyBytes(),

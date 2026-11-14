@@ -34,14 +34,16 @@ internal fun projectAdmittedGoAiRecord(archive: GoAiCheckpointArchive, admitted:
     }
     // automaticUsed is a permanent mixed-participation fact, not the current mode. It remains
     // in the authoritative GAI; a mixed human game must never be relabelled as pure automatic.
+    val native = match.copyBytes()
     return GameRecord(archive.recordId, GameType.GO, mode, when (match.config.difficulty) {
         GoAiDifficulty.SIMPLE -> Difficulty.EASY
         GoAiDifficulty.MEDIUM -> Difficulty.MEDIUM
         GoAiDifficulty.HARD -> Difficulty.HARD
         GoAiDifficulty.MASTER -> Difficulty.MASTER
-    }, admitted.result, match.copyBytes(), admitted.moveCount,
+    }, admitted.result, native, admitted.moveCount,
         completedAtEpochMillis = archive.completedAtEpochMillis,
-        playerIndex = if (match.config.humanPlayer == GoPlayer.WHITE) 1 else 0)
+        playerIndex = if (match.config.humanPlayer == GoPlayer.WHITE) 1 else 0,
+        engineFormatVersion = native[4].toInt())
 }
 
 /** Idempotency comparison only. Caller retains existing favorite and checks raw provenance. */

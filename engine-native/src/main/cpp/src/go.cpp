@@ -9,7 +9,8 @@
 
 namespace mocs::engine {
 namespace {
-constexpr std::uint8_t format_version = 3;
+constexpr std::uint8_t scored_format_version = 3;
+constexpr std::uint8_t resignation_format_version = 4;
 constexpr std::size_t legacy_header_size = 10;
 constexpr std::size_t v2_header_size = 11;
 constexpr std::size_t header_size = 16;
@@ -62,6 +63,10 @@ EngineAction make_go_confirm_score(
 
 EngineAction make_go_resume_play(const std::uint8_t first_player) noexcept {
     return {go_resume_play_action_kind, {first_player, 0, 0, 0}};
+}
+
+EngineAction make_go_resign(const std::uint8_t player) noexcept {
+    return {go_resign_action_kind, {player, 0, 0, 0}};
 }
 
 GoEngine::GoEngine(const std::uint8_t size, const std::int32_t black_komi_quarters,
@@ -197,6 +202,23 @@ ActionResult GoEngine::apply(const EngineAction& action) {
     if (phase() == GoPhase::finished ||
         (actions_.size() >= max_events && action.kind != go_confirm_score_action_kind)) {
         return {false, EngineError::invalid_state};
+    }
+    if (action.kind == go_resign_action_kind) {
+        if (action.arguments[0] < 0 || action.arguments[0] > 1 ||
+            action.arguments[1] != 0 || action.arguments[2] != 0 || action.arguments[3] != 0) {
+            return {false, EngineError::illegal_action};
+        }
+        auto next = positions_.back();
+        next.phase = GoPhase::finished;
+        next.result = action.arguments[0] == 0 ? GameResult::second_player_win : GameResult::first_player_win;
+        std::fill(next.dead.begin(), next.dead.end(), false);
+        next.confirmations = 0;
+        next.proposal_revision = 0;
+        const auto hash = hashes_.back();
+        positions_.push_back(std::move(next));
+        hashes_.push_back(hash);
+        actions_.push_back(action);
+        return {true, EngineError::none};
     }
     if (phase() == GoPhase::scoring) {
         auto next = positions_.back();
@@ -359,7 +381,9 @@ std::vector<EngineAction> GoEngine::legal_actions() const {
 GameResult GoEngine::game_result() const noexcept { return positions_.back().result; }
 
 std::vector<std::uint8_t> GoEngine::serialize() const {
-    std::vector<std::uint8_t> result{'M', 'O', 'C', 'G', format_version, size_,
+    const auto version = !actions_.empty() && actions_.back().kind == go_resign_action_kind
+        ? resignation_format_version : scored_format_version;
+    std::vector<std::uint8_t> result{'M', 'O', 'C', 'G', version, size_,
                                   static_cast<std::uint8_t>(black_komi_quarters_),
                                   handicap_stones_};
     const auto count = static_cast<std::uint32_t>(actions_.size());
@@ -378,18 +402,20 @@ std::vector<std::uint8_t> GoEngine::serialize() const {
 
 RestoreResult GoEngine::restore(const std::vector<std::uint8_t>& data) {
     if (data.size() < legacy_header_size || data[0] != 'M' || data[1] != 'O' ||
-        data[2] != 'C' || data[3] != 'G' || data[4] < 1 || data[4] > format_version ||
+        data[2] != 'C' || data[3] != 'G' || data[4] < 1 ||
+        data[4] > resignation_format_version ||
         data[5] != size_) {
         return {false, EngineError::corrupted_data};
     }
     const bool legacy = data[4] == 1;
+    const bool has_revisions = data[4] >= scored_format_version;
     const auto start = legacy ? legacy_header_size :
         data[4] == 2 ? v2_header_size : header_size;
     const auto record_size = legacy ? 3 : data[4] == 2 ? action_size : v3_action_size;
     if (data.size() < start || (!legacy && data[6] != 0 && data[6] != 15)) {
         return {false, EngineError::corrupted_data};
     }
-    const auto handicap = data[4] == 3 ? data[7] : 0;
+    const auto handicap = has_revisions ? data[7] : 0;
     if (handicap != 0 && (handicap < 2 || handicap > 9 || data[6] != 0)) {
         return {false, EngineError::corrupted_data};
     }
@@ -416,10 +442,13 @@ RestoreResult GoEngine::restore(const std::vector<std::uint8_t>& data) {
         } else {
             return {false, EngineError::corrupted_data};
         }
+        if (action.kind == go_resign_action_kind && data[4] != resignation_format_version) {
+            return {false, EngineError::corrupted_data};
+        }
         const bool new_proposal = action.kind == go_toggle_dead_action_kind ||
             (action.kind == go_pass_action_kind && candidate.positions_.back().passes == 1);
         if (new_proposal) {
-            const auto revision = data[4] == 3 ? read_u32(data, i + action_size) :
+            const auto revision = has_revisions ? read_u32(data, i + action_size) :
                 static_cast<std::uint32_t>((i - start) / record_size + 1);
             if (revision == 0 || revision <= candidate.proposal_clock_ || revision > 0x7FFFFFFFU) {
                 return {false, EngineError::corrupted_data};
@@ -427,12 +456,16 @@ RestoreResult GoEngine::restore(const std::vector<std::uint8_t>& data) {
             candidate.proposal_clock_ = revision - 1;
         }
         if (!candidate.apply(action).accepted ||
-            (data[4] == 3 && candidate.positions_.back().proposal_revision !=
+            (has_revisions && candidate.positions_.back().proposal_revision !=
              read_u32(data, i + action_size))) {
             return {false, EngineError::corrupted_data};
         }
     }
-    if (data[4] == 3) {
+    if (data[4] == resignation_format_version &&
+        (candidate.actions_.empty() || candidate.actions_.back().kind != go_resign_action_kind)) {
+        return {false, EngineError::corrupted_data};
+    }
+    if (has_revisions) {
         const auto clock = read_u32(data, 8);
         if (clock < candidate.proposal_clock_ || clock > 0x7FFFFFFFU) {
             return {false, EngineError::corrupted_data};
@@ -459,7 +492,7 @@ std::optional<GoStone> GoEngine::stone_at(
 }
 
 bool GoEngine::ready_for_scoring() const noexcept {
-    return phase() != GoPhase::playing;
+    return phase() == GoPhase::scoring || (phase() == GoPhase::finished && positions_.back().confirmations == 3);
 }
 
 GoPhase GoEngine::phase() const noexcept { return positions_.back().phase; }

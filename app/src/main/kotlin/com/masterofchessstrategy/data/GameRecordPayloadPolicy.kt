@@ -45,7 +45,7 @@ internal object GameRecordPayloadPolicy {
     } catch (_: IOException) { null }
 
     private fun acceptsGo(version: Int, state: ByteArray): Boolean {
-        val header = when (version) { 1 -> 10; 2 -> 11; 3 -> 16; else -> return false }
+        val header = when (version) { 1 -> 10; 2 -> 11; 3, 4 -> 16; else -> return false }
         val width = when (version) { 1 -> 3; 2 -> 17; else -> 21 }
         if (state.size !in header..GO_MAX_BYTES || state[0] != 'M'.code.toByte() ||
             state[1] != 'O'.code.toByte() || state[2] != 'C'.code.toByte() ||
@@ -53,7 +53,7 @@ internal object GameRecordPayloadPolicy {
             unsigned(state[5]) !in setOf(9, 13, 19)
         ) return false
         if (version != 1 && unsigned(state[6]) !in setOf(0, 15)) return false
-        if (version == 3) {
+        if (version >= 3) {
             val handicap = unsigned(state[7])
             if (handicap != 0 && (handicap !in 2..9 || state[6] != 0.toByte())) return false
             if (readUnsigned32(state, 8) > Int.MAX_VALUE) return false

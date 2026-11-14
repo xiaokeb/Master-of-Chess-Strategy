@@ -137,6 +137,35 @@ class GoAiProductionEntryInstrumentedTest {
         assertRejectedPlayRoute(UUID.randomUUID().toString(), "missing-active-id")
     }
 
+    @Test fun humanResignationArchivesTheLossAndRestoresTheSameNativeResult() {
+        withOwnedApp(completedLessons = 10) { f ->
+            f.mountApp()
+            enterSetup()
+            compose.onNodeWithTag("go_ai_setup_size_9").performScrollTo().performClick()
+            compose.onNodeWithTag("go_ai_setup_create").performScrollTo().performClick()
+            awaitHumanTurn()
+            val first = checkNotNull(f.active())
+            compose.onNodeWithTag("go_ai_resign").performScrollTo().performClick()
+            compose.onNodeWithTag("go_resign_confirm").performClick()
+            compose.waitUntil(30_000) { runBlocking { f.db.goAiCheckpointDao().listArchives().size } == 1 }
+            compose.onNodeWithTag("go_ai_resigned").performScrollTo().assertTextEquals("黑方认输")
+            val saved = checkNotNull(f.active())
+            assertEquals(first.matchId, saved.matchId)
+            assertEquals(4, saved.copyBytes()[4].toInt())
+            NativeGoEngine(9).use { native ->
+                assertEquals(RestoreResult.Restored, native.restore(saved.copyBytes()))
+                assertEquals(GameResult.SECOND_PLAYER_WIN, native.gameResult())
+                assertNull(native.finalScore())
+            }
+            f.capture("go-ai-resigned")
+            returnToSetup()
+            compose.onNodeWithTag("go_ai_setup_continue").performScrollTo().performClick()
+            compose.waitUntil(30_000) { compose.onAllNodesWithTag("go_ai_resigned").fetchSemanticsNodes().isNotEmpty() }
+            assertEquals(first.matchId, f.active()?.matchId)
+            assertEquals(1, runBlocking { f.db.goAiCheckpointDao().listArchives().size })
+        }
+    }
+
     @Test fun invalidMatchIdReturnsToSetupWithoutCreatingAnAiOwnerOrCheckpoint() {
         // Old persisted matches need not be UUIDs. NUL is invalid under both old and new GAI.
         assertRejectedPlayRoute("invalid\u0000match-id", "invalid-id")

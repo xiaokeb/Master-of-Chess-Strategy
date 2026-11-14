@@ -14,6 +14,7 @@ inline constexpr std::uint16_t go_pass_action_kind = 2;
 inline constexpr std::uint16_t go_toggle_dead_action_kind = 3;
 inline constexpr std::uint16_t go_confirm_score_action_kind = 4;
 inline constexpr std::uint16_t go_resume_play_action_kind = 5;
+inline constexpr std::uint16_t go_resign_action_kind = 6;
 
 enum class GoPhase : std::uint8_t {
     playing = 0,
@@ -62,9 +63,10 @@ struct GoScoringState {
 ) noexcept;
 // A disputed life/death decision resumes with the side claiming death first.
 [[nodiscard]] EngineAction make_go_resume_play(std::uint8_t first_player) noexcept;
+[[nodiscard]] EngineAction make_go_resign(std::uint8_t player) noexcept;
 
-// Rules-only slice. Two passes start agreement; only two confirmations of the
-// same dead-stone proposal can turn its area preview into a final result.
+// Two passes start agreement. Two confirmations finalize area scoring;
+// a resignation is a separate terminal result.
 class GoEngine final : public RuleEngine {
 public:
     explicit GoEngine(std::uint8_t size = 19, std::int32_t black_komi_quarters = 15,

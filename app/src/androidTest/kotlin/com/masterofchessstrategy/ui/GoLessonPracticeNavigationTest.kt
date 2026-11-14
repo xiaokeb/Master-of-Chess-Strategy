@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
+import com.masterofchessstrategy.data.toGameRecord
 import com.masterofchessstrategy.engine.*
 import com.masterofchessstrategy.games.go.*
 import com.masterofchessstrategy.games.go.data.*
@@ -112,6 +113,35 @@ class GoLessonPracticeNavigationTest {
         SystemClock.sleep(350)
         assertFalse("player piid:$second event:started" in audio())
         capture("local-go-muted")
+    }
+
+    @Test fun localResignationSurvivesReentryAndCreatesExactlyOneRoomRecord() {
+        compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag(GO_LOCAL_ENTRY_TAG).performScrollTo().performClick()
+        awaitTag("go_phase")
+        compose.onNodeWithTag("go_intersection_0_0").performClick()
+        val resign = compose.onNodeWithTag("go_resign_0")
+        resign.performScrollTo().performClick()
+        compose.onNodeWithText("继续对局").performClick()
+        compose.onNodeWithTag("go_resigned").assertDoesNotExist()
+        resign.performScrollTo().performClick()
+        compose.onNodeWithTag("go_resign_confirm").performClick()
+        awaitTag("go_resigned")
+        compose.onNodeWithTag("go_resigned").performScrollTo().assertTextEquals("黑方认输")
+        val record = checkNotNull(runBlocking { database.gameRecordDao().listAll() }.single().toGameRecord())
+        assertEquals(GameResult.SECOND_PLAYER_WIN, record.result)
+        assertEquals(4, record.engineFormatVersion)
+        assertEquals(1, record.moveCount)
+        NativeGoEngine(19).use { native ->
+            assertEquals(RestoreResult.Restored, native.restore(record.engineState))
+            assertEquals(GoAction.Resign(GoPlayer.BLACK), native.eventHistory().last())
+            assertNull(native.finalScore())
+        }
+        capture("go-local-resigned")
+        compose.onNodeWithText("返回").performScrollTo().performClick()
+        compose.onNodeWithTag(GO_LOCAL_ENTRY_TAG).performScrollTo().performClick()
+        awaitTag("go_resigned")
+        assertEquals(1, runBlocking { database.gameRecordDao().listAll().size })
     }
 
     @Test fun correspondingCaptureAndActivityRecreationPreserveTheOriginalCourseEntry() {

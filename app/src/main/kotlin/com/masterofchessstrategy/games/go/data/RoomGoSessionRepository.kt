@@ -92,7 +92,7 @@ internal class RoomGoSessionRepository(
         require(now >= 0)
         val record = GameRecord(identity.recordId, GameType.GO, StoredGameMode.LOCAL_TWO_PLAYER,
             difficulty = null, result = admitted.result, engineState = session.engineState,
-            moveCount = admitted.moveCount, completedAtEpochMillis = now, engineFormatVersion = 3)
+            moveCount = admitted.moveCount, completedAtEpochMillis = now, engineFormatVersion = session.engineState[4].toInt())
         if (prior != null) {
             require(source == identity && record.engineState.contentEquals(prior.engineState) &&
                 record.copy(engineState = prior.engineState, isFavorite = prior.isFavorite,

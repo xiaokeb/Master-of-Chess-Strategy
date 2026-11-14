@@ -31,6 +31,7 @@ internal object GoEventHistoryDecoder {
                 3 -> GoAction.ToggleDeadGroup(point(a, b), player(c))
                 4 -> { check(b >= 0 && c == 0); GoAction.ConfirmScore(player(a), b) }
                 5 -> { check(b == 0 && c == 0); GoAction.ResumePlay(player(a)) }
+                6 -> { check(b == 0 && c == 0 && index == count - 1); GoAction.Resign(player(a)) }
                 else -> error("Unknown Go event kind")
             }
         }

@@ -4,7 +4,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class GoEventHistoryDecoderTest {
-    @Test fun emptyAndAllFiveKindsDecodeForEveryBoardSize() {
+    @Test fun emptyAndAllKindsDecodeForEveryBoardSize() {
         for (size in listOf(9, 13, 19)) {
             assertTrue(GoEventHistoryDecoder.decode(intArrayOf(1, 0), size).isEmpty())
             assertEquals(listOf(
@@ -12,9 +12,10 @@ class GoEventHistoryDecoderTest {
                 GoAction.ToggleDeadGroup(BoardPosition(0, size - 1), GoPlayer.WHITE),
                 GoAction.ConfirmScore(GoPlayer.BLACK, Int.MAX_VALUE),
                 GoAction.ResumePlay(GoPlayer.WHITE),
-            ), GoEventHistoryDecoder.decode(intArrayOf(1, 5,
+                GoAction.Resign(GoPlayer.BLACK),
+            ), GoEventHistoryDecoder.decode(intArrayOf(1, 6,
                 1, size - 1, 0, 0, 0, 2, 0, 0, 0, 0,
-                3, 0, size - 1, 1, 0, 4, 0, Int.MAX_VALUE, 0, 0, 5, 1, 0, 0, 0), size))
+                3, 0, size - 1, 1, 0, 4, 0, Int.MAX_VALUE, 0, 0, 5, 1, 0, 0, 0, 6, 0, 0, 0, 0), size))
         }
     }
 
@@ -28,7 +29,7 @@ class GoEventHistoryDecoderTest {
     }
 
     @Test fun invalidKindsCoordinatesActorsAndRevisionAreRejected() {
-        for (kind in listOf(0, 6, Int.MAX_VALUE)) rejected(frame(kind, 0, 0, 0, 0))
+        for (kind in listOf(0, 7, Int.MAX_VALUE)) rejected(frame(kind, 0, 0, 0, 0))
         for (bad in listOf(-1, 9, Int.MAX_VALUE)) {
             rejected(frame(1, bad, 0, 0, 0))
             rejected(frame(3, 0, bad, 0, 0))
@@ -37,12 +38,14 @@ class GoEventHistoryDecoderTest {
             rejected(frame(3, 0, 0, bad, 0))
             rejected(frame(4, bad, 0, 0, 0))
             rejected(frame(5, bad, 0, 0, 0))
+            rejected(frame(6, bad, 0, 0, 0))
         }
         rejected(frame(4, 0, -1, 0, 0))
+        rejected(intArrayOf(1, 2, 6, 0, 0, 0, 0, 2, 0, 0, 0, 0))
     }
 
     @Test fun allUnusedArgumentSlotsMustBeZero() {
-        for (kind in 1..5) rejected(frame(kind, 0, 0, 0, 1))
+        for (kind in 1..6) rejected(frame(kind, 0, 0, 0, 1))
         rejected(frame(1, 0, 0, 1, 0))
         for (offset in 3..5) rejected(frame(2, 0, 0, 0, 0).also { it[offset] = 1 })
         rejected(frame(4, 0, 0, 1, 0))

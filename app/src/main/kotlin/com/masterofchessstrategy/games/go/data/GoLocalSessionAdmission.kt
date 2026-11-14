@@ -22,7 +22,8 @@ internal class GoAdmittedLocalSession(
 
     init {
         GoSessionFileCodec.encode(owned)
-        require(GameRecordPayloadPolicy.accepts(GameType.GO, 3, owned.engineState))
+        require(owned.engineState.getOrNull(4)?.toInt() in 3..4 &&
+            GameRecordPayloadPolicy.accepts(GameType.GO, owned.engineState[4].toInt(), owned.engineState))
         require((phase == GoPhase.FINISHED) == (result != GameResult.ONGOING))
         require(moveCount in 0..GameRecord.MAX_MOVE_COUNT)
     }
@@ -39,8 +40,9 @@ internal fun admitLocalGoSession(session: GoSavedSession): GoAdmittedLocalSessio
     require((state[5].toInt() and 255) == session.boardSize) { "Go board size differs from its checkpoint" }
     NativeGoEngine(session.boardSize).use { engine ->
         require(engine.restore(state) == RestoreResult.Restored) { "Invalid Go session history" }
-        require((engine.phase == GoPhase.FINISHED) == (engine.finalScore() != null))
         val events = engine.eventHistory()
+        val resigned = events.lastOrNull() is GoAction.Resign
+        require((engine.phase == GoPhase.FINISHED) == (engine.finalScore() != null || resigned))
         val last = events.filterIsInstance<GoAction.Place>().lastOrNull()?.point
         return GoAdmittedLocalSession(
             session.copy(engineState = engine.serialize(), lastMoveIndex = last?.let {

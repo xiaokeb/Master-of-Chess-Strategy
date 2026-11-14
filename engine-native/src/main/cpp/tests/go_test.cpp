@@ -23,6 +23,7 @@ using mocs::engine::make_go_place;
 using mocs::engine::make_go_toggle_dead;
 using mocs::engine::make_go_confirm_score;
 using mocs::engine::make_go_resume_play;
+using mocs::engine::make_go_resign;
 
 void play(GoEngine& game, const EngineAction& action) {
     assert(game.apply(action).accepted);
@@ -389,6 +390,39 @@ void malformed_agreement_and_legacy_restore_are_atomic() {
     assert(game.undo());
     assert(game.phase() == GoPhase::playing);
 }
+void resignation_preserves_board_and_round_trips_without_area_scoring() {
+    for (std::uint8_t actor = 0; actor < 2; ++actor) {
+        GoEngine game(9);
+        play(game, make_go_place(2, 3));
+        if (actor == 1) {
+            play(game, make_go_pass());
+            play(game, make_go_pass());
+            play(game, make_go_toggle_dead(2, 3, 1));
+        }
+        const auto before = game.serialize();
+        assert(before[4] == 3);
+        assert(game.apply(make_go_resign(2)).error == EngineError::illegal_action);
+        assert(game.serialize() == before);
+        play(game, make_go_resign(actor));
+        const auto stopped = game.serialize();
+        assert(stopped[4] == 4);
+        assert(game.phase() == GoPhase::finished);
+        assert(game.game_result() == (actor == 0 ? GameResult::second_player_win : GameResult::first_player_win));
+        assert(game.stone_at(2, 3) == GoStone::black && game.scoring_state().dead_stones.empty());
+        assert(!game.ready_for_scoring() && !game.final_score().has_value() && game.legal_actions().empty());
+        assert(!game.apply(make_go_pass()).accepted);
+
+        GoEngine restored(9);
+        assert(restored.restore(stopped).restored && restored.serialize() == stopped);
+        auto malformed = stopped;
+        malformed[4] = 3;
+        assert(!restored.restore(malformed).restored && restored.serialize() == stopped);
+        malformed = before;
+        malformed[4] = 4;
+        assert(!restored.restore(malformed).restored && restored.serialize() == stopped);
+        assert(restored.undo() && restored.serialize() == before);
+    }
+}
 }  // namespace
 
 int main() {
@@ -403,4 +437,5 @@ int main() {
     dispute_resume_preserves_board_and_undoes_atomically();
     dispute_resume_does_not_erase_ko_history();
     malformed_agreement_and_legacy_restore_are_atomic();
+    resignation_preserves_board_and_round_trips_without_area_scoring();
 }

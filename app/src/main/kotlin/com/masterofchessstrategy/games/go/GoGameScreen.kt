@@ -13,12 +13,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -45,7 +50,9 @@ fun GoGameScreen(
     onImportSgf: (() -> Unit)? = null,
     onExportSgf: (() -> Unit)? = null,
     recordMessage: String? = null,
+    onResign: ((GoPlayer) -> Unit)? = null,
 ) {
+    var resigning by remember { mutableStateOf<GoPlayer?>(null) }
     val title = when (state.result) {
         GameResult.FIRST_PLAYER_WIN -> "黑方获胜"
         GameResult.SECOND_PLAYER_WIN -> "白方获胜"
@@ -96,6 +103,7 @@ fun GoGameScreen(
                     }
                     if (recordMessage != null) Text(recordMessage, modifier = Modifier.testTag("go_record_message"))
                     Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("go_phase"))
+                    state.resignedBy?.let { Text("${goReplayPlayer(it)}方认输", modifier = Modifier.testTag("go_resigned")) }
                     if (state.handicapStones > 0) Text("让 ${state.handicapStones} 子 · 白方先行")
                     if (state.phase == GoPhase.PLAYING) {
                         TextButton(onClick = onLegalPointsToggle, enabled = state.canAct) {
@@ -154,6 +162,15 @@ fun GoGameScreen(
                         }
                         OutlinedButton(onClick = onUndo, enabled = state.canOperate) { Text("悔棋") }
                     }
+                    if (state.canAct && onResign != null) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            for (actor in GoPlayer.entries) {
+                                OutlinedButton({ resigning = actor }, modifier = Modifier.testTag("go_resign_${actor.code}")) {
+                                    Text("${goReplayPlayer(actor)}方认输")
+                                }
+                            }
+                        }
+                    }
                     if (state.saving) Text("正在保存对局…")
                     if (state.importing) Text("正在校验并保存导入棋谱…")
                     if (state.error != null) Text(state.error, color = MaterialTheme.colorScheme.error)
@@ -175,4 +192,23 @@ fun GoGameScreen(
             }
         }
     }
+    resigning?.let { actor ->
+        GoResignationDialog(actor, { resigning = null }) {
+            resigning = null
+            onResign?.invoke(actor)
+        }
+    }
+}
+
+@Composable
+internal fun GoResignationDialog(actor: GoPlayer, onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("确认${goReplayPlayer(actor)}方认输？") },
+        text = { Text("认输后本局结束，对方获胜。") },
+        confirmButton = {
+            TextButton(onConfirm, modifier = Modifier.testTag("go_resign_confirm")) { Text("确认认输") }
+        },
+        dismissButton = { TextButton(onDismiss) { Text("继续对局") } },
+    )
 }

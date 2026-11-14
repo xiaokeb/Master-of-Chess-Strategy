@@ -31,6 +31,7 @@ data class GoGameUiState(
     val recordAvailable: Boolean = false,
     val importing: Boolean = false,
     val error: String? = null,
+    val resignedBy: GoPlayer? = null,
 ) {
     val canOperate: Boolean get() = sessionReady && !loading && !saving && !needsSave && !importing
     val canAct: Boolean get() = canOperate && result == GameResult.ONGOING

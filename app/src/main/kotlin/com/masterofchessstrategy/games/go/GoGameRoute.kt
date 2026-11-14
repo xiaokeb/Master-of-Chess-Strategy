@@ -111,6 +111,7 @@ fun GoGameRoute(
         onIntersectionTap = game::play,
         onPass = game::pass,
         onUndo = game::undo,
+        onResign = game::resign,
         onConfirmScore = game::confirm,
         onResumePlay = game::resume,
         onScoringActorSelect = game::selectScoringActor,

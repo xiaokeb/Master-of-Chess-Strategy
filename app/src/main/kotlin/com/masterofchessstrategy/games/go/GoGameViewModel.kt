@@ -102,6 +102,8 @@ class GoGameViewModel(
 
     fun pass() = perform(GoAction.Pass)
 
+    fun resign(actor: GoPlayer) = perform(GoAction.Resign(actor))
+
     fun confirm(actor: GoPlayer) = perform(
         GoAction.ConfirmScore(actor, mutableState.value.proposalRevision),
     )
@@ -297,6 +299,7 @@ class GoGameViewModel(
     ): GoGameUiState {
         val size = engine.boardSize
         val scoring = engine.scoringState()
+        val history = (engine as? GoRecordEngine)?.eventHistory()
         return GoGameUiState(
             boardSize = size,
             handicapStones = engine.handicapStones,
@@ -310,8 +313,8 @@ class GoGameViewModel(
                 .map { it.point.y * size + it.point.x }.toSet(),
             showLegalPoints = mutableState.value.showLegalPoints,
             deadStoneIndices = scoring.deadStones.map { it.y * size + it.x }.toSet(),
-            lastMoveIndex = if (engine is GoRecordEngine) {
-                engine.eventHistory().filterIsInstance<GoAction.Place>().lastOrNull()?.point
+            lastMoveIndex = if (history != null) {
+                history.filterIsInstance<GoAction.Place>().lastOrNull()?.point
                     ?.let { it.y * size + it.x }
             } else lastMove,
             proposalRevision = scoring.proposalRevision,
@@ -324,6 +327,7 @@ class GoGameViewModel(
             sessionReady = true,
             recordAvailable = engine is GoRecordEngine,
             loading = false,
+            resignedBy = (history?.lastOrNull() as? GoAction.Resign)?.actor,
         )
     }
 

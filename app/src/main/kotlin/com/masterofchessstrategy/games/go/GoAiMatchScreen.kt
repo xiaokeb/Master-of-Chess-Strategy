@@ -44,6 +44,7 @@ fun GoAiMatchScreen(
     backgroundControls: (@Composable () -> Unit)? = null,
 ) {
     var restartDialog by remember { mutableStateOf(false) }
+    var resigning by remember { mutableStateOf<GoPlayer?>(null) }
     Surface(modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         BoxWithConstraints(Modifier.fillMaxSize().padding(12.dp)) {
             val wide = maxWidth > maxHeight
@@ -77,6 +78,7 @@ fun GoAiMatchScreen(
                         match.config.humanPlayer?.let { Text("你执${goReplayPlayer(it)}") }
                         if (match.hasSpecifiedOpening) Text("指定开局训练局 · 重开回到原开局 · 不计标准人机胜场")
                         Text(goAiMatchPhaseLabel(match), modifier = Modifier.testTag("go_ai_phase"))
+                        game.resignedBy?.let { Text("${goReplayPlayer(it)}方认输", modifier = Modifier.testTag("go_ai_resigned")) }
                         if (game.loading) Text("正在恢复对局…")
                         if (game.saving) Text("正在保存对局…")
                         if (match.savesTerminalImmediately && game.phase == GoPhase.FINISHED &&
@@ -198,6 +200,12 @@ fun GoAiMatchScreen(
                             Text("${if (game.phase == GoPhase.FINISHED) "正式结果" else "数子预览"}：$assessment")
                             TextButton(onDisplayMode) { Text(if (displayMode == GoScoreDisplayMode.STONES) "切换点目" else "切换数子") }
                         }
+                        val human = match.config.humanPlayer
+                        if (human != null && !match.closed && game.canAct) {
+                            OutlinedButton({ resigning = human }, modifier = Modifier.testTag("go_ai_resign")) {
+                                Text("认输")
+                            }
+                        }
                         OutlinedButton(onUndo, enabled = match.canUndo &&
                             (!match.savesTerminalImmediately || !match.completionStored),
                             modifier = Modifier.testTag("go_ai_undo")) { Text("悔棋") }
@@ -220,6 +228,12 @@ fun GoAiMatchScreen(
                 board(Modifier.fillMaxWidth().height(boardHeight))
                 controls(Modifier.weight(1f).fillMaxWidth())
             }
+        }
+    }
+    resigning?.let { actor ->
+        GoResignationDialog(actor, { resigning = null }) {
+            resigning = null
+            onAction(GoAction.Resign(actor))
         }
     }
     if (restartDialog) AlertDialog(
