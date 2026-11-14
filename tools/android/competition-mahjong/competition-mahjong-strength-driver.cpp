@@ -11,6 +11,7 @@
 
 namespace {
 using mocs::engine::CompetitionMahjongAutoSession;
+using mocs::engine::CompetitionMahjongBotPolicy;
 using mocs::engine::CompetitionMahjongRoundPhase;
 
 using Levels = std::array<std::uint8_t, 4>;
@@ -27,7 +28,7 @@ std::uint64_t seed_at(std::uint64_t seed, int index) {
     return (value ^ (value >> 31)) & 0x7fffffffffffffffULL;
 }
 
-void run_series(int lower, std::uint64_t seed, int rotation) {
+void run_series(int lower, std::uint64_t seed, int rotation, CompetitionMahjongBotPolicy policy) {
     const auto start = std::chrono::steady_clock::now();
     std::array<std::int64_t, 4> points{};
     int total_events = 0;
@@ -45,7 +46,7 @@ void run_series(int lower, std::uint64_t seed, int rotation) {
             seed_at(seed ^ 0x431c9dfe29753c01ULL, hand));
         bool finished = false;
         for (int events = 0; events < 4096;) {
-            const auto advanced = game.advance(32);
+            const auto advanced = game.advance(32, policy);
             if (advanced.accepted_actions == 0 || advanced.accepted_actions > 32)
                 throw std::runtime_error("Invalid progress at hand " + std::to_string(hand));
             events += advanced.accepted_actions;
@@ -71,14 +72,18 @@ void run_series(int lower, std::uint64_t seed, int rotation) {
 } // namespace
 
 int main(int argc, char** argv) {
-    // The diagnostic and production APK use the same four strategies and native automatic session.
-    if (argc != 2 || std::string_view(argv[1]) != "diagnostic-v1") return 2;
+    if (argc != 2) return 2;
+    const std::string_view profile = argv[1];
+    auto policy = CompetitionMahjongBotPolicy::baseline;
+    if (profile == "diagnostic-v2") policy = CompetitionMahjongBotPolicy::diagnostic_v2;
+    else if (profile == "diagnostic-v3") policy = CompetitionMahjongBotPolicy::diagnostic_v3;
+    else if (profile != "diagnostic-v1") return 2;
     std::cout << "lower\tseed\trotation\tp0\tp1\tp2\tp3\tdraws\tevents\telapsed_ms" << std::endl;
     for (int lower = 0; lower < 3; ++lower) {
         for (std::uint64_t seed = 71425001; seed <= 71425008; ++seed) {
             for (int rotation = 0; rotation < 4; ++rotation) {
                 try {
-                    run_series(lower, seed, rotation);
+                    run_series(lower, seed, rotation, policy);
                 } catch (const std::exception& failure) {
                     std::cerr << lower << '/' << seed << '/' << rotation << ": " << failure.what() << '\n';
                     return 1;

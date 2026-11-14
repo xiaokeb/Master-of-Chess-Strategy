@@ -1,0 +1,132 @@
+{
+  "distribution": "source-only",
+  "schema_version": 1,
+  "training": [
+    {
+      "hands": 1536,
+      "raw": "docs/testing/results/2026-11-14-competition-mahjong-strength-diagnostic-v2.tsv",
+      "raw_sha256": "999d94a6aaa44e5ab5320f1fb2805d4a5232e1b42c93de910997bd3f4f415d92",
+      "executable_sha256": "d430128150425314ec65f7eaf9c0ef165783f1ae7dd79a4f8a21fc6c79def643",
+      "identity": {
+        "profiles": [
+          "diagnostic-v1",
+          "diagnostic-v2"
+        ],
+        "base": "7a70e2b318cdd14aad9942b468f4d9d70ddb40fb",
+        "fixed": [
+          {
+            "sha256": "739ee6d5b5544df5c0b164bd10c35e887e811b4fc2204ca8850d2d2c45ae9fac",
+            "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_bot.cpp"
+          },
+          {
+            "sha256": "7a143f548b4e2faa47dc9a9109efad763b89e3c4bc51fddacc177b269d832c01",
+            "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_bot.hpp"
+          },
+          {
+            "sha256": "1e756d9940c69fb76c044cb33b4932816f84f35e3cbfd732bab99e7f09951ecc",
+            "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_auto_session.cpp"
+          },
+          {
+            "sha256": "e274f9249e6e8d7721a9050e284112e218b0fb6149f1aaabbe9c2f03e72d3e8a",
+            "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_auto_session.hpp"
+          },
+          {
+            "sha256": "1ea17c68203939e245c640efed9647eb5150c76d32c5c4d21eda190c96e79dc7",
+            "path": "tools/android/competition-mahjong/competition-mahjong-strength-driver.cpp"
+          },
+          {
+            "sha256": "81ad3986d1889778f733a9e171ffd44271ec2338fed1743b847c0824a9233806",
+            "path": "docs/games/competition-mahjong/2026-11-14-strategy-versioning-plan.md"
+          }
+        ]
+      },
+      "profile": "diagnostic-v2",
+      "series": 96
+    },
+    {
+      "hands": 1536,
+      "raw": "docs/testing/results/2026-11-14-competition-mahjong-strength-diagnostic-v3.tsv",
+      "raw_sha256": "fd685810f3095b78d52e9fa4e01f9b234c52cde3d266525aba92685546cd2721",
+      "executable_sha256": "436d7ad13169765974ab54623176c6a88c515ce5fc14afe2370025d366e9afbc",
+      "identity": {
+        "profiles": [
+          "diagnostic-v3"
+        ],
+        "fixed": [
+          {
+            "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_bot.cpp",
+            "sha256": "8d84cf7d6c75b6e66700262a8c01566358d0461c11c7f3a3f69a4b620a38b034"
+          },
+          {
+            "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_bot.hpp",
+            "sha256": "319969845b5fc48a90543909641df2dc52c4a93b249bcf2a6b5e0799fde9bdbf"
+          },
+          {
+            "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_auto_session.cpp",
+            "sha256": "1e756d9940c69fb76c044cb33b4932816f84f35e3cbfd732bab99e7f09951ecc"
+          },
+          {
+            "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_auto_session.hpp",
+            "sha256": "e274f9249e6e8d7721a9050e284112e218b0fb6149f1aaabbe9c2f03e72d3e8a"
+          },
+          {
+            "path": "tools/android/competition-mahjong/competition-mahjong-strength-driver.cpp",
+            "sha256": "4fdd8b9ec072242770493a05a28355b9452fe427e2b77a3543cda5086d819311"
+          },
+          {
+            "path": "docs/games/competition-mahjong/2026-11-14-strategy-versioning-plan.md",
+            "sha256": "655f7587fd807cac0312f02ed9e496630351cb005ca6470b887d5c0d0a181e1d"
+          }
+        ],
+        "base": "5e8c52537db46705df385230a7575ece9ef01400"
+      },
+      "profile": "diagnostic-v3",
+      "series": 96
+    }
+  ],
+  "expected_changed_paths": 12,
+  "device": {
+    "log_sha256": "26b4f3d6f4aa69720b3c32d60c94a2af31901307424d96586f44787fde6e4325",
+    "name": "Pixel_7_Pro",
+    "history_tests": 5
+  },
+  "tag": "v0.1.0-competition-mahjong-strength-tuning.1",
+  "build": {
+    "baseline": "5e8c52537db46705df385230a7575ece9ef01400",
+    "candidate": "cm-strength-tuning1",
+    "overlays": [
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_bot.cpp",
+        "sha256": "8d84cf7d6c75b6e66700262a8c01566358d0461c11c7f3a3f69a4b620a38b034",
+        "working_sha256": "8d84cf7d6c75b6e66700262a8c01566358d0461c11c7f3a3f69a4b620a38b034"
+      },
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_bot.hpp",
+        "sha256": "319969845b5fc48a90543909641df2dc52c4a93b249bcf2a6b5e0799fde9bdbf",
+        "working_sha256": "319969845b5fc48a90543909641df2dc52c4a93b249bcf2a6b5e0799fde9bdbf"
+      },
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_auto_session.cpp",
+        "sha256": "1e756d9940c69fb76c044cb33b4932816f84f35e3cbfd732bab99e7f09951ecc",
+        "working_sha256": "1e756d9940c69fb76c044cb33b4932816f84f35e3cbfd732bab99e7f09951ecc"
+      },
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_auto_session.hpp",
+        "sha256": "e274f9249e6e8d7721a9050e284112e218b0fb6149f1aaabbe9c2f03e72d3e8a",
+        "working_sha256": "e274f9249e6e8d7721a9050e284112e218b0fb6149f1aaabbe9c2f03e72d3e8a"
+      },
+      {
+        "path": "tools/android/competition-mahjong/competition-mahjong-strength-driver.cpp",
+        "sha256": "4fdd8b9ec072242770493a05a28355b9452fe427e2b77a3543cda5086d819311",
+        "working_sha256": "4fdd8b9ec072242770493a05a28355b9452fe427e2b77a3543cda5086d819311"
+      }
+    ],
+    "lint_errors": 0,
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "a019a6e570369c6e99bdd8b543a76c876d3928540d404e01dd85324621485880",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "c4a75373f86e1ab6f369a7b654f683421430bc3901160f48ad801f4b87a459b3"
+    },
+    "release_manifest": "processed",
+    "lint_warnings": 25
+  }
+}

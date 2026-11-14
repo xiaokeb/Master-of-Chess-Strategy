@@ -108,7 +108,7 @@ CompetitionMahjongPublicView CompetitionMahjongAutoSession::snapshot() const {
 }
 
 CompetitionMahjongAutoAdvance CompetitionMahjongAutoSession::advance(
-    const std::uint32_t max_actions) {
+    const std::uint32_t max_actions, const CompetitionMahjongBotPolicy policy) {
     if (max_actions == 0 || max_actions > 32)
         throw std::invalid_argument("Invalid automatic Mahjong budget");
     std::lock_guard lock(mutex_);
@@ -121,7 +121,7 @@ CompetitionMahjongAutoAdvance CompetitionMahjongAutoSession::advance(
             if (candidate.legal_actions(seat).empty()) continue;
             const auto public_view = competition_mahjong_public_view(candidate, seat);
             const auto action = competition_mahjong_choose_bot_action(candidate, seat,
-                levels_[seat], decision_seed(public_view, decision_seed_));
+                levels_[seat], decision_seed(public_view, decision_seed_), policy);
             if (!action) throw std::logic_error("Automatic Mahjong has no legal decision");
             const auto applied = candidate.apply(*action);
             if (!applied.accepted || applied.false_hu)

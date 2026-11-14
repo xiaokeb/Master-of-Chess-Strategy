@@ -1,6 +1,7 @@
 #pragma once
 
 #include "competition_mahjong_public_view.hpp"
+#include "competition_mahjong_bot.hpp"
 
 #include <array>
 #include <cstdint>
@@ -28,7 +29,8 @@ public:
     [[nodiscard]] std::uint8_t viewer_seat() const noexcept { return viewer_; }
     [[nodiscard]] CompetitionMahjongPublicView snapshot() const;
     // 1..32 accepted events. A failed batch preserves the previous round.
-    [[nodiscard]] CompetitionMahjongAutoAdvance advance(std::uint32_t max_actions);
+    [[nodiscard]] CompetitionMahjongAutoAdvance advance(std::uint32_t max_actions,
+        CompetitionMahjongBotPolicy policy = CompetitionMahjongBotPolicy::baseline);
     [[nodiscard]] bool undo();
     // MCMA v1 is private and distinct from human-session MCMS / match MCMT.
     [[nodiscard]] std::vector<std::uint8_t> serialize() const;
