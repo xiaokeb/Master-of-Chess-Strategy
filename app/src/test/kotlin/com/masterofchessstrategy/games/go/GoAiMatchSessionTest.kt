@@ -177,6 +177,38 @@ class GoAiMatchSessionTest {
         } finally { session.closeAndJoin() }
     }
 
+    @Test fun authorizedBackgroundReplacesForegroundCadenceAndRevocationCancelsSearch() = runTest {
+        val search = Search()
+        val repository = Repository()
+        val config = GoAiMatchConfig(9, humanPlayer = null)
+        val session = session(repository, search, config)
+        try {
+            runCurrent()
+            session.setSpeed(4f)
+            session.resume()
+            advanceTimeBy(100)
+            session.setPlaybackHost(visible = false, backgroundAuthorized = true)
+            advanceTimeBy(GO_BACKGROUND_DELAY_MILLIS - 1)
+            runCurrent()
+            assertTrue(search.requests.isEmpty())
+            advanceTimeBy(1)
+            runCurrent()
+            val backgroundRequest = search.requests.single()
+            session.setPlaybackHost(visible = false, backgroundAuthorized = false)
+            runCurrent()
+            assertTrue(backgroundRequest.cancellation.isCancelled)
+            assertTrue(session.state.value.paused)
+            session.setPlaybackHost(visible = true, backgroundAuthorized = false)
+            advanceTimeBy(5_000)
+            runCurrent()
+            assertEquals(1, search.requests.size)
+            session.resume()
+            advanceTimeBy(250)
+            runCurrent()
+            assertEquals(2, search.requests.size)
+        } finally { session.closeAndJoin() }
+    }
+
     @Test fun restoredMovesAndFailedWritesAreSilentButAnAcknowledgedMoveEmitsOnce() = runTest {
         val config = GoAiMatchConfig(9)
         val repository = Repository().apply { saved = GoAiSavedMatch("audible", config, byteArrayOf(9, 0, 0, 1)) }

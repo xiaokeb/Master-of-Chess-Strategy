@@ -41,6 +41,7 @@ fun GoAiMatchScreen(
     onConfirmOpening: () -> Unit,
     onRetryCompletion: () -> Unit = {},
     onSpeedChangeFinished: () -> Unit = {},
+    backgroundControls: (@Composable () -> Unit)? = null,
 ) {
     var restartDialog by remember { mutableStateOf(false) }
     Surface(modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -131,6 +132,7 @@ fun GoAiMatchScreen(
                                 Text("演局速度 ${multiplier}x")
                                 Slider(match.speed, onSpeed, valueRange = 0.5f..4f, enabled = !match.closed,
                                     modifier = Modifier.testTag("go_ai_speed"), onValueChangeFinished = onSpeedChangeFinished)
+                                backgroundControls?.invoke()
                             }
                         }
                         if (game.phase == GoPhase.SCORING) {

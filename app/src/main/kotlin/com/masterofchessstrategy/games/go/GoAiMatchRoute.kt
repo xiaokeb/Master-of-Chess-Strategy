@@ -1,18 +1,28 @@
 package com.masterofchessstrategy.games.go
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.PowerManager
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.core.content.edit
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -120,11 +130,20 @@ fun GoAiMatchRoute(
             }
         }
     }
-    // Background and returning never leave CPU search running. Auto requires explicit resume.
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { model.pause() }
+    val activityLifecycle = (LocalActivity.current as? LifecycleOwner)?.lifecycle
+    val routeLifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(model, activityLifecycle, routeLifecycle) {
+        val playbackLifecycle = activityLifecycle ?: routeLifecycle
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START) model.setPlaybackVisible(context.getSystemService(PowerManager::class.java).isInteractive)
+            if (event == Lifecycle.Event.ON_STOP) model.setPlaybackVisible(false)
+        }
+        playbackLifecycle.addObserver(observer)
+        onDispose { playbackLifecycle.removeObserver(observer) }
+    }
     val match = page.match
     LaunchedEffect(match?.game?.sessionReady) {
-        if (match?.game?.sessionReady == true && !match.config.automatic) model.resume()
+        if (match?.game?.sessionReady == true && !match.config.automatic && lifecycleState.isAtLeast(Lifecycle.State.STARTED)) model.resume()
     }
     GoAiMatchScreen(page, actor, mode, { if (!leaving) model.humanAction(it) }, { actor = it },
         { mode = if (mode == GoScoreDisplayMode.STONES) GoScoreDisplayMode.POINTS else GoScoreDisplayMode.STONES },
@@ -145,5 +164,38 @@ fun GoAiMatchRoute(
             } else openingMessage = "当前对局正在处理其他操作，请稍后重试。"
         }, onRetryCompletion = { model.retryCompletion() }, onSpeedChangeFinished = {
             model.persistSpeed { speed -> speedPreferences.edit { putFloat("speed", speed) } }
-        })
+        }, backgroundControls = { if (!leaving) GoBackgroundControls(model, match) })
+}
+
+@Composable
+private fun GoBackgroundControls(model: GoAiMatchViewModel, match: GoAiMatchUiState?) {
+    val context = LocalContext.current
+    val activity = LocalActivity.current
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val active by GoBackgroundPlayback.lease.collectAsState()
+    val own = active?.takeIf { it.owner === model }
+    var message by remember(model) { mutableStateOf<String?>(null) }
+    fun start() {
+        if (activity == null || !lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) || !model.startBackground(activity)) {
+            message = "后台演局未启动，请在棋盘可见时重试。"
+        }
+    }
+    val requestPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) start() else message = "请允许通知，以便随时停止后台演局。"
+    }
+    OutlinedButton(onClick = {
+        message = null
+        if (own != null) GoBackgroundPlayback.stop(own.token)
+        else if (GoBackgroundPlayback.notificationsAllowed(context)) start()
+        else if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context,
+                Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else message = "请在系统设置中开启围棋后台演局通知。"
+    }, enabled = own != null || (active == null && match?.canStartBackground == true),
+        modifier = Modifier.testTag("go_ai_background")) {
+        Text(if (own != null) "停止后台演局" else "启动后台演局")
+    }
+    if (own != null) Text(if (own.ready) "后台演局已启用" else "正在启动后台演局",
+        modifier = Modifier.testTag("go_ai_background_status"))
+    message?.let { Text(it) }
 }

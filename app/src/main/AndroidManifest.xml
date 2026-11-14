@@ -30,6 +30,13 @@
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="User-started offline Mahjong AI demonstration with slower screen-off play and a visible stop action." />
         </service>
+        <service
+            android:name=".games.go.GoBackgroundService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="User-started offline Go demonstrations with slower screen-off play and a visible stop action." />
+        </service>
         <activity
             android:name=".MainActivity"
             android:exported="true"

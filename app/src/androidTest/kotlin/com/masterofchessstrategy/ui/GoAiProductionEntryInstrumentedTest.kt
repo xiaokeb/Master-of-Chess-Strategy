@@ -1,5 +1,14 @@
 package com.masterofchessstrategy.ui
 
+import android.Manifest
+import android.app.Notification
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import android.os.ParcelFileDescriptor
+import android.os.PowerManager
+import android.os.SystemClock
+import androidx.compose.ui.semantics.SemanticsActions
 import android.graphics.Bitmap
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
@@ -228,6 +237,112 @@ class GoAiProductionEntryInstrumentedTest {
             assertReleased(owner)
         }
     }
+
+    @Test fun backgroundNotificationContinuesSlowerWithScreenOffAndStopsSameMatch() {
+        check(Build.HARDWARE in setOf("ranchu", "goldfish"))
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        val power = context.getSystemService(PowerManager::class.java)
+        val notifications = context.getSystemService(NotificationManager::class.java)
+        instrumentation.uiAutomation.grantRuntimePermission(context.packageName, Manifest.permission.POST_NOTIFICATIONS)
+        shell("cmd appops set --uid ${context.packageName} POST_NOTIFICATION allow")
+        val preferences = context.getSharedPreferences("go-auto-playback-v1", Context.MODE_PRIVATE)
+        val previousSpeed = preferences.all["speed"]
+        fun notification() = notifications.activeNotifications.singleOrNull {
+            it.notification.channelId == GoBackgroundPlayback.CHANNEL
+        }?.notification
+        fun wakeHeld() = shell("dumpsys power").substringAfter("Wake Locks:").substringBefore("Suspend Blockers:")
+            .contains("MasterofChessStrategy:GoBackground")
+        fun wakeScreen() {
+            shell("input keyevent 224")
+            shell("wm dismiss-keyguard")
+        }
+        fun await(stage: String, condition: () -> Boolean) = runBlocking {
+            try { withTimeout(35_000) { while (!condition()) delay(100) } }
+            catch (timeout: TimeoutCancellationException) {
+                throw AssertionError("$stage interactive=${power.isInteractive} visible=${GoBackgroundPlayback.lease.value?.visible}", timeout)
+            }
+        }
+        try {
+            withOwnedApp(completedLessons = 10, useActivityStore = true) { f ->
+                val initial = NativeGoEngine(9).use { engine ->
+                    GoAiSavedMatch(UUID.randomUUID().toString(), GoAiMatchConfig(9, humanPlayer = null), engine.serialize())
+                }
+                runBlocking { f.storage.formalAiRepository().save(initial) }
+                // Use the Activity's real content so a System UI configuration change can restore it.
+                enterSetup()
+                compose.onNodeWithTag("go_ai_setup_continue").performScrollTo().performClick()
+                fun phase(label: String) = compose.waitUntil(60_000) {
+                    compose.onAllNodes(hasText(label) and hasTestTag("go_ai_phase")).fetchSemanticsNodes().isNotEmpty()
+                }
+                phase("AI 已暂停")
+                compose.onNodeWithTag("go_ai_background").performScrollTo().assertIsNotEnabled()
+                compose.onNodeWithTag("go_ai_speed").performScrollTo()
+                    .performSemanticsAction(SemanticsActions.SetProgress) { it(4f) }
+                compose.onNodeWithTag("go_ai_pause").performScrollTo().performClick()
+                compose.waitUntil(30_000) {
+                    compose.onAllNodes(hasTestTag("go_ai_background") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+                }
+                compose.onNodeWithTag("go_ai_background").performScrollTo().assertIsDisplayed().performClick()
+                await("service ready") { GoBackgroundPlayback.lease.value?.ready == true && notification() != null }
+                compose.onNodeWithTag("go_ai_background_status").performScrollTo().assertTextEquals("后台演局已启用")
+                f.capture("go-background-enabled")
+                val notice = checkNotNull(notification())
+                assertTrue(notice.flags and Notification.FLAG_ONGOING_EVENT != 0)
+                assertEquals("停止后台演局", notice.actions.single().title.toString())
+                assertEquals("围棋后台演局", notice.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+                fun savedEvents(): Int {
+                    val saved = checkNotNull(f.active())
+                    assertEquals(initial.matchId, saved.matchId)
+                    return NativeGoEngine(9).use {
+                        assertEquals(RestoreResult.Restored, it.restore(saved.copyBytes()))
+                        it.eventHistory().size
+                    }
+                }
+                try {
+                    shell("input keyevent 223")
+                    await("screen-off lease") { !power.isInteractive && GoBackgroundPlayback.lease.value?.visible == false && wakeHeld() }
+                    val atSleep = savedEvents()
+                    await("first background move") { savedEvents() > atSleep }
+                    val first = savedEvents()
+                    val firstAt = SystemClock.elapsedRealtime()
+                    await("second background move") { savedEvents() > first }
+                    val interval = SystemClock.elapsedRealtime() - firstAt
+                    assertTrue("Background cadence $interval ms", interval >= GO_BACKGROUND_DELAY_MILLIS - 250)
+                    wakeScreen()
+                    notice.contentIntent.send()
+                    await("notification returns to the same foreground match") {
+                        power.isInteractive && GoBackgroundPlayback.lease.value?.visible == true && !wakeHeld()
+                    }
+                    shell("input keyevent 223")
+                    await("second screen-off lease") {
+                        !power.isInteractive && GoBackgroundPlayback.lease.value?.visible == false && wakeHeld()
+                    }
+                    notice.actions.single().actionIntent.send()
+                    await("notification and wake lock released") { notification() == null && !wakeHeld() }
+                    val stopped = savedEvents()
+                    SystemClock.sleep(GO_BACKGROUND_DELAY_MILLIS + 300)
+                    assertEquals(stopped, savedEvents())
+                    println("Go screen-off interval ${interval}ms, saved events $atSleep to $stopped")
+                } finally {
+                    wakeScreen()
+                    notice.contentIntent.send()
+                }
+                phase("AI 已暂停")
+                compose.onNodeWithTag("go_ai_phase").performScrollTo().assertIsDisplayed()
+                f.capture("go-background-returned")
+            }
+        } finally {
+            wakeScreen()
+            preferences.edit().apply {
+                if (previousSpeed is Float) putFloat("speed", previousSpeed) else remove("speed")
+            }.apply()
+        }
+    }
+
+    private fun shell(command: String): String = ParcelFileDescriptor.AutoCloseInputStream(
+        InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command),
+    ).bufferedReader().use { it.readText() }
 
     private fun assertRejectedPlayRoute(matchId: String?, picture: String) {
         withOwnedApp(completedLessons = 0) { f ->

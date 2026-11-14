@@ -1,5 +1,6 @@
 package com.masterofchessstrategy.games.go
 
+import android.app.Activity
 import androidx.annotation.MainThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -85,8 +86,11 @@ class GoAiMatchViewModel(
                 engineOwner = owned; candidate = null
                 session = next
                 next.state.collect { match ->
-                    if (!disposed.get()) mutableState.value = GoAiMatchPageState(loadingModel = false, match = match,
-                        completedStorageReady = completedSink != null)
+                    if (!disposed.get()) {
+                        GoBackgroundPlayback.update(this@GoAiMatchViewModel, match)
+                        mutableState.value = GoAiMatchPageState(loadingModel = false, match = match,
+                            completedStorageReady = completedSink != null)
+                    }
                 }
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -124,6 +128,17 @@ class GoAiMatchViewModel(
     fun resume() { if (!disposed.get()) session?.resume() }
     fun retrySearch() { if (!disposed.get()) session?.retrySearch() }
     fun setSpeed(speed: Float) { if (!disposed.get()) session?.setSpeed(speed) }
+    internal fun setPlaybackVisible(visible: Boolean) {
+        if (disposed.get()) return
+        val authorized = GoBackgroundPlayback.setVisible(this, visible)
+        session?.setPlaybackHost(visible, authorized)
+        if (!visible && !authorized) GoBackgroundPlayback.stopOwner(this)
+    }
+
+    internal fun startBackground(activity: Activity): Boolean {
+        val match = session?.state?.value ?: return false
+        return !disposed.get() && GoBackgroundPlayback.start(activity, this, match)
+    }
     internal fun persistSpeed(save: (Float) -> Unit) {
         if (!disposed.get()) session?.state?.value?.speed?.let(save)
     }
@@ -134,6 +149,7 @@ class GoAiMatchViewModel(
         if (retirementStarted) return retirementCompletion
         retirementStarted = true
         disposed.set(true)
+        GoBackgroundPlayback.stopOwner(this)
         val failures = mutableListOf<Throwable>()
         fun remember(error: Throwable) { failures.add(error) }
         try { session?.beginRetirement() } catch (error: Throwable) { remember(error) }

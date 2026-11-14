@@ -13,6 +13,8 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
+internal const val GO_BACKGROUND_DELAY_MILLIS = 3_000L
+
 data class GoAiHint(val highlightedPoints: Set<Int>, val passSuggested: Boolean, val allLegal: Boolean)
 
 data class GoAiMatchUiState(
@@ -98,6 +100,7 @@ class GoAiMatchSession(
     private var advanceJob: Job? = null
     private var hintSearchStamp: GoAiPositionStamp? = null
     private var automaticResumeAllowed = false // Owner-only; explicit/lifecycle pause revokes continuation search.
+    private var backgroundPlay = false
     private var retirementStarted = false // Owner dispatcher only; sealing never waits for a worker.
 
     init {
@@ -688,6 +691,15 @@ class GoAiMatchSession(
         invalidateSearch()
     }
 
+    internal fun setPlaybackHost(visible: Boolean, backgroundAuthorized: Boolean) {
+        if (disposed.get()) return
+        val allowed = !visible && backgroundAuthorized && mutableState.value.config.automatic
+        val changed = backgroundPlay != allowed
+        backgroundPlay = allowed
+        if (!visible && !allowed) pause()
+        else if (changed && advanceJob?.isActive == true) scheduleSearch()
+    }
+
     fun resume() {
         if (disposed.get() || !lifetime.isActive || !mutableState.value.game.canOperate || !mutableState.value.paused) return
         automaticResumeAllowed = true
@@ -835,7 +847,10 @@ class GoAiMatchSession(
         val version = stamp.get()
         advanceJob = scope.launch {
             val current = mutableState.value
-            if (current.config.automatic) delay((1_000 / current.speed).toLong())
+            if (current.config.automatic) {
+                val interval = (1_000 / current.speed).toLong()
+                delay(if (backgroundPlay) interval.coerceAtLeast(GO_BACKGROUND_DELAY_MILLIS) else interval)
+            }
             val ready = mutableState.value
             if (disposed.get() || ready.paused || !ready.game.canAct || ready.game.phase != GoPhase.PLAYING ||
                 !ready.config.isAi(ready.game.currentPlayer) || version != stamp.get()) return@launch
