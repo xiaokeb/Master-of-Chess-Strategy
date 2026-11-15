@@ -8,10 +8,11 @@ class NativeCompetitionMahjongSession(
     dealerSeat: Int = 0,
     roundWind: Int = 0,
     override val viewerSeat: Int = 0,
+    scoring: CompetitionMahjongScoring = CompetitionMahjongScoring.LEGACY,
 ) : CompetitionMahjongRuleSession {
     init { require(seed >= 0 && dealerSeat in 0..3 && roundWind in 0..3 && viewerSeat in 0..3) }
     private val lock = Any()
-    private var handle = NativeBindings.createCompetitionMahjong(seed, dealerSeat, roundWind, viewerSeat)
+    private var handle = NativeBindings.createCompetitionMahjong(seed, dealerSeat, roundWind, viewerSeat, scoring.recordVersion)
         .also { check(it > 0) { "Native competition Mahjong session could not be created" } }
 
     override fun snapshot(): CompetitionMahjongPublicView = withHandle {

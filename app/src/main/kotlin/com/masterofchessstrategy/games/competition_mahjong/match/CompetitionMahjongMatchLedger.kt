@@ -2,11 +2,15 @@ package com.masterofchessstrategy.games.competition_mahjong.match
 
 import com.masterofchessstrategy.engine.CompetitionMahjongPublicView
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundPhase
+import com.masterofchessstrategy.engine.CompetitionMahjongScoring
 import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongMatchConfig
 import java.util.UUID
 
-enum class CompetitionMahjongBotStrategy {
-    LEGACY_BATCH, POSITION_SEEDED_V1, POSITION_SEEDED_V2;
+enum class CompetitionMahjongBotStrategy(
+    internal val scoring: CompetitionMahjongScoring = CompetitionMahjongScoring.LEGACY,
+) {
+    LEGACY_BATCH, POSITION_SEEDED_V1, POSITION_SEEDED_V2,
+    POSITION_SEEDED_WMO(CompetitionMahjongScoring.WMO_2021);
 
     internal val positionSeeded get() = this != LEGACY_BATCH
 }
@@ -32,6 +36,7 @@ data class CompetitionMahjongCompetitionConfig(
             roundWind = seating.roundWind,
             viewerSeat = seating.seatOfPlayer(viewerPlayerId),
             botLevel = botLevel,
+            scoring = botStrategy.scoring,
         )
     }
 

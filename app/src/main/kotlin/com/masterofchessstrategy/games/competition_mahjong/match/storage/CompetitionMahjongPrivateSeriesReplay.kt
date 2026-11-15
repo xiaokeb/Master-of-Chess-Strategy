@@ -13,7 +13,7 @@ import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahj
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchLedger
 import com.masterofchessstrategy.games.competition_mahjong.match.advancePositionSeededBot
 
-/** Validates private MCMS v1 records for the configured series. Keep this off the UI thread. */
+/** Validates private hand records against the configured series. Keep this off the UI thread. */
 internal object CompetitionMahjongPrivateSeriesReplay {
     private const val SESSION_PAYLOAD_OFFSET = 12
     private const val SESSION_IDENTITY_BYTES = 8
@@ -52,7 +52,7 @@ internal object CompetitionMahjongPrivateSeriesReplay {
         val config = proof.config
         val hand = config.handConfig(index)
         val decisions = proof.decisions(index)
-        NativeCompetitionMahjongSession(hand.seed, hand.dealerSeat, hand.roundWind, hand.viewerSeat).use { native ->
+        hand.openNativeSession().use { native ->
             var read = 0
             var frame = native.snapshot()
             for (step in 0 until CompetitionMahjongArchivedSeries.MAX_ACTIONS) {
@@ -126,11 +126,11 @@ internal object CompetitionMahjongPrivateSeriesReplay {
         require(bytes.size in HAND_BYTES && (bytes.size - RECORD_MIN_BYTES) % 4 == 0) { "逐盘证据大小无效" }
         val record = bytes.copyOf()
         val hand = config.handConfig(handIndex)
-        return NativeCompetitionMahjongSession(hand.seed, hand.dealerSeat, hand.roundWind, hand.viewerSeat).use { native ->
+        return hand.openNativeSession().use { native ->
             val initial = native.serialize()
             // Native restore checks legality using the wall in the record. Compare the seeded setup first.
-            require(initial.size == RECORD_MIN_BYTES && initial[4].toInt() == 1 &&
-                initial[ROUND_VERSION_OFFSET].toInt() == 1 &&
+            require(initial.size == RECORD_MIN_BYTES && initial[4].toInt() == hand.scoring.recordVersion &&
+                initial[ROUND_VERSION_OFFSET].toInt() == hand.scoring.recordVersion &&
                 (0 until SESSION_IDENTITY_BYTES).all { record[it] == initial[it] } &&
                 (SESSION_PAYLOAD_OFFSET until SESSION_PAYLOAD_OFFSET + ROUND_SETUP_BYTES).all { record[it] == initial[it] }) {
                 "逐盘证据与赛事种子、座位或圈风不一致"

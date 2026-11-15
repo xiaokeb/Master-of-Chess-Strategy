@@ -5,7 +5,6 @@ import com.masterofchessstrategy.engine.CompetitionMahjongApplyResult
 import com.masterofchessstrategy.engine.CompetitionMahjongPublicView
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundPhase
 import com.masterofchessstrategy.engine.CompetitionMahjongRuleSession
-import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
 import com.masterofchessstrategy.engine.RestoreResult
 import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongMatchConfig
 import kotlinx.coroutines.CoroutineDispatcher
@@ -40,7 +39,7 @@ class CompetitionMahjongMatchController(
     private val initialConfig: CompetitionMahjongCompetitionConfig,
     private val store: CompetitionMahjongMatchStore,
     private val sessionFactory: (CompetitionMahjongMatchConfig) -> CompetitionMahjongRuleSession = {
-        NativeCompetitionMahjongSession(it.seed, it.dealerSeat, it.roundWind, it.viewerSeat)
+        it.openNativeSession()
     },
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
@@ -110,7 +109,8 @@ class CompetitionMahjongMatchController(
             val count = when (config.botStrategy) {
                 CompetitionMahjongBotStrategy.LEGACY_BATCH -> active.advanceBots(config.botLevel, randomSeed, maxActions)
                 CompetitionMahjongBotStrategy.POSITION_SEEDED_V1,
-                CompetitionMahjongBotStrategy.POSITION_SEEDED_V2 -> {
+                CompetitionMahjongBotStrategy.POSITION_SEEDED_V2,
+                CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO -> {
                     var moved = 0
                     while (moved < maxActions && active.advancePositionSeededBot(config.botLevel, config.botStrategy) == 1)
                         moved++

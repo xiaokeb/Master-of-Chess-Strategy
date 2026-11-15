@@ -2,6 +2,8 @@ package com.masterofchessstrategy.games.competition_mahjong
 
 import android.content.Context
 import android.util.AtomicFile
+import com.masterofchessstrategy.engine.CompetitionMahjongScoring
+import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -22,12 +24,16 @@ data class CompetitionMahjongMatchConfig(
     val roundWind: Int = 0,
     val viewerSeat: Int = 0,
     val botLevel: Int = 1,
+    val scoring: CompetitionMahjongScoring = CompetitionMahjongScoring.LEGACY,
 ) {
     init {
         require(seed >= 0)
         require(dealerSeat in 0..3 && roundWind in 0..3 && viewerSeat in 0..3)
         require(botLevel in 0..3)
     }
+
+    internal fun openNativeSession() =
+        NativeCompetitionMahjongSession(seed, dealerSeat, roundWind, viewerSeat, scoring)
 }
 
 /** Private engine bytes must remain in persistence; the table only receives public snapshots. */
@@ -59,7 +65,7 @@ internal object CompetitionMahjongCheckpointCodec {
 
     fun encode(checkpoint: CompetitionMahjongCheckpoint): ByteArray {
         val record = checkpoint.engineRecord
-        require(validEngineEnvelope(record, checkpoint.config.viewerSeat)) {
+        require(engineScoring(record, checkpoint.config.viewerSeat) == checkpoint.config.scoring) {
             "国标麻将私有记录无效"
         }
         val config = checkpoint.config
@@ -96,22 +102,26 @@ internal object CompetitionMahjongCheckpointCodec {
         if (crc(bytes, bytes.size - FOOTER_BYTES) != input.getInt(bytes.size - FOOTER_BYTES)) return null
         val record = ByteArray(length)
         input.get(record)
-        if (!validEngineEnvelope(record, viewerSeat)) return null
+        val scoring = engineScoring(record, viewerSeat) ?: return null
         return CompetitionMahjongCheckpoint(
-            CompetitionMahjongMatchConfig(seed, dealer, wind, viewer, level),
+            CompetitionMahjongMatchConfig(seed, dealer, wind, viewer, level, scoring),
             record,
         )
     }
 
-    private fun validEngineEnvelope(record: ByteArray, viewerSeat: Int): Boolean {
-        if (record.size !in 17..MAX_RECORD_BYTES) return false
+    private fun engineScoring(record: ByteArray, viewerSeat: Int): CompetitionMahjongScoring? {
+        if (record.size !in 17..MAX_RECORD_BYTES) return null
         val input = ByteBuffer.wrap(record).order(ByteOrder.LITTLE_ENDIAN)
-        if (input.int != 0x534d434d || input.get().toInt() != 1 ||
-            (input.get().toInt() and 0xff) != viewerSeat ||
-            input.get().toInt() != 0 || input.get().toInt() != 0) return false
+        if (input.int != 0x534d434d) return null
+        val version = input.get().toInt()
+        val scoring = CompetitionMahjongScoring.entries.firstOrNull { it.recordVersion == version } ?: return null
+        if ((input.get().toInt() and 0xff) != viewerSeat ||
+            input.get().toInt() != 0 || input.get().toInt() != 0) return null
         val payloadLength = input.int
-        if (payloadLength <= 0 || payloadLength != record.size - 16) return false
-        return crc(record, record.size - FOOTER_BYTES) == input.getInt(record.size - FOOTER_BYTES)
+        if (payloadLength <= 0 || payloadLength != record.size - 16) return null
+        if (scoring == CompetitionMahjongScoring.WMO_2021 &&
+            (payloadLength < 5 || input.getInt(12) != 0x4d434f4d || input.get(16).toInt() != version)) return null
+        return scoring.takeIf { crc(record, record.size - FOOTER_BYTES) == input.getInt(record.size - FOOTER_BYTES) }
     }
 
     private fun crc(bytes: ByteArray, length: Int): Int =

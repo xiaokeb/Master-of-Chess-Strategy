@@ -2,7 +2,6 @@ package com.masterofchessstrategy.games.competition_mahjong.match.storage.room
 
 import androidx.room.RoomDatabase
 import androidx.room.withTransaction
-import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
 import com.masterofchessstrategy.engine.RestoreResult
 import com.masterofchessstrategy.games.competition_mahjong.history.CompetitionMahjongMatchHistoryEntry
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongBotStrategy
@@ -180,7 +179,7 @@ private fun admitReplayEvidence(snapshot: CompetitionMahjongFormalSnapshot, chec
 /** Includes v4 paid-hint legality, not just the current public frame and terminal ledger. */
 private fun admitCompetitionMahjongFormalNative(checkpoint: CompetitionMahjongMatchCheckpoint) {
     val hand = checkpoint.config.handConfig(checkpoint.activeHandIndex)
-    NativeCompetitionMahjongSession(hand.seed, hand.dealerSeat, hand.roundWind, hand.viewerSeat).use { session ->
+    hand.openNativeSession().use { session ->
         require(session.restore(checkpoint.engineRecord) == RestoreResult.Restored) {
             "国标正式数据未通过Native重放准入"
         }

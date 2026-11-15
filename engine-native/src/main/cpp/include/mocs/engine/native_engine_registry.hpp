@@ -59,7 +59,8 @@ public:
     [[nodiscard]] std::shared_ptr<TigerGoatHandle> find_tiger_goat(EngineHandle handle) const;
     [[nodiscard]] bool release_tiger_goat(EngineHandle handle);
     [[nodiscard]] EngineHandle create_competition_mahjong(
-        std::uint64_t seed, std::uint8_t dealer, std::uint8_t round_wind, std::uint8_t viewer);
+        std::uint64_t seed, std::uint8_t dealer, std::uint8_t round_wind, std::uint8_t viewer,
+        CompetitionMahjongFanRules rules = CompetitionMahjongFanRules::legacy_v1);
     [[nodiscard]] std::shared_ptr<CompetitionMahjongNativeSession> find_competition_mahjong(
         EngineHandle handle) const;
     [[nodiscard]] bool release_competition_mahjong(EngineHandle handle);

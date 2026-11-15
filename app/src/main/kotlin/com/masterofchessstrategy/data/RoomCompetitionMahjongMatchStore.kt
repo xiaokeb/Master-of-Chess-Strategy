@@ -1,7 +1,6 @@
 package com.masterofchessstrategy.data
 
 import com.masterofchessstrategy.engine.GameType
-import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
 import com.masterofchessstrategy.engine.RestoreResult
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpoint
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpointCodec
@@ -83,7 +82,7 @@ internal fun validateCompetitionMahjongMatchArchive(archive: CompetitionMahjongM
     val checkpoint = archive.checkpoint
     val hand = checkpoint.config.handConfig(checkpoint.activeHandIndex)
     return try {
-        NativeCompetitionMahjongSession(hand.seed, hand.dealerSeat, hand.roundWind, hand.viewerSeat).use { session ->
+        hand.openNativeSession().use { session ->
             if (session.restore(checkpoint.engineRecord) != RestoreResult.Restored) return false
             checkpoint.validateRestoredFrame(session.snapshot())
             true

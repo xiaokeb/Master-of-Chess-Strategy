@@ -32,14 +32,16 @@ std::uint32_t get32(const std::vector<std::uint8_t>& bytes, std::size_t offset) 
 } // namespace
 
 CompetitionMahjongNativeSession::CompetitionMahjongNativeSession(
-    std::uint64_t seed, std::uint8_t dealer, std::uint8_t wind, std::uint8_t viewer)
-    : CompetitionMahjongNativeSession(competition_mahjong_shuffled_wall(seed), dealer, wind, viewer) {}
+    std::uint64_t seed, std::uint8_t dealer, std::uint8_t wind, std::uint8_t viewer,
+    CompetitionMahjongFanRules rules)
+    : CompetitionMahjongNativeSession(competition_mahjong_shuffled_wall(seed), dealer, wind, viewer, rules) {}
 
 CompetitionMahjongNativeSession::CompetitionMahjongNativeSession(
-    std::vector<std::uint8_t> wall, std::uint8_t dealer, std::uint8_t wind, std::uint8_t viewer)
-    : viewer_(viewer) {
+    std::vector<std::uint8_t> wall, std::uint8_t dealer, std::uint8_t wind, std::uint8_t viewer,
+    CompetitionMahjongFanRules rules)
+    : viewer_(viewer), record_version_(static_cast<std::uint8_t>(rules)) {
     if (viewer >= 4 || dealer >= 4 || wind >= 4) throw std::invalid_argument("Invalid Mahjong setup");
-    round_ = std::make_unique<CompetitionMahjongRound>(std::move(wall), dealer, wind);
+    round_ = std::make_unique<CompetitionMahjongRound>(std::move(wall), dealer, wind, rules);
 }
 
 CompetitionMahjongNativeSession::~CompetitionMahjongNativeSession() = default;
@@ -93,7 +95,7 @@ std::vector<std::uint8_t> CompetitionMahjongNativeSession::serialize() const {
     std::lock_guard lock(mutex_);
     const auto payload = round_->serialize();
     if (payload.size() > max_record_bytes - 16) throw std::length_error("Mahjong record too large");
-    std::vector<std::uint8_t> bytes{'M','C','M','S',1,viewer_,0,0};
+    std::vector<std::uint8_t> bytes{'M','C','M','S',record_version_,viewer_,0,0};
     put32(bytes, static_cast<std::uint32_t>(payload.size()));
     bytes.insert(bytes.end(), payload.begin(), payload.end());
     put32(bytes, crc32(bytes, bytes.size()));
@@ -103,7 +105,7 @@ std::vector<std::uint8_t> CompetitionMahjongNativeSession::serialize() const {
 bool CompetitionMahjongNativeSession::restore(const std::vector<std::uint8_t>& bytes) {
     if (bytes.size() < 16 || bytes.size() > max_record_bytes ||
         bytes[0] != 'M' || bytes[1] != 'C' || bytes[2] != 'M' || bytes[3] != 'S' ||
-        bytes[4] != 1 || bytes[5] != viewer_ || bytes[6] != 0 || bytes[7] != 0 ||
+        bytes[4] != record_version_ || bytes[5] != viewer_ || bytes[6] != 0 || bytes[7] != 0 ||
         get32(bytes, 8) != bytes.size() - 16 ||
         get32(bytes, bytes.size() - 4) != crc32(bytes, bytes.size() - 4)) return false;
     const std::vector<std::uint8_t> payload(bytes.begin() + 12, bytes.end() - 4);

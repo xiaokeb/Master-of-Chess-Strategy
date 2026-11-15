@@ -1,5 +1,10 @@
 package com.masterofchessstrategy.engine
 
+/** Scoring profile encoded by the private round record. */
+enum class CompetitionMahjongScoring(val recordVersion: Int) {
+    LEGACY(1), WMO_2021(2),
+}
+
 enum class CompetitionMahjongRoundPhase(val code: Int) {
     DISCARD(0), DRAW(1), CLAIM(2), ROB_KONG(3), WON(4), EXHAUSTIVE_DRAW(5),
 }

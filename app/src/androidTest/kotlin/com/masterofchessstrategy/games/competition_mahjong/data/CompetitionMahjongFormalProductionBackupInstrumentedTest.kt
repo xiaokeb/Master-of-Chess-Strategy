@@ -145,7 +145,7 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
     @Test fun sixteenRealHandsSettleWithdrawAndReopenWithHistoryAndDeletionIntact() = withOwnedLanzhouDatabase { f ->
         completeCourse(f.db)
         val config = CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(), 20261009, 0, 0,
-            CompetitionMahjongBotStrategy.POSITION_SEEDED_V2)
+            CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO)
         var host = CompetitionMahjongFormalHost(f.db, 0)
         var session = (host.open() as CompetitionMahjongFormalHost.Entry.Ready).session
         var usage = session.policy.freshUsage(config.botLevel)
@@ -160,6 +160,7 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
             assertTrue(controller.open())
             assertEquals(0, storedSnapshot(f.db).settledHandRecords!!.size)
             assertEquals(config.botStrategy, storedSnapshot(f.db).active!!.config.botStrategy)
+            assertEquals(2, storedSnapshot(f.db).active!!.engineRecord[4].toInt())
             for (index in 0 until 16) {
                 val seating = CompetitionMahjongMatchSeating.forHand(index)
                 val frame = checkNotNull(controller.state.value.table)

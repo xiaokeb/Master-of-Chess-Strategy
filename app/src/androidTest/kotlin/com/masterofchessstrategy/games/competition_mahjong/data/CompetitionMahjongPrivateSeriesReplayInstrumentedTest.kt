@@ -5,6 +5,7 @@ import com.masterofchessstrategy.engine.RestoreResult
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongBotStrategy
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongCompetitionConfig
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpoint
+import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpointCodec
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchController
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchLedger
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchStore
@@ -12,10 +13,14 @@ import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahj
 import com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongPrivateSeriesReplay
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.nio.ByteBuffer
 import java.util.UUID
+import java.util.zip.CRC32
 
 class CompetitionMahjongPrivateSeriesReplayInstrumentedTest {
     @Test fun sixteenNativeJournalsMustMatchEveryHandAndItsPublicResult() = runBlocking {
@@ -87,6 +92,33 @@ class CompetitionMahjongPrivateSeriesReplayInstrumentedTest {
         val baseline = config.copy(botStrategy = CompetitionMahjongBotStrategy.POSITION_SEEDED_V1)
         assertThrows(IllegalArgumentException::class.java) {
             CompetitionMahjongPrivateSeriesReplay.verifyHand(baseline, 0, records.first())
+        }
+        Unit
+    }
+
+    @Test fun wmoSeriesRestoresAndRegeneratesSixteenJournalsUnderItsOwnScoring() = runBlocking {
+        val config = CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(), 20261009, 0, 0,
+            CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO)
+        val (records, ledger) = playHands(config, 16)
+        assertTrue(records.all { it[4].toInt() == 2 && it[16].toInt() == 2 })
+        val checkpoint = CompetitionMahjongMatchCheckpoint(config, ledger, 15, records.last())
+        val codec = CompetitionMahjongMatchCheckpointCodec
+        val bytes = codec.encode(checkpoint)
+        assertEquals(7, bytes[4].toInt())
+        val restored = checkNotNull(codec.decode(bytes, 0))
+        assertEquals(config, restored.config)
+        assertArrayEquals(bytes, codec.encode(restored))
+        val proof = CompetitionMahjongPrivateSeriesReplay.archive(restored, records.dropLast(1))
+        assertEquals(ledger.results, CompetitionMahjongPrivateSeriesReplay.replayArchive(proof, records).results)
+
+        val relabelled = bytes.copyOf()
+        relabelled[4] = 6
+        val crc = CRC32().apply { update(relabelled, 0, relabelled.size - 4) }.value
+        ByteBuffer.wrap(relabelled).putInt(relabelled.size - 4, crc.toInt())
+        assertNull(codec.decode(relabelled, 0))
+        val legacy = config.copy(botStrategy = CompetitionMahjongBotStrategy.POSITION_SEEDED_V2)
+        assertThrows(IllegalArgumentException::class.java) {
+            CompetitionMahjongPrivateSeriesReplay.verifyHand(legacy, 0, records.first())
         }
         Unit
     }

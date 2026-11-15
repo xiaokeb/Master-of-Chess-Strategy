@@ -162,7 +162,7 @@ private fun CompetitionMahjongFormalDestinations(
                 val config = remember {
                     CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(),
                         System.currentTimeMillis().coerceAtLeast(0), viewer, easyLevel,
-                        CompetitionMahjongBotStrategy.POSITION_SEEDED_V2)
+                        CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO)
                 }
                 CompetitionMahjongMatchRoute(
                     store = session.match, initialConfig = config, playPolicy = session.policy,

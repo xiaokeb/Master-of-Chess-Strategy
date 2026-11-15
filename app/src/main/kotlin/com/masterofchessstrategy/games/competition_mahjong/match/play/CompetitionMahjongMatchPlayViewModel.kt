@@ -7,7 +7,6 @@ import com.masterofchessstrategy.engine.CompetitionMahjongPublicView
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundActionKind
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundPhase
 import com.masterofchessstrategy.engine.CompetitionMahjongRuleSession
-import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
 import com.masterofchessstrategy.game.ChineseChessSoundCue
 import com.masterofchessstrategy.games.competition_mahjong.COMPETITION_MAHJONG_AUTO_SPEEDS
 import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongAutoPlayUi
@@ -81,7 +80,7 @@ internal class CompetitionMahjongMatchPlayViewModel(
     private val store: CompetitionMahjongMatchStore,
     private val initialConfig: CompetitionMahjongCompetitionConfig,
     private val sessionFactory: (CompetitionMahjongMatchConfig) -> CompetitionMahjongRuleSession = {
-        NativeCompetitionMahjongSession(it.seed, it.dealerSeat, it.roundWind, it.viewerSeat)
+        it.openNativeSession()
     },
     private val workerDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val seedSource: () -> Long = { System.nanoTime() and Long.MAX_VALUE },

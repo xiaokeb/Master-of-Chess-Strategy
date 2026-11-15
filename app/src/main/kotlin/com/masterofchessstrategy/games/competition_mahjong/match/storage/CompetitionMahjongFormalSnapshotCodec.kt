@@ -27,7 +27,7 @@ internal object CompetitionMahjongFormalSnapshotCodec {
         val history = CompetitionMahjongMatchHistoryCodec.encode(snapshot.viewerPlayerId, snapshot.history.entries)
         val records = snapshot.settledHandRecords
         val archive = snapshot.archivedSeries
-        val versionedArchive = archive.any { it.config.botStrategy == CompetitionMahjongBotStrategy.POSITION_SEEDED_V2 }
+        val versionedArchive = archive.any { it.config.botStrategy != CompetitionMahjongBotStrategy.POSITION_SEEDED_V1 }
         val archiveSize = if (archive.isEmpty()) 0 else 4 + archive.sumOf { it.encodedSize(versionedArchive) }
         require(archiveSize <= MAX_ARCHIVE_BYTES) { "国标跨场证据已达到存档容量上限" }
         val version = when {

@@ -13,7 +13,8 @@ internal fun CompetitionMahjongRuleSession.advancePositionSeededBot(
     val seed = competitionMahjongPublicBotSeed(frame)
     return when (strategy) {
         CompetitionMahjongBotStrategy.POSITION_SEEDED_V1 -> advanceBots(level, seed, maxActions = 1)
-        CompetitionMahjongBotStrategy.POSITION_SEEDED_V2 -> advanceCalibratedBots(level, seed, maxActions = 1)
+        CompetitionMahjongBotStrategy.POSITION_SEEDED_V2,
+        CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO -> advanceCalibratedBots(level, seed, maxActions = 1)
         CompetitionMahjongBotStrategy.LEGACY_BATCH -> error("Legacy bot strategy requires a batch seed")
     }
 }

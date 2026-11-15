@@ -76,7 +76,7 @@ class CompetitionMahjongFormalSnapshotCodecTest {
         assertNull(codec.decode(rechecksum(invalidCount), 0))
     }
 
-    @Test fun v4KeepsBothArchiveStrategiesAndRejectsUnknownStrategyCodes() {
+    @Test fun v4KeepsThreeArchiveStrategiesAndRejectsUnknownStrategyCodes() {
         val first = formalCheckpoint()
         val second = formalCheckpoint(id = 2)
         val baseline = CompetitionMahjongArchivedSeries(
@@ -87,18 +87,24 @@ class CompetitionMahjongFormalSnapshotCodecTest {
             second.config.copy(botStrategy = CompetitionMahjongBotStrategy.POSITION_SEEDED_V2),
             List(16) { shortArrayOf(3) },
         )
+        val third = formalCheckpoint(id = 3)
+        val wmo = CompetitionMahjongArchivedSeries(
+            third.config.copy(botStrategy = CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO),
+            List(16) { shortArrayOf(4) },
+        )
         val snapshot = CompetitionMahjongFormalSnapshot(0).save(first, formalPolicy(), 100)
-            .save(second, formalPolicy(), 200).save(formalCheckpoint(id = 3, count = 0), formalPolicy(), 300)
-            .withPrivateEvidence(null, listOf(baseline, calibrated))
+            .save(second, formalPolicy(), 200).save(third, formalPolicy(), 300)
+            .save(formalCheckpoint(id = 4, count = 0), formalPolicy(), 400)
+            .withPrivateEvidence(null, listOf(baseline, calibrated, wmo))
         val codec = CompetitionMahjongFormalSnapshotCodec
         val bytes = codec.encode(snapshot)
         assertEquals(4, bytes[4].toInt())
         val restored = checkNotNull(codec.decode(bytes, 0))
-        assertEquals(listOf(baseline.config, calibrated.config), restored.archivedSeries.map { it.config })
-        assertArrayEquals(shortArrayOf(3), restored.archivedSeries.last().decisions(0))
+        assertEquals(listOf(baseline.config, calibrated.config, wmo.config), restored.archivedSeries.map { it.config })
+        assertArrayEquals(shortArrayOf(4), restored.archivedSeries.last().decisions(0))
         assertArrayEquals(bytes, codec.encode(restored))
         // The strategy byte follows the UUID, wall seed and bot difficulty of the final entry.
-        val strategy = bytes.size - 4 - calibrated.encodedSize(versioned = true) + 25
+        val strategy = bytes.size - 4 - wmo.encodedSize(versioned = true) + 25
         assertNull(codec.decode(rechecksum(bytes.copyOf().also { it[strategy] = 7 }), 0))
     }
 

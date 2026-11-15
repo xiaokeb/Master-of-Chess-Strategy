@@ -173,8 +173,9 @@ bool NativeEngineRegistry::release_tiger_goat(const EngineHandle handle) {
 }
 
 EngineHandle NativeEngineRegistry::create_competition_mahjong(
-    std::uint64_t seed, std::uint8_t dealer, std::uint8_t wind, std::uint8_t viewer) {
-    auto session = std::make_shared<CompetitionMahjongNativeSession>(seed, dealer, wind, viewer);
+    std::uint64_t seed, std::uint8_t dealer, std::uint8_t wind, std::uint8_t viewer,
+    CompetitionMahjongFanRules rules) {
+    auto session = std::make_shared<CompetitionMahjongNativeSession>(seed, dealer, wind, viewer, rules);
     std::lock_guard lock(mutex_);
     if (next_handle_ == std::numeric_limits<EngineHandle>::max())
         throw std::overflow_error("Native engine handle space is exhausted");

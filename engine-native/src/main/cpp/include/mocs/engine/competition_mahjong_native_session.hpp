@@ -1,5 +1,7 @@
 #pragma once
 
+#include "mocs/engine/competition_mahjong_fan.hpp"
+
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -17,9 +19,11 @@ enum class CompetitionMahjongRoundActionKind : std::uint8_t;
 class CompetitionMahjongNativeSession final {
 public:
     CompetitionMahjongNativeSession(std::uint64_t seed, std::uint8_t dealer,
-                                   std::uint8_t round_wind, std::uint8_t viewer);
+                                   std::uint8_t round_wind, std::uint8_t viewer,
+                                   CompetitionMahjongFanRules rules = CompetitionMahjongFanRules::legacy_v1);
     CompetitionMahjongNativeSession(std::vector<std::uint8_t> wall, std::uint8_t dealer,
-                                   std::uint8_t round_wind, std::uint8_t viewer);
+                                   std::uint8_t round_wind, std::uint8_t viewer,
+                                   CompetitionMahjongFanRules rules = CompetitionMahjongFanRules::legacy_v1);
     ~CompetitionMahjongNativeSession();
     [[nodiscard]] std::uint8_t viewer_seat() const noexcept { return viewer_; }
     [[nodiscard]] CompetitionMahjongPublicView snapshot() const;
@@ -34,6 +38,7 @@ public:
 
 private:
     const std::uint8_t viewer_;
+    const std::uint8_t record_version_;
     std::unique_ptr<CompetitionMahjongRound> round_;
     mutable std::mutex mutex_;
 };

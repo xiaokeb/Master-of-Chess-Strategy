@@ -220,9 +220,11 @@ class CompetitionMahjongMatchCheckpointTest {
         assertEquals(checkpoint.assistance, restored.assistance)
         assertEquals(checkpoint.playback, restored.playback)
         assertArrayEquals(bytes, codec.encode(restored))
-        val unknownVersion = bytes.copyOf().also { it[4] = 7 }
-        seal(unknownVersion)
-        assertNull(codec.decode(unknownVersion, 0))
+        for (version in listOf<Byte>(7, 8)) {
+            val invalid = bytes.copyOf().also { it[4] = version }
+            seal(invalid)
+            assertNull(codec.decode(invalid, 0))
+        }
     }
 
     @Test fun validVersionThreeCrcCannotHideBadPlaybackRevisionFlagsReservedOrSpeed() {
