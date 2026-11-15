@@ -5,7 +5,8 @@ param(
     [Parameter(Mandatory)][string]$TestApk,
     [Parameter(Mandatory)][string]$OutputDirectory,
     [string]$AdbPath = 'adb',
-    [string]$Serial = 'emulator-5554'
+    [string]$Serial = 'emulator-5554',
+    [switch]$VerifyExisting
 )
 
 $ErrorActionPreference = 'Stop'
@@ -30,7 +31,10 @@ function ReadField([string]$Log, [string]$Key) {
 }
 
 function KeepReplay([string]$Path, [byte[]]$Bytes, [string]$Hash) {
-    if (!(Test-Path -LiteralPath $Path)) { [IO.File]::WriteAllBytes($Path, $Bytes) }
+    if (!(Test-Path -LiteralPath $Path -PathType Leaf)) {
+        if ($VerifyExisting) { throw "Missing replay: $Path" }
+        [IO.File]::WriteAllBytes($Path, $Bytes)
+    }
     if ((Sha $Path) -ne $Hash) { throw "Replay changed: $Path" }
 }
 
@@ -82,21 +86,43 @@ function CheckResult([string]$LogPath, [int]$Index) {
     }
 }
 
-$output = (New-Item -ItemType Directory -Path $OutputDirectory -Force).FullName
+$output = if ($VerifyExisting) { (Resolve-Path -LiteralPath $OutputDirectory).Path }
+          else { (New-Item -ItemType Directory -Path $OutputDirectory -Force).FullName }
 $app = (Resolve-Path -LiteralPath $AppApk).Path
 $test = (Resolve-Path -LiteralPath $TestApk).Path
-if ((Device @('get-state')) -ne 'device') { throw 'Android device unavailable' }
-$abi = Device @('shell', 'getprop', 'ro.product.cpu.abi')
-$model = Device @('shell', 'getprop', 'ro.product.model')
-$fingerprint = Device @('shell', 'getprop', 'ro.build.fingerprint')
-$identity = [ordered]@{ cohort = $Cohort; profile = 'android-pilot-v1'; serial = $Serial; abi = $abi; model = $model
-    fingerprint = $fingerprint; app_sha256 = (Sha $app); test_sha256 = (Sha $test) }
+$appHash = Sha $app
+$testHash = Sha $test
 $identityPath = Join-Path $output 'run.json'
-$json = $identity | ConvertTo-Json
-if (Test-Path -LiteralPath $identityPath) {
-    if ((Get-Content -LiteralPath $identityPath -Raw).Trim() -cne $json.Trim()) { throw 'Run inputs have changed' }
+if ($VerifyExisting) {
+    $identity = Get-Content -LiteralPath $identityPath -Raw | ConvertFrom-Json
+    if ($identity.cohort -cne $Cohort -or $identity.profile -cne 'android-pilot-v1' -or
+        $identity.app_sha256 -cne $appHash -or $identity.test_sha256 -cne $testHash) {
+        throw 'Run inputs have changed'
+    }
 } else {
-    $json | Set-Content -LiteralPath $identityPath -Encoding utf8NoBOM
+    if ((Device @('get-state')) -ne 'device') { throw 'Android device unavailable' }
+    $abi = Device @('shell', 'getprop', 'ro.product.cpu.abi')
+    $model = Device @('shell', 'getprop', 'ro.product.model')
+    $fingerprint = Device @('shell', 'getprop', 'ro.build.fingerprint')
+    $identity = [ordered]@{ cohort = $Cohort; profile = 'android-pilot-v1'; serial = $Serial; abi = $abi; model = $model
+        fingerprint = $fingerprint; app_sha256 = $appHash; test_sha256 = $testHash }
+    $json = $identity | ConvertTo-Json
+    if (Test-Path -LiteralPath $identityPath) {
+        if ((Get-Content -LiteralPath $identityPath -Raw).Trim() -cne $json.Trim()) { throw 'Run inputs have changed' }
+    } else {
+        $json | Set-Content -LiteralPath $identityPath -Encoding utf8NoBOM
+    }
+}
+
+function CheckPairedOpening([int]$Index, [string]$OpeningHash) {
+    $otherName = 'match-{0:D3}.json' -f ($Index -bxor 1)
+    $otherPath = Join-Path $output $otherName
+    if (Test-Path -LiteralPath $otherPath) {
+        $other = Get-Content -LiteralPath $otherPath -Raw | ConvertFrom-Json
+        if ($OpeningHash -cne $other.opening_sha256) { throw "Opening mismatch for slot $Index" }
+    } elseif ($VerifyExisting) {
+        throw "Missing paired opening for slot $Index"
+    }
 }
 
 $needsInstall = $true
@@ -107,15 +133,20 @@ foreach ($index in $Slot) {
     if (Test-Path -LiteralPath $receiptPath) {
         $previous = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
         $verified = CheckResult $logPath $index
-        if ($verified.log_sha256 -ne $previous.log_sha256 -or $verified.row -cne $previous.row) {
+        if ($previous.slot -ne $index -or
+            $verified.log_sha256 -ne $previous.log_sha256 -or $verified.row -cne $previous.row -or
+            $verified.record_sha256 -ne $previous.record_sha256 -or $verified.sgf_sha256 -ne $previous.sgf_sha256 -or
+            $verified.opening_sha256 -ne $previous.opening_sha256) {
             throw "Recorded slot $index changed"
         }
+        CheckPairedOpening $index $verified.opening_sha256
         $previous.row
         continue
     }
+    if ($VerifyExisting) { throw "Missing receipt for slot $index" }
     if (!(Test-Path -LiteralPath $logPath)) {
         if ($needsInstall) {
-            if ((Device @('shell', 'dumpsys', 'activity', 'instrumentation')) -match '(?im)^\s*Active instrumentation\b' -or
+            if ((Device @('shell', 'dumpsys', 'activity', 'processes')) -match '(?im)^\s*Active instrumentation:' -or
                 (Device @('shell', 'ps', '-A', '-o', 'PID,NAME')) -match '(?m)com\.masterofchessstrategy:.+_qa\s*$') {
                 throw 'Device already has an active test'
             }
@@ -133,12 +164,7 @@ foreach ($index in $Slot) {
         if ($LASTEXITCODE -ne 0) { throw "Transport exited for slot $index. Evidence: $logPath" }
     }
     $receipt = CheckResult $logPath $index
-    $otherName = 'match-{0:D3}.json' -f ($index -bxor 1)
-    $otherPath = Join-Path $output $otherName
-    if (Test-Path -LiteralPath $otherPath) {
-        $other = Get-Content -LiteralPath $otherPath -Raw | ConvertFrom-Json
-        if ($receipt.opening_sha256 -ne $other.opening_sha256) { throw "Opening mismatch for slot $index" }
-    }
+    CheckPairedOpening $index $receipt.opening_sha256
     $receipt | ConvertTo-Json | Set-Content -LiteralPath $receiptPath -Encoding utf8NoBOM
     $receipt.row
 }

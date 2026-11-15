@@ -19,3 +19,7 @@
 ## 复现
 
 使用 PowerShell 7 运行 [对弈脚本](../../../tools/android/go/run-strength-matches.ps1)，提供同一冻结源码生成的 Debug APK、仪器测试 APK 和现有 SDK 的 ADB 路径。`-Cohort pilot -Slot (0..5)` 执行六场诊断。正式样本用 `-Cohort holdout-1`，在设备窗口内传入具体槽号。继续同一目录时会核对已有日志和棋谱，资料不完整的旧槽保留供审计。
+
+验收已完成的批次时可加 `-VerifyExisting`。传入同一对 APK 和证据目录，脚本离线核对 APK、原始日志、MOCG、SGF、结果回执与换色开局散列。此模式要求每槽材料和对应换色回执齐备，只读取已有文件。
+
+逐局审校完成后，将审校工具生成的两行得分日志和新 MOCG 存入独立目录，命名为 `match-NNN.log` 和 `match-NNN.mocg`。在该目录的 `adjudication.tsv` 记录已确认槽号和文件散列，表头依次为 `slot`、`raw_sha256`、`reviewed_sha256`、`review_log_sha256`。有争议的槽等核实后再登记。统计脚本验证 144 个已审校槽及对应原始证据，再按换色开局计算三个区间。[统计脚本](../../../tools/android/go/summarize-strength.ps1)

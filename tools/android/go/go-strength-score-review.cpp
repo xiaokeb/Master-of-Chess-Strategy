@@ -1,5 +1,7 @@
 #include "mocs/engine/go.hpp"
 
+#include "game/board.h"
+
 #include <algorithm>
 #include <charconv>
 #include <cstdint>
@@ -61,12 +63,54 @@ void print_score(std::string_view label, const GoScore& score, std::size_t dead)
     std::cout << label << ',' << static_cast<int>(score.result) << ',' << score.black_area_quarters << ','
               << score.white_area_quarters << ',' << score.black_komi_quarters << ',' << dead << '\n';
 }
+
+void print_group_review(const GoEngine& engine) {
+    const auto size = engine.board_size();
+    Board::initHash();
+    Board board(size, size);
+    std::vector<Move> setup;
+    for (int y = 0; y < size; ++y) {
+        for (int x = 0; x < size; ++x) {
+            const auto stone = engine.stone_at(x, y).value();
+            if (stone == GoStone::empty) continue;
+            setup.emplace_back(Location::getLoc(x, y, size),
+                stone == GoStone::black ? C_BLACK : C_WHITE);
+        }
+    }
+    if (!board.setStonesFailIfNoLibs(setup)) throw std::logic_error("invalid terminal board");
+    Color area[Board::MAX_ARR_SIZE];
+    // Freeze pass-alive evidence and leave other groups for review.
+    board.calculateArea(area, false, false, false, false);
+
+    bool seen[Board::MAX_ARR_SIZE]{};
+    std::cout << "x,y,color,stones,liberties,status\n";
+    for (const auto& stone : setup) {
+        const auto head = board.chain_head[stone.loc];
+        if (seen[head]) continue;
+        seen[head] = true;
+        int count = 0;
+        bool own = true;
+        bool opposing = true;
+        auto loc = head;
+        do {
+            ++count;
+            own &= area[loc] == stone.pla;
+            opposing &= area[loc] == getOpp(stone.pla);
+            loc = board.next_in_chain[loc];
+        } while (loc != head);
+        const auto status = own ? "pass_alive" : opposing ? "inside_opponent_pass_alive" : "unresolved";
+        std::cout << Location::getX(stone.loc, size) << ',' << Location::getY(stone.loc, size) << ','
+                  << (stone.pla == C_BLACK ? 'B' : 'W') << ',' << count << ','
+                  << board.getNumLiberties(stone.loc) << ',' << status << '\n';
+    }
+}
 } // namespace
 
 int main(int argc, char** argv) {
     try {
         if (argc < 3) {
-            throw std::invalid_argument("use: go-strength-score-review size input.mocg [output.mocg [x,y ...]]");
+            throw std::invalid_argument(
+                "use: go-strength-score-review size input.mocg [--groups | output.mocg [x,y ...]]");
         }
         const auto size = number(argv[1]);
         if (size != 9 && size != 13 && size != 19) throw std::invalid_argument("unsupported board size");
@@ -87,6 +131,11 @@ int main(int argc, char** argv) {
         print_score("raw", *before, 0);
         if (argc == 3) {
             print_board(engine);
+            return 0;
+        }
+        if (std::string_view(argv[3]) == "--groups") {
+            if (argc != 4) throw std::invalid_argument("--groups takes no coordinates");
+            print_group_review(engine);
             return 0;
         }
         if (std::filesystem::exists(argv[3])) throw std::invalid_argument("review output already exists");

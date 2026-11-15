@@ -1,0 +1,130 @@
+{
+  "tag": "v0.1.0-go-strength-evidence-review.1",
+  "baseline": "9ac8dc2fc7afd123fbb8958d0709711c1f13ec16",
+  "distribution": "source-only",
+  "assets": [],
+  "sources": [
+    {
+      "path": "tools/android/go/run-strength-matches.ps1",
+      "working_sha256": "2a4adb37d696a65b38f3bf3497db635da2624cf21ca8a1d031baa422397e4a5b"
+    },
+    {
+      "path": "tools/android/go/summarize-strength.ps1",
+      "working_sha256": "aa267708987df238e0a7b6570d640fc7da1b8767ad98a4fdfff526ce1c5db6fd"
+    },
+    {
+      "path": "tools/android/go/go-strength-score-review.cpp",
+      "working_sha256": "ffc3a5ee19f4dc5c8415c5339df089fd4a7ef5316cd26ad375f74a06fada543e"
+    },
+    {
+      "path": "docs/games/go/2026-11-15-search-strength-protocol.md",
+      "working_sha256": "0d16504e90001b231d99e355c539dbfa1d27bc9a1767e74cc8d7a1de9a850c1a"
+    },
+    {
+      "path": "docs/games/go/2026-11-15-strength-score-review.md",
+      "working_sha256": "f06d299f026fbc65d0f73fec433f97b3faf9001ed06a204d6250672d946922be"
+    }
+  ],
+  "audit_build": {
+    "working_sha256": "ffc3a5ee19f4dc5c8415c5339df089fd4a7ef5316cd26ad375f74a06fada543e",
+    "ndk": "30.0.16138531",
+    "source_sha256": "ffc3a5ee19f4dc5c8415c5339df089fd4a7ef5316cd26ad375f74a06fada543e",
+    "products": [
+      {
+        "katago_sha256": "4e7cff48d447016309e15e9fe48c784786e7286f021c16dae7656f7b2fcfd26b",
+        "abi": "x86_64",
+        "path": "score-review-x86_64",
+        "sha256": "3dded6dea91bfe7e08f7457edbb8cfdfcd5217d0b19b2b635307713b8d9cc68b",
+        "core_sha256": "a98c5b65757c8cf9830a39d54be4db526e49dc6ecb47ee51e483211c7c9a40e2"
+      },
+      {
+        "katago_sha256": "2d628cf1565c86f6ddef0f087619e2e3fbcb2e5551ab56d6feaa241fcc0ab0ba",
+        "abi": "arm64-v8a",
+        "path": "score-review-arm64-v8a",
+        "sha256": "56aeacd600da5872a219e7f5efe8306ddb30d545a2c8de3a5ad174e55298f795",
+        "core_sha256": "e5e88f442defc55a683d84e47cd1e44e033fecb87e01b1720ff1c9fd92bb1834"
+      }
+    ]
+  },
+  "diagnostic_device": {
+    "rejects_group_coordinates": true,
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "class_counts": {
+      "pass_alive": 5,
+      "unresolved": 34
+    },
+    "runs": [
+      {
+        "slot": 0,
+        "record_sha256": "b8462b09b9ed5cd72a75e863bc10cae6e38d91a1b848ffc7b74b8d4f6275e251",
+        "analysis_sha256": "accde036c65a9f5f457b9b05ebc2710abafb4a37947918c93eb8b317f777b866",
+        "groups": 4
+      },
+      {
+        "slot": 1,
+        "record_sha256": "8860e8228e552bae4593e967c8bde83f4836f566307d04660942f8268852ab74",
+        "analysis_sha256": "50cbc515f6b19e4e55b1475d1224da3b36bc6ea0c25ecde678d4189f840a1c06",
+        "groups": 2
+      },
+      {
+        "slot": 2,
+        "record_sha256": "b8bc2e312e83a790fb70aee2b8e7272a05f6d3ab04bce30ea24b85a7a7929f85",
+        "analysis_sha256": "f56da16f107da069f3f32ed1403909bc7744e431615baf1f1ebea7e66d1c1228",
+        "groups": 9
+      },
+      {
+        "slot": 3,
+        "record_sha256": "e1cba7c9bce0754f1ae72caf576f45f3381633d00d06c9f2e95305b7d9609e1b",
+        "analysis_sha256": "01f76625ca556fa0616b907f46038f485d6a1a4672cadea9332d46fe8693f06e",
+        "groups": 9
+      },
+      {
+        "slot": 4,
+        "record_sha256": "6dd2713472d34e2086a92883973dc765889b98f3ff8cced76603d6d1bc30efe8",
+        "analysis_sha256": "7cbf2882297ecd1587e92f96d43a0e884c20877f3dacd06f685f26ea3b5576cf",
+        "groups": 9
+      },
+      {
+        "slot": 5,
+        "record_sha256": "247a92a0bc2517e14fa950f6b0a6e58964819bdbb86aa302c7d042634b146799",
+        "analysis_sha256": "3bc858cdcdc586da03653df1a8d87500648f862fc195b4750a6cc5a2b7c60dcf",
+        "groups": 6
+      }
+    ],
+    "folder": "device-c01a5f991164441e8eecbd71186c0ac6"
+  },
+  "known_end_position": {
+    "groups_sha256": "c864ee17ec3e3f8f61521d5aeaef7562db7a5e4b2275ce9cc8fcd61f4f84bc92",
+    "reviewed": "5cbe3a33cc253fd51c16e5942bd2ac5526429f71f2da8c4d26959f4386b3e70f",
+    "fixture_source_sha256": "096d6f007f918b4eeffc83f469967e3bf39992af7b95cc119197d411a9cbfbb1",
+    "abi": "x86_64",
+    "review_log_sha256": "d97c9dec91aee0f25b9f92e12f2b5405af3f94affbd0132f16ad18a9844fb742",
+    "before": "6c8ca1fa02fc2c7ec26d8594c30496fd4b338527fa757f5da5772e6bcb986564",
+    "model": "Pixel_7_Pro"
+  },
+  "holdout": {
+    "first_slot": 0,
+    "raw_double_pass": 96,
+    "verified": 96,
+    "ordered_receipts_sha256": "50e4c56a840c893aee68a5508a8b2fc9923e5194f656232490b7559a72bded39",
+    "inputs": {
+      "cohort": "holdout-1",
+      "profile": "android-pilot-v1",
+      "serial": "emulator-5554",
+      "abi": "x86_64",
+      "model": "sdk_gphone16k_x86_64",
+      "fingerprint": "google/sdk_gphone16k_x86_64/emu64xa16k:17/CP31.260623.012/16064790:user/dev-keys",
+      "app_sha256": "007540d0ea165f0c3eca85d9621e6e75eefe830139837d2140e1cf07355fe549",
+      "test_sha256": "60bbf6b23c925ec1dd3f65100d46d682a615a61dab986e28b91f8a271380cdfc"
+    },
+    "last_slot": 95
+  },
+  "offline_checks": [
+    "no ADB for 96 raw receipts",
+    "reject altered SGF, mismatched opening, and absent MOCG",
+    "synthetic paired means 0.75/0.50/1.00",
+    "reject incomplete adjudication, modified log and mismatched raw tally"
+  ],
+  "formal_result": "pending remaining slots and adjudication"
+}
