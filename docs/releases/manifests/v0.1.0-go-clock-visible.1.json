@@ -1,0 +1,81 @@
+{
+  "expected_changed_paths": 6,
+  "kind": "source_prerelease",
+  "debug_abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "pending": [
+    "physical devices",
+    "wall-clock adjustment"
+  ],
+  "device": {
+    "restored_font": "1.0",
+    "abi": "x86_64",
+    "restored_notification_granted": false,
+    "avd": "Pixel_7_Pro",
+    "runs": [
+      {
+        "log_sha256": "4c41406cb3ff7244b7ceaa298326ac4ab6f8502bb6c3028ce8bfcd8b94bc18ae",
+        "font": "1.0",
+        "tests": 1,
+        "selector": "com.masterofchessstrategy.ui.GoAiProductionEntryInstrumentedTest#expiredHumanAndAutomaticClocksFinalizeThroughProductionNavigation",
+        "folder": "device-2f3d0c766e504189882f98735894c9fa",
+        "images": [
+          {
+            "sha256": "14bd77f5ddeeb799bf10b902803c183dc37bd7ce82ebc6bbd8f37079663eb92d",
+            "path": "font-1.0\\93c06e0e-13ec-47b4-aa68-e068c92d9790\\go-auto-clock-timeout.png"
+          },
+          {
+            "sha256": "63a16ccef8fcb4ce353833ff5ccf7f5ada3c84e7a6bafcc8daa2709fff1c32c3",
+            "path": "font-1.0\\93c06e0e-13ec-47b4-aa68-e068c92d9790\\go-human-clock.png"
+          }
+        ]
+      },
+      {
+        "log_sha256": "e624c624d71a9cbb066837569120d162e2bf28e40c4d69145c91c6b8479b6904",
+        "font": "1.5",
+        "tests": 1,
+        "selector": "com.masterofchessstrategy.ui.GoAiProductionEntryInstrumentedTest#backgroundClockExpiresAndArchivesWhileTheScreenRemainsOff",
+        "folder": "device-2f3d0c766e504189882f98735894c9fa",
+        "images": [
+          {
+            "sha256": "c36b7e36aefcaffc558e5feec3ab1ace2e0f7e232c6bb4ee483a8db1ec13f4aa",
+            "path": "font-1.5\\0b9d6e6f-ba2b-423c-a563-822389050b61\\go-background-clock-enabled.png"
+          },
+          {
+            "sha256": "e887b2614e06b7cbee0bf7815a530f65a4b1485e411bba4aaddb84236de7bb5d",
+            "path": "font-1.5\\0b9d6e6f-ba2b-423c-a563-822389050b61\\go-background-clock-timeout.png"
+          }
+        ]
+      }
+    ],
+    "screenshots_reviewed": 4,
+    "restored_app_op": "ignore"
+  },
+  "assets": [],
+  "game": "go",
+  "build": {
+    "lint_warnings": 25,
+    "lint_errors": 0,
+    "baseline": "57ca1920651aa6c2acde8d3718c3a0065545f5bd",
+    "overlays": [
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoAiProductionEntryInstrumentedTest.kt",
+        "sha256": "ea627b7a51c5f49ee75ee625029e12b9fb129a07406e03f3d881d272b15f2e58",
+        "working_sha256": "ea627b7a51c5f49ee75ee625029e12b9fb129a07406e03f3d881d272b15f2e58"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiMatchScreen.kt",
+        "sha256": "cd6a29b72b6d3c1b685ab552c34598c9cb63be4ee399a1d412598b3b04ca2513",
+        "working_sha256": "cd6a29b72b6d3c1b685ab552c34598c9cb63be4ee399a1d412598b3b04ca2513"
+      }
+    ],
+    "release_manifest": "processed",
+    "candidate": "go-clock-visible1",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "6851538e4c926f2699e58285f03155943511a7763b0b3ddae531b762c67536ec",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "2fa0727d6a462a638841daac378de7e6337f67636801662b37d074248d4941b5"
+    }
+  }
+}

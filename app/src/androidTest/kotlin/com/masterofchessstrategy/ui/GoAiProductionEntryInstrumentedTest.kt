@@ -150,7 +150,7 @@ class GoAiProductionEntryInstrumentedTest {
             compose.onNodeWithTag("go_ai_setup_size_9").performScrollTo().performClick()
             compose.onNodeWithTag("go_ai_setup_create").performScrollTo().performClick()
             awaitHumanTurn()
-            compose.onNodeWithTag("go_ai_clock").performScrollTo().assertIsDisplayed()
+            compose.onNodeWithTag("go_ai_clock").assertIsDisplayed()
             val first = checkNotNull(f.active())
             assertEquals(1_800_000L, first.clock?.limitMillis)
             f.capture("go-human-clock")
@@ -461,6 +461,8 @@ class GoAiProductionEntryInstrumentedTest {
                     }
                 }
                 await("service enabled", 10_000) { GoBackgroundPlayback.lease.value?.ready == true && notificationPosted() }
+                compose.onNodeWithTag("go_ai_background").assertIsDisplayed()
+                compose.onNodeWithTag("go_ai_clock").assertIsDisplayed()
                 f.capture("go-background-clock-enabled")
                 try {
                     shell("input keyevent 223")
@@ -483,9 +485,10 @@ class GoAiProductionEntryInstrumentedTest {
                     assertFalse(power.isInteractive)
                     val finished = checkNotNull(f.active())
                     assertEquals(initial.matchId, finished.matchId)
-                    assertEquals(0L, finished.clock?.blackMillis)
-                    assertTrue(checkNotNull(finished.clock).whiteMillis in 1 until clock.whiteMillis)
-                    assertNull(finished.clock?.active)
+                    val finalClock = checkNotNull(finished.clock)
+                    assertEquals(0L, finalClock.blackMillis)
+                    assertTrue(finalClock.whiteMillis in 1 until clock.whiteMillis)
+                    assertNull(finalClock.active)
                     NativeGoEngine(9).use {
                         assertEquals(RestoreResult.Restored, it.restore(finished.copyBytes()))
                         assertEquals(GameResult.SECOND_PLAYER_WIN, it.gameResult())
@@ -493,13 +496,14 @@ class GoAiProductionEntryInstrumentedTest {
                         assertEquals(GoAction.Timeout(GoPlayer.BLACK), events.last())
                         assertTrue("Expected a saved move after screen off", events.size > sleepEvents + 1)
                         println("Go screen-off ${SystemClock.elapsedRealtime() - sleepStartedAt}ms, " +
-                            "events $sleepEvents to ${events.size}, white=${finished.clock?.whiteMillis}ms")
+                            "events $sleepEvents to ${events.size}, white=${finalClock.whiteMillis}ms")
                     }
                 } finally {
                     shell("input keyevent 224")
                     shell("wm dismiss-keyguard")
                 }
                 compose.onNodeWithTag("go_ai_timeout").performScrollTo().assertIsDisplayed().assertTextEquals("黑方超时")
+                compose.onNodeWithTag("go_ai_clock").assertIsDisplayed()
                 f.capture("go-background-clock-timeout")
                 returnToSetup()
                 compose.onNodeWithTag("go_ai_setup_continue").performScrollTo().performClick()

@@ -80,9 +80,6 @@ fun GoAiMatchScreen(
                         Text(goAiMatchPhaseLabel(match), modifier = Modifier.testTag("go_ai_phase"))
                         game.resignedBy?.let { Text("${goReplayPlayer(it)}方认输", modifier = Modifier.testTag("go_ai_resigned")) }
                         game.timedOutBy?.let { Text("${goReplayPlayer(it)}方超时", modifier = Modifier.testTag("go_ai_timeout")) }
-                        game.timeRemainingMillis?.let { (black, white) ->
-                            Text("黑 ${goClockText(black)} · 白 ${goClockText(white)}", modifier = Modifier.testTag("go_ai_clock"))
-                        }
                         if (game.loading) Text("正在恢复对局…")
                         if (game.saving) Text("正在保存对局…")
                         if (match.savesTerminalImmediately && game.phase == GoPhase.FINISHED &&
@@ -225,12 +222,21 @@ fun GoAiMatchScreen(
                     }
                 }
             }
+            val timedControls: @Composable (Modifier) -> Unit = { target ->
+                val remaining = game?.timeRemainingMillis
+                if (remaining == null) controls(target)
+                else Column(target, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val (black, white) = remaining
+                    Text("黑 ${goClockText(black)} · 白 ${goClockText(white)}", modifier = Modifier.testTag("go_ai_clock"))
+                    controls(Modifier.weight(1f).fillMaxWidth())
+                }
+            }
             if (wide) Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 board(Modifier.weight(1f).fillMaxHeight())
-                controls(Modifier.width(controlsWidth).fillMaxHeight())
+                timedControls(Modifier.width(controlsWidth).fillMaxHeight())
             } else Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 board(Modifier.fillMaxWidth().height(boardHeight))
-                controls(Modifier.weight(1f).fillMaxWidth())
+                timedControls(Modifier.weight(1f).fillMaxWidth())
             }
         }
     }

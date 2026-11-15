@@ -1,6 +1,6 @@
 # 围棋与国标麻将阶段发布记录
 
-2026-11-14 已核对以下附注标签及同名源码预发布。预发布未附 APK。
+截至 2026-11-15，已核对以下附注标签及同名源码预发布。预发布未附 APK。
 
 | 棋种 | 节点 | 提交 | Release |
 | --- | --- | --- | --- |
@@ -19,3 +19,7 @@
 | 围棋 | 认输备份和真实进程恢复 | `5e8c525` | [v0.1.0-go-resignation-recovery.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-resignation-recovery.1) |
 | 国标麻将 | 两组策略训练对照 | `5a4e9bb` | [v0.1.0-competition-mahjong-strength-tuning.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-strength-tuning.1) |
 | 围棋 | 本地双人主时限 | `f02a87f` | [v0.1.0-go-local-clock.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-local-clock.1) |
+| 围棋 | 人机与双 AI 主时限 | `d1c8054` | [v0.1.0-go-ai-clock.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-ai-clock.1) |
+| 围棋 | 主时限真实杀进程恢复 | `803cbe9` | [v0.1.0-go-clock-process-recovery.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-clock-process-recovery.1) |
+| 国标麻将 | 选择性吃碰杠及独立棋力评测 | `3ea6774` | [v0.1.0-competition-mahjong-claim-tuning.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-competition-mahjong-claim-tuning.1) |
+| 围棋 | 实际熄屏判超时和归档 | `57ca192` | [v0.1.0-go-clock-background.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-clock-background.1) |
