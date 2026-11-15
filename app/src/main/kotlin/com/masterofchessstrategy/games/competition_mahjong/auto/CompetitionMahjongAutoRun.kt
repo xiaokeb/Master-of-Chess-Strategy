@@ -1,6 +1,7 @@
 package com.masterofchessstrategy.games.competition_mahjong.auto
 
 import com.masterofchessstrategy.engine.CompetitionMahjongAutoConfig
+import com.masterofchessstrategy.engine.CompetitionMahjongAutoPolicy
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongCompetitionConfig
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchSeating
 import java.util.UUID
@@ -12,6 +13,7 @@ class CompetitionMahjongAutoRunConfig(
     val viewerPlayerId: Int = 0,
     playerBotLevels: List<Int> = List(4) { 0 },
     val decisionSeed: Long = seed,
+    val policy: CompetitionMahjongAutoPolicy = CompetitionMahjongAutoPolicy.BASELINE,
 ) {
     private val levels = playerBotLevels.toList()
     val playerBotLevels: List<Int> get() = levels.toList()
@@ -32,12 +34,13 @@ class CompetitionMahjongAutoRunConfig(
         val seating = CompetitionMahjongMatchSeating.forHand(hand)
         val decisionIndex = if (hasOpening && hand == 0) 0 else series * 16 + hand
         return CompetitionMahjongAutoConfig(single.seed, single.dealerSeat, single.roundWind, single.viewerSeat,
-            (0..3).map { seat -> levels[seating.playerAtSeat(seat)] }, seedAt(decisionSeed, decisionIndex))
+            (0..3).map { seat -> levels[seating.playerAtSeat(seat)] }, seedAt(decisionSeed, decisionIndex), policy)
     }
 
     override fun equals(other: Any?): Boolean = other is CompetitionMahjongAutoRunConfig &&
-        runId == other.runId && seed == other.seed && viewerPlayerId == other.viewerPlayerId && levels == other.levels && decisionSeed == other.decisionSeed
-    override fun hashCode(): Int = listOf(runId, seed, viewerPlayerId, levels, decisionSeed).hashCode()
+        runId == other.runId && seed == other.seed && viewerPlayerId == other.viewerPlayerId &&
+        levels == other.levels && decisionSeed == other.decisionSeed && policy == other.policy
+    override fun hashCode(): Int = listOf(runId, seed, viewerPlayerId, levels, decisionSeed, policy).hashCode()
     override fun toString(): String = "CompetitionMahjongAutoRunConfig(runId=$runId, viewerPlayerId=$viewerPlayerId)"
 
     companion object {

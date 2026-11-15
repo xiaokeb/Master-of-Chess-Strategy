@@ -9,7 +9,7 @@ class NativeCompetitionMahjongAutoSession(
     private val lock = Any()
     private var handle = CompetitionMahjongAutoBindings.create(
         config.seed, config.dealerSeat, config.roundWind, config.viewerSeat,
-        config.botLevels.toIntArray(), config.decisionSeed,
+        config.botLevels.toIntArray(), config.decisionSeed, config.policy.recordVersion,
     ).also { check(it > 0) { "Native automatic Mahjong session could not be created" } }
 
     override fun snapshot(): CompetitionMahjongPublicView = withHandle {

@@ -17,7 +17,8 @@ internal object CompetitionMahjongAutoRecord {
     fun eventCount(bytes: ByteArray, config: CompetitionMahjongAutoConfig): Int {
         require(bytes.size in 187..MAX_BYTES) { "自动演局私有记录长度无效" }
         val input = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
-        require(input.int == 0x414d434d && input.get().toInt() == 1 && input.get().toInt() == config.viewerSeat)
+        require(input.int == 0x414d434d && input.get().toInt() == config.policy.recordVersion &&
+            input.get().toInt() == config.viewerSeat)
         config.botLevels.forEach { require(input.get().toInt() == it) }
         require(input.short.toInt() == 0 && input.long == config.decisionSeed)
         require(input.int == bytes.size - 28)

@@ -18,7 +18,8 @@ internal class CompetitionMahjongAutoAdmission(
         val actual = active.config
         if (actual.seed != expected.seed || actual.dealerSeat != expected.dealerSeat ||
             actual.roundWind != expected.roundWind || actual.viewerSeat != expected.viewerSeat ||
-            actual.decisionSeed != expected.decisionSeed || actual.botLevels != expected.botLevels) {
+            actual.decisionSeed != expected.decisionSeed || actual.botLevels != expected.botLevels ||
+            actual.policy != expected.policy) {
             active.close()
             error("自动会话工厂配置不一致")
         }

@@ -88,15 +88,16 @@ std::uint64_t decision_seed(const CompetitionMahjongPublicView& view,
 CompetitionMahjongAutoSession::CompetitionMahjongAutoSession(
     const std::uint64_t wall_seed, const std::uint8_t dealer, const std::uint8_t wind,
     const std::uint8_t viewer, const std::array<std::uint8_t, 4> levels,
-    const std::uint64_t seed)
+    const std::uint64_t seed, const bool calibrated)
     : CompetitionMahjongAutoSession(competition_mahjong_shuffled_wall(wall_seed),
-        dealer, wind, viewer, levels, seed) {}
+        dealer, wind, viewer, levels, seed, calibrated) {}
 
 CompetitionMahjongAutoSession::CompetitionMahjongAutoSession(
     std::vector<CompetitionMahjongTile> wall, const std::uint8_t dealer,
     const std::uint8_t wind, const std::uint8_t viewer,
-    const std::array<std::uint8_t, 4> levels, const std::uint64_t seed)
-    : viewer_(viewer), levels_(levels), decision_seed_(seed), round_(std::move(wall), dealer, wind) {
+    const std::array<std::uint8_t, 4> levels, const std::uint64_t seed, const bool calibrated)
+    : viewer_(viewer), levels_(levels), decision_seed_(seed), calibrated_(calibrated),
+      round_(std::move(wall), dealer, wind) {
     if (viewer >= 4 || std::any_of(levels.begin(), levels.end(),
         [](const auto level) { return level > 3; }))
         throw std::invalid_argument("Invalid automatic Mahjong configuration");
@@ -107,30 +108,37 @@ CompetitionMahjongPublicView CompetitionMahjongAutoSession::snapshot() const {
     return competition_mahjong_public_view(round_, viewer_);
 }
 
+std::optional<CompetitionMahjongRoundAction> CompetitionMahjongAutoSession::choose_action(
+    const CompetitionMahjongRound& round, const CompetitionMahjongBotPolicy policy) const {
+    for (std::uint8_t seat = 0; seat < 4; ++seat) {
+        if (round.legal_actions(seat).empty()) continue;
+        const auto view = competition_mahjong_public_view(round, seat);
+        return competition_mahjong_choose_bot_action(round, seat, levels_[seat], decision_seed(view, decision_seed_), policy);
+    }
+    return std::nullopt;
+}
+
+CompetitionMahjongAutoAdvance CompetitionMahjongAutoSession::advance(const std::uint32_t max_actions) {
+    return advance(max_actions, calibrated_ ? CompetitionMahjongBotPolicy::medium_live_bucket_8 :
+        CompetitionMahjongBotPolicy::baseline);
+}
+
 CompetitionMahjongAutoAdvance CompetitionMahjongAutoSession::advance(
     const std::uint32_t max_actions, const CompetitionMahjongBotPolicy policy) {
-    if (max_actions == 0 || max_actions > 32)
-        throw std::invalid_argument("Invalid automatic Mahjong budget");
+    if (max_actions == 0 || max_actions > 32 ||
+        (calibrated_ && policy != CompetitionMahjongBotPolicy::medium_live_bucket_8))
+        throw std::invalid_argument("Invalid automatic Mahjong budget or policy");
     std::lock_guard lock(mutex_);
     if (terminal(round_.view().phase)) return {0, true};
     auto candidate = round_;
     CompetitionMahjongAutoAdvance result{};
     while (result.accepted_actions < max_actions && !terminal(candidate.view().phase)) {
-        bool moved = false;
-        for (std::uint8_t seat = 0; seat < 4; ++seat) {
-            if (candidate.legal_actions(seat).empty()) continue;
-            const auto public_view = competition_mahjong_public_view(candidate, seat);
-            const auto action = competition_mahjong_choose_bot_action(candidate, seat,
-                levels_[seat], decision_seed(public_view, decision_seed_), policy);
-            if (!action) throw std::logic_error("Automatic Mahjong has no legal decision");
-            const auto applied = candidate.apply(*action);
-            if (!applied.accepted || applied.false_hu)
-                throw std::logic_error("Automatic Mahjong rejected a baseline decision");
-            ++result.accepted_actions;
-            moved = true;
-            break; // Re-evaluate claims and priority after every accepted event.
-        }
-        if (!moved) throw std::logic_error("Automatic Mahjong stalled before the terminal phase");
+        const auto action = choose_action(candidate, policy);
+        if (!action) throw std::logic_error("Automatic Mahjong has no legal decision");
+        const auto applied = candidate.apply(*action);
+        if (!applied.accepted || applied.false_hu)
+            throw std::logic_error("Automatic Mahjong rejected a bot decision");
+        ++result.accepted_actions; // Re-evaluate claims and priority after every event.
     }
     result.terminal = terminal(candidate.view().phase);
     round_ = std::move(candidate);
@@ -147,7 +155,7 @@ std::vector<std::uint8_t> CompetitionMahjongAutoSession::serialize() const {
     const auto payload = round_.serialize();
     if (payload.size() > max_record_bytes - envelope_size)
         throw std::length_error("Automatic Mahjong record too large");
-    std::vector<std::uint8_t> bytes{'M', 'C', 'M', 'A', 1, viewer_};
+    std::vector<std::uint8_t> bytes{'M', 'C', 'M', 'A', static_cast<std::uint8_t>(calibrated_ ? 2 : 1), viewer_};
     bytes.insert(bytes.end(), levels_.begin(), levels_.end());
     bytes.insert(bytes.end(), {0, 0});
     put(bytes, decision_seed_, 8);
@@ -160,14 +168,19 @@ std::vector<std::uint8_t> CompetitionMahjongAutoSession::serialize() const {
 bool CompetitionMahjongAutoSession::restore(const std::vector<std::uint8_t>& bytes) {
     if (bytes.size() < envelope_size || bytes.size() > max_record_bytes ||
         bytes[0] != 'M' || bytes[1] != 'C' || bytes[2] != 'M' || bytes[3] != 'A' ||
-        bytes[4] != 1 || bytes[5] != viewer_ || bytes[10] != 0 || bytes[11] != 0 ||
+        bytes[4] != (calibrated_ ? 2 : 1) || bytes[5] != viewer_ || bytes[10] != 0 || bytes[11] != 0 ||
         !std::equal(levels_.begin(), levels_.end(), bytes.begin() + 6) ||
         get(bytes, 12, 8) != decision_seed_ ||
         get(bytes, 20, 4) != bytes.size() - envelope_size ||
         get(bytes, bytes.size() - 4, 4) != crc32(bytes, bytes.size() - 4)) return false;
     const std::vector<std::uint8_t> payload(bytes.begin() + 24, bytes.end() - 4);
     std::lock_guard lock(mutex_);
-    return round_.restore(payload);
+    if (!calibrated_) return round_.restore(payload);
+    return round_.restore(payload, [this](const auto& round, const auto& recorded) {
+        const auto expected = choose_action(round, CompetitionMahjongBotPolicy::medium_live_bucket_8);
+        return expected && expected->kind == recorded.kind && expected->player == recorded.player &&
+            expected->tile == recorded.tile && expected->sequence_start == recorded.sequence_start;
+    });
 }
 
 } // namespace mocs::engine

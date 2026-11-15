@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <vector>
 
@@ -87,7 +88,8 @@ public:
         const CompetitionMahjongRoundAction& action);
     [[nodiscard]] bool undo();
     [[nodiscard]] std::vector<std::uint8_t> serialize() const;
-    [[nodiscard]] bool restore(const std::vector<std::uint8_t>& data);
+    [[nodiscard]] bool restore(const std::vector<std::uint8_t>& data,
+        const std::function<bool(const CompetitionMahjongRound&, const CompetitionMahjongRoundAction&)>& verify = {});
     [[nodiscard]] std::uint8_t next_dealer() const noexcept;
 
 private:

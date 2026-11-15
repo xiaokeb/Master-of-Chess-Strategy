@@ -1,6 +1,10 @@
 package com.masterofchessstrategy.engine
 
-/** Four physical-seat baseline strategies, not the product's accepted difficulty tiers. */
+enum class CompetitionMahjongAutoPolicy(val recordVersion: Int) {
+    BASELINE(1), CALIBRATED(2),
+}
+
+/** Four physical-seat levels and an immutable bot policy for the hand. */
 class CompetitionMahjongAutoConfig(
     val seed: Long,
     val dealerSeat: Int = 0,
@@ -8,6 +12,7 @@ class CompetitionMahjongAutoConfig(
     val viewerSeat: Int = 0,
     botLevels: List<Int> = List(4) { 0 },
     val decisionSeed: Long = seed,
+    val policy: CompetitionMahjongAutoPolicy = CompetitionMahjongAutoPolicy.BASELINE,
 ) {
     private val levels = botLevels.toList()
     /** Defensive copies keep the native session's configuration immutable. */
@@ -37,7 +42,7 @@ interface CompetitionMahjongAutoSession : AutoCloseable {
     fun undo(): Boolean
     /** Private MCMA record, containing hidden hands/wall. Never render or publicly share it. */
     fun serialize(): ByteArray
-    /** Replays a candidate; failures preserve this session. Viewer/levels/decision seed must match.
+    /** Replays a candidate; failures preserve this session. Viewer, levels, policy and seed must match.
      * Dealer/wind and the actual wall come from the record, not the initial seed. */
     fun restore(data: ByteArray): RestoreResult
 }

@@ -178,7 +178,7 @@ class CompetitionMahjongAutoPlayViewModel(
                 (source != null && source.config.viewerPlayerId != initialConfig.viewerPlayerId)) return@launch
             val seed = source?.config?.seed ?: (System.nanoTime() and Long.MAX_VALUE)
             val target = CompetitionMahjongAutoRunConfig(UUID.randomUUID().toString(), seed, initialConfig.viewerPlayerId,
-                selected, source?.config?.decisionSeed ?: seed)
+                selected, source?.config?.decisionSeed ?: seed, source?.config?.policy ?: initialConfig.policy)
             playback.newRun(target, settings, source?.engineRecord)
         }
 }

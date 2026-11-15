@@ -3,7 +3,7 @@ package com.masterofchessstrategy.engine.internal
 /** Distinct entry points and handle type; human MCMS calls cannot operate on MCMA sessions. */
 internal object CompetitionMahjongAutoBindings {
     init { System.loadLibrary("mocs_engine_native") }
-    external fun create(seed: Long, dealer: Int, wind: Int, viewer: Int, levels: IntArray, decisionSeed: Long): Long
+    external fun create(seed: Long, dealer: Int, wind: Int, viewer: Int, levels: IntArray, decisionSeed: Long, policy: Int): Long
     external fun release(handle: Long)
     external fun snapshot(handle: Long): IntArray
     /** Version 1, accepted event count, terminal boolean. No private bot action is returned. */

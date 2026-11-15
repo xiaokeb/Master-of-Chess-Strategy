@@ -11,8 +11,8 @@ import org.junit.Test
 
 /** Real JNI only, with synthetic walls. No App database, settings or user record is touched. */
 class NativeCompetitionMahjongAutoInstrumentedTest {
-    private fun config(viewer: Int = 0) = CompetitionMahjongAutoConfig(
-        925, viewerSeat = viewer, botLevels = listOf(0, 1, 2, 3), decisionSeed = 7,
+    private fun config(viewer: Int = 0, policy: CompetitionMahjongAutoPolicy = CompetitionMahjongAutoPolicy.BASELINE) =
+        CompetitionMahjongAutoConfig(925, viewerSeat = viewer, botLevels = listOf(0, 1, 2, 3), decisionSeed = 7, policy = policy,
     )
 
     @Test fun fixedViewerActsAutomaticallyWithoutExposingOtherHands() {
@@ -32,9 +32,9 @@ class NativeCompetitionMahjongAutoInstrumentedTest {
     }
 
     @Test fun batchesAndObserverSelectionDoNotChangeTheActualTrajectory() {
-        NativeCompetitionMahjongAutoSession(config()).use { single ->
-            NativeCompetitionMahjongAutoSession(config()).use { batch ->
-                NativeCompetitionMahjongAutoSession(config(3)).use { otherObserver ->
+        for (policy in CompetitionMahjongAutoPolicy.entries) NativeCompetitionMahjongAutoSession(config(policy = policy)).use { single ->
+            NativeCompetitionMahjongAutoSession(config(policy = policy)).use { batch ->
+                NativeCompetitionMahjongAutoSession(config(3, policy)).use { otherObserver ->
                     repeat(2) {
                         val result = batch.advance(32)
                         repeat(result.acceptedActions) { assertEquals(1, single.advance(1).acceptedActions) }
@@ -64,7 +64,7 @@ class NativeCompetitionMahjongAutoInstrumentedTest {
                 assertEquals(source.advance(5), restored.advance(5))
                 assertArrayEquals(source.serialize(), restored.serialize())
                 val stable = restored.serialize()
-                val unknown = record.copyOf().also { it[4] = 2; repairCrc(it) }
+                val unknown = record.copyOf().also { it[4] = 3; repairCrc(it) }
                 val reserved = record.copyOf().also { it[10] = 1; repairCrc(it) }
                 val damaged = record.copyOf().also { it[24] = 0 }
                 for (bad in listOf(byteArrayOf(), record.copyOf(27), unknown, reserved, damaged, ByteArray(1_048_577))) {
@@ -82,6 +82,31 @@ class NativeCompetitionMahjongAutoInstrumentedTest {
                 val stable = target.serialize()
                 assertEquals(RestoreResult.Rejected(EngineError.CORRUPTED_DATA), target.restore(record))
                 assertArrayEquals(stable, target.serialize())
+            }
+        }
+    }
+
+    @Test fun calibratedRecordsRejectRelabelledBaselineActionsAndContinueDeterministically() {
+        val policy = CompetitionMahjongAutoPolicy.CALIBRATED
+        NativeCompetitionMahjongAutoSession(config(policy = policy)).use { source ->
+            source.advance(32)
+            val calibrated = source.serialize()
+            assertEquals(2, calibrated[4].toInt())
+            NativeCompetitionMahjongAutoSession(config()).use { baseline ->
+                baseline.advance(32)
+                val original = baseline.serialize()
+                assertEquals(RestoreResult.Rejected(EngineError.CORRUPTED_DATA), baseline.restore(calibrated))
+                assertArrayEquals(original, baseline.serialize())
+                val relabelled = original.copyOf().also { it[4] = 2; repairCrc(it) }
+                assertFalse(relabelled.contentEquals(calibrated))
+                NativeCompetitionMahjongAutoSession(config(policy = policy)).use { restored ->
+                    assertEquals(RestoreResult.Restored, restored.restore(calibrated))
+                    assertEquals(RestoreResult.Rejected(EngineError.CORRUPTED_DATA), restored.restore(original))
+                    assertEquals(RestoreResult.Rejected(EngineError.CORRUPTED_DATA), restored.restore(relabelled))
+                    assertArrayEquals(calibrated, restored.serialize())
+                    assertEquals(source.advance(8), restored.advance(8))
+                    assertArrayEquals(source.serialize(), restored.serialize())
+                }
             }
         }
     }
@@ -114,15 +139,18 @@ class NativeCompetitionMahjongAutoInstrumentedTest {
 
     @Test fun jniValidatesRawConfigurationAndBudgetsBeforeMutation() {
         for (levels in listOf(intArrayOf(), intArrayOf(0, 0, 0), intArrayOf(0, 0, 0, 4), intArrayOf(-1, 0, 0, 0))) {
-            assertThrows(IllegalArgumentException::class.java) { CompetitionMahjongAutoBindings.create(925, 0, 0, 0, levels, 0) }
+            assertThrows(IllegalArgumentException::class.java) { CompetitionMahjongAutoBindings.create(925, 0, 0, 0, levels, 0, 1) }
         }
         for (setup in listOf(longArrayOf(-1, 0, 0, 0, 0), longArrayOf(0, 4, 0, 0, 0),
             longArrayOf(0, 0, -1, 0, 0), longArrayOf(0, 0, 0, 4, 0), longArrayOf(0, 0, 0, 0, -1))) {
             assertThrows(IllegalArgumentException::class.java) {
-                CompetitionMahjongAutoBindings.create(setup[0], setup[1].toInt(), setup[2].toInt(), setup[3].toInt(), intArrayOf(0, 0, 0, 0), setup[4])
+                CompetitionMahjongAutoBindings.create(setup[0], setup[1].toInt(), setup[2].toInt(), setup[3].toInt(), intArrayOf(0, 0, 0, 0), setup[4], 1)
             }
         }
-        val handle = CompetitionMahjongAutoBindings.create(Long.MAX_VALUE, 3, 3, 3, intArrayOf(3, 2, 1, 0), Long.MAX_VALUE)
+        assertThrows(IllegalArgumentException::class.java) {
+            CompetitionMahjongAutoBindings.create(925, 0, 0, 0, intArrayOf(0, 0, 0, 0), 0, 3)
+        }
+        val handle = CompetitionMahjongAutoBindings.create(Long.MAX_VALUE, 3, 3, 3, intArrayOf(3, 2, 1, 0), Long.MAX_VALUE, 1)
         try {
             val stable = CompetitionMahjongAutoBindings.serialize(handle)
             for (budget in listOf(-1, 0, 33, Int.MAX_VALUE)) {
@@ -134,7 +162,7 @@ class NativeCompetitionMahjongAutoInstrumentedTest {
 
     @Test fun wrongTypeLookupsAndReleasesDoNotDestroyEitherSession() {
         val human = NativeBindings.createCompetitionMahjong(925, 0, 0, 0)
-        val automatic = CompetitionMahjongAutoBindings.create(925, 0, 0, 0, intArrayOf(0, 0, 0, 0), 0)
+        val automatic = CompetitionMahjongAutoBindings.create(925, 0, 0, 0, intArrayOf(0, 0, 0, 0), 0, 1)
         try {
             val humanRecord = NativeBindings.serializeCompetitionMahjong(human)
             val autoRecord = CompetitionMahjongAutoBindings.serialize(automatic)

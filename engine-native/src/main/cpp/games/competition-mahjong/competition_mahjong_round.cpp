@@ -536,7 +536,8 @@ std::vector<std::uint8_t> CompetitionMahjongRound::serialize() const {
     return out;
 }
 
-bool CompetitionMahjongRound::restore(const std::vector<std::uint8_t>& data) {
+bool CompetitionMahjongRound::restore(const std::vector<std::uint8_t>& data,
+    const std::function<bool(const CompetitionMahjongRound&, const CompetitionMahjongRoundAction&)>& verify) {
     constexpr std::size_t header_size = 7 + competition_mahjong_tile_count + 4;
     if (data.size() < header_size + 4 ||
         data[0] != 'M' || data[1] != 'O' || data[2] != 'C' || data[3] != 'M' ||
@@ -552,8 +553,9 @@ bool CompetitionMahjongRound::restore(const std::vector<std::uint8_t>& data) {
             const std::size_t offset = header_size + 4 * i;
             if (data[offset] > static_cast<std::uint8_t>(CompetitionMahjongRoundActionKind::hu))
                 return false;
-            if (!candidate.apply({static_cast<CompetitionMahjongRoundActionKind>(data[offset]),
-                data[offset + 1], data[offset + 2], data[offset + 3]}).accepted) return false;
+            const CompetitionMahjongRoundAction action{static_cast<CompetitionMahjongRoundActionKind>(data[offset]),
+                data[offset + 1], data[offset + 2], data[offset + 3]};
+            if ((verify && !verify(candidate, action)) || !candidate.apply(action).accepted) return false;
         }
         *this = std::move(candidate);
         return true;

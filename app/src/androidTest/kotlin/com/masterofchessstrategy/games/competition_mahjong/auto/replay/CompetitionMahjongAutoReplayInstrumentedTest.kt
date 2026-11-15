@@ -1,6 +1,7 @@
 package com.masterofchessstrategy.games.competition_mahjong.auto.replay
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.masterofchessstrategy.engine.CompetitionMahjongAutoPolicy
 import com.masterofchessstrategy.engine.NativeCompetitionMahjongAutoSession
 import com.masterofchessstrategy.engine.RestoreResult
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoArchive
@@ -51,11 +52,12 @@ class CompetitionMahjongAutoReplayInstrumentedTest {
     }
 
     @Test fun exportedEnvelopeRoundTripsBeforeNativeAdmissionOfFinalPosition() = runBlocking {
-        val archive = nativeArchive()
+        val archive = calibratedArchive()
         val exported = archive.export()
         val decoded = CompetitionMahjongAutoExportCodec.decode(exported.bytes, VIEWER)
         assertNotNull(decoded)
         assertTrue(archive.sameReplayContent(decoded!!))
+        assertEquals(CompetitionMahjongAutoPolicy.CALIBRATED, decoded.checkpoint.config.policy)
 
         val controller = CompetitionMahjongAutoReplayController(decoded)
         try {
@@ -82,11 +84,19 @@ class CompetitionMahjongAutoReplayInstrumentedTest {
     companion object {
         private const val VIEWER = 2
         @Volatile private var cachedArchive: CompetitionMahjongAutoArchive? = null
+        @Volatile private var cachedCalibratedArchive: CompetitionMahjongAutoArchive? = null
 
         internal fun nativeArchive(): CompetitionMahjongAutoArchive = synchronized(this) {
             cachedArchive ?: buildNativeArchive(CompetitionMahjongAutoRunConfig(
                 "84000000-0000-4000-8000-000000000001", 73, VIEWER, listOf(0, 1, 2, 3), 109,
             )).also { cachedArchive = it }
+        }
+
+        internal fun calibratedArchive(): CompetitionMahjongAutoArchive = synchronized(this) {
+            cachedCalibratedArchive ?: buildNativeArchive(CompetitionMahjongAutoRunConfig(
+                "84000000-0000-4000-8000-000000000002", 73, VIEWER, listOf(0, 1, 2, 3), 109,
+                CompetitionMahjongAutoPolicy.CALIBRATED,
+            )).also { cachedCalibratedArchive = it }
         }
 
         internal fun buildNativeArchive(config: CompetitionMahjongAutoRunConfig): CompetitionMahjongAutoArchive {

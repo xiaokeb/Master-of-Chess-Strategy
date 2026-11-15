@@ -22,7 +22,7 @@ internal fun autoPolicy(full: Boolean = true) = CompetitionMahjongPlayPolicy.fro
 /** Mechanical envelope only: deliberately synthetic wall/events, never claimed as Native legal replay. */
 internal fun autoRecord(config: CompetitionMahjongAutoConfig, count: Int = 0, origin: Int = config.seed.toInt(), eventByte: Int = 7): ByteArray {
     val out = ByteBuffer.allocate(187 + 4 * count).order(ByteOrder.LITTLE_ENDIAN)
-    out.putInt(0x414d434d).put(1).put(config.viewerSeat.toByte())
+    out.putInt(0x414d434d).put(config.policy.recordVersion.toByte()).put(config.viewerSeat.toByte())
     config.botLevels.forEach { out.put(it.toByte()) }
     out.putShort(0).putLong(config.decisionSeed).putInt(out.capacity() - 28)
     out.putInt(0x4d434f4d).put(1).put(config.dealerSeat.toByte()).put(config.roundWind.toByte())

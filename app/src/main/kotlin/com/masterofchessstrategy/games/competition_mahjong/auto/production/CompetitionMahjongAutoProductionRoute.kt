@@ -33,6 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.masterofchessstrategy.data.MocsDatabase
+import com.masterofchessstrategy.engine.CompetitionMahjongAutoPolicy
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoOpening
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoOpeningLibrary
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoPlayViewModel
@@ -160,7 +161,8 @@ internal fun CompetitionMahjongAutoProductionRoute(
         current && policy != null && firstLevel != null -> {
             val config = remember(host, firstLevel) {
                 CompetitionMahjongAutoRunConfig(UUID.randomUUID().toString(),
-                    System.nanoTime() and Long.MAX_VALUE, viewer, List(4) { firstLevel })
+                    System.nanoTime() and Long.MAX_VALUE, viewer, List(4) { firstLevel },
+                    policy = CompetitionMahjongAutoPolicy.CALIBRATED)
             }
             CompetitionMahjongAutoRoute(host.store, onBack, policy, initialConfig = config, openings = holder.openings, ownerKey = host.key,
                 onWriterReady = writers::register, useBackgroundService = true, soundEnabled = soundEnabled)

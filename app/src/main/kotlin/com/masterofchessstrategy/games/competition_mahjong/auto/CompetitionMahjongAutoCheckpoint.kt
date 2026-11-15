@@ -1,5 +1,6 @@
 package com.masterofchessstrategy.games.competition_mahjong.auto
 
+import com.masterofchessstrategy.engine.CompetitionMahjongAutoPolicy
 import com.masterofchessstrategy.engine.CompetitionMahjongPublicView
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundPhase
 import com.masterofchessstrategy.engine.Difficulty
@@ -121,7 +122,7 @@ class CompetitionMahjongAutoArchive internal constructor(val checkpoint: Competi
         } && checkpoint.openingRecord.contentEqualsNullable(other.checkpoint.openingRecord)
 }
 
-/** MCAU v1, BE; opaque MCMA/MOCM remain their original LE v1 formats. */
+/** MCAU v1/v2 selects the bot policy and requires matching MCMA records. */
 internal object CompetitionMahjongAutoCheckpointCodec {
     private const val MAGIC = 0x4d434155
     const val MAX_BYTES = 1_100_000
@@ -175,7 +176,7 @@ internal object CompetitionMahjongAutoCheckpointCodec {
         val payload = body.toByteArray()
         require(payload.size + 16 <= MAX_BYTES)
         return ByteBuffer.allocate(payload.size + 16).order(ByteOrder.BIG_ENDIAN).apply {
-            putInt(MAGIC).put(1).put(0).putShort(0).putInt(payload.size).put(payload)
+            putInt(MAGIC).put(checkpoint.config.policy.recordVersion.toByte()).put(0).putShort(0).putInt(payload.size).put(payload)
             putInt(CRC32().apply { update(array(), 0, position()) }.value.toInt())
         }.array()
     }
@@ -184,7 +185,10 @@ internal object CompetitionMahjongAutoCheckpointCodec {
         require(viewerPlayerId in 0..3)
         if (bytes.size !in 16..MAX_BYTES) return null
         val input = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN)
-        if (input.int != MAGIC || input.get().toInt() != 1 || input.get().toInt() != 0 || input.short.toInt() != 0 ||
+        if (input.int != MAGIC) return null
+        val version = input.get().toInt()
+        val policy = CompetitionMahjongAutoPolicy.entries.firstOrNull { it.recordVersion == version } ?: return null
+        if (input.get().toInt() != 0 || input.short.toInt() != 0 ||
             input.int != bytes.size - 16 || input.getInt(bytes.size - 4) != CRC32().apply { update(bytes, 0, bytes.size - 4) }.value.toInt()) return null
         input.limit(bytes.size - 4)
         return try {
@@ -201,7 +205,7 @@ internal object CompetitionMahjongAutoCheckpointCodec {
             val decision = input.long
             val viewer = byte()
             require(viewer == viewerPlayerId)
-            val config = CompetitionMahjongAutoRunConfig(id, seed, viewer, List(4) { byte() }, decision)
+            val config = CompetitionMahjongAutoRunConfig(id, seed, viewer, List(4) { byte() }, decision, policy)
             val series = input.short.toInt() and 65535
             val hand = byte()
             val elapsed = input.long

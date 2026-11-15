@@ -67,6 +67,7 @@ class CompetitionMahjongAutoProcessCheckActivity : ComponentActivity() {
                             val archive = dao.find(0, "${checkpoint.config.runId}/${checkpoint.seriesIndex}")
                             JSONObject().put("token", token).put("pid", Process.myPid())
                                 .put("run_id", checkpoint.config.runId).put("series", current.seriesIndex)
+                                .put("policy_version", checkpoint.config.policy.recordVersion)
                                 .put("hand", current.handIndex).put("completed", current.completedHands)
                                 .put("events", current.eventsAfterOpening).put("paused", current.settings.paused)
                                 .put("finished", current.finished).put("phase", current.frame.phase.name)

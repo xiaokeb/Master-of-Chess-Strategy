@@ -65,7 +65,8 @@ public:
     [[nodiscard]] bool release_competition_mahjong(EngineHandle handle);
     [[nodiscard]] EngineHandle create_competition_mahjong_auto(
         std::uint64_t seed, std::uint8_t dealer, std::uint8_t round_wind,
-        std::uint8_t viewer, std::array<std::uint8_t, 4> levels, std::uint64_t decision_seed);
+        std::uint8_t viewer, std::array<std::uint8_t, 4> levels, std::uint64_t decision_seed,
+        bool calibrated = false);
     [[nodiscard]] std::shared_ptr<CompetitionMahjongAutoSession> find_competition_mahjong_auto(
         EngineHandle handle) const;
     [[nodiscard]] bool release_competition_mahjong_auto(EngineHandle handle);

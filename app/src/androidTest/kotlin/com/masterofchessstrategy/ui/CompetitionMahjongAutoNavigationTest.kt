@@ -28,6 +28,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.core.app.ActivityOptionsCompat
 import androidx.test.platform.app.InstrumentationRegistry
+import com.masterofchessstrategy.engine.CompetitionMahjongAutoPolicy
 import com.masterofchessstrategy.engine.NativeCompetitionMahjongAutoSession
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoCheckpoint
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoOpeningLibrary
@@ -102,6 +103,8 @@ class CompetitionMahjongAutoNavigationTest {
         openAutomatic()
         val reader = RoomCompetitionMahjongAutoStore(db, viewer)
         val initial = checkNotNull(runBlocking { reader.load(viewer) })
+        assertEquals(CompetitionMahjongAutoPolicy.CALIBRATED, initial.config.policy)
+        assertEquals(2, initial.engineRecord[4].toInt())
         compose.onNodeWithTag("competition_mahjong_auto_step").performScrollTo().assertIsEnabled().performClick()
         compose.waitUntil(15_000) { runBlocking { reader.load(viewer)?.eventsAfterOpening == 1 } }
         val saved = checkNotNull(runBlocking { reader.load(viewer) })
@@ -115,6 +118,7 @@ class CompetitionMahjongAutoNavigationTest {
         openAutomatic()
         val resumed = checkNotNull(runBlocking { reader.load(viewer) })
         assertEquals(saved.config.runId, resumed.config.runId)
+        assertEquals(CompetitionMahjongAutoPolicy.CALIBRATED, resumed.config.policy)
         assertArrayEquals(saved.engineRecord, resumed.engineRecord)
         assertNull(runBlocking { RoomCompetitionMahjongAutoStore(db, 0).load(0) })
         capture("resumed")
@@ -180,6 +184,7 @@ class CompetitionMahjongAutoNavigationTest {
         openAutomatic()
         val initial = checkNotNull(runBlocking { store.load(viewer) })
         assertNull(initial.openingRecord)
+        assertEquals(CompetitionMahjongAutoPolicy.CALIBRATED, initial.config.policy)
 
         val newRun = "competition_mahjong_auto_new"
         val openingTag = "competition_mahjong_auto_opening_${opening.id}"
@@ -196,6 +201,7 @@ class CompetitionMahjongAutoNavigationTest {
         compose.waitUntil(15_000) { runBlocking { store.load(viewer)?.openingRecord != null } }
         val selected = checkNotNull(runBlocking { store.load(viewer) })
         assertNotEquals(initial.config.runId, selected.config.runId)
+        assertEquals(CompetitionMahjongAutoPolicy.BASELINE, selected.config.policy)
         assertArrayEquals(opening.engineRecord, selected.openingRecord)
         assertArrayEquals(selected.baseline, selected.engineRecord)
         assertEquals(0, selected.eventsAfterOpening)
@@ -210,6 +216,7 @@ class CompetitionMahjongAutoNavigationTest {
         openAutomatic()
         val restored = checkNotNull(runBlocking { store.load(viewer) })
         assertEquals(saved.config.runId, restored.config.runId)
+        assertEquals(CompetitionMahjongAutoPolicy.BASELINE, restored.config.policy)
         assertArrayEquals(saved.engineRecord, restored.engineRecord)
         assertArrayEquals(opening.engineRecord, restored.openingRecord)
         assertTrue(runBlocking { db.matchOutcomeDao().listAll().isEmpty() })

@@ -18,6 +18,7 @@ import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjo
 import com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoRunConfig
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoExportCodec
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoImportResult
+import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayInstrumentedTest.Companion.calibratedArchive
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayInstrumentedTest.Companion.nativeArchive
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongCoordinatedBackupRepository
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongStorageEpochGate
@@ -94,7 +95,7 @@ class CompetitionMahjongAutoRoomInstrumentedTest {
 
     @Test fun coordinatedBackupRestoresArchiveAndRejectsForgedStandardWallBeforeClearing() = runBlocking {
         withDatabase(Room.inMemoryDatabaseBuilder(context, MocsDatabase::class.java).build()) { db ->
-            val archive = nativeArchive()
+            val archive = calibratedArchive()
             val viewer = archive.checkpoint.config.viewerPlayerId
             val registry = GameBackupRegistry(listOf(CompetitionMahjongAutoBackupAdapter()))
             val repository = CompetitionMahjongCoordinatedBackupRepository(

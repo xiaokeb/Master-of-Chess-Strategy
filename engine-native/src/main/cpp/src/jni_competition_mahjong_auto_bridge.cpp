@@ -36,10 +36,10 @@ std::shared_ptr<CompetitionMahjongAutoSession> require_session(jlong handle) {
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_masterofchessstrategy_engine_internal_CompetitionMahjongAutoBindings_create(
     JNIEnv* env, jobject, jlong seed, jint dealer, jint wind, jint viewer,
-    jintArray levels, jlong decision_seed) {
+    jintArray levels, jlong decision_seed, jint policy) {
     return guarded(env, static_cast<jlong>(0), [&]() -> jlong {
         if (seed < 0 || decision_seed < 0 || dealer < 0 || dealer > 3 ||
-            wind < 0 || wind > 3 || viewer < 0 || viewer > 3 || !levels ||
+            wind < 0 || wind > 3 || viewer < 0 || viewer > 3 || policy < 1 || policy > 2 || !levels ||
             env->GetArrayLength(levels) != 4) throw std::invalid_argument("Invalid setup");
         std::array<jint, 4> values{};
         env->GetIntArrayRegion(levels, 0, 4, values.data());
@@ -50,7 +50,7 @@ Java_com_masterofchessstrategy_engine_internal_CompetitionMahjongAutoBindings_cr
             strategies[seat] = static_cast<std::uint8_t>(values[seat]);
         }
         return NativeEngineRegistry::instance().create_competition_mahjong_auto(
-            seed, dealer, wind, viewer, strategies, decision_seed);
+            seed, dealer, wind, viewer, strategies, decision_seed, policy == 2);
     });
 }
 

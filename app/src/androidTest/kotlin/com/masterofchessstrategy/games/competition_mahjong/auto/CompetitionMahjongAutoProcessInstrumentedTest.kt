@@ -3,6 +3,7 @@ package com.masterofchessstrategy.games.competition_mahjong.auto
 import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
 import com.masterofchessstrategy.data.MocsDatabase
+import com.masterofchessstrategy.engine.CompetitionMahjongAutoPolicy
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayInstrumentedTest.Companion.buildNativeArchive
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayRecord
 import com.masterofchessstrategy.games.competition_mahjong.auto.storage.RoomCompetitionMahjongAutoStore
@@ -30,7 +31,8 @@ class CompetitionMahjongAutoProcessInstrumentedTest {
                 proof.confirm(CompetitionMahjongLearningProofRequest(UUID.randomUUID().toString(), chapter,
                     CompetitionMahjongLearningProofCatalog.cardIds(chapter), index.toLong()))
             }
-            val config = CompetitionMahjongAutoRunConfig(token, 73, 0, List(4) { 0 }, 109)
+            val config = CompetitionMahjongAutoRunConfig(token, 73, 0, List(4) { 0 }, 109,
+                CompetitionMahjongAutoPolicy.CALIBRATED)
             val records = buildNativeArchive(config).checkpoint.completedHands
             val handIndex = 14
             val hand = records[handIndex]
