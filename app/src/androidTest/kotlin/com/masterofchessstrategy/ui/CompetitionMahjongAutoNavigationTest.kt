@@ -106,6 +106,10 @@ class CompetitionMahjongAutoNavigationTest {
         assertEquals(CompetitionMahjongAutoPolicy.CALIBRATED_WMO, initial.config.policy)
         assertEquals(3, initial.engineRecord[4].toInt())
         assertEquals(2, initial.engineRecord[28].toInt())
+        compose.onAllNodesWithText("返回").assertCountEquals(1)
+        compose.onAllNodesWithText("设置").assertCountEquals(1)
+        compose.onAllNodesWithText("悔棋").assertCountEquals(0)
+        compose.onAllNodesWithText("重开").assertCountEquals(0)
         compose.onNodeWithTag("competition_mahjong_auto_step").performScrollTo().assertIsEnabled().performClick()
         compose.waitUntil(15_000) { runBlocking { reader.load(viewer)?.eventsAfterOpening == 1 } }
         val saved = checkNotNull(runBlocking { reader.load(viewer) })
@@ -114,7 +118,8 @@ class CompetitionMahjongAutoNavigationTest {
         assertTrue(saved.settings.paused)
         assertTrue(runBlocking { db.matchOutcomeDao().listAll().isEmpty() })
         capture("played")
-        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        compose.onNodeWithText("设置").assertIsDisplayed()
+        compose.onNodeWithText("返回").assertIsDisplayed().assertIsEnabled().performClick()
         awaitTag("competition_auto_entry")
         openAutomatic()
         val resumed = checkNotNull(runBlocking { reader.load(viewer) })

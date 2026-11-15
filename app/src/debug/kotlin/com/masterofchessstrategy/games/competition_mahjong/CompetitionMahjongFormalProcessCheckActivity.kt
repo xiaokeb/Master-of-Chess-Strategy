@@ -61,15 +61,19 @@ class CompetitionMahjongFormalProcessCheckActivity : ComponentActivity() {
                     if (committed != null && active != null && usage != null && active.config.matchId == state.series.matchId &&
                         active.activeHandIndex == state.series.activeHandIndex &&
                         active.ledger.completedHandCount == state.series.completedHandCount && usage == state.assistance) {
+                        val record = active.engineRecord
                         val data = JSONObject().put("database", name).put("pid", Process.myPid())
                             .put("match_id", active.config.matchId).put("difficulty", active.config.botLevel)
+                            .put("strategy", active.config.botStrategy.name)
+                            .put("session_version", record[4].toInt()).put("round_version", record[16].toInt())
                             .put("hand_index", active.activeHandIndex).put("settled_hands", active.ledger.completedHandCount)
                             .put("phase", state.series.table?.phase?.name ?: JSONObject.NULL)
                             .put("scores", (0..3).map { active.ledger.cumulativeScores[it] }.joinToString(","))
                             .put("hints_used", usage.hintUsed).put("undos_used", usage.undoUsed)
                             .put("hints_remaining", usage.hintRemaining ?: JSONObject.NULL)
                             .put("undos_remaining", usage.undoRemaining ?: JSONObject.NULL)
-                            .put("checkpoint_sha256", sha256(active.engineRecord))
+                            .put("archives", snapshot.archivedSeries.size)
+                            .put("checkpoint_sha256", sha256(record))
                             .put("snapshot_sha256", sha256(committed))
                         withContext(Dispatchers.IO) {
                             val stream = receipt.startWrite()

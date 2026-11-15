@@ -5,7 +5,6 @@ import com.masterofchessstrategy.data.GameBackupRecord
 import com.masterofchessstrategy.data.GameBackupRegistry
 import com.masterofchessstrategy.data.LocalDataBackupCodec
 import com.masterofchessstrategy.data.LocalDataSnapshot
-import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
 import com.masterofchessstrategy.games.competition_mahjong.history.CompetitionMahjongMatchHistory
 import com.masterofchessstrategy.games.competition_mahjong.history.CompetitionMahjongMatchHistoryEntry
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongLearningBackupAdapter
@@ -40,9 +39,13 @@ internal object CompetitionMahjongNativeWinFixture {
         inputs.mapIndexed { index, fields -> lazy { replayFixture(index, fields) } }
     }
 
-    fun records(wins: Int, activeLevel: Int? = null): List<GameBackupRecord> {
+    fun records(
+        wins: Int,
+        activeLevel: Int? = null,
+        activeStrategy: CompetitionMahjongBotStrategy = CompetitionMahjongBotStrategy.POSITION_SEEDED_V1,
+    ): List<GameBackupRecord> {
         require(wins in 0..45)
-        return records(matches.take(wins).map { it.value }, activeLevel)
+        return records(matches.take(wins).map { it.value }, activeLevel, activeStrategy)
     }
 
     /** Reuse replayable seeds to exercise storage volume without creating extra qualified wins. */
@@ -65,9 +68,10 @@ internal object CompetitionMahjongNativeWinFixture {
     private fun records(
         selected: List<Pair<CompetitionMahjongArchivedSeries, CompetitionMahjongMatchHistoryEntry>>,
         activeLevel: Int?,
+        activeStrategy: CompetitionMahjongBotStrategy = CompetitionMahjongBotStrategy.POSITION_SEEDED_V1,
     ): List<GameBackupRecord> {
         val history = selected.map { it.second }
-        val active = activeLevel?.let { initial(it) }
+        val active = activeLevel?.let { initial(it, activeStrategy) }
         val snapshot = CompetitionMahjongFormalSnapshot(0, active,
             CompetitionMahjongStatistics.from(history.map { it.toOutcome() }),
             CompetitionMahjongMatchHistory.from(history), settledHandRecords = active?.let { emptyList() },
@@ -81,8 +85,11 @@ internal object CompetitionMahjongNativeWinFixture {
         return listOf(formal, CompetitionMahjongLearningBackupAdapter().encode(CompetitionMahjongLearningProofCodec.encode(learning)))
     }
 
-    fun backup(wins: Int, activeLevel: Int? = null): ByteArray =
-        encodeBackup(records(wins, activeLevel))
+    fun backup(
+        wins: Int,
+        activeLevel: Int? = null,
+        activeStrategy: CompetitionMahjongBotStrategy = CompetitionMahjongBotStrategy.POSITION_SEEDED_V1,
+    ): ByteArray = encodeBackup(records(wins, activeLevel, activeStrategy))
 
     private fun encodeBackup(records: List<GameBackupRecord>): ByteArray =
         LocalDataBackupCodec.encode(LocalDataSnapshot(1, gameExtensions = records),
@@ -109,12 +116,11 @@ internal object CompetitionMahjongNativeWinFixture {
         return proof to entry
     }
 
-    private fun initial(level: Int): CompetitionMahjongMatchCheckpoint {
+    private fun initial(level: Int, strategy: CompetitionMahjongBotStrategy): CompetitionMahjongMatchCheckpoint {
         val seed = 400000L + level
-        val config = CompetitionMahjongCompetitionConfig(UUID(2, seed).toString(), seed, 0, level,
-            CompetitionMahjongBotStrategy.POSITION_SEEDED_V1)
+        val config = CompetitionMahjongCompetitionConfig(UUID(2, seed).toString(), seed, 0, level, strategy)
         val difficulty = competitionMahjongProductionStrategies.entries.single { it.value == level }.key
-        return NativeCompetitionMahjongSession(seed, 0, 0, 0).use {
+        return config.handConfig(0).openNativeSession().use {
             CompetitionMahjongMatchCheckpoint(config, CompetitionMahjongMatchLedger.empty(), 0, it.serialize(),
                 CompetitionMahjongAssistanceUsage(difficulty))
         }

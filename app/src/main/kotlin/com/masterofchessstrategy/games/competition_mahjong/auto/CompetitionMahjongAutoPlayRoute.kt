@@ -121,8 +121,8 @@ internal fun CompetitionMahjongAutoContent(game: CompetitionMahjongAutoPlayViewM
         }
         val table: @Composable (Modifier) -> Unit = { tableModifier ->
             state.table?.let { tableState ->
-                CompetitionMahjongTableScreen(tableState, onAction = {}, onBack = onBack, onRestart = { newRunOpen = true },
-                    onSettings = { settingsOpen = true }, onUndo = { game.undo() }, modifier = tableModifier)
+                CompetitionMahjongTableScreen(tableState, onAction = {}, onBack = null, onRestart = null,
+                    onSettings = null, onUndo = null, modifier = tableModifier)
             }
         }
         if (state.table == null) {
@@ -155,69 +155,74 @@ private fun AutoControls(state: CompetitionMahjongAutoPlayUiState, game: Competi
     val playback = state.playback
     val activity = playback.activity
     Card(modifier.padding(8.dp).testTag("competition_mahjong_auto_controls")) {
-        Column(Modifier.padding(12.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("国标麻将 · AI自动演局", style = MaterialTheme.typography.titleMedium)
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 OutlinedButton(onClick = onBack, enabled = !playback.busy) { Text("返回") }
                 OutlinedButton(onClick = onSettings, enabled = activity.frame != null && !playback.busy && !activity.needsSave,
                     modifier = Modifier.testTag("competition_mahjong_auto_settings")) { Text("设置") }
             }
-            if (playback.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-            if (activity.frame == null) {
-                Text(playback.error ?: if (activity.closed) "演局已关闭" else "正在恢复演局")
-                Button(onClick = { game.retryLoad() }, enabled = !playback.busy && !activity.closed,
-                    modifier = Modifier.testTag("competition_mahjong_auto_load")) { Text("重试读取") }
-            } else {
-                Text("赛事 ${activity.seriesIndex + 1} / ${activity.settings.maxSeries} · 第${activity.handIndex + 1}盘",
-                    modifier = Modifier.testTag("competition_mahjong_auto_position"))
-                Text("已完成 ${activity.completedHands} / 16盘", modifier = Modifier.testTag("competition_mahjong_auto_progress"))
-                val seconds = activity.elapsedMillis / 1000
-                Text("运行 ${seconds / 60}分${seconds % 60}秒 · ${String.format(Locale.ROOT, "%.2f", activity.settings.speed)}×")
-                state.configuration?.let { config ->
-                    Text("观察席：玩家${config.viewerPlayerId + 1}AI")
-                    config.playerBotLevels.forEachIndexed { index, level ->
-                        val label = state.difficultyOptions.firstOrNull { it.botLevel == level }?.let {
-                            CompetitionMahjongPlayPolicy.difficultyLabel(it.difficulty) } ?: "未配置"
-                        Text("玩家${index + 1}AI：$label")
-                    }
-                }
-                Text("累计比赛分", style = MaterialTheme.typography.titleSmall)
-                repeat(4) { player ->
-                    Text("玩家${player + 1}：${activity.scores[player]}", modifier = Modifier.testTag("competition_mahjong_auto_score_$player"))
-                }
-                if (activity.seriesComplete) {
-                    state.configuration?.standings?.forEach { standing ->
-                        val points = if (standing.standardPointsNumerator % standing.standardPointsDenominator == 0)
-                            (standing.standardPointsNumerator / standing.standardPointsDenominator).toString() else
-                            "${standing.standardPointsNumerator}/${standing.standardPointsDenominator}"
-                        Text("第${standing.rank}名 玩家${standing.playerId + 1} · 标准分 $points")
-                    }
-                    Text("AI观战赛事不计人类排位和难度解锁。")
-                }
-                playback.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                if (activity.needsSave) {
-                    Text("保存成功后才能继续演局或返回。")
-                    Button(onClick = { game.retrySave() }, enabled = !playback.busy,
-                        modifier = Modifier.testTag("competition_mahjong_auto_retry")) { Text("重试保存") }
+            Column(
+                Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text("国标麻将 · AI自动演局", style = MaterialTheme.typography.titleMedium)
+                if (playback.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+                if (activity.frame == null) {
+                    Text(playback.error ?: if (activity.closed) "演局已关闭" else "正在恢复演局")
+                    Button(onClick = { game.retryLoad() }, enabled = !playback.busy && !activity.closed,
+                        modifier = Modifier.testTag("competition_mahjong_auto_load")) { Text("重试读取") }
                 } else {
-                    Button(onClick = { game.togglePlayback() }, enabled = !playback.busy && !activity.finished,
-                        modifier = Modifier.testTag("competition_mahjong_auto_toggle")) {
-                        Text(if (activity.settings.paused || playback.halted) "继续演局" else "暂停演局")
+                    Text("赛事 ${activity.seriesIndex + 1} / ${activity.settings.maxSeries} · 第${activity.handIndex + 1}盘",
+                        modifier = Modifier.testTag("competition_mahjong_auto_position"))
+                    Text("已完成 ${activity.completedHands} / 16盘", modifier = Modifier.testTag("competition_mahjong_auto_progress"))
+                    val seconds = activity.elapsedMillis / 1000
+                    Text("运行 ${seconds / 60}分${seconds % 60}秒 · ${String.format(Locale.ROOT, "%.2f", activity.settings.speed)}×")
+                    state.configuration?.let { config ->
+                        Text("观察席：玩家${config.viewerPlayerId + 1}AI")
+                        config.playerBotLevels.forEachIndexed { index, level ->
+                            val label = state.difficultyOptions.firstOrNull { it.botLevel == level }?.let {
+                                CompetitionMahjongPlayPolicy.difficultyLabel(it.difficulty) } ?: "未配置"
+                            Text("玩家${index + 1}AI：$label")
+                        }
                     }
-                    if (serviceOwner != null && activity.settings.backgroundEnabled && !activity.finished) {
-                        AutoBackgroundControls(serviceOwner, playback, game::pauseForBackgroundStop)
+                    Text("累计比赛分", style = MaterialTheme.typography.titleSmall)
+                    repeat(4) { player ->
+                        Text("玩家${player + 1}：${activity.scores[player]}", modifier = Modifier.testTag("competition_mahjong_auto_score_$player"))
                     }
-                    OutlinedButton(onClick = { game.step() }, enabled = playback.canStep,
-                        modifier = Modifier.testTag("competition_mahjong_auto_step")) {
-                        Text(if (activity.frame.isAutoTerminal()) if (activity.handIndex == 15) "下一赛事" else "下一盘" else "单步前进")
+                    if (activity.seriesComplete) {
+                        state.configuration?.standings?.forEach { standing ->
+                            val points = if (standing.standardPointsNumerator % standing.standardPointsDenominator == 0)
+                                (standing.standardPointsNumerator / standing.standardPointsDenominator).toString() else
+                                "${standing.standardPointsNumerator}/${standing.standardPointsDenominator}"
+                            Text("第${standing.rank}名 玩家${standing.playerId + 1} · 标准分 $points")
+                        }
+                        Text("AI观战赛事不计人类排位和难度解锁。")
                     }
-                    OutlinedButton(onClick = { game.undo() }, enabled = playback.canUndo,
-                        modifier = Modifier.testTag("competition_mahjong_auto_undo")) { Text("回退一步") }
-                    if (activity.finished) Text("已达到本次演局上限。可在设置中增加上限，或确认新开演局。")
+                    playback.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    if (activity.needsSave) {
+                        Text("保存成功后才能继续演局或返回。")
+                        Button(onClick = { game.retrySave() }, enabled = !playback.busy,
+                            modifier = Modifier.testTag("competition_mahjong_auto_retry")) { Text("重试保存") }
+                    } else {
+                        Button(onClick = { game.togglePlayback() }, enabled = !playback.busy && !activity.finished,
+                            modifier = Modifier.testTag("competition_mahjong_auto_toggle")) {
+                            Text(if (activity.settings.paused || playback.halted) "继续演局" else "暂停演局")
+                        }
+                        if (serviceOwner != null && activity.settings.backgroundEnabled && !activity.finished) {
+                            AutoBackgroundControls(serviceOwner, playback, game::pauseForBackgroundStop)
+                        }
+                        OutlinedButton(onClick = { game.step() }, enabled = playback.canStep,
+                            modifier = Modifier.testTag("competition_mahjong_auto_step")) {
+                            Text(if (activity.frame.isAutoTerminal()) if (activity.handIndex == 15) "下一赛事" else "下一盘" else "单步前进")
+                        }
+                        OutlinedButton(onClick = { game.undo() }, enabled = playback.canUndo,
+                            modifier = Modifier.testTag("competition_mahjong_auto_undo")) { Text("回退一步") }
+                        if (activity.finished) Text("已达到本次演局上限。可在设置中增加上限，或确认新开演局。")
+                    }
                 }
+                OutlinedButton(onClick = onNew, enabled = !playback.busy && !activity.needsSave && state.difficultyOptions.any { it.unlocked },
+                    modifier = Modifier.testTag("competition_mahjong_auto_new")) { Text("新开演局") }
             }
-            OutlinedButton(onClick = onNew, enabled = !playback.busy && !activity.needsSave && state.difficultyOptions.any { it.unlocked },
-                modifier = Modifier.testTag("competition_mahjong_auto_new")) { Text("新开演局") }
         }
     }
 }

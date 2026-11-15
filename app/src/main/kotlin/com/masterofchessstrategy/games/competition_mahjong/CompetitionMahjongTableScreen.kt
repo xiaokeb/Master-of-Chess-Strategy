@@ -40,13 +40,13 @@ internal const val COMPETITION_MAHJONG_RESULT_TAG = "competition_mahjong_result"
 internal fun CompetitionMahjongTableScreen(
     state: CompetitionMahjongTableUiState,
     onAction: (String) -> Unit,
-    onBack: () -> Unit,
-    onRestart: () -> Unit,
-    onSettings: () -> Unit,
+    onBack: (() -> Unit)?,
+    onRestart: (() -> Unit)?,
+    onSettings: (() -> Unit)?,
     modifier: Modifier = Modifier,
     onToggleAutoPlay: () -> Unit = {},
     onAutoPlaySpeedChanged: (Float) -> Unit = {},
-    onUndo: () -> Unit = {},
+    onUndo: (() -> Unit)? = {},
 ) {
     val local = state.seats[state.localSeat]
     val left = state.seats[(state.localSeat + 1) % 4]
@@ -64,12 +64,12 @@ internal fun CompetitionMahjongTableScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    OutlinedButton(onClick = onBack) { Text("返回") }
+                    if (onBack != null) OutlinedButton(onClick = onBack) { Text("返回") }
                     Column(modifier = Modifier.weight(1f)) {
                         Text("国标麻将 · ${state.roundLabel}", style = MaterialTheme.typography.titleMedium)
                         Text("牌墙剩余 ${state.wallRemaining} 张", style = MaterialTheme.typography.bodySmall)
                     }
-                    OutlinedButton(onClick = onSettings) { Text("设置") }
+                    if (onSettings != null) OutlinedButton(onClick = onSettings) { Text("设置") }
                 }
                 Text(state.status, style = MaterialTheme.typography.bodyMedium)
                 state.drawnTile?.let { tile ->
@@ -134,31 +134,33 @@ internal fun CompetitionMahjongTableScreen(
                     SeatPanel(right, state.currentSeat == right.seat, false, compact,
                         modifier = Modifier.weight(1f))
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    OutlinedButton(onClick = onUndo, enabled = state.canUndo && !state.isBusy,
-                        modifier = Modifier.testTag("competition_mahjong_undo")) {
-                        Text("悔棋")
-                    }
-                    OutlinedButton(onClick = onRestart, enabled = state.canRestart && !state.isBusy) {
-                        Text("重开")
-                    }
-                    if (state.autoPlay.available) {
-                        OutlinedButton(
-                            onClick = onToggleAutoPlay,
-                            enabled = state.autoPlay.controlsEnabled,
-                        ) { Text(if (state.autoPlay.running) "暂停AI" else "继续AI") }
-                        COMPETITION_MAHJONG_AUTO_SPEEDS.forEach { speed ->
-                            OutlinedButton(
-                                onClick = { onAutoPlaySpeedChanged(speed) },
-                                enabled = state.autoPlay.controlsEnabled &&
-                                    state.autoPlay.speed != speed,
-                            ) { Text("${speed}×") }
+                if (onUndo != null || onRestart != null || state.autoPlay.available) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        if (onUndo != null) OutlinedButton(onClick = onUndo, enabled = state.canUndo && !state.isBusy,
+                            modifier = Modifier.testTag("competition_mahjong_undo")) {
+                            Text("悔棋")
                         }
-                        Text("其他三席 AI", modifier = Modifier.align(Alignment.CenterVertically),
-                            style = MaterialTheme.typography.labelSmall)
+                        if (onRestart != null) OutlinedButton(onClick = onRestart, enabled = state.canRestart && !state.isBusy) {
+                            Text("重开")
+                        }
+                        if (state.autoPlay.available) {
+                            OutlinedButton(
+                                onClick = onToggleAutoPlay,
+                                enabled = state.autoPlay.controlsEnabled,
+                            ) { Text(if (state.autoPlay.running) "暂停AI" else "继续AI") }
+                            COMPETITION_MAHJONG_AUTO_SPEEDS.forEach { speed ->
+                                OutlinedButton(
+                                    onClick = { onAutoPlaySpeedChanged(speed) },
+                                    enabled = state.autoPlay.controlsEnabled &&
+                                        state.autoPlay.speed != speed,
+                                ) { Text("${speed}×") }
+                            }
+                            Text("其他三席 AI", modifier = Modifier.align(Alignment.CenterVertically),
+                                style = MaterialTheme.typography.labelSmall)
+                        }
                     }
                 }
             }

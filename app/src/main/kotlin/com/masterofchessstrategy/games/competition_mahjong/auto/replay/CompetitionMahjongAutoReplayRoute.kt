@@ -237,52 +237,56 @@ private fun ReplayContent(
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val controls: @Composable (Modifier) -> Unit = { controlsModifier ->
             Card(controlsModifier.padding(8.dp).testTag("competition_mahjong_auto_replay_controls")) {
-                Column(Modifier.padding(12.dp).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         OutlinedButton(onClick = onBack, enabled = !state.busy) { Text("返回棋谱") }
                         Text("赛事 " + ((state.selected?.seriesIndex ?: 0) + 1),
                             style = MaterialTheme.typography.titleMedium)
                     }
-                    if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-                    state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                    Text("第" + (state.replay.handIndex + 1) + " / 16盘 · 事件 " +
-                        state.replay.eventIndex + " / " + state.replay.eventCount,
-                        modifier = Modifier.testTag("competition_mahjong_auto_replay_position"))
-                    Row(Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        repeat(16) { hand ->
-                            FilterChip(state.replay.handIndex == hand, { game.selectHand(hand) },
-                                enabled = !state.busy, label = { Text((hand + 1).toString()) },
-                                modifier = Modifier.testTag("competition_mahjong_auto_replay_hand_" + hand))
+                    Column(
+                        Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+                        state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                        Text("第" + (state.replay.handIndex + 1) + " / 16盘 · 事件 " +
+                            state.replay.eventIndex + " / " + state.replay.eventCount,
+                            modifier = Modifier.testTag("competition_mahjong_auto_replay_position"))
+                        Row(Modifier.horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            repeat(16) { hand ->
+                                FilterChip(state.replay.handIndex == hand, { game.selectHand(hand) },
+                                    enabled = !state.busy, label = { Text((hand + 1).toString()) },
+                                    modifier = Modifier.testTag("competition_mahjong_auto_replay_hand_" + hand))
+                            }
                         }
-                    }
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        OutlinedButton(onClick = { game.backward() },
-                            enabled = state.replay.canBackward && !state.busy,
-                            modifier = Modifier.testTag("competition_mahjong_auto_replay_previous")) { Text("上一步") }
-                        Button(onClick = game::togglePlayback,
-                            enabled = !state.busy && !state.replay.atEnd,
-                            modifier = Modifier.testTag("competition_mahjong_auto_replay_toggle")) {
-                            Text(if (state.playing) "暂停" else "播放")
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            OutlinedButton(onClick = { game.backward() },
+                                enabled = state.replay.canBackward && !state.busy,
+                                modifier = Modifier.testTag("competition_mahjong_auto_replay_previous")) { Text("上一步") }
+                            Button(onClick = game::togglePlayback,
+                                enabled = !state.busy && !state.replay.atEnd,
+                                modifier = Modifier.testTag("competition_mahjong_auto_replay_toggle")) {
+                                Text(if (state.playing) "暂停" else "播放")
+                            }
+                            OutlinedButton(onClick = { game.forward() },
+                                enabled = state.replay.canForward && !state.busy,
+                                modifier = Modifier.testTag("competition_mahjong_auto_replay_next")) { Text("下一步") }
                         }
-                        OutlinedButton(onClick = { game.forward() },
-                            enabled = state.replay.canForward && !state.busy,
-                            modifier = Modifier.testTag("competition_mahjong_auto_replay_next")) { Text("下一步") }
+                        Text("速度 " + String.format(Locale.ROOT, "%.2f×", state.speed))
+                        Slider(state.speed, game::setSpeed, valueRange = .5f..4f,
+                            enabled = !state.busy,
+                            modifier = Modifier.testTag("competition_mahjong_auto_replay_speed"))
+                        if (state.replay.atEnd) Text("十六盘回放结束。")
                     }
-                    Text("速度 " + String.format(Locale.ROOT, "%.2f×", state.speed))
-                    Slider(state.speed, game::setSpeed, valueRange = .5f..4f,
-                        enabled = !state.busy,
-                        modifier = Modifier.testTag("competition_mahjong_auto_replay_speed"))
-                    if (state.replay.atEnd) Text("十六盘回放结束。")
                 }
             }
         }
         val board: @Composable (Modifier) -> Unit = { boardModifier ->
             table?.let {
-                CompetitionMahjongTableScreen(it, onAction = {}, onBack = onBack, onRestart = {},
-                    onSettings = onSettings, modifier = boardModifier)
+                CompetitionMahjongTableScreen(it, onAction = {}, onBack = null, onRestart = null,
+                    onSettings = onSettings, onUndo = null, modifier = boardModifier)
             }
         }
         if (table == null) {

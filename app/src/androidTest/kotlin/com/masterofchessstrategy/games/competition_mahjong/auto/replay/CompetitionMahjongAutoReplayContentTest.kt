@@ -88,9 +88,15 @@ class CompetitionMahjongAutoReplayContentTest {
             active.state.value.replay.handIndex == 15 && active.state.value.replay.eventIndex == 0
         }
         compose.onNodeWithTag("competition_mahjong_auto_replay_speed").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("返回棋谱").assertIsDisplayed()
         captureCompetitionMahjongAuto("replay")
         compose.onAllNodesWithText("摸牌").assertCountEquals(0)
         compose.onAllNodesWithText("出牌").assertCountEquals(0)
+        compose.onAllNodesWithText("返回棋谱").assertCountEquals(1)
+        compose.onAllNodesWithText("返回").assertCountEquals(0)
+        compose.onAllNodesWithText("设置").assertCountEquals(1)
+        compose.onAllNodesWithText("悔棋").assertCountEquals(0)
+        compose.onAllNodesWithText("重开").assertCountEquals(0)
     }
 
     private fun createGame(library: UiLibrary): CompetitionMahjongAutoReplayViewModel {
