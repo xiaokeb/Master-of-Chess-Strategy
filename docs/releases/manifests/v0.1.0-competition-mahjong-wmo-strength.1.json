@@ -1,0 +1,95 @@
+{
+  "tag": "v0.1.0-competition-mahjong-wmo-strength.1",
+  "baseline": "773fe0bc224bd95754b67f5c826933678a0010c6",
+  "distribution": "source-only-with-generated-evidence",
+  "assets": [],
+  "build": {
+    "inputs": [
+      {
+        "working_sha256": "65a69f55bf61125ff3eae6e2f6127a71ea85f86c777cbee2a29e2d8a3adf0e3d",
+        "path": "tools/android/competition-mahjong/competition-mahjong-strength-driver.cpp",
+        "sha256": "65a69f55bf61125ff3eae6e2f6127a71ea85f86c777cbee2a29e2d8a3adf0e3d"
+      },
+      {
+        "working_sha256": "56a16c855b9a638596705333a1f766def60a9fc304e41a69642f98219b39a42a",
+        "path": "tools/android/competition-mahjong/summarize-strength.ps1",
+        "sha256": "56a16c855b9a638596705333a1f766def60a9fc304e41a69642f98219b39a42a"
+      },
+      {
+        "working_sha256": "be43e9867a99ee14bc5b3f15a38b9184c2b044a8d52070401e858f708063468f",
+        "path": "docs/games/competition-mahjong/2026-11-15-wmo-strength-protocol.md",
+        "sha256": "be43e9867a99ee14bc5b3f15a38b9184c2b044a8d52070401e858f708063468f"
+      }
+    ],
+    "base": "83d14d9410863027f26a878369ed0da053629e7b",
+    "products": [
+      {
+        "core_sha256": "a98c5b65757c8cf9830a39d54be4db526e49dc6ecb47ee51e483211c7c9a40e2",
+        "abi": "x86_64",
+        "bin": "driver-x86_64",
+        "sha256": "122e79617979de4613977f644a7069d64c54280745b50b96d617ea1eb938e9de"
+      },
+      {
+        "core_sha256": "e5e88f442defc55a683d84e47cd1e44e033fecb87e01b1720ff1c9fd92bb1834",
+        "abi": "arm64-v8a",
+        "bin": "driver-arm64-v8a",
+        "sha256": "fe8c04eecd3be276d039939beb308d9de546e588e8d59b279145360df2cdc181"
+      }
+    ],
+    "ndk": "30.0.16138531",
+    "profile": "held-out-wmo-calibrated-v1"
+  },
+  "receipt": {
+    "series": 288,
+    "stderr_bytes": 0,
+    "raw_sha256": "c03132eb70768dab96bbf555994d2ae4379574d3b9cff9e5ca58b364bf32ccc3",
+    "hands": 4608,
+    "raw": "docs/testing/results/2026-11-16-competition-mahjong-held-out-wmo-calibrated-v1.tsv",
+    "profile": "held-out-wmo-calibrated-v1",
+    "model": "Pixel_7_Pro",
+    "exit": 0,
+    "abi": "x86_64",
+    "device_capture_sha256": "b683141aeae40088e73132b7266985bc42e8a30b4987985ca52742d4eb5314b0"
+  },
+  "summary": [
+    {
+      "lower": 0,
+      "series": 96,
+      "hands": 1536,
+      "wins": 276,
+      "ties": 2,
+      "losses": 106,
+      "draws": 278,
+      "mean": 0.7213541666666666,
+      "interval_lower": 0.668583249860804,
+      "interval_upper": 0.7741250834725293,
+      "meets_protocol": true
+    },
+    {
+      "lower": 1,
+      "series": 96,
+      "hands": 1536,
+      "wins": 279,
+      "ties": 1,
+      "losses": 104,
+      "draws": 112,
+      "mean": 0.7278645833333334,
+      "interval_lower": 0.6711437930708412,
+      "interval_upper": 0.7845853735958256,
+      "meets_protocol": true
+    },
+    {
+      "lower": 2,
+      "series": 96,
+      "hands": 1536,
+      "wins": 278,
+      "ties": 1,
+      "losses": 105,
+      "draws": 96,
+      "mean": 0.7252604166666666,
+      "interval_lower": 0.6646051362385584,
+      "interval_upper": 0.7859156970947748,
+      "meets_protocol": true
+    }
+  ]
+}

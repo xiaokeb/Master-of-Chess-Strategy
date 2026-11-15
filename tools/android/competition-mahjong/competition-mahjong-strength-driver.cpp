@@ -12,6 +12,7 @@
 namespace {
 using mocs::engine::CompetitionMahjongAutoSession;
 using mocs::engine::CompetitionMahjongBotPolicy;
+using mocs::engine::CompetitionMahjongFanRules;
 using mocs::engine::CompetitionMahjongRoundPhase;
 
 using Levels = std::array<std::uint8_t, 4>;
@@ -28,8 +29,11 @@ std::uint64_t seed_at(std::uint64_t seed, int index) {
     return (value ^ (value >> 31)) & 0x7fffffffffffffffULL;
 }
 
-void run_series(int lower, std::uint64_t seed, int rotation, CompetitionMahjongBotPolicy policy) {
+void run_series(int lower, std::uint64_t seed, int rotation, CompetitionMahjongBotPolicy policy,
+                CompetitionMahjongFanRules scoring) {
     const auto start = std::chrono::steady_clock::now();
+    const bool wmo = scoring == CompetitionMahjongFanRules::wmo_2021;
+    const auto decision_seed = wmo ? seed : seed ^ 0x431c9dfe29753c01ULL;
     std::array<std::int64_t, 4> points{};
     int total_events = 0;
     int draws = 0;
@@ -43,11 +47,12 @@ void run_series(int lower, std::uint64_t seed, int rotation, CompetitionMahjongB
         }
         const auto viewer = static_cast<std::uint8_t>(std::find(seating.begin(), seating.end(), 0) - seating.begin());
         CompetitionMahjongAutoSession game(seed_at(seed, hand), hand % 4, hand / 4, viewer, levels,
-            seed_at(seed ^ 0x431c9dfe29753c01ULL, hand));
+            seed_at(decision_seed, hand), wmo, scoring);
         bool finished = false;
         for (int events = 0; events < 4096;) {
-            const auto advanced = game.advance(32, policy);
-            if (advanced.accepted_actions == 0 || advanced.accepted_actions > 32)
+            const auto budget = static_cast<std::uint32_t>(std::min(32, 4096 - events));
+            const auto advanced = wmo ? game.advance(budget) : game.advance(budget, policy);
+            if (advanced.accepted_actions == 0 || advanced.accepted_actions > budget)
                 throw std::runtime_error("Invalid progress at hand " + std::to_string(hand));
             events += advanced.accepted_actions;
             if (advanced.terminal) {
@@ -74,6 +79,8 @@ void run_series(int lower, std::uint64_t seed, int rotation, CompetitionMahjongB
 int main(int argc, char** argv) {
     if (argc != 2) return 2;
     const std::string_view profile = argv[1];
+    const bool wmo = profile == "held-out-wmo-calibrated-v1";
+    const auto scoring = wmo ? CompetitionMahjongFanRules::wmo_2021 : CompetitionMahjongFanRules::legacy_v1;
     auto policy = CompetitionMahjongBotPolicy::baseline;
     if (profile == "diagnostic-v2") policy = CompetitionMahjongBotPolicy::diagnostic_v2;
     else if (profile == "diagnostic-v3") policy = CompetitionMahjongBotPolicy::diagnostic_v3;
@@ -82,21 +89,22 @@ int main(int argc, char** argv) {
     else if (profile == "training-medium-bucket-8" || profile == "held-out-medium-bucket-8")
         policy = CompetitionMahjongBotPolicy::medium_live_bucket_8;
     else if (profile == "training-medium-bucket-4") policy = CompetitionMahjongBotPolicy::medium_live_bucket_4;
-    else if (profile != "diagnostic-v1") return 2;
-    const bool held_out = profile == "held-out-v5" || profile == "held-out-medium-bucket-8";
+    else if (profile != "diagnostic-v1" && !wmo) return 2;
+    const bool held_out = profile == "held-out-v5" || profile == "held-out-medium-bucket-8" || wmo;
     const bool medium_training = profile == "training-medium-control" ||
         profile == "training-medium-bucket-8" || profile == "training-medium-bucket-4";
     std::uint64_t first = 71425001ULL;
     if (profile == "held-out-v5") first = 4285151001ULL;
     if (medium_training) first = 71551001ULL;
     if (profile == "held-out-medium-bucket-8") first = 5920152401ULL;
+    if (wmo) first = 9226102001ULL;
     const int seed_count = held_out ? 24 : 8;
     std::cout << "lower\tseed\trotation\tp0\tp1\tp2\tp3\tdraws\tevents\telapsed_ms" << std::endl;
     for (int lower = 0; lower < 3; ++lower) {
         for (std::uint64_t seed = first; seed < first + seed_count; ++seed) {
             for (int rotation = 0; rotation < 4; ++rotation) {
                 try {
-                    run_series(lower, seed, rotation, policy);
+                    run_series(lower, seed, rotation, policy, scoring);
                 } catch (const std::exception& failure) {
                     std::cerr << lower << '/' << seed << '/' << rotation << ": " << failure.what() << '\n';
                     return 1;
