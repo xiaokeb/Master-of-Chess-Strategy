@@ -18,6 +18,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+internal const val ANDROID_GO_PILOT_PROFILE = "android-pilot-v1"
+internal val androidGoPilotBudgets = mapOf(
+    GoAiDifficulty.SIMPLE to GoAiSearchBudget(1, 1_000),
+    GoAiDifficulty.MEDIUM to GoAiSearchBudget(4, 1_000),
+    GoAiDifficulty.HARD to GoAiSearchBudget(12, 1_600),
+    GoAiDifficulty.MASTER to GoAiSearchBudget(40, 1_750),
+)
+
 @LargeTest
 class GoProductionSearchLatencyInstrumentedTest {
     @Test fun measureProductionBudgetsAcrossThreeBoardSizes() = runBlocking {
@@ -25,12 +33,7 @@ class GoProductionSearchLatencyInstrumentedTest {
         val profile = InstrumentationRegistry.getArguments().getString("go_search_profile") ?: "production"
         val budgets = when (profile) {
             "production" -> GoAiDifficulty.entries.associateWith { it.budget }
-            "android-pilot-v1" -> mapOf(
-                GoAiDifficulty.SIMPLE to GoAiSearchBudget(1, 1_000),
-                GoAiDifficulty.MEDIUM to GoAiSearchBudget(4, 1_000),
-                GoAiDifficulty.HARD to GoAiSearchBudget(12, 1_600),
-                GoAiDifficulty.MASTER to GoAiSearchBudget(40, 1_750),
-            )
+            ANDROID_GO_PILOT_PROFILE -> androidGoPilotBudgets
             else -> error("Unknown Go search budget profile: $profile")
         }
         val loadStart = SystemClock.elapsedRealtimeNanos()

@@ -1,0 +1,116 @@
+{
+  "tag": "v0.1.0-go-search-strength-pilot.1",
+  "provisional_raw_agreement_games": [
+    {
+      "opening_sha256": "9610e9da3fd0bb4005f50be9637afe96a07ed114c09fb47384a72d1fe23939dd",
+      "record_sha256": "b8462b09b9ed5cd72a75e863bc10cae6e38d91a1b848ffc7b74b8d4f6275e251",
+      "row": "pilot,0,9,39101,SIMPLE,BLACK,9610e9da3fd0bb4005f50be9637afe96a07ed114c09fb47384a72d1fe23939dd,FIRST_PLAYER_WIN,1,double_pass,57,192,132,116,28,263285,0,8300916,b8462b09b9ed5cd72a75e863bc10cae6e38d91a1b848ffc7b74b8d4f6275e251",
+      "slot": 0,
+      "sgf_sha256": "212b35d7403ee7f500b9b8332075c8570744e69ade14ee88fa9bd66de0bc282b",
+      "log_sha256": "d0d2411c2924186d143a6c2df216ebb6019984bd5826343ffaada4aed407cabc",
+      "sgf_path": "docs/testing/results/go-strength-pilot-2026-11-15/match-000.sgf"
+    },
+    {
+      "opening_sha256": "9610e9da3fd0bb4005f50be9637afe96a07ed114c09fb47384a72d1fe23939dd",
+      "record_sha256": "8860e8228e552bae4593e967c8bde83f4836f566307d04660942f8268852ab74",
+      "row": "pilot,1,9,39101,SIMPLE,WHITE,9610e9da3fd0bb4005f50be9637afe96a07ed114c09fb47384a72d1fe23939dd,FIRST_PLAYER_WIN,0,double_pass,42,180,144,21,84,277756,0,6246978,8860e8228e552bae4593e967c8bde83f4836f566307d04660942f8268852ab74",
+      "slot": 1,
+      "sgf_sha256": "a60d115ac89f7ecf3e113f0285c62719955a3269da9aabf314ee0790e793e674",
+      "log_sha256": "54d6126ad3e0a0108da9da5019b93f7c6384d9a00eaca0930d8682f6c51ed488",
+      "sgf_path": "docs/testing/results/go-strength-pilot-2026-11-15/match-001.sgf"
+    },
+    {
+      "opening_sha256": "de66705eaa95f18e4d13a4262b4491023baa6eb18a0952b0b5f1e533c650368e",
+      "record_sha256": "b8bc2e312e83a790fb70aee2b8e7272a05f6d3ab04bce30ea24b85a7a7929f85",
+      "row": "pilot,2,9,39102,MEDIUM,BLACK,de66705eaa95f18e4d13a4262b4491023baa6eb18a0952b0b5f1e533c650368e,FIRST_PLAYER_WIN,1,double_pass,65,188,136,396,128,789119,0,20659788,b8bc2e312e83a790fb70aee2b8e7272a05f6d3ab04bce30ea24b85a7a7929f85",
+      "slot": 2,
+      "sgf_sha256": "dab8035f88c764277d54f37ea567bf43a9b12cdce37ac9da0c4833a8c1f22fe7",
+      "log_sha256": "5573d4fbd26cbd565f170ebe9e85d74f136d6491fdce7e2dda0204923e0d15b9",
+      "sgf_path": "docs/testing/results/go-strength-pilot-2026-11-15/match-002.sgf"
+    },
+    {
+      "opening_sha256": "de66705eaa95f18e4d13a4262b4491023baa6eb18a0952b0b5f1e533c650368e",
+      "record_sha256": "e1cba7c9bce0754f1ae72caf576f45f3381633d00d06c9f2e95305b7d9609e1b",
+      "row": "pilot,3,9,39102,MEDIUM,WHITE,de66705eaa95f18e4d13a4262b4491023baa6eb18a0952b0b5f1e533c650368e,SECOND_PLAYER_WIN,1,double_pass,59,176,148,120,348,783363,0,16960775,e1cba7c9bce0754f1ae72caf576f45f3381633d00d06c9f2e95305b7d9609e1b",
+      "slot": 3,
+      "sgf_sha256": "f46bd2665c0055dd944f65fe9fdae6b2242bd9f7fdb64568ddb2e82bb953658c",
+      "log_sha256": "fb9f8b3c119db95143791f23495d36d2d282b934abbd091d37e05364d5807967",
+      "sgf_path": "docs/testing/results/go-strength-pilot-2026-11-15/match-003.sgf"
+    },
+    {
+      "opening_sha256": "c0e6b97316a64c768852b058b6df982a2706e68548652153518e1d29268b1530",
+      "record_sha256": "6dd2713472d34e2086a92883973dc765889b98f3ff8cced76603d6d1bc30efe8",
+      "row": "pilot,4,9,39103,HARD,BLACK,c0e6b97316a64c768852b058b6df982a2706e68548652153518e1d29268b1530,SECOND_PLAYER_WIN,0,double_pass,62,124,200,1212,372,1811086,0,43354990,6dd2713472d34e2086a92883973dc765889b98f3ff8cced76603d6d1bc30efe8",
+      "slot": 4,
+      "sgf_sha256": "b0afa3b3355fa80c8e606f4dcd0e229954df0d440eee5d9b14dbeb4503cb457d",
+      "log_sha256": "60c65d591adaeba0ae38bec393d85a34d050ea90760f03dc2b0895adacadf464",
+      "sgf_path": "docs/testing/results/go-strength-pilot-2026-11-15/match-004.sgf"
+    },
+    {
+      "opening_sha256": "c0e6b97316a64c768852b058b6df982a2706e68548652153518e1d29268b1530",
+      "record_sha256": "247a92a0bc2517e14fa950f6b0a6e58964819bdbb86aa302c7d042634b146799",
+      "row": "pilot,5,9,39103,HARD,WHITE,c0e6b97316a64c768852b058b6df982a2706e68548652153518e1d29268b1530,SECOND_PLAYER_WIN,1,double_pass,51,176,148,312,980,1771244,0,35503941,247a92a0bc2517e14fa950f6b0a6e58964819bdbb86aa302c7d042634b146799",
+      "slot": 5,
+      "sgf_sha256": "2f8cbd696d9a2cac48ff947231fc29a7581151f8f99af8f32ebe764ec3d82a1b",
+      "log_sha256": "efe4a0b0976166371dd465367e55e05a00d8128ad6bae41c6d8f8dfe13b60422",
+      "sgf_path": "docs/testing/results/go-strength-pilot-2026-11-15/match-005.sgf"
+    }
+  ],
+  "kind": "source_prerelease",
+  "expected_changed_paths": 14,
+  "device": {
+    "cohort": "pilot",
+    "profile": "android-pilot-v1",
+    "serial": "emulator-5554",
+    "abi": "x86_64",
+    "model": "sdk_gphone16k_x86_64",
+    "fingerprint": "google/sdk_gphone16k_x86_64/emu64xa16k:17/CP31.260623.012/16064790:user/dev-keys",
+    "app_sha256": "007540d0ea165f0c3eca85d9621e6e75eefe830139837d2140e1cf07355fe549",
+    "test_sha256": "60bbf6b23c925ec1dd3f65100d46d682a615a61dab986e28b91f8a271380cdfc"
+  },
+  "pending": [
+    "144-game holdout",
+    "independent dead-stone audit",
+    "physical-device timing"
+  ],
+  "build": {
+    "baseline": "f17fd614cf281c9b68086be29077505f0dc7d6f4",
+    "lint_errors": 0,
+    "inherited_candidate": "cm-auto-restore-integrated1",
+    "overlays": [
+      {
+        "sha256": "a6db34eddc2f87b1cb379e4b9eabb991e526f0d823a13965d4763dd4c7e1c085",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoProductionSearchLatencyInstrumentedTest.kt",
+        "working_sha256": "a6db34eddc2f87b1cb379e4b9eabb991e526f0d823a13965d4763dd4c7e1c085"
+      },
+      {
+        "sha256": "bd14b3704652ff8797597d49ed6b2e8fb4456a6a8175eaaa003ae478acb87c47",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoSearchStrengthInstrumentedTest.kt",
+        "working_sha256": "bd14b3704652ff8797597d49ed6b2e8fb4456a6a8175eaaa003ae478acb87c47"
+      },
+      {
+        "sha256": "a5137f2e66b1755a7db11ea630abf1ccf77e61fddb5e07b4cbb683898ddfd2be",
+        "path": "tools/android/go/run-strength-matches.ps1",
+        "working_sha256": "a5137f2e66b1755a7db11ea630abf1ccf77e61fddb5e07b4cbb683898ddfd2be"
+      },
+      {
+        "sha256": "fb60a6697bd2fc285cd8bf88ef2a45fadc4c1c158b11092e77cac2ba224d778b",
+        "path": "docs/games/go/2026-11-15-search-strength-protocol.md",
+        "working_sha256": "fb60a6697bd2fc285cd8bf88ef2a45fadc4c1c158b11092e77cac2ba224d778b"
+      }
+    ],
+    "candidate": "go-strength-pilot1",
+    "lint_warnings": 25,
+    "products": {
+      "app-debug-androidTest.apk": "60bbf6b23c925ec1dd3f65100d46d682a615a61dab986e28b91f8a271380cdfc",
+      "app-debug.apk": "007540d0ea165f0c3eca85d9621e6e75eefe830139837d2140e1cf07355fe549"
+    }
+  },
+  "assets": [],
+  "results": {
+    "sha256": "7864b06c971e50fb0f663c3f9d9472a061ef698c0dc536faf131addf10098fbd",
+    "path": "docs/testing/results/go-strength-pilot-2026-11-15/matches.csv"
+  },
+  "avd": "Pixel_7_Pro",
+  "game": "go"
+}
