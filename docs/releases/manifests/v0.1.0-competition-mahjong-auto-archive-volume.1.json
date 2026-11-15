@@ -1,0 +1,83 @@
+{
+  "pending": [
+    "physical-device measurements",
+    "larger backups and replay-time improvements"
+  ],
+  "game": "competition-mahjong",
+  "kind": "source_prerelease",
+  "coverage": [
+    "real mixed-policy archive replay",
+    "disk reopen after restore",
+    "same stored bytes, timestamps and favorite",
+    "no human results"
+  ],
+  "expected_changed_paths": 4,
+  "assets": [],
+  "device_runs": [
+    {
+      "products": {
+        "app-debug-androidTest.apk": "6696ee183eb73b3a4e774be80f1467272e7571f76c3c4f2757774aca4117097a",
+        "app-debug.apk": "4b63faebf9d9c51efa3b2ed501be9b7cd78a43f132619ce37a3c11b79a8a5be8"
+      },
+      "log_sha256": "6630d0458a01831e38213609eec392acc94ab07c29eb8e0335edc632a96a8d64",
+      "model": "Pixel_7_Pro",
+      "metrics": {
+        "volume_auto_export_ms": 83340,
+        "volume_auto_generate_ms": 3915,
+        "volume_auto_series": 100,
+        "volume_auto_populate_ms": 370,
+        "volume_auto_read_history_ms": 149,
+        "volume_auto_export_bytes": 3870722,
+        "volume_auto_write_favorite_ms": 3,
+        "volume_auto_restore_ms": 82775
+      },
+      "abi": "x86_64",
+      "folder": "device-f3f316981c234fc6bcec830363ace81d",
+      "selector": "com.masterofchessstrategy.games.competition_mahjong.auto.storage.CompetitionMahjongAutoVolumeInstrumentedTest",
+      "candidate": "cm-auto-volume2",
+      "tests": 1
+    },
+    {
+      "products": {
+        "app-debug-androidTest.apk": "6696ee183eb73b3a4e774be80f1467272e7571f76c3c4f2757774aca4117097a",
+        "app-debug.apk": "4b63faebf9d9c51efa3b2ed501be9b7cd78a43f132619ce37a3c11b79a8a5be8"
+      },
+      "log_sha256": "3c60eca0399e340f56e4097961d37f80ee511ae51d581666b473373ff2d51d92",
+      "model": "Pixel_7_Pro",
+      "metrics": {
+        "volume_auto_export_ms": 409942,
+        "volume_auto_generate_ms": 3961,
+        "volume_auto_series": 500,
+        "volume_auto_populate_ms": 1855,
+        "volume_auto_read_history_ms": 524,
+        "volume_auto_export_bytes": 19189522,
+        "volume_auto_write_favorite_ms": 3,
+        "volume_auto_restore_ms": 407528
+      },
+      "abi": "x86_64",
+      "folder": "device-2afd1cf1b4f747279ca752d19afa5930",
+      "selector": "com.masterofchessstrategy.games.competition_mahjong.auto.storage.CompetitionMahjongAutoVolumeInstrumentedTest",
+      "candidate": "cm-auto-volume2",
+      "tests": 1
+    }
+  ],
+  "build": {
+    "lint_warnings": 25,
+    "lint_errors": 0,
+    "candidate": "cm-auto-volume2",
+    "products": {
+      "app-debug-androidTest.apk": "6696ee183eb73b3a4e774be80f1467272e7571f76c3c4f2757774aca4117097a",
+      "app-debug.apk": "4b63faebf9d9c51efa3b2ed501be9b7cd78a43f132619ce37a3c11b79a8a5be8"
+    },
+    "inherited_candidate": "go-life1",
+    "baseline": "95862bc63b787704f179e4f784000138835ee8da",
+    "overlays": [
+      {
+        "sha256": "61043c569e30e95621ff67717c8abec60acad2c6db52241f9a57bf3fe9e32999",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/auto/storage/CompetitionMahjongAutoVolumeInstrumentedTest.kt",
+        "working_sha256": "61043c569e30e95621ff67717c8abec60acad2c6db52241f9a57bf3fe9e32999"
+      }
+    ]
+  },
+  "tag": "v0.1.0-competition-mahjong-auto-archive-volume.1"
+}
