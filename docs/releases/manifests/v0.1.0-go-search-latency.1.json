@@ -1,0 +1,80 @@
+{
+  "summary": [
+    {
+      "max_us": 68739,
+      "over_two_seconds": 0,
+      "difficulty": "SIMPLE",
+      "min_us": 65090,
+      "legal": 6
+    },
+    {
+      "max_us": 457150,
+      "over_two_seconds": 0,
+      "difficulty": "MEDIUM",
+      "min_us": 448653,
+      "legal": 6
+    },
+    {
+      "max_us": 1554807,
+      "over_two_seconds": 0,
+      "difficulty": "HARD",
+      "min_us": 1150921,
+      "legal": 6
+    },
+    {
+      "max_us": 6218236,
+      "over_two_seconds": 6,
+      "difficulty": "MASTER",
+      "min_us": 4294980,
+      "legal": 6
+    }
+  ],
+  "build": {
+    "overlays": [
+      {
+        "working_sha256": "49bd1732c6b4c117655d5ae8bd793b841675140df89d103d4c84358828461ede",
+        "sha256": "49bd1732c6b4c117655d5ae8bd793b841675140df89d103d4c84358828461ede",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoProductionSearchLatencyInstrumentedTest.kt"
+      }
+    ],
+    "lint_warnings": 25,
+    "products": {
+      "app-debug.apk": "4b63faebf9d9c51efa3b2ed501be9b7cd78a43f132619ce37a3c11b79a8a5be8",
+      "app-debug-androidTest.apk": "bfc4ab06ab4496e0a903a82f4c673489c3516474576900bf7f2c1572c4492054"
+    },
+    "baseline": "d11bfeb57d894a6f8bae79d6d11a3718f117664b",
+    "candidate": "go-search-latency1",
+    "lint_errors": 0,
+    "inherited_candidate": "go-life1"
+  },
+  "tag": "v0.1.0-go-search-latency.1",
+  "pending": [
+    "physical-device timing",
+    "adjacent-tier strength",
+    "power consumption"
+  ],
+  "device": {
+    "tests": 1,
+    "selector": "com.masterofchessstrategy.games.go.GoProductionSearchLatencyInstrumentedTest",
+    "candidate": "go-search-latency1",
+    "abi": "x86_64",
+    "samples": 24,
+    "model": "Pixel_7_Pro",
+    "folder": "device-dcd9c5d885c5487db0a8840aafe94d43",
+    "log_sha256": "6c362a99cefec495ae07b1d736bf68f95779b29eba63c3d1942114aa474a94b7",
+    "model_load_us": 3440166,
+    "products": {
+      "app-debug.apk": "4b63faebf9d9c51efa3b2ed501be9b7cd78a43f132619ce37a3c11b79a8a5be8",
+      "app-debug-androidTest.apk": "bfc4ab06ab4496e0a903a82f4c673489c3516474576900bf7f2c1572c4492054"
+    },
+    "csv_sha256": "18686d938dbd7145e191ecc64c41146fd14640b5a10958a34c8701b95aa32ac6"
+  },
+  "kind": "source_prerelease",
+  "expected_changed_paths": 5,
+  "game": "go",
+  "assets": [],
+  "evidence": {
+    "sha256": "923102aafd73d873ed9356d31354c69dfe318f29c4f23124e33c437632a210c2",
+    "path": "docs/testing/results/2026-11-15-go-production-search-latency.csv"
+  }
+}
