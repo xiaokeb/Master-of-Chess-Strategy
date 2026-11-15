@@ -1,4 +1,5 @@
 #include "mocs/engine/competition_mahjong_fan.hpp"
+#include "competition_mahjong_round.hpp"
 
 #include <algorithm>
 #include <array>
@@ -318,6 +319,77 @@ int check_thresholds() {
     return failures;
 }
 
+int fan_count(const CompetitionMahjongFanResult& result, int id) {
+    const auto match = std::find_if(result.entries.begin(), result.entries.end(),
+        [id](const auto& entry) { return entry.id == id; });
+    return match == result.entries.end() ? 0 : match->count;
+}
+
+int check_rule_profiles(const std::vector<Example>& cases) {
+    const auto legacy = CompetitionMahjongFanRules::legacy_v1;
+    const auto wmo = CompetitionMahjongFanRules::wmo_2021;
+    const auto pure_green = exposed({chow(10), chow(10), pung(14), pung(16)}, 11);
+    const auto triple_terminal = exposed({pung(0), pung(9), pung(18), pung(8)}, 17);
+    const std::array<CompetitionMahjongFanInput, 5> inputs{
+        cases[2].input, pure_green, context(cases[3].input, self_draw), cases[7].input, triple_terminal,
+    };
+    const std::array<int, 5> primary{3, 3, 4, 8, 8};
+    const std::array<int, 5> related{50, 22, 73, 65, 32};
+    const std::array<int, 5> legacy_count{0, 1, 1, 0, 1};
+    const std::array<int, 5> wmo_count{1, 1, 0, 2, 1};
+    const std::array<int, 5> delta{6, 0, -1, 4, 0};
+    int failures = 0;
+    for (std::size_t i = 0; i < inputs.size(); ++i) {
+        const auto old = evaluateCompetitionMahjongFan(inputs[i], legacy);
+        const auto next = evaluateCompetitionMahjongFan(inputs[i], wmo);
+        if (!old.qualifies || !next.qualifies || fan_count(old, primary[i]) != 1 ||
+            fan_count(next, primary[i]) != 1 || fan_count(old, related[i]) != legacy_count[i] ||
+            fan_count(next, related[i]) != wmo_count[i] || next.total_fan - old.total_fan != delta[i] ||
+            (i == 1 && fan_count(next, 50) != 0) ||
+            (i == 2 && (fan_count(next, 56) != 1 || fan_count(next, 62) != 0)) ||
+            (i == 4 && fan_count(next, 65) != 0)) {
+            std::fprintf(stderr, "profile case %zu, fan %d/%d: counts %d -> %d, totals %d -> %d\n",
+                i, primary[i], related[i], fan_count(old, related[i]), fan_count(next, related[i]),
+                old.total_fan, next.total_fan);
+            ++failures;
+        }
+    }
+    return failures;
+}
+
+bool check_round_profiles() {
+    constexpr std::array<CompetitionMahjongTile, 14> hand{0,0,0,1,2,3,4,5,6,7,8,8,8,4};
+    auto remainder = competition_mahjong_shuffled_wall(9214);
+    for (const auto tile : hand) remainder.erase(std::find(remainder.begin(), remainder.end(), tile));
+    std::vector<CompetitionMahjongTile> wall(144, 255);
+    for (std::size_t i = 0; i < hand.size(); ++i) {
+        const auto index = i < 12 ? (i / 4) * 16 + i % 4 : 48 + i - 12;
+        wall[index] = hand[i];
+    }
+    auto next = remainder.begin();
+    for (auto& tile : wall) if (tile == 255) tile = *next++;
+
+    const auto legacy = CompetitionMahjongFanRules::legacy_v1;
+    const auto wmo = CompetitionMahjongFanRules::wmo_2021;
+    CompetitionMahjongRound old(wall, 0, 0, legacy);
+    CompetitionMahjongRound updated(wall, 0, 0, wmo);
+    const auto old_start = old.serialize();
+    const auto updated_start = updated.serialize();
+    const CompetitionMahjongRoundAction hu{CompetitionMahjongRoundActionKind::hu, 0, 4, 0};
+    if (!old.apply(hu).accepted || !updated.apply(hu).accepted) return false;
+    const auto old_view = old.view();
+    const auto updated_view = updated.view();
+    const auto old_record = old.serialize();
+    const auto updated_record = updated.serialize();
+    if (old_view.phase != CompetitionMahjongRoundPhase::won || updated_view.phase != old_view.phase ||
+        updated_view.score_delta[0] != old_view.score_delta[0] - 3 ||
+        old_record[4] != 1 || updated_record[4] != 2 || updated.restore(old_record) || old.restore(updated_record) ||
+        old.serialize() != old_record || updated.serialize() != updated_record) return false;
+    return old.undo() && updated.undo() && old.serialize() == old_start && updated.serialize() == updated_start &&
+        old.restore(old_record) && updated.restore(updated_record) &&
+        old.view().score_delta == old_view.score_delta && updated.view().score_delta == updated_view.score_delta;
+}
+
 } // namespace
 
 int main() {
@@ -342,7 +414,12 @@ int main() {
     const auto negative = counterexamples(cases);
     for (const auto& example : negative) if (!check(example)) ++failures;
     failures += check_thresholds();
-    std::printf("WMO fan examples: %zu positive, %zu negative, 18 threshold cases, %d failures\n",
+    failures += check_rule_profiles(cases);
+    if (!check_round_profiles()) {
+        std::fprintf(stderr, "versioned round scoring or restoration failed\n");
+        ++failures;
+    }
+    std::printf("WMO fan examples: %zu positive, %zu negative, 18 threshold cases, 6 rule profile cases, %d failures\n",
                 cases.size(), negative.size(), failures);
     return failures == 0 ? 0 : 1;
 }

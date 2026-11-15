@@ -67,6 +67,7 @@ struct CompetitionMahjongRoundView {
     std::optional<CompetitionMahjongTile> drawn_tile; // Current seat's latest draw, only before discard after drawing.
     std::array<bool, 4> can_declare_win{}; // Phase eligibility, independent of the eight-point threshold.
     std::optional<CompetitionMahjongTile> winning_tile;
+    CompetitionMahjongFanRules fan_rules{CompetitionMahjongFanRules::legacy_v1};
 };
 
 [[nodiscard]] std::vector<CompetitionMahjongTile> competition_mahjong_shuffled_wall(
@@ -79,7 +80,8 @@ public:
     explicit CompetitionMahjongRound(
         std::vector<CompetitionMahjongTile> wall,
         std::uint8_t dealer = 0,
-        std::uint8_t round_wind = 0);
+        std::uint8_t round_wind = 0,
+        CompetitionMahjongFanRules fan_rules = CompetitionMahjongFanRules::legacy_v1);
 
     [[nodiscard]] CompetitionMahjongRoundView view() const;
     [[nodiscard]] std::vector<CompetitionMahjongRoundAction> legal_actions(
@@ -129,6 +131,7 @@ private:
     std::array<std::int32_t, 4> score_delta_{};
     std::vector<CompetitionMahjongRoundAction> journal_;
     CompetitionMahjongFanResult winning_fan_{};
+    CompetitionMahjongFanRules fan_rules_;
     std::uint8_t dealer_{};
     std::uint8_t round_wind_{};
     std::uint8_t current_player_{};

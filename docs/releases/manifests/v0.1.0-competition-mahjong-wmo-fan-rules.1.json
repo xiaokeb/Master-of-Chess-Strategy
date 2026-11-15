@@ -1,0 +1,151 @@
+{
+  "expected_changed_paths": 9,
+  "pending": [
+    "formal and automatic Android entries",
+    "complete exclusion matrix",
+    "ARM64 device execution"
+  ],
+  "build": {
+    "frozen": {
+      "overlays": [
+        {
+          "working_sha256": "d5315fa048c557f44186b9a1b92b58c092326f90989fdca1c86399a1907a5ba4",
+          "path": "engine-native/src/main/cpp/include/mocs/engine/competition_mahjong_fan.hpp",
+          "sha256": "d5315fa048c557f44186b9a1b92b58c092326f90989fdca1c86399a1907a5ba4"
+        },
+        {
+          "working_sha256": "c254cca723daf180b173f9bcb516c9213d166a59dfb15336335e2693bc0171bd",
+          "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_fan.cpp",
+          "sha256": "c254cca723daf180b173f9bcb516c9213d166a59dfb15336335e2693bc0171bd"
+        },
+        {
+          "working_sha256": "378d8552a1fc2522b6164640236612fa5c5904c7af93dc62e8728350a768013d",
+          "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_round.hpp",
+          "sha256": "378d8552a1fc2522b6164640236612fa5c5904c7af93dc62e8728350a768013d"
+        },
+        {
+          "working_sha256": "d089a6d74e6294b34f94f2070da30686f25a647048e717141829ed0721a611f9",
+          "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_round.cpp",
+          "sha256": "d089a6d74e6294b34f94f2070da30686f25a647048e717141829ed0721a611f9"
+        },
+        {
+          "working_sha256": "05e400c182e6e2436d15ec10a76818b6102e9a810d6d210f8916233d49edaf38",
+          "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_bot.cpp",
+          "sha256": "05e400c182e6e2436d15ec10a76818b6102e9a810d6d210f8916233d49edaf38"
+        },
+        {
+          "working_sha256": "143e9e7e5498c619aa33429b9021a7830fda6547048af7d1fe4ab7e751e97ce0",
+          "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_fan_examples_test.cpp",
+          "sha256": "143e9e7e5498c619aa33429b9021a7830fda6547048af7d1fe4ab7e751e97ce0"
+        }
+      ],
+      "baseline": "9a8f13ecca16743b2b7ce228aeae8681d51cd92c"
+    },
+    "logs": [
+      {
+        "path": "build-arm64-v8a.log",
+        "sha256": "f3518c5a4e409aea4d5374704ff7c9a770f62d2001ab2cdca1f18452977a1250"
+      },
+      {
+        "path": "build-legacy-driver.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "build-x86_64.log",
+        "sha256": "5b5b07c6787f512fb2b7c277f7a89f29a33106850abc36e33ed6660f3b8de74f"
+      },
+      {
+        "path": "config-arm64-v8a.log",
+        "sha256": "97fb062593294766d5dccfc143e2dfbfc9cfaa5ba46f4f787669309bb4b8e440"
+      },
+      {
+        "path": "config-x86_64.log",
+        "sha256": "9150c687945859a47257755c8324bff2ca807699d33890d21159765a001a773c"
+      }
+    ],
+    "targets": [
+      "mocs_competition_mahjong_fan_examples_test",
+      "mocs_competition_mahjong_auto_session_test",
+      "mocs_engine_native"
+    ],
+    "ndk": "30.0.16138531",
+    "cmake": "4.1.2",
+    "products": [
+      {
+        "sha256": "9069c2624a86d956d848331f265341e6609353670fae95b9a9df3e66bd87ec42",
+        "path": "x86_64/tests/mocs_competition_mahjong_fan_examples_test",
+        "abi": "x86_64"
+      },
+      {
+        "sha256": "fbd9c7485733ebd580ee9fd2f91bf75cedb0dd88a750ca411d697493fc10a30a",
+        "path": "x86_64/tests/mocs_competition_mahjong_auto_session_test",
+        "abi": "x86_64"
+      },
+      {
+        "sha256": "f8a664db9abc58d6f9ba0428e5cd50811d4413aa4c76760eaecdda0d04bfac85",
+        "path": "x86_64/libmocs_engine_native.so",
+        "abi": "x86_64"
+      },
+      {
+        "sha256": "1f793a611c05ce334be9610ebf22f8fb1fa1b949ec11a533e5456083ccf126f4",
+        "path": "arm64-v8a/tests/mocs_competition_mahjong_fan_examples_test",
+        "abi": "arm64-v8a"
+      },
+      {
+        "sha256": "0d1b4675f9f243ba2dbeace4e0ad3ddce9cd96634c1bffc19d0657d73cf2ebbc",
+        "path": "arm64-v8a/tests/mocs_competition_mahjong_auto_session_test",
+        "abi": "arm64-v8a"
+      },
+      {
+        "sha256": "8f053e2cff0b09bd1e4eb659d4df6f4dfe265effab141928ef84c3dbe51753dd",
+        "path": "arm64-v8a/libmocs_engine_native.so",
+        "abi": "arm64-v8a"
+      },
+      {
+        "sha256": "7a4797433d8974b5d71b698f1bf30ad144647cb9a3b5f8a52cc2a5aeb22f2742",
+        "path": "x86_64/cm-auto-restore-replay-check",
+        "abi": "x86_64"
+      }
+    ]
+  },
+  "kind": "source_prerelease",
+  "tag": "v0.1.0-competition-mahjong-wmo-fan-rules.1",
+  "device": {
+    "model": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "folder": "device-f8f35f10603445609d54dbfee836dddb",
+    "fan_cases": {
+      "negative": 21,
+      "positive": 81,
+      "threshold": 18,
+      "profiles": 6
+    },
+    "prior_journal_sha256": "58e50b3cc26e235562e1d23238d1c41f5550f1e63d29f9b6b51badac5327f594",
+    "legacy_terminal_journals": 32,
+    "checks": [
+      {
+        "exit_code": 0,
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "name": "mocs_competition_mahjong_fan_examples_test",
+        "log_sha256": "16902778b23b60b53290161f054bdddb01144e504b54c6683723072e4b071063",
+        "executable_sha256": "9069c2624a86d956d848331f265341e6609353670fae95b9a9df3e66bd87ec42"
+      },
+      {
+        "exit_code": 0,
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "name": "mocs_competition_mahjong_auto_session_test",
+        "log_sha256": "5c9cedc68c79c54744a5b20190ce1d8c7e0a17b76966ac6eb2948c58cf5f5b66",
+        "executable_sha256": "fbd9c7485733ebd580ee9fd2f91bf75cedb0dd88a750ca411d697493fc10a30a"
+      },
+      {
+        "exit_code": 0,
+        "stderr_sha256": "c083bcf75353f1e67b10d3d4f2f004cb598643ab4684d16de7e8003c8e9b4c79",
+        "name": "cm-auto-restore-replay-check",
+        "log_sha256": "58e50b3cc26e235562e1d23238d1c41f5550f1e63d29f9b6b51badac5327f594",
+        "executable_sha256": "7a4797433d8974b5d71b698f1bf30ad144647cb9a3b5f8a52cc2a5aeb22f2742"
+      }
+    ]
+  },
+  "game": "competition-mahjong",
+  "assets": []
+}

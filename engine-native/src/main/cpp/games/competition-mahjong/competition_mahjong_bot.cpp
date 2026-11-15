@@ -112,7 +112,7 @@ int standing_score(const CompetitionMahjongRoundView& view,
         if (level >= 3 && estimate.shanten == 0 && available > 0) {
             const auto input = fan_input(view, player, standing,
                 static_cast<CompetitionMahjongTile>(tile));
-            const auto fan = evaluateCompetitionMahjongFan(input);
+            const auto fan = evaluateCompetitionMahjongFan(input, view.fan_rules);
             if (fan.qualifies) {
                 qualifying_live += available;
                 if (value_waits) fan_value += available * std::clamp(fan.total_fan - 8, 0, 24);

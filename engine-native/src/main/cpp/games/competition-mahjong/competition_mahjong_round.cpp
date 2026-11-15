@@ -61,11 +61,13 @@ std::vector<CompetitionMahjongTile> competition_mahjong_shuffled_wall(
 
 CompetitionMahjongRound::CompetitionMahjongRound(
     std::vector<CompetitionMahjongTile> wall, std::uint8_t dealer,
-    std::uint8_t round_wind)
+    std::uint8_t round_wind, CompetitionMahjongFanRules fan_rules)
     : initial_wall_(std::move(wall)), back_(initial_wall_.size()),
-      dealer_(dealer), round_wind_(round_wind), current_player_(dealer) {
+      fan_rules_(fan_rules), dealer_(dealer), round_wind_(round_wind), current_player_(dealer) {
     if (!competition_mahjong_valid_wall(initial_wall_) || dealer >= 4 || round_wind >= 4)
         throw std::invalid_argument("invalid Mahjong wall, dealer or round wind");
+    if (fan_rules != CompetitionMahjongFanRules::legacy_v1 && fan_rules != CompetitionMahjongFanRules::wmo_2021)
+        throw std::invalid_argument("invalid Mahjong scoring rules");
     for (int repeat = 0; repeat < 3; ++repeat) {
         for (int distance = 0; distance < 4; ++distance) {
             const auto player = static_cast<std::uint8_t>((dealer + distance) % 4);
@@ -141,6 +143,7 @@ CompetitionMahjongRoundView CompetitionMahjongRound::view() const {
     result.winner = winner_;
     result.discarder = discarder_;
     result.winning_fan = winning_fan_;
+    result.fan_rules = fan_rules_;
     if (phase_ == CompetitionMahjongRoundPhase::discard && can_self_kong_) {
         result.drawn_tile = last_drawn_tile_;
         result.can_declare_win[current_player_] = !win_disabled_[current_player_];
@@ -239,7 +242,7 @@ CompetitionMahjongFanResult CompetitionMahjongRound::evaluate_hu(
                 (meld.from_player + 4 - player) % 4;
         input.packs.push_back({kind, meld.tile, normalized_offer, meld.added_kong});
     }
-    return evaluateCompetitionMahjongFan(input);
+    return evaluateCompetitionMahjongFan(input, fan_rules_);
 }
 
 std::vector<CompetitionMahjongRoundAction> CompetitionMahjongRound::legal_actions(
@@ -515,7 +518,7 @@ CompetitionMahjongRoundActionResult CompetitionMahjongRound::apply(
 
 bool CompetitionMahjongRound::undo() {
     if (journal_.empty()) return false;
-    CompetitionMahjongRound candidate(initial_wall_, dealer_, round_wind_);
+    CompetitionMahjongRound candidate(initial_wall_, dealer_, round_wind_, fan_rules_);
     for (std::size_t i = 0; i + 1 < journal_.size(); ++i)
         if (!candidate.apply(journal_[i]).accepted) return false;
     *this = std::move(candidate);
@@ -523,7 +526,7 @@ bool CompetitionMahjongRound::undo() {
 }
 
 std::vector<std::uint8_t> CompetitionMahjongRound::serialize() const {
-    std::vector<std::uint8_t> out{'M','O','C','M',1,dealer_,round_wind_};
+    std::vector<std::uint8_t> out{'M','O','C','M',static_cast<std::uint8_t>(fan_rules_),dealer_,round_wind_};
     out.insert(out.end(), initial_wall_.begin(), initial_wall_.end());
     put32(out, static_cast<std::uint32_t>(journal_.size()));
     for (const auto& action : journal_) {
@@ -541,14 +544,14 @@ bool CompetitionMahjongRound::restore(const std::vector<std::uint8_t>& data,
     constexpr std::size_t header_size = 7 + competition_mahjong_tile_count + 4;
     if (data.size() < header_size + 4 ||
         data[0] != 'M' || data[1] != 'O' || data[2] != 'C' || data[3] != 'M' ||
-        data[4] != 1) return false;
+        data[4] != static_cast<std::uint8_t>(fan_rules_)) return false;
     const auto count = get32(data, 7 + competition_mahjong_tile_count);
     if (count > max_actions || data.size() != header_size + 4 * count + 4 ||
         get32(data, data.size() - 4) != checksum(data, data.size() - 4)) return false;
     try {
         CompetitionMahjongRound candidate(
             std::vector<CompetitionMahjongTile>(data.begin() + 7,
-                data.begin() + 7 + competition_mahjong_tile_count), data[5], data[6]);
+                data.begin() + 7 + competition_mahjong_tile_count), data[5], data[6], fan_rules_);
         candidate.journal_.reserve(count);
         for (std::size_t i = 0; i < count; ++i) {
             const std::size_t offset = header_size + 4 * i;

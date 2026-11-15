@@ -29,12 +29,32 @@ int official_id(const int vendor_id) {
     return vendor_id;
 }
 
+void apply_wmo_exclusions(const std::array<int, 34>& counts, mahjong::fan_table_t& table) {
+    // In #3, the inclusion of the green dragon permits #50 alongside All Green.
+    if (table[mahjong::ALL_GREEN] && counts[32] != 0) table[mahjong::HALF_FLUSH] = 1;
+    if (table[mahjong::NINE_GATES]) table[mahjong::PUNG_OF_TERMINALS_OR_HONORS] = 0;
+    if (table[mahjong::ALL_TERMINALS] && !table[mahjong::TRIPLE_PUNG]) {
+        // #8 retains independent identical-rank pungs in different suits.
+        table[mahjong::DOUBLE_PUNG] = 0;
+        for (const int rank : {0, 8}) {
+            const int suits = (counts[rank] >= 3) + (counts[rank + 9] >= 3) + (counts[rank + 18] >= 3);
+            if (suits == 2) ++table[mahjong::DOUBLE_PUNG];
+        }
+    }
+}
+
 } // namespace
 
 CompetitionMahjongFanResult evaluateCompetitionMahjongFan(
     const CompetitionMahjongFanInput& input) {
+    return evaluateCompetitionMahjongFan(input, CompetitionMahjongFanRules::legacy_v1);
+}
+
+CompetitionMahjongFanResult evaluateCompetitionMahjongFan(
+    const CompetitionMahjongFanInput& input, const CompetitionMahjongFanRules rules) {
     CompetitionMahjongFanResult result{};
-    if (input.win_tile < 0 || input.win_tile >= 34 || input.seat_wind < 0 ||
+    if ((rules != CompetitionMahjongFanRules::legacy_v1 && rules != CompetitionMahjongFanRules::wmo_2021) ||
+        input.win_tile < 0 || input.win_tile >= 34 || input.seat_wind < 0 ||
         input.seat_wind > 3 || input.round_wind < 0 || input.round_wind > 3 ||
         input.flower_count < 0 || input.flower_count > 8) {
         result.error = CompetitionMahjongFanError::invalid_context;
@@ -133,6 +153,7 @@ CompetitionMahjongFanResult evaluateCompetitionMahjongFan(
         return result;
     }
     result.structure_valid = true;
+    if (rules == CompetitionMahjongFanRules::wmo_2021) apply_wmo_exclusions(counts, table);
     const bool fully_concealed_self_draw = input.self_drawn &&
         std::all_of(input.packs.begin(), input.packs.end(), [](const auto& pack) {
             return pack.kind == CompetitionMahjongFanPackKind::kong && pack.offer == 0;

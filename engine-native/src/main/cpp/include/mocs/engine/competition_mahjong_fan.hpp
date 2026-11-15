@@ -6,6 +6,8 @@
 
 namespace mocs::engine {
 
+enum class CompetitionMahjongFanRules : std::uint8_t { legacy_v1 = 1, wmo_2021 = 2 };
+
 enum class CompetitionMahjongFanPackKind : std::uint8_t { chow = 1, pung = 2, kong = 3 };
 
 struct CompetitionMahjongFanPack {
@@ -52,6 +54,8 @@ struct CompetitionMahjongFanResult {
 
 [[nodiscard]] CompetitionMahjongFanResult evaluateCompetitionMahjongFan(
     const CompetitionMahjongFanInput& input);
+[[nodiscard]] CompetitionMahjongFanResult evaluateCompetitionMahjongFan(
+    const CompetitionMahjongFanInput& input, CompetitionMahjongFanRules rules);
 
 // Complete official catalogue in descending score order, independent of a particular hand.
 [[nodiscard]] const std::vector<CompetitionMahjongFanEntry>& competitionMahjongFanCatalogue();
