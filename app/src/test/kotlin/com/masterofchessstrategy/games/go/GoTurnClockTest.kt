@@ -34,4 +34,32 @@ class GoTurnClockTest {
         assertEquals(0L, stopped.blackMillis)
         assertNull(stopped.expired(Long.MAX_VALUE))
     }
+
+    @Test fun bootAnchorPreservesTheDeadlineAcrossWallTimeChangesAndProcessRestart() {
+        var elapsed = 5_000L
+        var wall = 100_000L
+        var stored: Long? = null
+        fun source() = GoElapsedClock({ elapsed }, { wall }, { stored }, { stored = it })
+
+        val live = source()
+        val countdown = GoTurnClock.start(10_000L, GoPlayer.BLACK, live.now())
+        wall += 3_600_000L
+        elapsed += 4_000L
+        assertEquals(6_000L, countdown.remaining(GoPlayer.BLACK, live.now()))
+
+        wall -= 7_200_000L
+        val reopened = source()
+        elapsed += 5_999L
+        assertNull(countdown.expired(reopened.now()))
+        elapsed++
+        assertEquals(GoPlayer.BLACK, countdown.expired(reopened.now()))
+        assertEquals(10_000L, countdown.remaining(GoPlayer.WHITE, reopened.now()))
+        assertEquals(95_000L, stored)
+    }
+
+    @Test fun newBootUsesAWallTimeAnchorForExistingEpochRecords() {
+        val saved = GoTurnClock.start(10_000L, GoPlayer.BLACK, 100_000L)
+        val restarted = GoElapsedClock({ 2_000L }, { 105_000L }, { null }, {})
+        assertEquals(5_000L, saved.remaining(GoPlayer.BLACK, restarted.now()))
+    }
 }

@@ -50,11 +50,13 @@ fun GoGameRoute(
 ) {
     val context = LocalContext.current.applicationContext
     val sessions = remember(context, repository) { repository ?: GoSessionFileRepository(context) }
-    val game: GoGameViewModel = viewModel(key = viewModelKey, factory = remember(sessions, onWriterReady) {
+    val matchTime = remember(context) { GoAndroidClock.source(context) }
+    val game: GoGameViewModel = viewModel(key = viewModelKey, factory = remember(matchTime, sessions, onWriterReady) {
         object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                GoGameViewModel(sessions, initialLimitMinutes = newGameLimitMinutes).also(onWriterReady) as T
+                GoGameViewModel(sessions, nowMillis = matchTime, initialLimitMinutes = newGameLimitMinutes,
+                    prepareClock = { withContext(Dispatchers.IO) { matchTime() } }).also(onWriterReady) as T
         }
     })
     onWriterReady(game) // Retained owners must also be registered after activity recreation.

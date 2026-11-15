@@ -39,6 +39,7 @@ class GoAiMatchViewModel(
     private val completeHumanImmediately: Boolean = false,
     private val completeAutomaticImmediately: Boolean = false,
     private val loadSpeed: () -> Float = { 1f },
+    private val nowMillis: () -> Long = System::currentTimeMillis,
     private val engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
 ) : ViewModel(), LocalDataWriterRetirement {
     internal var navigationOwnerKey: String? = null
@@ -82,7 +83,7 @@ class GoAiMatchViewModel(
                 val next = GoAiMatchSession(viewModelScope, repository, config, owned, worker, specifiedOpening,
                     completedSink, completeHumanImmediately = completeHumanImmediately,
                     completeAutomaticImmediately = completeAutomaticImmediately, initialSpeed = initialSpeed,
-                    onSound = { mutableSounds.tryEmit(it) }, engineFactory = engineFactory)
+                    onSound = { mutableSounds.tryEmit(it) }, engineFactory = engineFactory, nowMillis = nowMillis)
                 engineOwner = owned; candidate = null
                 session = next
                 next.state.collect { match ->

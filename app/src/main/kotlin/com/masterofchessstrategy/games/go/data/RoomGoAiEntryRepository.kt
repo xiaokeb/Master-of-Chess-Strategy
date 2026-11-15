@@ -20,6 +20,7 @@ internal class RoomGoAiEntryRepository(
     private val clock: () -> Long = System::currentTimeMillis,
     beforeCommit: suspend () -> Unit = {},
     private val newGameLimitMinutes: Int? = null,
+    private val matchTime: () -> Long = clock,
 ) : GoAiEntryRepository {
     private val creator = RoomGoRankedMatchCreator(database, checkpoints, learning, gate, ownerEpoch,
         worker, clock, beforeCommit)
@@ -61,5 +62,5 @@ internal class RoomGoAiEntryRepository(
         }
     }
 
-    private fun newClock(first: GoPlayer) = newGameLimitMinutes?.let { GoTurnClock.start(it * 60_000L, first, clock()) }
+    private fun newClock(first: GoPlayer) = newGameLimitMinutes?.let { GoTurnClock.start(it * 60_000L, first, matchTime()) }
 }

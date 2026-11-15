@@ -39,6 +39,7 @@ class GoGameViewModel(
     private val recordDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val nowMillis: () -> Long = System::currentTimeMillis,
     initialLimitMinutes: Int? = null,
+    prepareClock: suspend () -> Unit = {},
 ) : ViewModel() {
     private val mutex = Mutex()
     private var engine: GoRuleEngine? = null
@@ -62,6 +63,7 @@ class GoGameViewModel(
                 var candidate: GoRuleEngine? = null
                 try {
                     val saved = repository.load()
+                    prepareClock()
                     candidate = engineFactory(saved?.boardSize ?: initialSize,
                         if (saved == null && initialHandicap > 0) 0 else 15,
                         if (saved == null) initialHandicap else 0)

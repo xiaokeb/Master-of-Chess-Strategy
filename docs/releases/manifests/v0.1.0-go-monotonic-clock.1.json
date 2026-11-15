@@ -1,0 +1,321 @@
+{
+  "assets": [],
+  "kind": "source_prerelease",
+  "debug_abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "pending": [
+    "system wall time changes on a device",
+    "physical-device gameplay"
+  ],
+  "expected_changed_paths": 12,
+  "tag": "v0.1.0-go-monotonic-clock.1",
+  "build": {
+    "lint_warnings": 25,
+    "baseline": "9ec4c49a1adc8650669cb5418a1215bbf6324507",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "0e5dc8370a587538813dc4ecc7cf24a5e4ac97a2b5a773960d10ebe39fb66ad4",
+      "app/build/outputs/apk/debug/app-debug.apk": "7cb53d5b2c83aa3764e5550304fccdfce09c5d77559fb6e1bd67f79568ed8720"
+    },
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoElapsedClock.kt",
+        "working_sha256": "bda015b5f4368535a7786da4d6a25a1fe2a5c84415cd66bf1271afa96779022f",
+        "sha256": "bda015b5f4368535a7786da4d6a25a1fe2a5c84415cd66bf1271afa96779022f"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoGameRoute.kt",
+        "working_sha256": "d43f1d1106cd503effbcebdcb028d0d35a64a614d743838615978e939d02aa6f",
+        "sha256": "d43f1d1106cd503effbcebdcb028d0d35a64a614d743838615978e939d02aa6f"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoGameViewModel.kt",
+        "working_sha256": "df16bafe2e420ae3d43fd65315cd5ed6518832d452d480804d06f7894e011774",
+        "sha256": "df16bafe2e420ae3d43fd65315cd5ed6518832d452d480804d06f7894e011774"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiMatchRoute.kt",
+        "working_sha256": "63541706b5babd30b00eebbf835a045f5a84e0bd44493b33e9d5a8fde1f3a32e",
+        "sha256": "63541706b5babd30b00eebbf835a045f5a84e0bd44493b33e9d5a8fde1f3a32e"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiMatchViewModel.kt",
+        "working_sha256": "cc57585286f8f105f9c92cf65928b6fad697836399a1b18ac22fd6b7c034b4f0",
+        "sha256": "cc57585286f8f105f9c92cf65928b6fad697836399a1b18ac22fd6b7c034b4f0"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/data/GoCompleteStorageBundle.kt",
+        "working_sha256": "df9ad38906027d7924105a3b45350cd325ef14946f9060308c20710619877756",
+        "sha256": "df9ad38906027d7924105a3b45350cd325ef14946f9060308c20710619877756"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/data/GoLocalStorage.kt",
+        "working_sha256": "5f2c6824345dbb604f8299cce58f8dfc507af22a01549afec25403aa9b4b6665",
+        "sha256": "5f2c6824345dbb604f8299cce58f8dfc507af22a01549afec25403aa9b4b6665"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/data/RoomGoAiEntryRepository.kt",
+        "working_sha256": "110a6ad8ab720499a6954cdf5e3b583e03227de8e69a8b5c6077da75126ae86b",
+        "sha256": "110a6ad8ab720499a6954cdf5e3b583e03227de8e69a8b5c6077da75126ae86b"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoTurnClockTest.kt",
+        "working_sha256": "8c66655b8df4c817923887a019e8c907b250d67e58bfde98e388cefeb29dd1e9",
+        "sha256": "8c66655b8df4c817923887a019e8c907b250d67e58bfde98e388cefeb29dd1e9"
+      }
+    ],
+    "lint_errors": 0,
+    "release_manifest": "processed",
+    "candidate": "go-clock-monotonic1",
+    "unit_tests": [
+      {
+        "tests": 21,
+        "name": "com.masterofchessstrategy.games.go.GoAiMatchSessionTest"
+      },
+      {
+        "tests": 12,
+        "name": "com.masterofchessstrategy.games.go.GoAiMatchViewModelTest"
+      },
+      {
+        "tests": 12,
+        "name": "com.masterofchessstrategy.games.go.GoGameViewModelTest"
+      },
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.go.GoTurnClockTest"
+      }
+    ]
+  },
+  "game": "go",
+  "device": {
+    "name": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "navigation_log_sha256": "5dbf7b542ba15f2e3fd4925f6a5168f9f4dece68835c30389ff37e57fffbc4d3",
+    "cases": [
+      {
+        "mode": "timed-human",
+        "checkpoints": [
+          {
+            "database": "go-formal-process-qa-230ccbf7-b68c-407d-9c35-650ac65448ed.db",
+            "pid": 12611,
+            "match_id": "1af81a04-707c-34ab-8b56-3ad871646016",
+            "phase": "PLAYING",
+            "result": "ONGOING",
+            "resigned_by": null,
+            "timed_out_by": null,
+            "clock_limit": 300000,
+            "clock_started_at": 1794716796478,
+            "clock_active": "BLACK",
+            "black_millis": 300000,
+            "white_millis": 300000,
+            "event_count": 0,
+            "opening_event_count": 0,
+            "checkpoint_sha256": "8a4044fa2b1ad9ff100394d1ad011b54ea3c4b0f88d35ed405c22ccf3501033b",
+            "opening_sha256": null,
+            "undo_remaining": 2147483647,
+            "hint_remaining": 2147483647,
+            "automatic": false,
+            "automatic_used": false,
+            "auto_continue": false,
+            "series_game": 1,
+            "series_limit": 1,
+            "completion_stored": false,
+            "black_confirmed": false,
+            "white_confirmed": false,
+            "archive_count": 0
+          },
+          {
+            "database": "go-formal-process-qa-230ccbf7-b68c-407d-9c35-650ac65448ed.db",
+            "pid": 12937,
+            "match_id": "1af81a04-707c-34ab-8b56-3ad871646016",
+            "phase": "FINISHED",
+            "result": "SECOND_PLAYER_WIN",
+            "resigned_by": null,
+            "timed_out_by": "BLACK",
+            "clock_limit": 300000,
+            "clock_started_at": 0,
+            "clock_active": null,
+            "black_millis": 0,
+            "white_millis": 300000,
+            "event_count": 1,
+            "opening_event_count": 0,
+            "checkpoint_sha256": "0c0d841be25a803051061166852c7cfd9bf2f37937185e52c4da2b3c35377677",
+            "opening_sha256": null,
+            "undo_remaining": 2147483647,
+            "hint_remaining": 2147483647,
+            "automatic": false,
+            "automatic_used": false,
+            "auto_continue": false,
+            "series_game": 1,
+            "series_limit": 1,
+            "completion_stored": true,
+            "black_confirmed": false,
+            "white_confirmed": false,
+            "archive_count": 1
+          },
+          {
+            "database": "go-formal-process-qa-230ccbf7-b68c-407d-9c35-650ac65448ed.db",
+            "pid": 13040,
+            "match_id": "1af81a04-707c-34ab-8b56-3ad871646016",
+            "phase": "FINISHED",
+            "result": "SECOND_PLAYER_WIN",
+            "resigned_by": null,
+            "timed_out_by": "BLACK",
+            "clock_limit": 300000,
+            "clock_started_at": 0,
+            "clock_active": null,
+            "black_millis": 0,
+            "white_millis": 300000,
+            "event_count": 1,
+            "opening_event_count": 0,
+            "checkpoint_sha256": "0c0d841be25a803051061166852c7cfd9bf2f37937185e52c4da2b3c35377677",
+            "opening_sha256": null,
+            "undo_remaining": 2147483647,
+            "hint_remaining": 2147483647,
+            "automatic": false,
+            "automatic_used": false,
+            "auto_continue": false,
+            "series_game": 1,
+            "series_limit": 1,
+            "completion_stored": true,
+            "black_confirmed": false,
+            "white_confirmed": false,
+            "archive_count": 1
+          }
+        ],
+        "hashes": [
+          {
+            "name": "timed-human-after.json",
+            "sha256": "53c097ffcad0265c7505f5bdc03d8388357ad5dc743615406228acd74b862b38"
+          },
+          {
+            "name": "timed-human-before.json",
+            "sha256": "b92c8f3be234da9f772b17e0ca35ed60b102d54176aa6d9235599e30fa4833df"
+          },
+          {
+            "name": "timed-human-final.json",
+            "sha256": "868c2994b204631110d4758ed3c0c503de28713d2a9c4ae87453cf58dc4b35df"
+          },
+          {
+            "name": "timed-human-seed.log",
+            "sha256": "307d03674b307b031582b07ca1c7b50c794a8889fce86b3a8ea12a8b12a864d0"
+          }
+        ]
+      },
+      {
+        "mode": "timed-auto",
+        "checkpoints": [
+          {
+            "database": "go-formal-process-qa-86b029d9-165f-49f6-8892-7b189dec197f.db",
+            "pid": 13187,
+            "match_id": "6a36ba3d-7d63-3239-97d7-1fe411119db6",
+            "phase": "PLAYING",
+            "result": "ONGOING",
+            "resigned_by": null,
+            "timed_out_by": null,
+            "clock_limit": 300000,
+            "clock_started_at": 1794716858748,
+            "clock_active": "BLACK",
+            "black_millis": 300000,
+            "white_millis": 300000,
+            "event_count": 0,
+            "opening_event_count": 0,
+            "checkpoint_sha256": "21acbc3ab4f23333d248070acf70827a24fa25450bc11b908968bf738df0332f",
+            "opening_sha256": null,
+            "undo_remaining": 2147483647,
+            "hint_remaining": 2147483647,
+            "automatic": true,
+            "automatic_used": true,
+            "auto_continue": false,
+            "series_game": 1,
+            "series_limit": 1,
+            "completion_stored": false,
+            "black_confirmed": false,
+            "white_confirmed": false,
+            "archive_count": 0
+          },
+          {
+            "database": "go-formal-process-qa-86b029d9-165f-49f6-8892-7b189dec197f.db",
+            "pid": 13490,
+            "match_id": "6a36ba3d-7d63-3239-97d7-1fe411119db6",
+            "phase": "FINISHED",
+            "result": "SECOND_PLAYER_WIN",
+            "resigned_by": null,
+            "timed_out_by": "BLACK",
+            "clock_limit": 300000,
+            "clock_started_at": 0,
+            "clock_active": null,
+            "black_millis": 0,
+            "white_millis": 300000,
+            "event_count": 1,
+            "opening_event_count": 0,
+            "checkpoint_sha256": "c9e0b9d440866df927d70b2bdd4e47ffed9765b295e0dca3ba5327727d7757a4",
+            "opening_sha256": null,
+            "undo_remaining": 2147483647,
+            "hint_remaining": 2147483647,
+            "automatic": true,
+            "automatic_used": true,
+            "auto_continue": false,
+            "series_game": 1,
+            "series_limit": 1,
+            "completion_stored": true,
+            "black_confirmed": false,
+            "white_confirmed": false,
+            "archive_count": 1
+          },
+          {
+            "database": "go-formal-process-qa-86b029d9-165f-49f6-8892-7b189dec197f.db",
+            "pid": 13602,
+            "match_id": "6a36ba3d-7d63-3239-97d7-1fe411119db6",
+            "phase": "FINISHED",
+            "result": "SECOND_PLAYER_WIN",
+            "resigned_by": null,
+            "timed_out_by": "BLACK",
+            "clock_limit": 300000,
+            "clock_started_at": 0,
+            "clock_active": null,
+            "black_millis": 0,
+            "white_millis": 300000,
+            "event_count": 1,
+            "opening_event_count": 0,
+            "checkpoint_sha256": "c9e0b9d440866df927d70b2bdd4e47ffed9765b295e0dca3ba5327727d7757a4",
+            "opening_sha256": null,
+            "undo_remaining": 2147483647,
+            "hint_remaining": 2147483647,
+            "automatic": true,
+            "automatic_used": true,
+            "auto_continue": false,
+            "series_game": 1,
+            "series_limit": 1,
+            "completion_stored": true,
+            "black_confirmed": false,
+            "white_confirmed": false,
+            "archive_count": 1
+          }
+        ],
+        "hashes": [
+          {
+            "name": "timed-auto-after.json",
+            "sha256": "79e5f5eb8bfc99efae620fafeae419530dfa0e267dcfcecd340ac22175a5ffb9"
+          },
+          {
+            "name": "timed-auto-before.json",
+            "sha256": "341aabe5e1fdb9f6c921cd90741a6d58bd4cba133fef64d37ffa35eb6fd0c8e2"
+          },
+          {
+            "name": "timed-auto-final.json",
+            "sha256": "7ae2fa7380c96dfb7bf9a9038a48fabe0d25c1f514584eb0f02fd028c68ba1e0"
+          },
+          {
+            "name": "timed-auto-seed.log",
+            "sha256": "1e82a6b2cef54cecbbadca14f445ee94752574203bf51b245a76e3ee88a3da88"
+          }
+        ]
+      }
+    ],
+    "anchor_sha256": "7bb6cf06d0551d08bc2319fe37105b3847174098273354c13078749abe3d30f8",
+    "boot_count": 48,
+    "folder": "device-17e7774810ac4f05a64a356e320ff9c2"
+  }
+}

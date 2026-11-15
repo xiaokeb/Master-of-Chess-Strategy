@@ -62,13 +62,13 @@ fun GoAiMatchRoute(
             ?: error("Production Go resume requires formal storage"), expectedMatchId)
     }
     val model: GoAiMatchViewModel = viewModel(key = "go-ai-$routeKey", factory = remember(storage, config, loadEngine,
-        completedSink, opening, completeHumanImmediately, completeAutomaticImmediately, speedPreferences) {
+        completedSink, opening, completeHumanImmediately, completeAutomaticImmediately, speedPreferences, context) {
         object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T = GoAiMatchViewModel(storage, config, loadEngine,
                 completedSink = completedSink, specifiedOpening = opening,
                 completeHumanImmediately = completeHumanImmediately,
-                completeAutomaticImmediately = completeAutomaticImmediately, loadSpeed = {
+                completeAutomaticImmediately = completeAutomaticImmediately, nowMillis = GoAndroidClock.source(context), loadSpeed = {
                     val stored = speedPreferences.all["speed"] as? Float
                     stored?.takeIf { it in 0.5f..4f } ?: 1f
                 }).also {
