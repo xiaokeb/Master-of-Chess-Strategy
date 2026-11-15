@@ -77,10 +77,15 @@ int main(int argc, char** argv) {
     auto policy = CompetitionMahjongBotPolicy::baseline;
     if (profile == "diagnostic-v2") policy = CompetitionMahjongBotPolicy::diagnostic_v2;
     else if (profile == "diagnostic-v3") policy = CompetitionMahjongBotPolicy::diagnostic_v3;
+    else if (profile == "diagnostic-v4") policy = CompetitionMahjongBotPolicy::diagnostic_v4;
+    else if (profile == "held-out-v5") policy = CompetitionMahjongBotPolicy::candidate_v5;
     else if (profile != "diagnostic-v1") return 2;
+    const bool held_out = profile == "held-out-v5";
+    const std::uint64_t first = held_out ? 4285151001ULL : 71425001ULL;
+    const int seed_count = held_out ? 24 : 8;
     std::cout << "lower\tseed\trotation\tp0\tp1\tp2\tp3\tdraws\tevents\telapsed_ms" << std::endl;
     for (int lower = 0; lower < 3; ++lower) {
-        for (std::uint64_t seed = 71425001; seed <= 71425008; ++seed) {
+        for (std::uint64_t seed = first; seed < first + seed_count; ++seed) {
             for (int rotation = 0; rotation < 4; ++rotation) {
                 try {
                     run_series(lower, seed, rotation, policy);

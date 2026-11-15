@@ -1,0 +1,144 @@
+{
+  "toolchain": "Android NDK 30.0.16138531 LLVM/Clang",
+  "build": {
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "db68063867b204c3165442af3fa343df33b0eaaca13f1b2486a7676a1b283380",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "703232a405e0c1b35d9085934ceac39ffc590af79e652085bf65bacb7962f8f7"
+    },
+    "lint_warnings": 25,
+    "lint_errors": 0,
+    "release_manifest": "processed",
+    "candidate": "cm-claim-tuning1",
+    "baseline": "803cbe9290f32c2d6437e9c60afd3614d7fb76f2",
+    "overlays": [
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_bot.cpp",
+        "sha256": "5eb5cd19bf138f39d0ba207df8e415fb2f625b2b41d9f0b6331b2fa85ee85423",
+        "working_sha256": "5eb5cd19bf138f39d0ba207df8e415fb2f625b2b41d9f0b6331b2fa85ee85423"
+      },
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_bot.hpp",
+        "sha256": "3279a47255c3ed280de1c54b117e9b610ef6afd3c1e349bce2a416bbee3311a4",
+        "working_sha256": "3279a47255c3ed280de1c54b117e9b610ef6afd3c1e349bce2a416bbee3311a4"
+      },
+      {
+        "path": "tools/android/competition-mahjong/competition-mahjong-strength-driver.cpp",
+        "sha256": "56d517f32426d8bc0379e0f0bc42e3439b3495222595254374b412dcdd07d1a7",
+        "working_sha256": "56d517f32426d8bc0379e0f0bc42e3439b3495222595254374b412dcdd07d1a7"
+      }
+    ]
+  },
+  "scope": "selective-claim diagnostics, independent strength evidence, legacy replay regression",
+  "assets": [],
+  "debug_abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "production_policy": "baseline",
+  "benchmarks": {
+    "held_out_executable_sha256": "07c2e1e59138424f00865e5c3bd5b8647a257196c3f17cbdbeccbf790ce1216d",
+    "held_out_pre_result_protocol_sha256": "df57873e30b8b16f318033d345ceed471a53c3c75e13f26a343cb452708bc6c9",
+    "held_out_result": [
+      {
+        "wins": 240,
+        "hands": 1536,
+        "lower": 0,
+        "mean": 0.625,
+        "interval_upper": 0.6959011268631546,
+        "series_elapsed_ms": {
+          "mean": 676.1666666666666,
+          "max": 893.0,
+          "min": 521.0
+        },
+        "ties": 0,
+        "series": 96,
+        "draws": 370,
+        "meets_protocol": true,
+        "losses": 144,
+        "min": 0.25,
+        "interval_lower": 0.5540988731368454,
+        "seed_count": 24,
+        "max": 1.0
+      },
+      {
+        "wins": 310,
+        "hands": 1536,
+        "lower": 1,
+        "mean": 0.80859375,
+        "interval_upper": 0.8655587165964488,
+        "series_elapsed_ms": {
+          "mean": 669.59375,
+          "max": 796.0,
+          "min": 551.0
+        },
+        "ties": 1,
+        "series": 96,
+        "draws": 112,
+        "meets_protocol": false,
+        "losses": 73,
+        "min": 0.5,
+        "interval_lower": 0.7516287834035512,
+        "seed_count": 24,
+        "max": 1.0
+      },
+      {
+        "wins": 258,
+        "hands": 1536,
+        "lower": 2,
+        "mean": 0.671875,
+        "interval_upper": 0.742024693253483,
+        "series_elapsed_ms": {
+          "mean": 1256.0729166666667,
+          "max": 1820.0,
+          "min": 996.0
+        },
+        "ties": 0,
+        "series": 96,
+        "draws": 93,
+        "meets_protocol": true,
+        "losses": 126,
+        "min": 0.3125,
+        "interval_lower": 0.601725306746517,
+        "seed_count": 24,
+        "max": 1.0
+      }
+    ],
+    "evidence_encoding": "UTF-8 LF in Git, CRLF in the captured output",
+    "held_out_seed_range": "4285151001..4285151024",
+    "held_out_stderr_bytes": 0,
+    "evidence": [
+      {
+        "repo_sha256": "c5f2238908e12b3a83e647f024ba9cbdb0ddf0c259a36177eb125402c8ff1100",
+        "capture_sha256": "55398f2a692d97f9126fd1efa89e202d7897174fc44b9e67271d96f35c5ec0a5",
+        "path": "docs/testing/results/2026-11-15-competition-mahjong-strength-diagnostic-v4.tsv",
+        "series": 96
+      },
+      {
+        "repo_sha256": "aa00a58a6fe01b16789700f50142b968895281caa223af79240224eb3d51d81a",
+        "capture_sha256": "23629b24ca070b32b43bcbd83b88269aeb660faf983675b8f3d0b22954d55264",
+        "path": "docs/testing/results/2026-11-15-competition-mahjong-strength-held-out-v5.tsv",
+        "series": 288
+      }
+    ],
+    "held_out_exit_code": 0,
+    "held_out_all_pairs_accepted": false
+  },
+  "kind": "source_prerelease",
+  "pending": [
+    "middle and hard policy tuning and a fresh independent sample",
+    "versioned production policy",
+    "physical-device latency and sustained use"
+  ],
+  "device": {
+    "avd": "Pixel_7_Pro",
+    "log_sha256": "5ec7537004abd27f10c517dfff24f347d6cb0f8181d2a4dc5b8edc9fa331879c",
+    "classes": [
+      "CompetitionMahjongPrivateSeriesReplayInstrumentedTest",
+      "CompetitionMahjongAutoReplayInstrumentedTest"
+    ],
+    "tests": 5,
+    "abi": "x86_64"
+  },
+  "game": "competition-mahjong",
+  "expected_changed_paths": 8
+}

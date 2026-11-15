@@ -6,6 +6,7 @@
 #include <array>
 #include <limits>
 #include <random>
+#include <stdexcept>
 #include <vector>
 
 namespace mocs::engine {
@@ -94,13 +95,9 @@ CompetitionMahjongFanInput fan_input(const CompetitionMahjongRoundView& view,
     return input;
 }
 
-int discard_score(const CompetitionMahjongRoundView& view,
+int standing_score(const CompetitionMahjongRoundView& view,
     const std::uint8_t player, const std::uint8_t level,
-    const CompetitionMahjongTile discard, const std::array<int, 34>& known, const bool value_waits) {
-    auto standing = view.concealed[player];
-    const auto it = std::find(standing.begin(), standing.end(), discard);
-    if (it == standing.end()) return std::numeric_limits<int>::min();
-    standing.erase(it);
+    const std::vector<CompetitionMahjongTile>& standing, const std::array<int, 34>& known, const bool value_waits) {
     const auto estimate = estimate_shape(standing, view.melds[player].size());
     int score = -1000 * estimate.shanten;
     if (level == 1) return score;
@@ -125,6 +122,64 @@ int discard_score(const CompetitionMahjongRoundView& view,
     if (level >= 3 && estimate.shanten == 0) score += qualifying_live * 8;
     if (value_waits) score += qualifying_live * 16 + fan_value / 2;
     return score;
+}
+
+int discard_score(const CompetitionMahjongRoundView& view,
+    const std::uint8_t player, const std::uint8_t level,
+    const CompetitionMahjongTile discard, const std::array<int, 34>& known, const bool value_waits) {
+    auto standing = view.concealed[player];
+    const auto it = std::find(standing.begin(), standing.end(), discard);
+    if (it == standing.end()) return std::numeric_limits<int>::min();
+    standing.erase(it);
+    return standing_score(view, player, level, standing, known, value_waits);
+}
+
+// A claim can lower shanten while sacrificing all legal eight-fan waits.
+// Evaluate only the acting seat's tiles and the claim already visible on the table.
+std::optional<CompetitionMahjongRoundAction> improving_claim(
+    const CompetitionMahjongRoundView& view, std::uint8_t player,
+    const std::vector<CompetitionMahjongRoundAction>& actions) {
+    using Kind = CompetitionMahjongRoundActionKind;
+    const auto known = known_counts(view, player);
+    int best = standing_score(view, player, 3, view.concealed[player], known, true) + 10;
+    std::optional<CompetitionMahjongRoundAction> choice;
+    for (const auto& action : actions) {
+        if (action.kind != Kind::chow && action.kind != Kind::pung && action.kind != Kind::exposed_kong) continue;
+        auto candidate = view;
+        auto& hand = candidate.concealed[player];
+        const auto remove = [&](CompetitionMahjongTile tile) {
+            const auto position = std::find(hand.begin(), hand.end(), tile);
+            if (position == hand.end()) throw std::logic_error("Legal Mahjong claim is missing a concealed tile");
+            hand.erase(position);
+        };
+        const auto from = view.pending_player.value();
+        int score = std::numeric_limits<int>::min();
+        if (action.kind == Kind::chow) {
+            for (int offset = 0; offset < 3; ++offset) {
+                const auto tile = static_cast<CompetitionMahjongTile>(action.sequence_start + offset);
+                if (tile != action.tile) remove(tile);
+            }
+            candidate.melds[player].push_back({CompetitionMahjongMeldKind::chow, action.sequence_start,
+                from, static_cast<std::uint8_t>(action.tile - action.sequence_start + 1), false, false});
+        } else {
+            remove(action.tile);
+            remove(action.tile);
+            if (action.kind == Kind::exposed_kong) remove(action.tile);
+            candidate.melds[player].push_back({action.kind == Kind::exposed_kong ? CompetitionMahjongMeldKind::kong :
+                CompetitionMahjongMeldKind::pung, action.tile, from, 0, false, false});
+        }
+        if (action.kind == Kind::exposed_kong) {
+            score = standing_score(candidate, player, 3, hand, known, true) + 12;
+        } else {
+            for (const auto discard : hand)
+                score = std::max(score, discard_score(candidate, player, 3, discard, known, true));
+        }
+        if (score > best) {
+            best = score;
+            choice = action;
+        }
+    }
+    return choice;
 }
 
 // At the end of the wall, visible copies limit what an opponent can be waiting for.
@@ -166,13 +221,17 @@ std::optional<CompetitionMahjongRoundAction> competition_mahjong_choose_bot_acti
 
     std::mt19937_64 rng(random_seed);
     const bool experimental = policy != CompetitionMahjongBotPolicy::baseline;
-    const bool value_waits = policy == CompetitionMahjongBotPolicy::diagnostic_v3 && level == 3;
+    const bool v4_novice = policy == CompetitionMahjongBotPolicy::diagnostic_v4;
+    const bool v3_novice = policy == CompetitionMahjongBotPolicy::diagnostic_v3 ||
+        policy == CompetitionMahjongBotPolicy::candidate_v5;
+    const bool selective_claims = v4_novice || policy == CompetitionMahjongBotPolicy::candidate_v5;
+    const bool value_waits = (v3_novice || selective_claims) && level == 3;
     std::vector<CompetitionMahjongRoundAction> discards;
     for (const auto& action : actions)
         if (action.kind == CompetitionMahjongRoundActionKind::discard)
             discards.push_back(action);
     if (!discards.empty()) {
-        const unsigned novice_random_percent = policy == CompetitionMahjongBotPolicy::diagnostic_v3 ? 8 : 20;
+        const unsigned novice_random_percent = v4_novice ? 12 : v3_novice ? 8 : 20;
         if (level == 0 && (!experimental || rng() % 100 < novice_random_percent)) return discards[rng() % discards.size()];
         const auto view = round.view();
         const auto known = known_counts(view, player);
@@ -193,8 +252,10 @@ std::optional<CompetitionMahjongRoundAction> competition_mahjong_choose_bot_acti
 
     // On claims, novice bots decline; stronger baselines accept a Kong or Pung
     // before a Chow. This is a legal fallback, not a claim of expert play.
-    const unsigned novice_pass_percent = policy == CompetitionMahjongBotPolicy::diagnostic_v3 ? 20 : 40;
-    if (level > 0 || (experimental && rng() % 100 >= novice_pass_percent)) {
+    const unsigned novice_pass_percent = v4_novice ? 26 : v3_novice ? 20 : 40;
+    if (selective_claims && level == 3) {
+        if (auto claim = improving_claim(round.view(), player, actions)) return claim;
+    } else if (level > 0 || (experimental && rng() % 100 >= novice_pass_percent)) {
         for (const auto kind : {CompetitionMahjongRoundActionKind::exposed_kong,
                                 CompetitionMahjongRoundActionKind::pung,
                                 CompetitionMahjongRoundActionKind::chow}) {
