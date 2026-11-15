@@ -32,7 +32,7 @@ class CompetitionMahjongAutoProcessInstrumentedTest {
                     CompetitionMahjongLearningProofCatalog.cardIds(chapter), index.toLong()))
             }
             val config = CompetitionMahjongAutoRunConfig(token, 73, 0, List(4) { 0 }, 109,
-                CompetitionMahjongAutoPolicy.CALIBRATED)
+                CompetitionMahjongAutoPolicy.CALIBRATED_WMO)
             val records = buildNativeArchive(config).checkpoint.completedHands
             val handIndex = 14
             val hand = records[handIndex]

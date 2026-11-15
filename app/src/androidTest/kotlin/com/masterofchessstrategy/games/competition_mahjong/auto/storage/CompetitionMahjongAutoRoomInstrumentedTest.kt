@@ -20,6 +20,7 @@ import com.masterofchessstrategy.games.competition_mahjong.auto.replay.Competiti
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoImportResult
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayInstrumentedTest.Companion.calibratedArchive
 import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayInstrumentedTest.Companion.nativeArchive
+import com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayInstrumentedTest.Companion.wmoArchive
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongCoordinatedBackupRepository
 import com.masterofchessstrategy.games.competition_mahjong.learning.CompetitionMahjongStorageEpochGate
 import java.io.IOException
@@ -95,7 +96,8 @@ class CompetitionMahjongAutoRoomInstrumentedTest {
 
     @Test fun coordinatedBackupRestoresArchiveAndRejectsForgedStandardWallBeforeClearing() = runBlocking {
         withDatabase(Room.inMemoryDatabaseBuilder(context, MocsDatabase::class.java).build()) { db ->
-            val archive = calibratedArchive()
+            val archive = wmoArchive()
+            val earlier = calibratedArchive()
             val viewer = archive.checkpoint.config.viewerPlayerId
             val registry = GameBackupRegistry(listOf(CompetitionMahjongAutoBackupAdapter()))
             val repository = CompetitionMahjongCoordinatedBackupRepository(
@@ -104,11 +106,12 @@ class CompetitionMahjongAutoRoomInstrumentedTest {
             )
             val old = RoomCompetitionMahjongAutoStore(db, viewer) { 100 }
             old.load(viewer)
+            old.save(earlier.checkpoint, earlier)
             old.save(archive.checkpoint, archive)
             old.setFavorite(archive.key, viewer, true)
             val exported = repository.export(200)
             val envelope = LocalDataBackupCodec.decode(exported, registry)
-            assertEquals(2, envelope.gameExtensions.size)
+            assertEquals(3, envelope.gameExtensions.size)
 
             val other = initial(differentWall = true)
             val active = envelope.gameExtensions.single { it.fields[3] == "-" }
@@ -123,8 +126,10 @@ class CompetitionMahjongAutoRoomInstrumentedTest {
             current.delete(archive.key, viewer)
             repository.restore(exported)
             val restored = RoomCompetitionMahjongAutoStore(db, viewer)
-            assertTrue(restored.list(viewer).single().favorite)
+            assertTrue(restored.list(viewer).single { it.key == archive.key }.favorite)
+            assertTrue(earlier.sameContent(checkNotNull(restored.load(earlier.key, viewer))))
             assertTrue(archive.sameContent(checkNotNull(restored.load(archive.key, viewer))))
+            assertEquals(archive.checkpoint.config.policy, restored.load(viewer)?.config?.policy)
             assertArrayEquals(exported, repository.export(200))
             assertTrue(db.matchOutcomeDao().listAll().isEmpty())
         }

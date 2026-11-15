@@ -52,23 +52,25 @@ class CompetitionMahjongAutoReplayInstrumentedTest {
     }
 
     @Test fun exportedEnvelopeRoundTripsBeforeNativeAdmissionOfFinalPosition() = runBlocking {
-        val archive = calibratedArchive()
-        val exported = archive.export()
-        val decoded = CompetitionMahjongAutoExportCodec.decode(exported.bytes, VIEWER)
-        assertNotNull(decoded)
-        assertTrue(archive.sameReplayContent(decoded!!))
-        assertEquals(CompetitionMahjongAutoPolicy.CALIBRATED, decoded.checkpoint.config.policy)
+        for (archive in listOf(calibratedArchive(), wmoArchive())) {
+            val exported = archive.export()
+            val decoded = checkNotNull(CompetitionMahjongAutoExportCodec.decode(exported.bytes, VIEWER))
+            assertTrue(archive.sameReplayContent(decoded))
+            val policy = archive.checkpoint.config.policy
+            assertEquals(policy, decoded.checkpoint.config.policy)
+            assertEquals(policy.roundRecordVersion, decoded.checkpoint.engineRecord[28].toInt())
 
-        val controller = CompetitionMahjongAutoReplayController(decoded)
-        try {
-            assertTrue(controller.open())
-            assertTrue(controller.selectHand(15))
-            val lastCount = controller.state.value.eventCount
-            assertTrue(controller.seek(15, lastCount))
-            assertTrue(controller.state.value.atEnd)
-            assertTrue(controller.state.value.frame!!.isAutoTerminal())
-        } finally {
-            controller.close()
+            val controller = CompetitionMahjongAutoReplayController(decoded)
+            try {
+                assertTrue(controller.open())
+                assertTrue(controller.selectHand(15))
+                val lastCount = controller.state.value.eventCount
+                assertTrue(controller.seek(15, lastCount))
+                assertTrue(controller.state.value.atEnd)
+                assertTrue(controller.state.value.frame!!.isAutoTerminal())
+            } finally {
+                controller.close()
+            }
         }
     }
 
@@ -85,6 +87,7 @@ class CompetitionMahjongAutoReplayInstrumentedTest {
         private const val VIEWER = 2
         @Volatile private var cachedArchive: CompetitionMahjongAutoArchive? = null
         @Volatile private var cachedCalibratedArchive: CompetitionMahjongAutoArchive? = null
+        @Volatile private var cachedWmoArchive: CompetitionMahjongAutoArchive? = null
 
         internal fun nativeArchive(): CompetitionMahjongAutoArchive = synchronized(this) {
             cachedArchive ?: buildNativeArchive(CompetitionMahjongAutoRunConfig(
@@ -97,6 +100,13 @@ class CompetitionMahjongAutoReplayInstrumentedTest {
                 "84000000-0000-4000-8000-000000000002", 73, VIEWER, listOf(0, 1, 2, 3), 109,
                 CompetitionMahjongAutoPolicy.CALIBRATED,
             )).also { cachedCalibratedArchive = it }
+        }
+
+        internal fun wmoArchive(): CompetitionMahjongAutoArchive = synchronized(this) {
+            cachedWmoArchive ?: buildNativeArchive(CompetitionMahjongAutoRunConfig(
+                "84000000-0000-4000-8000-000000000003", 73, VIEWER, listOf(0, 1, 2, 3), 109,
+                CompetitionMahjongAutoPolicy.CALIBRATED_WMO,
+            )).also { cachedWmoArchive = it }
         }
 
         internal fun buildNativeArchive(config: CompetitionMahjongAutoRunConfig): CompetitionMahjongAutoArchive {

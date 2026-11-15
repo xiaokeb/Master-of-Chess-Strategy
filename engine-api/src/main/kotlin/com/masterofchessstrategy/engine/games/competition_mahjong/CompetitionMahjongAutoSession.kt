@@ -1,10 +1,12 @@
 package com.masterofchessstrategy.engine
 
-enum class CompetitionMahjongAutoPolicy(val recordVersion: Int) {
-    BASELINE(1), CALIBRATED(2),
+enum class CompetitionMahjongAutoPolicy(val recordVersion: Int, val roundRecordVersion: Int) {
+    BASELINE(1, 1),
+    CALIBRATED(2, 1),
+    CALIBRATED_WMO(3, 2),
 }
 
-/** Four physical-seat levels and an immutable bot policy for the hand. */
+/** Four physical-seat levels and an immutable bot and scoring policy for the hand. */
 class CompetitionMahjongAutoConfig(
     val seed: Long,
     val dealerSeat: Int = 0,

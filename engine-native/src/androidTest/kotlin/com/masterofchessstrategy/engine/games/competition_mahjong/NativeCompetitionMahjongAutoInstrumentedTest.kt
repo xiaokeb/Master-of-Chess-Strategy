@@ -64,7 +64,7 @@ class NativeCompetitionMahjongAutoInstrumentedTest {
                 assertEquals(source.advance(5), restored.advance(5))
                 assertArrayEquals(source.serialize(), restored.serialize())
                 val stable = restored.serialize()
-                val unknown = record.copyOf().also { it[4] = 3; repairCrc(it) }
+                val unknown = record.copyOf().also { it[4] = 4; repairCrc(it) }
                 val reserved = record.copyOf().also { it[10] = 1; repairCrc(it) }
                 val damaged = record.copyOf().also { it[24] = 0 }
                 for (bad in listOf(byteArrayOf(), record.copyOf(27), unknown, reserved, damaged, ByteArray(1_048_577))) {
@@ -137,6 +137,59 @@ class NativeCompetitionMahjongAutoInstrumentedTest {
         }
     }
 
+    @Test fun wmoPolicyRestoresVersionTwoRoundAndRejectsRelabelledLegacyScoring() {
+        val wmo = config(policy = CompetitionMahjongAutoPolicy.CALIBRATED_WMO)
+        val previous = config(policy = CompetitionMahjongAutoPolicy.CALIBRATED)
+        NativeCompetitionMahjongAutoSession(previous).use { old ->
+            old.advance(12)
+            val oldRecord = old.serialize()
+            assertEquals(1, oldRecord[28].toInt())
+            NativeCompetitionMahjongAutoSession(wmo).use { live ->
+                live.advance(12)
+                val record = live.serialize()
+                assertEquals(3, record[4].toInt())
+                assertEquals(2, record[28].toInt())
+                NativeCompetitionMahjongAutoSession(wmo).use { restored ->
+                    assertEquals(RestoreResult.Restored, restored.restore(record))
+                    val relabelled = oldRecord.copyOf().also { it[4] = 3; repairCrc(it) }
+                    assertEquals(RestoreResult.Rejected(EngineError.CORRUPTED_DATA), restored.restore(relabelled))
+                    assertEquals(RestoreResult.Rejected(EngineError.CORRUPTED_DATA), old.restore(record))
+                    assertArrayEquals(oldRecord, old.serialize())
+                    assertArrayEquals(record, restored.serialize())
+                    assertEquals(live.advance(3), restored.advance(3))
+                    assertArrayEquals(live.serialize(), restored.serialize())
+                }
+            }
+        }
+    }
+
+    @Test fun wmoAutomaticSettlementAppliesNewNineGatesScoring() {
+        val firstHand = listOf(0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8, 8, 4)
+        val envelope = CompetitionMahjongNativeTestRecords.record(firstHand, viewer = 0)
+        val legacyRound = envelope.copyOfRange(12, envelope.size - 4)
+        val wmoRound = legacyRound.copyOf()
+        wmoRound[4] = 2
+        var hash = 2166136261u
+        for (index in 0 until wmoRound.size - 4) hash = (hash xor wmoRound[index].toUByte().toUInt()) * 16777619u
+        repeat(4) { wmoRound[wmoRound.size - 4 + it] = (hash shr (it * 8)).toByte() }
+        val scores = listOf(
+            CompetitionMahjongAutoPolicy.CALIBRATED to legacyRound,
+            CompetitionMahjongAutoPolicy.CALIBRATED_WMO to wmoRound,
+        ).map { (policy, round) ->
+            val config = config(policy = policy)
+            NativeCompetitionMahjongAutoSession(config).use { session ->
+                assertEquals(RestoreResult.Restored, session.restore(wrapRound(round, config)))
+                assertEquals(CompetitionMahjongAutoAdvance(1, true), session.advance(1))
+                val frame = session.snapshot()
+                assertEquals(CompetitionMahjongRoundPhase.WON, frame.phase)
+                assertEquals(0, frame.winnerSeat)
+                assertEquals(policy == CompetitionMahjongAutoPolicy.CALIBRATED, frame.winningFan.entries.any { it.id == 73 })
+                frame.netScores
+            }
+        }
+        assertEquals(listOf(-3, 1, 1, 1), scores[1].zip(scores[0]) { wmo, legacy -> wmo - legacy })
+    }
+
     @Test fun jniValidatesRawConfigurationAndBudgetsBeforeMutation() {
         for (levels in listOf(intArrayOf(), intArrayOf(0, 0, 0), intArrayOf(0, 0, 0, 4), intArrayOf(-1, 0, 0, 0))) {
             assertThrows(IllegalArgumentException::class.java) { CompetitionMahjongAutoBindings.create(925, 0, 0, 0, levels, 0, 1) }
@@ -148,7 +201,7 @@ class NativeCompetitionMahjongAutoInstrumentedTest {
             }
         }
         assertThrows(IllegalArgumentException::class.java) {
-            CompetitionMahjongAutoBindings.create(925, 0, 0, 0, intArrayOf(0, 0, 0, 0), 0, 3)
+            CompetitionMahjongAutoBindings.create(925, 0, 0, 0, intArrayOf(0, 0, 0, 0), 0, 4)
         }
         val handle = CompetitionMahjongAutoBindings.create(Long.MAX_VALUE, 3, 3, 3, intArrayOf(3, 2, 1, 0), Long.MAX_VALUE, 1)
         try {
@@ -241,7 +294,7 @@ class NativeCompetitionMahjongAutoInstrumentedTest {
     private fun wrapRound(payload: ByteArray, config: CompetitionMahjongAutoConfig): ByteArray {
         val bytes = ByteArray(28 + payload.size)
         "MCMA".toByteArray(Charsets.US_ASCII).copyInto(bytes)
-        bytes[4] = 1; bytes[5] = config.viewerSeat.toByte()
+        bytes[4] = config.policy.recordVersion.toByte(); bytes[5] = config.viewerSeat.toByte()
         config.botLevels.forEachIndexed { index, level -> bytes[6 + index] = level.toByte() }
         repeat(8) { bytes[12 + it] = (config.decisionSeed ushr (8 * it)).toByte() }
         repeat(4) { bytes[20 + it] = (payload.size ushr (8 * it)).toByte() }

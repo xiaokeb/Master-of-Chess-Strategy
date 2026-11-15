@@ -23,7 +23,7 @@ internal object CompetitionMahjongAutoRecord {
         require(input.short.toInt() == 0 && input.long == config.decisionSeed)
         require(input.int == bytes.size - 28)
         require(CRC32().apply { update(bytes, 0, bytes.size - 4) }.value.toInt() == input.getInt(bytes.size - 4))
-        require(input.getInt(ROUND_OFFSET) == 0x4d434f4d && bytes[ROUND_OFFSET + 4].toInt() == 1)
+        require(input.getInt(ROUND_OFFSET) == 0x4d434f4d && bytes[ROUND_OFFSET + 4].toInt() == config.policy.roundRecordVersion)
         require(bytes[ROUND_OFFSET + 5].toInt() == config.dealerSeat && bytes[ROUND_OFFSET + 6].toInt() == config.roundWind)
         val count = input.getInt(COUNT_OFFSET)
         require(count in 0..MAX_EVENTS && bytes.size == 187 + 4 * count)

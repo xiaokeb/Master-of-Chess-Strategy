@@ -177,7 +177,7 @@ class CompetitionMahjongAutoControllerTest {
 
     @Test fun damagedUnknownOrForeignRecordsArePreservedWithoutNewSession() = runBlocking {
         val good = CompetitionMahjongAutoCheckpointCodec.encode(autoCheckpoint())
-        val unknown = good.copyOf().also { it[4] = 3; fixAutoCheckpointCrc(it) }
+        val unknown = good.copyOf().also { it[4] = 4; fixAutoCheckpointCrc(it) }
         val foreign = CompetitionMahjongAutoCheckpointCodec.encode(autoCheckpoint(autoConfig(1)))
         listOf(byteArrayOf(0), unknown, foreign).forEach { bytes ->
             val store = AutoMemoryStore().also { it.bytes = bytes.copyOf() }
@@ -189,7 +189,7 @@ class CompetitionMahjongAutoControllerTest {
         }
     }
 
-    @Test fun bothSavedPoliciesResumeAndRejectAnOuterAndInnerVersionMismatch() = runBlocking {
+    @Test fun allSavedPoliciesResumeAndRejectAnOuterAndInnerVersionMismatch() = runBlocking {
         val codec = CompetitionMahjongAutoCheckpointCodec
         val policies = com.masterofchessstrategy.engine.CompetitionMahjongAutoPolicy.entries
         for (policy in policies) {
@@ -199,17 +199,18 @@ class CompetitionMahjongAutoControllerTest {
             assertEquals(policy.recordVersion, original[4].toInt())
             assertEquals(policy, restored.config.policy)
             assertArrayEquals(original, codec.encode(restored))
-            val other = policies.single { it != policy }
-            val forged = original.copyOf().also { it[4] = other.recordVersion.toByte(); fixAutoCheckpointCrc(it) }
-            assertNull(codec.decode(forged, 0))
+            for (other in policies.filter { it != policy }) {
+                val forged = original.copyOf().also { it[4] = other.recordVersion.toByte(); fixAutoCheckpointCrc(it) }
+                assertNull(codec.decode(forged, 0))
 
-            val proposed = CompetitionMahjongAutoRunConfig(autoConfig().runId, 73, policy = other)
-            val store = AutoMemoryStore().also { it.bytes = original }
-            val harness = AutoHarness(config = proposed, store = store)
-            assertTrue(harness.controller.open())
-            assertEquals(policy, harness.active.config.policy)
-            assertArrayEquals(original, store.bytes)
-            harness.controller.close()
+                val proposed = CompetitionMahjongAutoRunConfig(autoConfig().runId, 73, policy = other)
+                val store = AutoMemoryStore().also { it.bytes = original }
+                val harness = AutoHarness(config = proposed, store = store)
+                assertTrue(harness.controller.open())
+                assertEquals(policy, harness.active.config.policy)
+                assertArrayEquals(original, store.bytes)
+                harness.controller.close()
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 package com.masterofchessstrategy.games.competition_mahjong.auto
 
+import com.masterofchessstrategy.engine.CompetitionMahjongAutoPolicy
 import org.junit.Assert.*
 import org.junit.Test
 import java.nio.ByteBuffer
@@ -111,6 +112,25 @@ class CompetitionMahjongAutoCheckpointTest {
         assertThrows(IllegalArgumentException::class.java) { CompetitionMahjongAutoRecord.eventCount(corruptInner, native) }
         assertEquals(4096, CompetitionMahjongAutoRecord.eventCount(autoRecord(native, 4096), native))
         assertThrows(IllegalArgumentException::class.java) { CompetitionMahjongAutoRecord.eventCount(autoRecord(native, 4097), native) }
+    }
+
+    @Test fun outerPolicyAndNestedScoringVersionMustMatchAfterChecksumsAreRepaired() {
+        for (policy in CompetitionMahjongAutoPolicy.entries) {
+            val config = CompetitionMahjongAutoRunConfig("81000000-0000-4000-8000-000000000001", 73, policy = policy)
+            val source = autoCheckpoint(config, events = 3)
+            val bytes = CompetitionMahjongAutoCheckpointCodec.encode(source)
+            assertEquals(policy.recordVersion, bytes[4].toInt())
+            val decoded = checkNotNull(CompetitionMahjongAutoCheckpointCodec.decode(bytes, 0))
+            assertEquals(policy, decoded.config.policy)
+            assertArrayEquals(bytes, CompetitionMahjongAutoCheckpointCodec.encode(decoded))
+            val mismatched = decoded.engineRecord.also {
+                it[28] = (3 - policy.roundRecordVersion).toByte()
+                fixAutoRecordChecksums(it)
+            }
+            assertThrows(IllegalArgumentException::class.java) {
+                CompetitionMahjongAutoRecord.eventCount(mismatched, config.handConfig(0, 0, false))
+            }
+        }
     }
 
     @Test fun terminalFrameAndLedgerMustAgreeAndCannotSkipHand() {

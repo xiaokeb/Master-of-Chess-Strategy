@@ -25,7 +25,7 @@ internal fun autoRecord(config: CompetitionMahjongAutoConfig, count: Int = 0, or
     out.putInt(0x414d434d).put(config.policy.recordVersion.toByte()).put(config.viewerSeat.toByte())
     config.botLevels.forEach { out.put(it.toByte()) }
     out.putShort(0).putLong(config.decisionSeed).putInt(out.capacity() - 28)
-    out.putInt(0x4d434f4d).put(1).put(config.dealerSeat.toByte()).put(config.roundWind.toByte())
+    out.putInt(0x4d434f4d).put(config.policy.roundRecordVersion.toByte()).put(config.dealerSeat.toByte()).put(config.roundWind.toByte())
     repeat(144) { out.put((origin + it).toByte()) }
     out.putInt(count)
     repeat(count * 4) { out.put((eventByte + it).toByte()) }

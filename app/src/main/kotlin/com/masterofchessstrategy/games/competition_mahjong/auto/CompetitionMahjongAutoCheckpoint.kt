@@ -122,7 +122,7 @@ class CompetitionMahjongAutoArchive internal constructor(val checkpoint: Competi
         } && checkpoint.openingRecord.contentEqualsNullable(other.checkpoint.openingRecord)
 }
 
-/** MCAU v1/v2 selects the bot policy and requires matching MCMA records. */
+/** MCAU v1–v3 selects the bot and scoring policy and requires matching MCMA records. */
 internal object CompetitionMahjongAutoCheckpointCodec {
     private const val MAGIC = 0x4d434155
     const val MAX_BYTES = 1_100_000
