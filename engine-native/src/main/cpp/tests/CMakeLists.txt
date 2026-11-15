@@ -234,3 +234,9 @@ add_executable(mocs_competition_mahjong_auto_session_test
 target_link_libraries(mocs_competition_mahjong_auto_session_test PRIVATE mocs_engine_core)
 target_compile_options(mocs_competition_mahjong_auto_session_test PRIVATE -Wall -Wextra -Wpedantic -UNDEBUG)
 add_test(NAME mocs_competition_mahjong_auto_session COMMAND mocs_competition_mahjong_auto_session_test)
+
+add_executable(mocs_competition_mahjong_fan_examples_test
+    ../games/competition-mahjong/competition_mahjong_fan_examples_test.cpp)
+target_link_libraries(mocs_competition_mahjong_fan_examples_test PRIVATE mocs_engine_core)
+target_compile_options(mocs_competition_mahjong_fan_examples_test PRIVATE -Wall -Wextra -Wpedantic -UNDEBUG)
+add_test(NAME mocs_competition_mahjong_fan_examples COMMAND mocs_competition_mahjong_fan_examples_test)

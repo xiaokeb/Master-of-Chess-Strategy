@@ -1,0 +1,52 @@
+{
+  "expected_changed_paths": 5,
+  "pending": [
+    "full exclusion matrix",
+    "maximum-scoring decomposition coverage",
+    "ARM64 device execution"
+  ],
+  "device": {
+    "exit_code": 0,
+    "executable_sha256": "75445d21e925cab3e11b01d74999cb5dbbef4d9febef0e4bf388e8a64ebe85e0",
+    "threshold": 18,
+    "folder": "device-76f7f2976ead4a049f3b017c99f24974",
+    "log_sha256": "3183002f68718cb276dda9332e6abd690361417a300667ad08643c807683cca8",
+    "positive": 81,
+    "model": "Pixel_7_Pro",
+    "negative": 21,
+    "abi": "x86_64"
+  },
+  "tag": "v0.1.0-competition-mahjong-fan-examples.1",
+  "build": {
+    "products": [
+      {
+        "build_sha256": "a451fe42cc3e76d14d6aac9b7903830dc2f31172d0d7ed68dc28417777f5a5c1",
+        "abi": "x86_64",
+        "configure_sha256": "d138243ad9458b27400b9d7e95b22ae42cddc74ade8a671f605bb666012cc81e",
+        "sha256": "75445d21e925cab3e11b01d74999cb5dbbef4d9febef0e4bf388e8a64ebe85e0",
+        "path": "x86_64/tests/mocs_competition_mahjong_fan_examples_test"
+      },
+      {
+        "build_sha256": "acd491e666fa44aebce3d3273dae09ce1765ca837f6ef1f2a44f09240dfa3c32",
+        "abi": "arm64-v8a",
+        "configure_sha256": "b210b88d20c156b9bf4e6b241c4f469dbfe3620d7058d7bdeebc8d86617770f3",
+        "sha256": "8a59dd79b62da9c425272078587cd5f20805bb11bff3a862c6fb217da3d20f0f",
+        "path": "arm64-v8a/tests/mocs_competition_mahjong_fan_examples_test"
+      }
+    ],
+    "cmake": "4.1.2",
+    "ndk": "30.0.16138531",
+    "frozen": {
+      "cmake_sha256": "b2a6e7aacdc72efeaffaf32ea6d520546383dabb13d6501057cc8963598eac00",
+      "cmake": "engine-native/src/main/cpp/tests/CMakeLists.txt",
+      "baseline": "2fcde3a4635830766bad38822f40fb979cc37c6e",
+      "fixture_sha256": "84d9d6d1c1f6cfad76cc60481d18d42e7304b8a9af2b320797bb656cbe41879e",
+      "patch_sha256": "18eeb7cd4e3e49a3b8ac9543c864b969a78aac897cd53e7bec5f4aab8c23a425",
+      "fixture": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_fan_examples_test.cpp"
+    },
+    "target": "mocs_competition_mahjong_fan_examples_test"
+  },
+  "game": "competition-mahjong",
+  "assets": [],
+  "kind": "source_prerelease"
+}
