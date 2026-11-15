@@ -109,9 +109,11 @@ class CompetitionMahjongMatchController(
         try {
             val count = when (config.botStrategy) {
                 CompetitionMahjongBotStrategy.LEGACY_BATCH -> active.advanceBots(config.botLevel, randomSeed, maxActions)
-                CompetitionMahjongBotStrategy.POSITION_SEEDED_V1 -> {
+                CompetitionMahjongBotStrategy.POSITION_SEEDED_V1,
+                CompetitionMahjongBotStrategy.POSITION_SEEDED_V2 -> {
                     var moved = 0
-                    while (moved < maxActions && active.advancePositionSeededBot(config.botLevel) == 1) moved++
+                    while (moved < maxActions && active.advancePositionSeededBot(config.botLevel, config.botStrategy) == 1)
+                        moved++
                     moved
                 }
             }

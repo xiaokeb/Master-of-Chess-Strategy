@@ -96,6 +96,8 @@ interface CompetitionMahjongRuleSession : AutoCloseable {
     fun apply(action: CompetitionMahjongAction): CompetitionMahjongApplyResult
     /** Baseline levels 0..3, not a claim of accepted product strength. */
     fun advanceBots(level: Int, seed: Long, maxActions: Int = 32): Int
+    fun advanceCalibratedBots(level: Int, seed: Long, maxActions: Int): Int =
+        throw UnsupportedOperationException("Calibrated competition Mahjong bots are unavailable")
     fun undo(): Boolean
     /** Private complete record; never use it to render opponents' hands. */
     fun serialize(): ByteArray

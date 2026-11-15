@@ -11,10 +11,10 @@ internal class CompetitionMahjongArchivedSeries(
     decisions: List<ShortArray>,
 ) {
     private val hands = decisions.map(ShortArray::copyOf)
-    val encodedSize = HEADER_BYTES + 2 * hands.sumOf { 1 + it.size }
+    private val encodedSize = HEADER_BYTES + 2 * hands.sumOf { 1 + it.size }
 
     init {
-        require(config.botStrategy == CompetitionMahjongBotStrategy.POSITION_SEEDED_V1)
+        require(config.botStrategy.positionSeeded)
         require(hands.size == 16 && hands.all { hand ->
             hand.size <= MAX_ACTIONS && hand.all { action ->
                 val bits = action.toInt() and 0xffff
@@ -25,10 +25,17 @@ internal class CompetitionMahjongArchivedSeries(
 
     fun decisions(handIndex: Int): ShortArray = hands[handIndex].copyOf()
 
-    fun writeTo(output: ByteBuffer) {
+    fun encodedSize(versioned: Boolean): Int = encodedSize + if (versioned) 1 else 0
+
+    fun writeTo(output: ByteBuffer, versioned: Boolean) {
         val id = UUID.fromString(config.matchId)
         output.putLong(id.mostSignificantBits).putLong(id.leastSignificantBits)
             .putLong(config.seed).put(config.botLevel.toByte())
+        if (versioned) output.put(when (config.botStrategy) {
+            CompetitionMahjongBotStrategy.POSITION_SEEDED_V1 -> 1.toByte()
+            CompetitionMahjongBotStrategy.POSITION_SEEDED_V2 -> 2.toByte()
+            CompetitionMahjongBotStrategy.LEGACY_BATCH -> error("Archive requires a position-seeded strategy")
+        })
         hands.forEach { hand ->
             output.putShort(hand.size.toShort())
             hand.forEach { output.putShort(it) }
@@ -38,13 +45,21 @@ internal class CompetitionMahjongArchivedSeries(
     companion object {
         private const val HEADER_BYTES = 25
         const val MAX_ACTIONS = 4096
-        const val MIN_BYTES = HEADER_BYTES + 2 * 16
+        private const val MIN_BYTES = HEADER_BYTES + 2 * 16
 
-        fun read(input: ByteBuffer, viewer: Int): CompetitionMahjongArchivedSeries? {
-            if (input.remaining() < MIN_BYTES) return null
+        fun minimumBytes(versioned: Boolean): Int = MIN_BYTES + if (versioned) 1 else 0
+
+        fun read(input: ByteBuffer, viewer: Int, versioned: Boolean): CompetitionMahjongArchivedSeries? {
+            if (input.remaining() < minimumBytes(versioned)) return null
             val id = UUID(input.long, input.long).toString()
-            val config = CompetitionMahjongCompetitionConfig(id, input.long, viewer, input.get().toInt(),
-                CompetitionMahjongBotStrategy.POSITION_SEEDED_V1)
+            val seed = input.long
+            val level = input.get().toInt()
+            val strategy = when (if (versioned) input.get().toInt() else 1) {
+                1 -> CompetitionMahjongBotStrategy.POSITION_SEEDED_V1
+                2 -> CompetitionMahjongBotStrategy.POSITION_SEEDED_V2
+                else -> return null
+            }
+            val config = CompetitionMahjongCompetitionConfig(id, seed, viewer, level, strategy)
             val hands = List(16) {
                 if (input.remaining() < 2) return null
                 val count = input.short.toInt()

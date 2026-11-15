@@ -145,7 +145,7 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
     @Test fun sixteenRealHandsSettleWithdrawAndReopenWithHistoryAndDeletionIntact() = withOwnedLanzhouDatabase { f ->
         completeCourse(f.db)
         val config = CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(), 20261009, 0, 0,
-            CompetitionMahjongBotStrategy.POSITION_SEEDED_V1)
+            CompetitionMahjongBotStrategy.POSITION_SEEDED_V2)
         var host = CompetitionMahjongFormalHost(f.db, 0)
         var session = (host.open() as CompetitionMahjongFormalHost.Entry.Ready).session
         var usage = session.policy.freshUsage(config.botLevel)
@@ -169,7 +169,7 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
                 if (index == 15) {
                     val sql = f.db.openHelper.writableDatabase
                     sql.execSQL("CREATE TRIGGER reject_series_archive BEFORE UPDATE OF mctx ON competition_mahjong_formal " +
-                        "WHEN hex(substr(NEW.mctx,5,1))='03' BEGIN SELECT RAISE(ABORT,'archive fault'); END")
+                        "WHEN hex(substr(NEW.mctx,5,1))='04' BEGIN SELECT RAISE(ABORT,'archive fault'); END")
                     try {
                         finishCompetitionMahjongTestHand(controller, index, allowPendingSave = true)
                         assertTrue(controller.state.value.needsSave)
@@ -246,6 +246,7 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
             host.close()
 
             val beforeBackup = storedMctx(f.db)
+            assertEquals(4, beforeBackup[4].toInt())
             val recorded = storedSnapshot(f.db)
             val prefix = checkNotNull(recorded.settledHandRecords)
             val wrongHand = recorded.withSettledHandRecords(listOf(prefix[1]) + prefix.drop(1))

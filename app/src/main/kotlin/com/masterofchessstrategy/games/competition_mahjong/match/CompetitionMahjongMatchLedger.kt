@@ -5,7 +5,11 @@ import com.masterofchessstrategy.engine.CompetitionMahjongRoundPhase
 import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongMatchConfig
 import java.util.UUID
 
-enum class CompetitionMahjongBotStrategy { LEGACY_BATCH, POSITION_SEEDED_V1 }
+enum class CompetitionMahjongBotStrategy {
+    LEGACY_BATCH, POSITION_SEEDED_V1, POSITION_SEEDED_V2;
+
+    internal val positionSeeded get() = this != LEGACY_BATCH
+}
 
 /** Player IDs are their original East/South/West/North assignments, never current seats. */
 data class CompetitionMahjongCompetitionConfig(

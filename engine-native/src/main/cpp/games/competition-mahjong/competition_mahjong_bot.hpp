@@ -8,7 +8,8 @@
 namespace mocs::engine {
 
 enum class CompetitionMahjongBotPolicy : std::uint8_t {
-    baseline, diagnostic_v2, diagnostic_v3, diagnostic_v4, candidate_v5
+    baseline, diagnostic_v2, diagnostic_v3, diagnostic_v4, candidate_v5,
+    medium_live_bucket_8, medium_live_bucket_4
 };
 
 // Baseline offline strategy. Levels 0..3 increase shape and available-tile

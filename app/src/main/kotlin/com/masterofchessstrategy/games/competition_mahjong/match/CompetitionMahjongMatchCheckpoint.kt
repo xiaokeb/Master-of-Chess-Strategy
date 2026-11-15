@@ -82,7 +82,7 @@ interface CompetitionMahjongMatchStore {
     suspend fun save(checkpoint: CompetitionMahjongMatchCheckpoint)
 }
 
-/** MCMT v5 adds position-seeded AI. v1–v4 retain their original metadata layout. */
+/** MCMT v5 and v6 identify the baseline and calibrated position-seeded strategies. */
 internal object CompetitionMahjongMatchCheckpointCodec {
     private const val MAGIC = 0x4d434d54
     private const val HEADER_BYTES = 12
@@ -97,7 +97,7 @@ internal object CompetitionMahjongMatchCheckpointCodec {
             checkpoint.assistance != null -> 2
             else -> 1
         }
-        val positionSeeded = checkpoint.config.botStrategy == CompetitionMahjongBotStrategy.POSITION_SEEDED_V1
+        val strategy = checkpoint.config.botStrategy
         val output = ByteArrayOutputStream()
         DataOutputStream(output).use { data ->
             val config = checkpoint.config
@@ -110,7 +110,7 @@ internal object CompetitionMahjongMatchCheckpointCodec {
             data.writeByte(checkpoint.activeHandIndex)
             val results = checkpoint.ledger.results
             data.writeByte(results.size)
-            if (positionSeeded) data.writeByte(metadata)
+            if (strategy.positionSeeded) data.writeByte(metadata)
             results.forEach { result ->
                 data.writeByte(result.handIndex)
                 data.writeByte(result.phase.code)
@@ -149,7 +149,11 @@ internal object CompetitionMahjongMatchCheckpointCodec {
         val body = output.toByteArray()
         val frame = ByteBuffer.allocate(HEADER_BYTES + body.size + FOOTER_BYTES).order(ByteOrder.BIG_ENDIAN)
         require(frame.capacity() <= MAX_FILE_BYTES)
-        val version = if (positionSeeded) 5 else metadata
+        val version = when (strategy) {
+            CompetitionMahjongBotStrategy.LEGACY_BATCH -> metadata
+            CompetitionMahjongBotStrategy.POSITION_SEEDED_V1 -> 5
+            CompetitionMahjongBotStrategy.POSITION_SEEDED_V2 -> 6
+        }
         frame.putInt(MAGIC).put(version.toByte())
             .put(0.toByte()).put(0.toByte()).put(0.toByte()).putInt(body.size)
         frame.put(body)
@@ -163,7 +167,7 @@ internal object CompetitionMahjongMatchCheckpointCodec {
         val input = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN)
         if (input.int != MAGIC) return null
         val version = input.get().toInt()
-        if (version !in 1..5) return null
+        if (version !in 1..6) return null
         repeat(3) { if (input.get().toInt() != 0) return null }
         if (input.int != bytes.size - HEADER_BYTES - FOOTER_BYTES ||
             crc(bytes, bytes.size - FOOTER_BYTES) != input.getInt(bytes.size - FOOTER_BYTES)) return null
@@ -177,7 +181,7 @@ internal object CompetitionMahjongMatchCheckpointCodec {
         val level = input.get().toInt() and 255
         val active = input.get().toInt() and 255
         val count = input.get().toInt() and 255
-        val metadata = if (version == 5) {
+        val metadata = if (version >= 5) {
             if (!input.hasRemaining()) return null
             input.get().toInt().takeIf { it in 1..4 } ?: return null
         } else version
@@ -186,8 +190,11 @@ internal object CompetitionMahjongMatchCheckpointCodec {
                 (if (metadata >= 2) 12 else 0) + (if (metadata >= 3) 8 else 0) +
                 (if (metadata == 4) 4 + CompetitionMahjongHintReceiptCodec.MIN_BYTES else 0)) return null
         return try {
-            val strategy = if (version == 5) CompetitionMahjongBotStrategy.POSITION_SEEDED_V1
-                else CompetitionMahjongBotStrategy.LEGACY_BATCH
+            val strategy = when (version) {
+                5 -> CompetitionMahjongBotStrategy.POSITION_SEEDED_V1
+                6 -> CompetitionMahjongBotStrategy.POSITION_SEEDED_V2
+                else -> CompetitionMahjongBotStrategy.LEGACY_BATCH
+            }
             val config = CompetitionMahjongCompetitionConfig(id, seed, viewer, level, strategy)
             val results = ArrayList<CompetitionMahjongHandResult>(count)
             repeat(count) { index ->

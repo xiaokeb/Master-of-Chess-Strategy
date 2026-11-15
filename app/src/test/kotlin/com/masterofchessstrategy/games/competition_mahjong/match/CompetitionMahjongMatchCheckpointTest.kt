@@ -207,6 +207,24 @@ class CompetitionMahjongMatchCheckpointTest {
         }
     }
 
+    @Test fun versionSixRestoresTheCalibratedStrategyAndRejectsNewerVersions() {
+        val config = matchConfig().copy(botStrategy = CompetitionMahjongBotStrategy.POSITION_SEEDED_V2)
+        val checkpoint = CompetitionMahjongMatchCheckpoint(config, CompetitionMahjongMatchLedger.empty(), 0, matchRecord(0))
+            .withAssistance(CompetitionMahjongAssistanceUsage(Difficulty.MEDIUM))
+            .withPlayback(CompetitionMahjongMatchPlayback(true, 2f))
+        val codec = CompetitionMahjongMatchCheckpointCodec
+        val bytes = codec.encode(checkpoint)
+        assertEquals(6, bytes[4].toInt())
+        val restored = checkNotNull(codec.decode(bytes, 0))
+        assertEquals(config, restored.config)
+        assertEquals(checkpoint.assistance, restored.assistance)
+        assertEquals(checkpoint.playback, restored.playback)
+        assertArrayEquals(bytes, codec.encode(restored))
+        val unknownVersion = bytes.copyOf().also { it[4] = 7 }
+        seal(unknownVersion)
+        assertNull(codec.decode(unknownVersion, 0))
+    }
+
     @Test fun validVersionThreeCrcCannotHideBadPlaybackRevisionFlagsReservedOrSpeed() {
         val config = matchConfig()
         val bytes = CompetitionMahjongMatchCheckpointCodec.encode(CompetitionMahjongMatchCheckpoint(

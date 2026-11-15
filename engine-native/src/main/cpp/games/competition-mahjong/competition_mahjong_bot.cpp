@@ -97,10 +97,11 @@ CompetitionMahjongFanInput fan_input(const CompetitionMahjongRoundView& view,
 
 int standing_score(const CompetitionMahjongRoundView& view,
     const std::uint8_t player, const std::uint8_t level,
-    const std::vector<CompetitionMahjongTile>& standing, const std::array<int, 34>& known, const bool value_waits) {
+    const std::vector<CompetitionMahjongTile>& standing, const std::array<int, 34>& known,
+    const bool value_waits, const int medium_live_bucket = 0) {
     const auto estimate = estimate_shape(standing, view.melds[player].size());
     int score = -1000 * estimate.shanten;
-    if (level == 1) return score;
+    if (level == 1 && medium_live_bucket == 0) return score;
     int live = 0;
     int qualifying_live = 0;
     int fan_value = 0;
@@ -118,7 +119,8 @@ int standing_score(const CompetitionMahjongRoundView& view,
             }
         }
     }
-    score += live;
+    // A wider bucket keeps more of the intermediate tier's seeded ties.
+    score += level == 1 ? live / medium_live_bucket : live;
     if (level >= 3 && estimate.shanten == 0) score += qualifying_live * 8;
     if (value_waits) score += qualifying_live * 16 + fan_value / 2;
     return score;
@@ -126,12 +128,13 @@ int standing_score(const CompetitionMahjongRoundView& view,
 
 int discard_score(const CompetitionMahjongRoundView& view,
     const std::uint8_t player, const std::uint8_t level,
-    const CompetitionMahjongTile discard, const std::array<int, 34>& known, const bool value_waits) {
+    const CompetitionMahjongTile discard, const std::array<int, 34>& known,
+    const bool value_waits, const int medium_live_bucket = 0) {
     auto standing = view.concealed[player];
     const auto it = std::find(standing.begin(), standing.end(), discard);
     if (it == standing.end()) return std::numeric_limits<int>::min();
     standing.erase(it);
-    return standing_score(view, player, level, standing, known, value_waits);
+    return standing_score(view, player, level, standing, known, value_waits, medium_live_bucket);
 }
 
 // A claim can lower shanten while sacrificing all legal eight-fan waits.
@@ -222,9 +225,14 @@ std::optional<CompetitionMahjongRoundAction> competition_mahjong_choose_bot_acti
     std::mt19937_64 rng(random_seed);
     const bool experimental = policy != CompetitionMahjongBotPolicy::baseline;
     const bool v4_novice = policy == CompetitionMahjongBotPolicy::diagnostic_v4;
-    const bool v3_novice = policy == CompetitionMahjongBotPolicy::diagnostic_v3 ||
-        policy == CompetitionMahjongBotPolicy::candidate_v5;
-    const bool selective_claims = v4_novice || policy == CompetitionMahjongBotPolicy::candidate_v5;
+    int medium_live_bucket = 0;
+    if (level == 1 && policy == CompetitionMahjongBotPolicy::medium_live_bucket_8) medium_live_bucket = 8;
+    if (level == 1 && policy == CompetitionMahjongBotPolicy::medium_live_bucket_4) medium_live_bucket = 4;
+    const bool based_on_v5 = policy == CompetitionMahjongBotPolicy::candidate_v5 ||
+        policy == CompetitionMahjongBotPolicy::medium_live_bucket_8 ||
+        policy == CompetitionMahjongBotPolicy::medium_live_bucket_4;
+    const bool v3_novice = policy == CompetitionMahjongBotPolicy::diagnostic_v3 || based_on_v5;
+    const bool selective_claims = v4_novice || based_on_v5;
     const bool value_waits = (v3_novice || selective_claims) && level == 3;
     std::vector<CompetitionMahjongRoundAction> discards;
     for (const auto& action : actions)
@@ -238,7 +246,8 @@ std::optional<CompetitionMahjongRoundAction> competition_mahjong_choose_bot_acti
         int best_score = std::numeric_limits<int>::min();
         std::vector<CompetitionMahjongRoundAction> best;
         for (const auto& action : discards) {
-            int score = discard_score(view, player, std::max<std::uint8_t>(1, level), action.tile, known, value_waits);
+            int score = discard_score(view, player, std::max<std::uint8_t>(1, level),
+                action.tile, known, value_waits, medium_live_bucket);
             if (policy == CompetitionMahjongBotPolicy::diagnostic_v2 && level == 3)
                 score -= late_discard_risk(view, player, action.tile, known[action.tile]);
             if (score > best_score) {

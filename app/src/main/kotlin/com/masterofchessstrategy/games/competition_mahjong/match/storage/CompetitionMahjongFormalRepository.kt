@@ -75,7 +75,7 @@ class CompetitionMahjongFormalRepository internal constructor(
         // An older v2 installation may already have a complete current series at replacement time.
         val settled = if (previous != null && previous.config.matchId != checkpoint.config.matchId &&
             previous.ledger.isComplete) previous else checkpoint
-        if (!settled.ledger.isComplete || settled.config.botStrategy != CompetitionMahjongBotStrategy.POSITION_SEEDED_V1)
+        if (!settled.ledger.isComplete || !settled.config.botStrategy.positionSeeded)
             return archive
         if (archive.any { it.config.matchId == settled.config.matchId }) {
             if (settled === checkpoint && previous != null && previous.config == checkpoint.config) {

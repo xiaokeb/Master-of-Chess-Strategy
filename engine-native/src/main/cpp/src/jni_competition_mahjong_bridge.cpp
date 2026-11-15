@@ -31,6 +31,14 @@ std::shared_ptr<CompetitionMahjongNativeSession> require_session(jlong handle) {
     return session;
 }
 
+jint advance_bots(JNIEnv* env, jlong handle, jint level, jlong seed, jint budget, bool calibrated) {
+    return guarded(env, static_cast<jint>(0), [&]() -> jint {
+        if (level < 0 || level > 3 || seed < 0 || budget < 1 || budget > 256)
+            throw std::invalid_argument("Invalid bot parameters");
+        return require_session(handle)->advance_bots(level, seed, budget, calibrated);
+    });
+}
+
 jintArray ints(JNIEnv* env, const std::vector<jint>& fields) {
     if (fields.size() > 65536) throw std::length_error("Oversized Mahjong view");
     auto result = env->NewIntArray(static_cast<jsize>(fields.size()));
@@ -133,11 +141,13 @@ Java_com_masterofchessstrategy_engine_internal_NativeBindings_applyCompetitionMa
 extern "C" JNIEXPORT jint JNICALL
 Java_com_masterofchessstrategy_engine_internal_NativeBindings_advanceCompetitionMahjongBots(
     JNIEnv* env, jobject, jlong handle, jint level, jlong seed, jint budget) {
-    return guarded(env,static_cast<jint>(0),[&]() -> jint {
-        if (level < 0 || level > 3 || seed < 0 || budget < 1 || budget > 256)
-            throw std::invalid_argument("Invalid bot parameters");
-        return require_session(handle)->advance_bots(level,seed,budget);
-    });
+    return advance_bots(env, handle, level, seed, budget, false);
+}
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_masterofchessstrategy_engine_CalibratedCompetitionMahjongBindings_advanceBots(
+    JNIEnv* env, jobject, jlong handle, jint level, jlong seed, jint budget) {
+    return advance_bots(env, handle, level, seed, budget, true);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL

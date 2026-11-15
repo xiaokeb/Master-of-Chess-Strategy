@@ -27,7 +27,7 @@ public:
     [[nodiscard]] CompetitionMahjongRoundActionResult apply(
         CompetitionMahjongRoundActionKind kind, std::uint8_t tile, std::uint8_t sequence_start);
     [[nodiscard]] std::uint32_t advance_bots(std::uint8_t level, std::uint64_t seed,
-                                            std::uint32_t max_actions);
+                                            std::uint32_t max_actions, bool calibrated = false);
     [[nodiscard]] bool undo();
     [[nodiscard]] std::vector<std::uint8_t> serialize() const;
     [[nodiscard]] bool restore(const std::vector<std::uint8_t>& data);

@@ -78,10 +78,18 @@ int main(int argc, char** argv) {
     if (profile == "diagnostic-v2") policy = CompetitionMahjongBotPolicy::diagnostic_v2;
     else if (profile == "diagnostic-v3") policy = CompetitionMahjongBotPolicy::diagnostic_v3;
     else if (profile == "diagnostic-v4") policy = CompetitionMahjongBotPolicy::diagnostic_v4;
-    else if (profile == "held-out-v5") policy = CompetitionMahjongBotPolicy::candidate_v5;
+    else if (profile == "held-out-v5" || profile == "training-medium-control") policy = CompetitionMahjongBotPolicy::candidate_v5;
+    else if (profile == "training-medium-bucket-8" || profile == "held-out-medium-bucket-8")
+        policy = CompetitionMahjongBotPolicy::medium_live_bucket_8;
+    else if (profile == "training-medium-bucket-4") policy = CompetitionMahjongBotPolicy::medium_live_bucket_4;
     else if (profile != "diagnostic-v1") return 2;
-    const bool held_out = profile == "held-out-v5";
-    const std::uint64_t first = held_out ? 4285151001ULL : 71425001ULL;
+    const bool held_out = profile == "held-out-v5" || profile == "held-out-medium-bucket-8";
+    const bool medium_training = profile == "training-medium-control" ||
+        profile == "training-medium-bucket-8" || profile == "training-medium-bucket-4";
+    std::uint64_t first = 71425001ULL;
+    if (profile == "held-out-v5") first = 4285151001ULL;
+    if (medium_training) first = 71551001ULL;
+    if (profile == "held-out-medium-bucket-8") first = 5920152401ULL;
     const int seed_count = held_out ? 24 : 8;
     std::cout << "lower\tseed\trotation\tp0\tp1\tp2\tp3\tdraws\tevents\telapsed_ms" << std::endl;
     for (int lower = 0; lower < 3; ++lower) {

@@ -1,6 +1,7 @@
 package com.masterofchessstrategy.games.competition_mahjong.match.storage
 
 import com.masterofchessstrategy.games.competition_mahjong.history.CompetitionMahjongMatchHistoryCodec
+import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongBotStrategy
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpointCodec
 import com.masterofchessstrategy.games.competition_mahjong.statistics.CompetitionMahjongStatisticsCodec
 import java.nio.ByteBuffer
@@ -8,7 +9,7 @@ import java.nio.ByteOrder
 import java.nio.charset.StandardCharsets
 import java.util.zip.CRC32
 
-/** MCTX v3 adds compact evidence for completed series. v1 and v2 remain byte-stable. */
+/** MCTX v4 tags the strategy of each compact archived series. */
 internal object CompetitionMahjongFormalSnapshotCodec {
     private const val MAGIC = 0x4d435458
     private const val HEADER_BYTES = 12
@@ -26,9 +27,15 @@ internal object CompetitionMahjongFormalSnapshotCodec {
         val history = CompetitionMahjongMatchHistoryCodec.encode(snapshot.viewerPlayerId, snapshot.history.entries)
         val records = snapshot.settledHandRecords
         val archive = snapshot.archivedSeries
-        val archiveSize = if (archive.isEmpty()) 0 else 4 + archive.sumOf { it.encodedSize }
+        val versionedArchive = archive.any { it.config.botStrategy == CompetitionMahjongBotStrategy.POSITION_SEEDED_V2 }
+        val archiveSize = if (archive.isEmpty()) 0 else 4 + archive.sumOf { it.encodedSize(versionedArchive) }
         require(archiveSize <= MAX_ARCHIVE_BYTES) { "国标跨场证据已达到存档容量上限" }
-        val version = if (archive.isNotEmpty()) 3 else if (records != null) 2 else 1
+        val version = when {
+            versionedArchive -> 4
+            archive.isNotEmpty() -> 3
+            records != null -> 2
+            else -> 1
+        }
         val size = HEADER_BYTES + FOOTER_BYTES + 16 + active.size + statistics.size + history.size +
             snapshot.deletedMatchIds.size * 36 + (if (version >= 2) 1 else 0) +
             (records?.sumOf { record -> 4 + record.size } ?: 0) + archiveSize
@@ -44,9 +51,9 @@ internal object CompetitionMahjongFormalSnapshotCodec {
             output.put((records?.size ?: -1).toByte())
             records?.forEach { record -> output.putInt(record.size).put(record) }
         }
-        if (version == 3) {
+        if (version >= 3) {
             output.putInt(archive.size)
-            archive.forEach { it.writeTo(output) }
+            archive.forEach { it.writeTo(output, versionedArchive) }
         }
         output.putInt(CRC32().apply { update(output.array(), 0, output.position()) }.value.toInt())
         return output.array()
@@ -58,7 +65,7 @@ internal object CompetitionMahjongFormalSnapshotCodec {
         val input = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN)
         if (input.int != MAGIC) return null
         val version = input.get().toInt()
-        if (version !in 1..3 || input.get().toInt() != viewerPlayerId ||
+        if (version !in 1..4 || input.get().toInt() != viewerPlayerId ||
             input.short.toInt() != 0 || input.int != bytes.size - HEADER_BYTES - FOOTER_BYTES ||
             input.getInt(bytes.size - FOOTER_BYTES) != CRC32().apply {
                 update(bytes, 0, bytes.size - FOOTER_BYTES)
@@ -88,17 +95,18 @@ internal object CompetitionMahjongFormalSnapshotCodec {
             val records = if (version >= 2) {
                 if (!input.hasRemaining()) return null
                 val prefixCount = input.get().toInt()
-                if (version == 3 && prefixCount == -1) null else {
+                if (version >= 3 && prefixCount == -1) null else {
                     if (prefixCount != active?.activeHandIndex) return null
                     List(prefixCount) { section(CompetitionMahjongPrivateSeriesReplay.MAX_HAND_BYTES) ?: return null }
                 }
             } else null
-            val archive = if (version == 3) {
+            val archive = if (version >= 3) {
                 if (input.remaining() !in 4..MAX_ARCHIVE_BYTES) return null
                 val archiveCount = input.int
+                val versionedArchive = version == 4
                 if (archiveCount !in 1..statistics.seriesCount ||
-                    archiveCount > input.remaining() / CompetitionMahjongArchivedSeries.MIN_BYTES) return null
-                List(archiveCount) { CompetitionMahjongArchivedSeries.read(input, viewerPlayerId) ?: return null }
+                    archiveCount > input.remaining() / CompetitionMahjongArchivedSeries.minimumBytes(versionedArchive)) return null
+                List(archiveCount) { CompetitionMahjongArchivedSeries.read(input, viewerPlayerId, versionedArchive) ?: return null }
             } else emptyList()
             if (input.hasRemaining()) return null
             val result = CompetitionMahjongFormalSnapshot(viewerPlayerId, active, statistics, history, deleted.toSet(), records, archive)

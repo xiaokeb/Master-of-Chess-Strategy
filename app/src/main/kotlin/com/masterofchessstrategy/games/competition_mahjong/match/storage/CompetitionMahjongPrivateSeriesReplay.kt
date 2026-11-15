@@ -6,7 +6,6 @@ import com.masterofchessstrategy.engine.CompetitionMahjongRoundActionKind
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundPhase
 import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
 import com.masterofchessstrategy.engine.RestoreResult
-import com.masterofchessstrategy.games.competition_mahjong.competitionMahjongPublicBotSeed
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongBotStrategy
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongCompetitionConfig
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpoint
@@ -58,7 +57,7 @@ internal object CompetitionMahjongPrivateSeriesReplay {
             var frame = native.snapshot()
             for (step in 0 until CompetitionMahjongArchivedSeries.MAX_ACTIONS) {
                 if (frame.isTerminal()) break
-                if (native.advanceBots(config.botLevel, competitionMahjongPublicBotSeed(frame), maxActions = 1) != 1) {
+                if (native.advancePositionSeededBot(config.botLevel, config.botStrategy, frame) != 1) {
                     require(read < decisions.size) { "跨场证据缺少玩家动作" }
                     val bits = decisions[read++].toInt() and 0xffff
                     val kind = CompetitionMahjongRoundActionKind.entries.first { it.code == (bits and 15) }
@@ -87,7 +86,7 @@ internal object CompetitionMahjongPrivateSeriesReplay {
             verifyResult(checkpoint, index, record)
         }
         if (checkpoint.ledger.completedHandCount == checkpoint.activeHandIndex &&
-            checkpoint.config.botStrategy == CompetitionMahjongBotStrategy.POSITION_SEEDED_V1) {
+            checkpoint.config.botStrategy.positionSeeded) {
             replayFrame(checkpoint.config, checkpoint.activeHandIndex, checkpoint.engineRecord)
         }
     }
@@ -136,8 +135,8 @@ internal object CompetitionMahjongPrivateSeriesReplay {
                 (SESSION_PAYLOAD_OFFSET until SESSION_PAYLOAD_OFFSET + ROUND_SETUP_BYTES).all { record[it] == initial[it] }) {
                 "逐盘证据与赛事种子、座位或圈风不一致"
             }
-            if (config.botStrategy == CompetitionMahjongBotStrategy.POSITION_SEEDED_V1) {
-                replayPositionSeeded(native, config.botLevel, record)
+            if (config.botStrategy.positionSeeded) {
+                replayPositionSeeded(native, config.botLevel, config.botStrategy, record)
             } else {
                 require(native.restore(record) == RestoreResult.Restored) { "逐盘证据未通过 Native 重放" }
             }
@@ -145,7 +144,9 @@ internal object CompetitionMahjongPrivateSeriesReplay {
         }
     }
 
-    private fun replayPositionSeeded(native: NativeCompetitionMahjongSession, level: Int, record: ByteArray) {
+    private fun replayPositionSeeded(
+        native: NativeCompetitionMahjongSession, level: Int, strategy: CompetitionMahjongBotStrategy, record: ByteArray,
+    ) {
         for (offset in FIRST_ACTION_OFFSET until record.size - CHECKSUM_BYTES step 4) {
             val seat = record[offset + 1].toInt()
             val accepted = if (seat == native.viewerSeat) {
@@ -153,7 +154,7 @@ internal object CompetitionMahjongPrivateSeriesReplay {
                     ?: throw IllegalArgumentException("逐盘证据操作无效")
                 native.apply(CompetitionMahjongAction(kind, record[offset + 2].toInt(), record[offset + 3].toInt())).accepted
             } else {
-                native.advancePositionSeededBot(level) == 1
+                native.advancePositionSeededBot(level, strategy) == 1
             }
             require(accepted) { "逐盘证据动作与 AI 策略不一致" }
         }

@@ -75,6 +75,22 @@ class CompetitionMahjongPrivateSeriesReplayInstrumentedTest {
         Unit
     }
 
+    @Test fun calibratedNativeSeriesArchivesAndReplaysWithItsOwnStrategy() = runBlocking {
+        val config = CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(), 20261009, 0, 0,
+            CompetitionMahjongBotStrategy.POSITION_SEEDED_V2)
+        val (records, ledger) = playHands(config, 16)
+        val checkpoint = CompetitionMahjongMatchCheckpoint(config, ledger, 15, records.last())
+        assertEquals(ledger.results, CompetitionMahjongPrivateSeriesReplay.verifySeries(config, records, ledger).results)
+        val archive = CompetitionMahjongPrivateSeriesReplay.archive(checkpoint, records.dropLast(1))
+        assertEquals(config, archive.config)
+        assertEquals(ledger.results, CompetitionMahjongPrivateSeriesReplay.replayArchive(archive, records).results)
+        val baseline = config.copy(botStrategy = CompetitionMahjongBotStrategy.POSITION_SEEDED_V1)
+        assertThrows(IllegalArgumentException::class.java) {
+            CompetitionMahjongPrivateSeriesReplay.verifyHand(baseline, 0, records.first())
+        }
+        Unit
+    }
+
     private suspend fun playHands(
         config: CompetitionMahjongCompetitionConfig,
         count: Int,

@@ -113,7 +113,7 @@ class CompetitionMahjongNavigationIntegrationTest {
         clickReady("competition_formal_play")
         waitForTag("competition_mahjong_action_bar")
         val start = checkNotNull(activeMatch())
-        assertEquals(CompetitionMahjongBotStrategy.POSITION_SEEDED_V1, start.config.botStrategy)
+        assertEquals(CompetitionMahjongBotStrategy.POSITION_SEEDED_V2, start.config.botStrategy)
         val discard = hasText("出 ", substring = true) and hasClickAction() and isEnabled()
         compose.waitUntil(10_000) { compose.onAllNodes(discard).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("competition_mahjong_local_tiles").assertIsDisplayed()

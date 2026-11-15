@@ -61,16 +61,18 @@ CompetitionMahjongRoundActionResult CompetitionMahjongNativeSession::apply(
 }
 
 std::uint32_t CompetitionMahjongNativeSession::advance_bots(
-    std::uint8_t level, std::uint64_t seed, std::uint32_t max_actions) {
+    std::uint8_t level, std::uint64_t seed, std::uint32_t max_actions, bool calibrated) {
     if (level > 3 || max_actions == 0 || max_actions > 256)
         throw std::invalid_argument("Invalid Mahjong bot budget");
     std::lock_guard lock(mutex_);
+    const auto policy = calibrated ? CompetitionMahjongBotPolicy::medium_live_bucket_8 :
+        CompetitionMahjongBotPolicy::baseline;
     std::uint32_t advanced = 0;
     while (advanced < max_actions && round_->legal_actions(viewer_).empty()) {
         bool moved = false;
         for (std::uint8_t seat = 0; seat < 4; ++seat) {
             if (seat == viewer_ || round_->legal_actions(seat).empty()) continue;
-            const auto action = competition_mahjong_choose_bot_action(*round_, seat, level, seed + advanced);
+            const auto action = competition_mahjong_choose_bot_action(*round_, seat, level, seed + advanced, policy);
             if (!action || !round_->apply(*action).accepted)
                 throw std::logic_error("Mahjong bot failed to choose a legal action");
             ++advanced;

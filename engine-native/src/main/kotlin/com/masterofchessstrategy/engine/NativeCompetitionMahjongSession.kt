@@ -41,6 +41,12 @@ class NativeCompetitionMahjongSession(
             .also { count -> check(count in 0..maxActions) }
     }
 
+    override fun advanceCalibratedBots(level: Int, seed: Long, maxActions: Int): Int = withHandle {
+        require(level in 0..3 && seed >= 0 && maxActions in 1..256)
+        CalibratedCompetitionMahjongBindings.advanceBots(it, level, seed, maxActions)
+            .also { count -> check(count in 0..maxActions) }
+    }
+
     override fun undo(): Boolean = withHandle(NativeBindings::undoCompetitionMahjong)
     override fun serialize(): ByteArray = withHandle(NativeBindings::serializeCompetitionMahjong).copyOf()
     override fun restore(data: ByteArray): RestoreResult = withHandle {
@@ -59,4 +65,8 @@ class NativeCompetitionMahjongSession(
         check(handle != 0L) { "Competition Mahjong session is closed" }
         operation(handle)
     }
+}
+
+private object CalibratedCompetitionMahjongBindings {
+    external fun advanceBots(handle: Long, level: Int, seed: Long, budget: Int): Int
 }

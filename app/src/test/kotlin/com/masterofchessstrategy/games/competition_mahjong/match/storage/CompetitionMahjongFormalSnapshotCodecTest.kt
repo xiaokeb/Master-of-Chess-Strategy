@@ -44,7 +44,7 @@ class CompetitionMahjongFormalSnapshotCodecTest {
 
     @Test fun validChecksumCannotHideUnknownVersionReservedBitsOrOverflowLength() {
         val base = CompetitionMahjongFormalSnapshotCodec.encode(CompetitionMahjongFormalSnapshot(0))
-        assertNull(CompetitionMahjongFormalSnapshotCodec.decode(rechecksum(base.copyOf().also { it[4] = 4 }), 0))
+        assertNull(CompetitionMahjongFormalSnapshotCodec.decode(rechecksum(base.copyOf().also { it[4] = 5 }), 0))
         assertNull(CompetitionMahjongFormalSnapshotCodec.decode(rechecksum(base.copyOf().also { it[6] = 1 }), 0))
         assertNull(CompetitionMahjongFormalSnapshotCodec.decode(rechecksum(base.copyOf().also {
             ByteBuffer.wrap(it).order(ByteOrder.BIG_ENDIAN).putInt(12, Int.MAX_VALUE)
@@ -71,9 +71,35 @@ class CompetitionMahjongFormalSnapshotCodecTest {
         restored.archivedSeries.single().decisions(0)[0] = 5
         assertArrayEquals(bytes, codec.encode(restored))
         assertThrows(IllegalArgumentException::class.java) { original.withPrivateEvidence(null, listOf(proof, proof)) }
-        val countOffset = bytes.size - 4 - proof.encodedSize - 4
+        val countOffset = bytes.size - 4 - proof.encodedSize(versioned = false) - 4
         val invalidCount = bytes.copyOf().also { ByteBuffer.wrap(it).putInt(countOffset, Int.MAX_VALUE) }
         assertNull(codec.decode(rechecksum(invalidCount), 0))
+    }
+
+    @Test fun v4KeepsBothArchiveStrategiesAndRejectsUnknownStrategyCodes() {
+        val first = formalCheckpoint()
+        val second = formalCheckpoint(id = 2)
+        val baseline = CompetitionMahjongArchivedSeries(
+            first.config.copy(botStrategy = CompetitionMahjongBotStrategy.POSITION_SEEDED_V1),
+            List(16) { shortArrayOf(1) },
+        )
+        val calibrated = CompetitionMahjongArchivedSeries(
+            second.config.copy(botStrategy = CompetitionMahjongBotStrategy.POSITION_SEEDED_V2),
+            List(16) { shortArrayOf(3) },
+        )
+        val snapshot = CompetitionMahjongFormalSnapshot(0).save(first, formalPolicy(), 100)
+            .save(second, formalPolicy(), 200).save(formalCheckpoint(id = 3, count = 0), formalPolicy(), 300)
+            .withPrivateEvidence(null, listOf(baseline, calibrated))
+        val codec = CompetitionMahjongFormalSnapshotCodec
+        val bytes = codec.encode(snapshot)
+        assertEquals(4, bytes[4].toInt())
+        val restored = checkNotNull(codec.decode(bytes, 0))
+        assertEquals(listOf(baseline.config, calibrated.config), restored.archivedSeries.map { it.config })
+        assertArrayEquals(shortArrayOf(3), restored.archivedSeries.last().decisions(0))
+        assertArrayEquals(bytes, codec.encode(restored))
+        // The strategy byte follows the UUID, wall seed and bot difficulty of the final entry.
+        val strategy = bytes.size - 4 - calibrated.encodedSize(versioned = true) + 25
+        assertNull(codec.decode(rechecksum(bytes.copyOf().also { it[strategy] = 7 }), 0))
     }
 
     @Test fun v2PrefixIsBoundedAndOwnedWithoutChangingV1Bytes() {
