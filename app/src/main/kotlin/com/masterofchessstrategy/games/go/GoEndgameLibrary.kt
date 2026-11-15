@@ -32,7 +32,8 @@ class GoEndgamePuzzle(
         require((setup + answer + captured + targetStones).all { it.x in 0 until boardSize && it.y in 0 until boardSize })
         require(setup.distinct().size == setup.size && answer !in setup && captured.all(setup::contains))
         require(targetStones.all(setup::contains))
-        require(maxBlackMoves in 1..4 && (maxBlackMoves == 1 || theme == GoEndgameTheme.CAPTURE))
+        require(maxBlackMoves in 1..4 && (maxBlackMoves == 1 || theme == GoEndgameTheme.CAPTURE ||
+            theme == GoEndgameTheme.LIFE && maxBlackMoves == 2))
         require(when (theme) {
             GoEndgameTheme.CAPTURE -> captured.isNotEmpty() && targetStones.isEmpty()
             GoEndgameTheme.ESCAPE -> captured.isEmpty() && targetStones.size == 1
@@ -124,6 +125,12 @@ object GoEndgameLibrary {
             0 to 1, 0 to 2, 1 to 1, 1 to 2, 1 to 0, 2 to 1, 3 to 1, 2 to 2,
             3 to 0, 3 to 2, 4 to 1, 4 to 2, 5 to 1, 5 to 2, 5 to 0, 6 to 1,
             answer = 2 to 0, targets = setOf(0 to 1, 4 to 1)),
+        GoEndgamePuzzle("corner-life-counter-capture", "护眼反提", GoEndgameTheme.LIFE, GoEndgameLevel.MASTER,
+            "黑先：在两手内做出两只真眼。白方可以点入眼形，注意提掉侵入的白子。",
+            "黑棋提走侵入棋子，保住两只真眼。", 9,
+            listOf(p(0, 1), p(0, 2), p(1, 1), p(1, 2), p(2, 1), p(2, 2), p(3, 1), p(3, 2),
+                p(4, 1), p(4, 2), p(4, 0), p(5, 2), p(8, 8), p(5, 1), p(7, 8), p(5, 0)),
+            p(1, 0), targetStones = setOf(p(0, 1), p(3, 1)), maxBlackMoves = 2),
     )
 
     init { require(puzzles.map { it.id }.toSet().size == puzzles.size) }
@@ -137,7 +144,7 @@ object GoEndgameLibrary {
     fun open(puzzle: GoEndgamePuzzle,
         engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
     ): GoEndgamePlan {
-        if (puzzle.maxBlackMoves > 1) {
+        if (puzzle.maxBlackMoves > 1 && puzzle.theme == GoEndgameTheme.CAPTURE) {
             val capture = GoTacticalCapturePuzzle(puzzle.id, puzzle.title, puzzle.boardSize, puzzle.setup,
                 puzzle.captured, puzzle.answer, puzzle.maxBlackMoves)
             val plan = GoTacticalCaptureLibrary.open(capture, engineFactory)
@@ -164,8 +171,12 @@ object GoEndgameLibrary {
             require(solution.apply(GoAction.Place(puzzle.answer)) == ActionResult.Accepted) {
                 "残局 ${puzzle.id} 答案不合法。" }
             require(solution.stoneAt(puzzle.answer) == GoStone.BLACK)
-            require(goEndgameGoalReached(puzzle, solution)) { "残局 ${puzzle.id} 未达到题目目标。" }
             require(solution.phase == GoPhase.PLAYING && solution.gameResult() == GameResult.ONGOING)
+            if (puzzle.maxBlackMoves == 2) {
+                require(!goEndgameGoalReached(puzzle, solution))
+                require(goEndgameLifeDefense(puzzle, solution, engineFactory) != null) {
+                    "残局 ${puzzle.id} 无法应对全部合法防守。" }
+            } else require(goEndgameGoalReached(puzzle, solution)) { "残局 ${puzzle.id} 未达到题目目标。" }
         }
         return GoEndgamePlan(puzzle, initial)
     }
@@ -177,9 +188,11 @@ class GoEndgameSession(
     private val engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
 ) {
     private val tacticalCapture = plan.tacticalCapture?.let { GoTacticalCaptureSession(it, engineFactory) }
+    private var lifeContinuation: ByteArray? = null
     private var state = initialState()
     fun state() = state.copy(stones = state.stones.toList(), trueEyes = state.trueEyes.toSet())
     fun reset(): GoEndgameState {
+        lifeContinuation = null
         state = tacticalCapture?.reset()?.toEndgameState() ?: initialState()
         return state()
     }
@@ -194,23 +207,43 @@ class GoEndgameSession(
         var stones: List<Int>? = null
         var accepted = false
         var eyes: Set<BoardPosition> = emptySet()
+        var defense: ByteArray? = null
+        var lastMove = point.y * puzzle.boardSize + point.x
         engineFactory(puzzle.boardSize, 15, 0).use { candidate ->
-            check(candidate.restore(plan.copyInitialBytes()) == RestoreResult.Restored)
+            check(candidate.restore(lifeContinuation ?: plan.copyInitialBytes()) == RestoreResult.Restored)
             accepted = candidate.apply(GoAction.Place(point)) == ActionResult.Accepted
             if (accepted) {
                 val reached = if (puzzle.theme == GoEndgameTheme.LIFE) {
                     eyes = goEndgameTrueEyes(puzzle, candidate)
                     eyes.size >= 2
                 } else goEndgameGoalReached(puzzle, candidate, point)
-                if (reached) stones = snapshot(candidate)
+                if (reached) {
+                    stones = snapshot(candidate)
+                } else if (puzzle.maxBlackMoves == 2 && lifeContinuation == null) {
+                    defense = goEndgameLifeDefense(puzzle, candidate, engineFactory)
+                    defense?.let {
+                        check(candidate.restore(it) == RestoreResult.Restored)
+                        stones = snapshot(candidate)
+                        val reply = candidate.eventHistory().lastOrNull() as? GoAction.Place
+                        if (reply != null) lastMove = reply.point.y * puzzle.boardSize + reply.point.x
+                    }
+                }
             }
         }
         state = when {
             !accepted -> state.copy(attempts = state.attempts + 1, feedback = "这手不符合当前围棋规则，题面保持不变。")
-            stones == null -> state.copy(attempts = state.attempts + 1, feedback = if (puzzle.theme == GoEndgameTheme.LIFE)
-                "这手合法，还需要让同一棋组围住两只真眼。" else "这手合法，但没有完成本题目标；请继续观察局部的气。")
+            defense != null -> {
+                lifeContinuation = defense
+                state.copy(stones = checkNotNull(stones), attempts = state.attempts + 1, lastMoveIndex = lastMove,
+                    feedback = "白方已应手。剩余 1 手，请完成双眼。")
+            }
+            stones == null -> state.copy(attempts = state.attempts + 1, feedback = when {
+                puzzle.theme != GoEndgameTheme.LIFE -> "这手合法，但没有完成本题目标；请继续观察局部的气。"
+                puzzle.maxBlackMoves == 1 -> "这手合法，还需要让同一棋组围住两只真眼。"
+                else -> "这手合法，但无法在剩余手数内完成双眼。"
+            })
             else -> state.copy(stones = checkNotNull(stones), completed = true,
-                attempts = state.attempts + 1, lastMoveIndex = point.y * puzzle.boardSize + point.x,
+                attempts = state.attempts + 1, lastMoveIndex = lastMove,
                 feedback = puzzle.success, trueEyes = eyes)
         }
         return state()
@@ -279,3 +312,40 @@ internal fun goEndgameGroup(engine: GoRuleEngine, start: BoardPosition): Set<Boa
 
 internal fun goEndgameLiberties(engine: GoRuleEngine, group: Set<BoardPosition>): Set<BoardPosition> =
     group.flatMap { goEndgameNeighbors(it, engine.boardSize) }.filter { engine.stoneAt(it) == GoStone.EMPTY }.toSet()
+
+/** Returns a local white reply only after every legal reply has a black solution. */
+private fun goEndgameLifeDefense(
+    puzzle: GoEndgamePuzzle,
+    afterBlack: GoRecordEngine,
+    engineFactory: (Int, Int, Int) -> GoRecordEngine,
+): ByteArray? {
+    check(puzzle.theme == GoEndgameTheme.LIFE && puzzle.maxBlackMoves == 2)
+    check(afterBlack.currentPlayer.value == GoPlayer.WHITE.code && afterBlack.phase == GoPhase.PLAYING)
+    val record = afterBlack.serialize()
+    val nearTargets = compareBy<GoAction> { action ->
+        if (action is GoAction.Place) puzzle.targetStones.minOf {
+            kotlin.math.abs(it.x - action.point.x) + kotlin.math.abs(it.y - action.point.y)
+        } else Int.MAX_VALUE
+    }.thenBy { action ->
+        if (action is GoAction.Place) action.point.y * puzzle.boardSize + action.point.x else Int.MAX_VALUE
+    }
+    val replies = afterBlack.legalActions().filter { it is GoAction.Place || it == GoAction.Pass }.sortedWith(nearTargets)
+    var selectedReply: ByteArray? = null
+    engineFactory(puzzle.boardSize, 15, 0).use { defender ->
+        engineFactory(puzzle.boardSize, 15, 0).use { solver ->
+            for (reply in replies) {
+                check(defender.restore(record) == RestoreResult.Restored)
+                check(defender.apply(reply) == ActionResult.Accepted)
+                val afterWhite = defender.serialize()
+                val solved = defender.legalActions().filterIsInstance<GoAction.Place>().sortedWith(nearTargets).any { move ->
+                    check(solver.restore(afterWhite) == RestoreResult.Restored)
+                    check(solver.apply(move) == ActionResult.Accepted)
+                    goEndgameGoalReached(puzzle, solver)
+                }
+                if (!solved) return null
+                if (selectedReply == null) selectedReply = afterWhite
+            }
+        }
+    }
+    return selectedReply
+}

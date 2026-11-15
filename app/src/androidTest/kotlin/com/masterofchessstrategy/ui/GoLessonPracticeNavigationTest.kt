@@ -420,6 +420,36 @@ class GoLessonPracticeNavigationTest {
         capture("life-second-clear")
     }
 
+    @Test fun lifeCounterCaptureWaitsForTheSecondMoveBeforeAwardingCredit() {
+        val puzzle = checkNotNull(GoEndgameLibrary.puzzle("corner-life-counter-capture"))
+        val preceding = GoEndgameLibrary.puzzles.takeWhile { it.id != puzzle.id }.map { it.id }.toSet()
+        val repository = RoomGoEndgameProgressRepository(database)
+        runBlocking {
+            preceding.forEach { repository.complete(it) }
+            repository.select(puzzle.id)
+        }
+        compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag(GO_ENDGAMES_ENTRY_TAG).performScrollTo().performClick()
+        awaitTitle(puzzle.title)
+        capture("life-counter-start")
+        compose.onNodeWithTag("go_intersection_1_0").performClick()
+        compose.waitUntil(15_000) {
+            compose.onAllNodes(hasTestTag("go_endgame_feedback") and hasText("剩余 1 手", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("go_intersection_3_0").assertContentDescriptionEquals("第1行第4列，白子，最后落点")
+        assertEquals(preceding, runBlocking { repository.load().completedIds })
+        compose.onNodeWithTag("go_endgame_feedback").performScrollTo().assertIsDisplayed()
+        capture("life-counter-defense")
+        compose.onNodeWithTag("go_intersection_2_0").performClick()
+        awaitTag("go_endgame_completed")
+        compose.onNodeWithTag("go_intersection_3_0").assertContentDescriptionEquals("第1行第4列，空点，高亮点")
+        compose.onNodeWithTag("go_endgame_rewards").performScrollTo().assertTextEquals("残局奖励 13 星 · 420 分")
+        assertEquals(preceding + puzzle.id, runBlocking { repository.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        capture("life-counter-clear")
+    }
+
     private fun openLessons() {
         compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
         compose.onNodeWithTag(GO_LEARNING_ENTRY_TAG).performScrollTo().performClick()

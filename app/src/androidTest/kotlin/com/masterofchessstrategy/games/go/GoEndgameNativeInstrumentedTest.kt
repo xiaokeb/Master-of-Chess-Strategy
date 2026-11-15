@@ -24,7 +24,7 @@ class GoEndgameNativeInstrumentedTest {
                 2 -> {
                     assertFalse(first.completed)
                     assertTrue(first.feedback.contains("剩余 1 手"))
-                    session.answer(BoardPosition(8, 7))
+                    session.answer(if (puzzle.theme == GoEndgameTheme.LIFE) BoardPosition(2, 0) else BoardPosition(8, 7))
                 }
                 else -> {
                     assertFalse(first.completed)
@@ -81,5 +81,28 @@ class GoEndgameNativeInstrumentedTest {
                 }
             }
         }
+    }
+
+    @Test fun twoMoveLifeSurvivesBothLocalInvasionsAndPass() {
+        val puzzle = checkNotNull(GoEndgameLibrary.puzzle("corner-life-counter-capture"))
+        val plan = GoEndgameLibrary.open(puzzle)
+        val defenses = mapOf(
+            GoAction.Place(BoardPosition(2, 0)) to BoardPosition(3, 0),
+            GoAction.Place(BoardPosition(3, 0)) to BoardPosition(2, 0),
+            GoAction.Pass to BoardPosition(2, 0),
+        )
+        for ((defense, reply) in defenses) {
+            NativeGoEngine(puzzle.boardSize).use { engine ->
+                assertEquals(RestoreResult.Restored, engine.restore(plan.copyInitialBytes()))
+                assertEquals(ActionResult.Accepted, engine.apply(GoAction.Place(puzzle.answer)))
+                assertFalse(goEndgameGoalReached(puzzle, engine))
+                assertEquals(ActionResult.Accepted, engine.apply(defense))
+                assertEquals(ActionResult.Accepted, engine.apply(GoAction.Place(reply)))
+                assertTrue(goEndgameGoalReached(puzzle, engine))
+            }
+        }
+        val alternate = GoEndgameSession(plan)
+        assertEquals(GoStone.WHITE.code, alternate.answer(BoardPosition(2, 0)).stones[0])
+        assertTrue(alternate.answer(BoardPosition(1, 0)).completed)
     }
 }

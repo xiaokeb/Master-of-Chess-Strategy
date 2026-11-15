@@ -1,0 +1,122 @@
+{
+  "debug_abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "pending": [
+    "larger life-and-death library",
+    "more boards and three-or-more moves",
+    "physical-device gameplay"
+  ],
+  "device": {
+    "runs": [
+      {
+        "log_sha256": "3dc681125e63111ec88db1bbed136647d85fc8c20bd3178d3ac8d65da0c8b868",
+        "tests": 5,
+        "font": "1.0",
+        "images": [
+          {
+            "path": "font-1.0\\89be742e-3aaa-41c6-90aa-374eea2c091e\\life-counter-clear.png",
+            "sha256": "a17fb5a8672ad45818fd10d806202a1594d633321d2778fea096ecc76d16ea88"
+          },
+          {
+            "path": "font-1.0\\89be742e-3aaa-41c6-90aa-374eea2c091e\\life-counter-defense.png",
+            "sha256": "5774b4bb3e1f154ad0bff2165fa579dde6aa0b03af6ddad6a08ad093b024e5a4"
+          },
+          {
+            "path": "font-1.0\\89be742e-3aaa-41c6-90aa-374eea2c091e\\life-counter-start.png",
+            "sha256": "ed288e84c368b5f47ffcd076554215aedd4b07394307d3d52125bacb81d82212"
+          }
+        ]
+      },
+      {
+        "log_sha256": "00926dda65a21be376526f5cd1ab09258773a80f0f0927e03ea52e17ddb33ad2",
+        "tests": 1,
+        "font": "1.5",
+        "images": [
+          {
+            "path": "font-1.5\\b32c88f7-d17a-4239-9db4-4bef8336d645\\life-counter-clear.png",
+            "sha256": "24e076966884a74427f12defe79636d9708f255a35d1b7632e4279085707bd9a"
+          },
+          {
+            "path": "font-1.5\\b32c88f7-d17a-4239-9db4-4bef8336d645\\life-counter-defense.png",
+            "sha256": "a5e6ff7ae93a0f775fcfc74807b1cbe5ef46853f4044ed7a44cff755b7dabbc7"
+          },
+          {
+            "path": "font-1.5\\b32c88f7-d17a-4239-9db4-4bef8336d645\\life-counter-start.png",
+            "sha256": "ba68d75bc36eac0a08c70bc09f6c784eab0167934fc4b7e45af8bc0b1925a8b0"
+          }
+        ]
+      }
+    ],
+    "restored_font": "1.0",
+    "name": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "folder": "device-a8506f80bef64aad9b144d18da92c580"
+  },
+  "expected_changed_paths": 8,
+  "assets": [],
+  "build": {
+    "release_manifest": "processed",
+    "baseline": "c9e64216d38c6e4f73d8d30213b2a37175b086f0",
+    "candidate": "go-two-life1",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "e9c3f8442755479a4673002de3eb1ca806ee585a54ab1865c861412b36e6c718",
+      "app/build/outputs/apk/debug/app-debug.apk": "97ffd1caf75fb7a43eb049e024748b5fe61d8cea1c27c05e7f33fd8669f445f8"
+    },
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.games.go.data.RoomGoProgressRepositoriesTest",
+        "tests": 14
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameChallengesTest",
+        "tests": 7
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameLibraryTest",
+        "tests": 14
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameProgressTest",
+        "tests": 9
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameViewModelTest",
+        "tests": 11
+      }
+    ],
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "overlays": [
+      {
+        "sha256": "93190943681b86f276e5f2c9938cf5fdc99a2c1d1924d02d9713bace391ae88b",
+        "working_sha256": "93190943681b86f276e5f2c9938cf5fdc99a2c1d1924d02d9713bace391ae88b",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibrary.kt"
+      },
+      {
+        "sha256": "f29d78fc6350bbf1faf644a346a7142dda47b3c596fa12602f3cc7e1785ae6c7",
+        "working_sha256": "f29d78fc6350bbf1faf644a346a7142dda47b3c596fa12602f3cc7e1785ae6c7",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibraryTest.kt"
+      },
+      {
+        "sha256": "380d3ae65ea52aefc23ea2b8c09e3b9d147182538b1845f898190064f0c254f9",
+        "working_sha256": "380d3ae65ea52aefc23ea2b8c09e3b9d147182538b1845f898190064f0c254f9",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoEndgameNativeInstrumentedTest.kt"
+      },
+      {
+        "sha256": "a91791d9b72734376a75ec9dc24291e8bf2eaf1d553437923039f7767a27c185",
+        "working_sha256": "a91791d9b72734376a75ec9dc24291e8bf2eaf1d553437923039f7767a27c185",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoLessonPracticeNavigationTest.kt"
+      },
+      {
+        "sha256": "2a308f9037b9efa369f7640b1801b217a534369bea789dca60e41974bc4d0b7e",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameChallengesTest.kt",
+        "working_sha256": "2a308f9037b9efa369f7640b1801b217a534369bea789dca60e41974bc4d0b7e"
+      }
+    ]
+  },
+  "tag": "v0.1.0-go-two-move-life.1",
+  "kind": "source_prerelease",
+  "game": "go"
+}

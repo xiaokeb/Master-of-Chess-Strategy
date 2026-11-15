@@ -15,8 +15,11 @@ class GoEndgameChallengesTest {
         assertEquals(listOf(ids[4]), GoEndgameChallenges.catalog(GoEndgameTheme.CAPTURE, GoEndgameLevel.MEDIUM).map { it.id })
         assertTrue(GoEndgameChallenges.available(GoEndgameProgress(), level = GoEndgameLevel.MEDIUM).isEmpty())
         assertTrue(GoEndgameChallenges.available(GoEndgameProgress(), level = GoEndgameLevel.MASTER).isEmpty())
-        val masterUnlocked = GoEndgameProgress(ids.dropLast(1).toSet())
-        assertEquals(listOf("corner-liberty-race"), GoEndgameChallenges.available(masterUnlocked,
+        val lifeLocked = GoEndgameProgress(ids.dropLast(2).toSet())
+        assertEquals(listOf("corner-liberty-race"), GoEndgameChallenges.available(lifeLocked,
+            level = GoEndgameLevel.MASTER).map { it.id })
+        val lifeUnlocked = lifeLocked.complete("link-one-eye-groups")
+        assertEquals(listOf("corner-liberty-race", "corner-life-counter-capture"), GoEndgameChallenges.available(lifeUnlocked,
             level = GoEndgameLevel.MASTER).map { it.id })
         assertEquals(listOf(ids[0]), GoEndgameChallenges.available(GoEndgameProgress(), GoEndgameTheme.CAPTURE).map { it.id })
     }

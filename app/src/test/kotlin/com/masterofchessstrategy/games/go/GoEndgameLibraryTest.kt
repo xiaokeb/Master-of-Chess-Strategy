@@ -8,7 +8,7 @@ import org.junit.Test
 class GoEndgameLibraryTest {
     @Test fun catalogHasStableUniqueMetadataAndLinearDifficultyOrder() {
         val puzzles = GoEndgameLibrary.puzzles
-        assertEquals(12, puzzles.size); assertEquals(puzzles.size, puzzles.map { it.id }.toSet().size)
+        assertEquals(13, puzzles.size); assertEquals(puzzles.size, puzzles.map { it.id }.toSet().size)
         assertTrue(puzzles.all { it.setup.size % 2 == 0 })
         assertEquals(setOf(9, 13, 19), puzzles.map { it.boardSize }.toSet())
         assertEquals(GoEndgameLevel.entries, puzzles.map { it.level }.distinct())
@@ -38,7 +38,8 @@ class GoEndgameLibraryTest {
         assertEquals(EndgameRewardTotals(7, 7, 120), GoEndgameLibrary.rewards(decoded.completedIds))
         assertEquals(EndgameRewardTotals(9, 9, 200), GoEndgameLibrary.rewards(puzzles.take(9).map { it.id }.toSet()))
         assertEquals(EndgameRewardTotals(10, 10, 280), GoEndgameLibrary.rewards(puzzles.take(10).map { it.id }.toSet()))
-        assertEquals(EndgameRewardTotals(12, 12, 340), GoEndgameLibrary.rewards(puzzles.map { it.id }.toSet()))
+        assertEquals(EndgameRewardTotals(12, 12, 340), GoEndgameLibrary.rewards(puzzles.take(12).map { it.id }.toSet()))
+        assertEquals(EndgameRewardTotals(13, 13, 420), GoEndgameLibrary.rewards(puzzles.map { it.id }.toSet()))
         assertEquals(EndgameRewardTotals(), GoEndgameLibrary.rewards(setOf("unknown")))
         assertEquals(GoEndgameLibrary.rewards(older.completedIds),
             GoEndgameLibrary.rewards(older.complete(puzzles.first().id).completedIds))
@@ -67,6 +68,28 @@ class GoEndgameLibraryTest {
         assertFalse(wrong.completed); assertEquals(1, wrong.attempts); assertEquals(initial.stones, wrong.stones)
         val solved = session.answer(puzzle.answer)
         assertTrue(solved.completed); assertEquals(2, solved.attempts)
+    }
+
+    @Test fun twoMoveLifeRejectsRefutedAndWastedMovesWithoutLosingCheckpoint() {
+        val puzzle = checkNotNull(GoEndgameLibrary.puzzle("corner-life-counter-capture"))
+        val session = GoEndgameSession(GoEndgameLibrary.open(puzzle, factory), factory)
+        val initial = session.state()
+        val refuted = session.answer(BoardPosition(0, 0))
+        assertEquals(initial.stones, refuted.stones)
+        assertNull(refuted.lastMoveIndex)
+        val defended = session.answer(puzzle.answer)
+        assertFalse(defended.completed)
+        assertEquals(GoStone.WHITE.code, defended.stones[3])
+        assertEquals(3, defended.lastMoveIndex)
+        assertTrue(defended.feedback.contains("剩余 1 手"))
+        val wasted = session.answer(BoardPosition(6, 6))
+        assertEquals(defended.stones, wasted.stones)
+        assertFalse(wasted.completed)
+        val solved = session.answer(BoardPosition(2, 0))
+        assertTrue(solved.completed)
+        assertEquals(4, solved.attempts)
+        assertEquals(setOf(BoardPosition(0, 0), BoardPosition(3, 0)), solved.trueEyes)
+        assertEquals(initial, session.reset())
     }
 
     @Test fun illegalMoveDoesNotMutatePositionOrConsumeAnswer() {
