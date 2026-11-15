@@ -1,0 +1,91 @@
+{
+  "expected_changed_paths": 6,
+  "device": {
+    "cases": [
+      {
+        "mode": "timed-human",
+        "pids": [
+          3507,
+          3923,
+          4039
+        ],
+        "hashes": [
+          {
+            "sha256": "199d777ebbda3d852472eb0a2ac2b3fb3e5a4d454189a7765384fe821c2dc2f4",
+            "name": "timed-human-seed.log"
+          },
+          {
+            "sha256": "15f0d17f737a89a51103e837b62d0bbf611a63bc6f08becac9c97d623d45a15c",
+            "name": "timed-human-before.json"
+          },
+          {
+            "sha256": "48b9214bfc2806926f2bbd1038167a03bb62067d7748f43e7f5691db6bdd5bb0",
+            "name": "timed-human-after.json"
+          },
+          {
+            "sha256": "6485fd1a00a32f570b98b3330ff53c19c79f5d6eafd056d32cfd7855e99f5b9f",
+            "name": "timed-human-final.json"
+          }
+        ]
+      },
+      {
+        "mode": "timed-auto",
+        "pids": [
+          4219,
+          4573,
+          4684
+        ],
+        "hashes": [
+          {
+            "sha256": "5b300fbdfb3db82e2efe8fdc9b33e165c7bdbb3076bc69771a83a7362d9f3eea",
+            "name": "timed-auto-seed.log"
+          },
+          {
+            "sha256": "16e633a2c767aeb7ab53c754d5fb54833d82ae079fe94a542a913a8e2ae161ad",
+            "name": "timed-auto-before.json"
+          },
+          {
+            "sha256": "9de181fb604be97f194768c154342ce02f6da65ea77d8d662da36be472b4ea44",
+            "name": "timed-auto-after.json"
+          },
+          {
+            "sha256": "5828fc0ec902c70e6e8fa60fc96c8ee87f124ef6e4294224694b23e63fcf52e0",
+            "name": "timed-auto-final.json"
+          }
+        ]
+      }
+    ],
+    "folder": "device-56b3336e3f2444ddac2dbce15fd5c648",
+    "name": "Pixel_7_Pro"
+  },
+  "distribution": "source-only",
+  "schema_version": 1,
+  "driver": {
+    "path": "tools/android/go/test-clock-process-restart.ps1",
+    "sha256": "abf175e33e90b4ca0f79037a853b0f7e40b17a91e9d9c9cfe18352aed114b390"
+  },
+  "build": {
+    "baseline": "d1c80540366d09956fe7cd0b115873262c731fc8",
+    "overlays": [
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/data/GoFormalProcessCheckpointInstrumentedTest.kt",
+        "sha256": "82ae045ebef33b0a7cf6441581857a910cd0e648c7d665d56b4102c6d35bc392",
+        "working_sha256": "82ae045ebef33b0a7cf6441581857a910cd0e648c7d665d56b4102c6d35bc392"
+      },
+      {
+        "path": "app/src/debug/kotlin/com/masterofchessstrategy/ui/GoFormalProcessCheckActivity.kt",
+        "sha256": "dee30d022845a6345b773c014b454faf4392b27591d7cd3639f499069355c190",
+        "working_sha256": "dee30d022845a6345b773c014b454faf4392b27591d7cd3639f499069355c190"
+      }
+    ],
+    "release_manifest": "processed",
+    "lint_warnings": 25,
+    "candidate": "go-ai-clock-process1",
+    "lint_errors": 0,
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "703232a405e0c1b35d9085934ceac39ffc590af79e652085bf65bacb7962f8f7",
+      "app/build/outputs/apk/debug/app-debug.apk": "66a2bbfbeb29b9668836f07f3ab6351e6a56ea1ef25710c62c65b9b72fc129ad"
+    }
+  },
+  "tag": "v0.1.0-go-clock-process-recovery.1"
+}

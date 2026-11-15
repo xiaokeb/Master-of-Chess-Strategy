@@ -14,6 +14,7 @@ import com.masterofchessstrategy.games.go.GoAiSavedMatch
 import com.masterofchessstrategy.games.go.GoEndgameProgress
 import com.masterofchessstrategy.games.go.GoLearningLibrary
 import com.masterofchessstrategy.games.go.GoLearningProgress
+import com.masterofchessstrategy.games.go.GoTurnClock
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertArrayEquals
@@ -28,7 +29,7 @@ class GoFormalProcessCheckpointInstrumentedTest {
         val token = externalToken ?: UUID.randomUUID().toString()
         val mode = args.getString("go_process_case") ?: "standard"
         require(UUID.fromString(token).toString() == token)
-        require(mode in setOf("standard", "opening", "continuation", "long19", "resignation"))
+        require(mode in setOf("standard", "opening", "continuation", "long19", "resignation", "timed-human", "timed-auto"))
         val name = "go-formal-process-qa-$token.db"
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         check(!context.getDatabasePath(name).exists())
@@ -39,12 +40,19 @@ class GoFormalProcessCheckpointInstrumentedTest {
                 GoLearningLegacySource { GoLearningProgress() }, GoEndgameLegacySource { GoEndgameProgress() },
                 GoAiLegacySource { null })
             val longGame = mode == "long19"
-            val automatic = longGame || mode == "continuation"
+            val timed = mode == "timed-human" || mode == "timed-auto"
+            val automatic = longGame || mode == "continuation" || mode == "timed-auto"
             val ranked = mode == "standard" || mode == "resignation"
             val config = GoAiMatchConfig(if (longGame) 19 else 9,
                 humanPlayer = if (automatic) null else GoPlayer.BLACK)
             val repository = bundle.formalAiRepository()
             val saved = NativeGoEngine(config.boardSize).use { native ->
+                if (timed) {
+                    // Persist a real near-term deadline. The process driver waits while the owner is absent.
+                    val now = System.currentTimeMillis()
+                    val clock = GoTurnClock.start(300_000L, GoPlayer.BLACK, now - 250_000L)
+                    return@use GoAiSavedMatch(matchId, config, native.serialize(), clock = clock)
+                }
                 if (longGame) return@use GoAiSavedMatch(matchId, config, native.serialize(),
                     autoContinueEnabled = true, autoContinueMaxGames = 2, autoContinueGameNumber = 2)
                 if (ranked) {
