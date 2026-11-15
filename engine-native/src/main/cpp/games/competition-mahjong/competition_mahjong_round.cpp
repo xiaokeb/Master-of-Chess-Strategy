@@ -549,13 +549,16 @@ bool CompetitionMahjongRound::restore(const std::vector<std::uint8_t>& data,
         CompetitionMahjongRound candidate(
             std::vector<CompetitionMahjongTile>(data.begin() + 7,
                 data.begin() + 7 + competition_mahjong_tile_count), data[5], data[6]);
+        candidate.journal_.reserve(count);
         for (std::size_t i = 0; i < count; ++i) {
             const std::size_t offset = header_size + 4 * i;
             if (data[offset] > static_cast<std::uint8_t>(CompetitionMahjongRoundActionKind::hu))
                 return false;
             const CompetitionMahjongRoundAction action{static_cast<CompetitionMahjongRoundActionKind>(data[offset]),
                 data[offset + 1], data[offset + 2], data[offset + 3]};
-            if ((verify && !verify(candidate, action)) || !candidate.apply(action).accepted) return false;
+            // The candidate is discarded on failure, so each replay step needs no rollback copy.
+            if ((verify && !verify(candidate, action)) || !candidate.execute(action).accepted) return false;
+            candidate.journal_.push_back(action);
         }
         *this = std::move(candidate);
         return true;

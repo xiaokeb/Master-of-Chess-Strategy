@@ -111,7 +111,9 @@ CompetitionMahjongPublicView CompetitionMahjongAutoSession::snapshot() const {
 std::optional<CompetitionMahjongRoundAction> CompetitionMahjongAutoSession::choose_action(
     const CompetitionMahjongRound& round, const CompetitionMahjongBotPolicy policy) const {
     for (std::uint8_t seat = 0; seat < 4; ++seat) {
-        if (round.legal_actions(seat).empty()) continue;
+        const auto actions = round.legal_actions(seat);
+        if (actions.empty()) continue;
+        if (actions.size() == 1) return actions.front();
         const auto view = competition_mahjong_public_view(round, seat);
         return competition_mahjong_choose_bot_action(round, seat, levels_[seat], decision_seed(view, decision_seed_), policy);
     }

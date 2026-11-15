@@ -1,0 +1,200 @@
+{
+  "assets": [],
+  "previous_volume_100": {
+    "volume_auto_export_ms": 83340,
+    "volume_auto_generate_ms": 3915,
+    "volume_auto_series": 100,
+    "volume_auto_populate_ms": 370,
+    "volume_auto_read_history_ms": 149,
+    "volume_auto_export_bytes": 3870722,
+    "volume_auto_write_favorite_ms": 3,
+    "volume_auto_restore_ms": 82775
+  },
+  "device": {
+    "volume_metrics": {
+      "volume_auto_read_history_ms": 125,
+      "volume_auto_series": 100,
+      "volume_auto_populate_ms": 378,
+      "volume_auto_generate_ms": 3443,
+      "volume_auto_export_ms": 69624,
+      "volume_auto_write_favorite_ms": 2,
+      "volume_auto_export_bytes": 3870722,
+      "volume_auto_restore_ms": 69393
+    },
+    "abi": "x86_64",
+    "candidate": "cm-auto-restore-integrated1",
+    "runs": [
+      {
+        "name": "native",
+        "selector": "com.masterofchessstrategy.engine.NativeCompetitionMahjongAutoInstrumentedTest,com.masterofchessstrategy.engine.NativeCompetitionMahjongInstrumentedTest,com.masterofchessstrategy.engine.CompetitionMahjongPublicV2InstrumentedTest",
+        "log_sha256": "94c73ae3638cd1913057c304c3cc8fa34c24594fbe5a49e25ccd9dbd56ddf845",
+        "tests": 18
+      },
+      {
+        "name": "storage",
+        "selector": "com.masterofchessstrategy.games.competition_mahjong.auto.replay.CompetitionMahjongAutoReplayInstrumentedTest,com.masterofchessstrategy.games.competition_mahjong.auto.storage.CompetitionMahjongAutoRoomInstrumentedTest#coordinatedBackupRestoresArchiveAndRejectsForgedStandardWallBeforeClearing,com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalProductionBackupInstrumentedTest#realNativeRejectsAnIllegalPaidActionBeforeAnyClear,com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalProductionBackupInstrumentedTest#sixteenRealHandsSettleWithdrawAndReopenWithHistoryAndDeletionIntact",
+        "log_sha256": "a667bcb3d53bfa29dc9984c212f3e5f4add55da640cc0e970800c23d2a6f4d67",
+        "tests": 5
+      },
+      {
+        "name": "volume-100",
+        "selector": "com.masterofchessstrategy.games.competition_mahjong.auto.storage.CompetitionMahjongAutoVolumeInstrumentedTest",
+        "log_sha256": "5acbfaf9896dc0de38e34f004e5949eb6af79a6213a5d1de3cf0a7ad6fcfac9a",
+        "tests": 1
+      }
+    ],
+    "products": {
+      "engine-native/build/outputs/apk/androidTest/debug/engine-native-debug-androidTest.apk": "f536de01a113d1cbced614b54213ce5cd9977c63caf86be26805e48be7aa26d9",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "e9c3f8442755479a4673002de3eb1ca806ee585a54ab1865c861412b36e6c718",
+      "app/build/outputs/apk/debug/app-debug.apk": "007540d0ea165f0c3eca85d9621e6e75eefe830139837d2140e1cf07355fe549"
+    },
+    "folder": "device-0367436b207f4bbaa7e18c16eef78640",
+    "model": "Pixel_7_Pro"
+  },
+  "game": "competition-mahjong",
+  "kind": "source_prerelease",
+  "build": {
+    "lint_errors": 0,
+    "baseline": "9ef4a9a88d2e369dadd779fd00c0f15fb5baaaa0",
+    "overlays": [
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_auto_session.cpp",
+        "working_sha256": "81e26953f7e7784f93cabfe6f242bfe7975fc67c1a29e841b32d6d5cf1539287",
+        "sha256": "81e26953f7e7784f93cabfe6f242bfe7975fc67c1a29e841b32d6d5cf1539287"
+      },
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_round.cpp",
+        "working_sha256": "225c3d48ae5303120bfd1db282b4bf7d174a1c0e8ca9182a5a7e117473c27bbf",
+        "sha256": "225c3d48ae5303120bfd1db282b4bf7d174a1c0e8ca9182a5a7e117473c27bbf"
+      },
+      {
+        "path": "tools/android/competition-mahjong/competition-mahjong-auto-restore-driver.cpp",
+        "working_sha256": "8b6fdd7b85b8ed622a90f50f6f2db100b5f1865c507a0819b28b83a1b9dd0a00",
+        "sha256": "8b6fdd7b85b8ed622a90f50f6f2db100b5f1865c507a0819b28b83a1b9dd0a00"
+      }
+    ],
+    "lint_warnings": 25,
+    "release_manifest": "processed",
+    "products": {
+      "engine-native/build/outputs/apk/androidTest/debug/engine-native-debug-androidTest.apk": "f536de01a113d1cbced614b54213ce5cd9977c63caf86be26805e48be7aa26d9",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "e9c3f8442755479a4673002de3eb1ca806ee585a54ab1865c861412b36e6c718",
+      "app/build/outputs/apk/debug/app-debug.apk": "007540d0ea165f0c3eca85d9621e6e75eefe830139837d2140e1cf07355fe549"
+    },
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoCheckpointTest",
+        "tests": 9
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.auto.CompetitionMahjongAutoControllerTest",
+        "tests": 24
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchCheckpointTest",
+        "tests": 15
+      }
+    ],
+    "candidate": "cm-auto-restore-integrated1"
+  },
+  "debug_abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "pending": [
+    "physical-device timing",
+    "500-series optimized path timing",
+    "larger backups"
+  ],
+  "native_comparison": {
+    "record_sha256": "58e50b3cc26e235562e1d23238d1c41f5550f1e63d29f9b6b51badac5327f594",
+    "model": "Pixel_7_Pro",
+    "folder": "device-39dc0897ffc34784b974e2ab9289b803",
+    "build": {
+      "executable_sha256": {
+        "cm-auto-restore-after": "8296c87e749025f3e24a5e228ecb26e4a1fcd97c33d6600e371168c57610541c",
+        "cm-auto-restore-before": "8d1fbe8681565b8f517cd72e6888993e8c64fdaa9814399a7eb040b13cdc4ccf"
+      },
+      "shared_lib_sha256": "21f4fbc0aba5df89824b3de2638d504dd4c16aa1762ddeb3979d19ca05744ccb",
+      "ndk": "30.0.16138531",
+      "inputs": [
+        {
+          "working_sha256": "8b6fdd7b85b8ed622a90f50f6f2db100b5f1865c507a0819b28b83a1b9dd0a00",
+          "path": "tools/android/competition-mahjong/competition-mahjong-auto-restore-driver.cpp",
+          "sha256": "8b6fdd7b85b8ed622a90f50f6f2db100b5f1865c507a0819b28b83a1b9dd0a00"
+        },
+        {
+          "working_sha256": "81e26953f7e7784f93cabfe6f242bfe7975fc67c1a29e841b32d6d5cf1539287",
+          "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_auto_session.cpp",
+          "sha256": "81e26953f7e7784f93cabfe6f242bfe7975fc67c1a29e841b32d6d5cf1539287"
+        },
+        {
+          "working_sha256": "225c3d48ae5303120bfd1db282b4bf7d174a1c0e8ca9182a5a7e117473c27bbf",
+          "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_round.cpp",
+          "sha256": "225c3d48ae5303120bfd1db282b4bf7d174a1c0e8ca9182a5a7e117473c27bbf"
+        }
+      ],
+      "flags": [
+        "-std=c++17",
+        "-O0",
+        "-Wall",
+        "-Wextra",
+        "-Werror"
+      ],
+      "abi": "x86_64",
+      "base": "c9e64216d38c6e4f73d8d30213b2a37175b086f0"
+    },
+    "tests": 32,
+    "runs": [
+      {
+        "metrics_sha256": "1539d9f11fa926481ab9cb854eb61e79ffa4e5f03dc41815ec4ada22120924fe",
+        "variant": "before",
+        "metrics_file": "1-before-metrics.log",
+        "restore_us": [
+          973417,
+          975678,
+          976205
+        ],
+        "records_file": "1-before.tsv",
+        "records_sha256": "58e50b3cc26e235562e1d23238d1c41f5550f1e63d29f9b6b51badac5327f594"
+      },
+      {
+        "metrics_sha256": "b5e9a24e3eae43a67354617af9f114954b2fa1c86e525b0f35cf54803bcad52f",
+        "variant": "after",
+        "metrics_file": "2-after-metrics.log",
+        "restore_us": [
+          822584,
+          829699,
+          825022
+        ],
+        "records_file": "2-after.tsv",
+        "records_sha256": "58e50b3cc26e235562e1d23238d1c41f5550f1e63d29f9b6b51badac5327f594"
+      },
+      {
+        "metrics_sha256": "fb6f53cdf3de3a488f0eb66b58d50bbbb403402244208c172062e8f41123bd6a",
+        "variant": "after",
+        "metrics_file": "3-after-metrics.log",
+        "restore_us": [
+          830318,
+          828773,
+          826572
+        ],
+        "records_file": "3-after.tsv",
+        "records_sha256": "58e50b3cc26e235562e1d23238d1c41f5550f1e63d29f9b6b51badac5327f594"
+      },
+      {
+        "metrics_sha256": "7f75fd996b01d5cbc024244e53b7c754ac6c0edd08e162be77e489ac01097f4d",
+        "variant": "before",
+        "metrics_file": "4-before-metrics.log",
+        "restore_us": [
+          980794,
+          981637,
+          984013
+        ],
+        "records_file": "4-before.tsv",
+        "records_sha256": "58e50b3cc26e235562e1d23238d1c41f5550f1e63d29f9b6b51badac5327f594"
+      }
+    ]
+  },
+  "expected_changed_paths": 6,
+  "tag": "v0.1.0-competition-mahjong-auto-restore-performance.1"
+}
