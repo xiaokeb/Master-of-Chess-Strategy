@@ -1,0 +1,81 @@
+{
+  "debug_abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "build": {
+    "baseline": "3ea6774fc9ce0638d134894aea6cbab6e61ff187",
+    "overlays": {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoAiProductionEntryInstrumentedTest.kt",
+      "sha256": "c70497eb287b38b27290ffca71ce92813a81d8d84e9d068efc698bdf047eff31",
+      "working_sha256": "c70497eb287b38b27290ffca71ce92813a81d8d84e9d068efc698bdf047eff31"
+    },
+    "release_manifest": "processed",
+    "lint_warnings": 25,
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "d01720c60bcf04959856598e1ae4491cb28d4b129ca9d0d1b129590118de928d",
+      "app/build/outputs/apk/debug/app-debug.apk": "f2ba30c2174baeb0d51be315e31b9358f6c7c7373a24a8c5d79cc18e468a419f"
+    },
+    "lint_errors": 0,
+    "candidate": "go-ai-clock-background1"
+  },
+  "game": "go",
+  "pending": [
+    "physical Android device",
+    "wall-clock changes"
+  ],
+  "kind": "source_prerelease",
+  "assets": [],
+  "device": {
+    "restored_notification_granted": false,
+    "avd": "Pixel_7_Pro",
+    "initial_black_remaining_ms": 30000,
+    "ordinary_font_wrapper_note": "Instrumentation succeeded and screenshots were saved. The optional logcat line was absent. The large-font run omitted the optional logcat requirement.",
+    "original_app_op": "ignore",
+    "restored_app_op": "ignore",
+    "runs": [
+      {
+        "log_sha256": "72623341f189726e585084cc20d91f1e976c6373d5bccaf1e024466cbe5c3d72",
+        "folder": "device-fa4d2a5f89ee4137b52274e9360caf64",
+        "elapsed_seconds": 57.699,
+        "images": [
+          {
+            "path": "font-1.0/0437ce1e-7227-441d-b799-fd4a92332894/go-background-clock-enabled.png",
+            "sha256": "26819f23923e9313be18eea85148be5efe1ac6ea4bec9a4c3f2c4c5b49ad9775"
+          },
+          {
+            "path": "font-1.0/0437ce1e-7227-441d-b799-fd4a92332894/go-background-clock-timeout.png",
+            "sha256": "3b00c4f2e48c3cf6dfc46ec9bc3cd52309d9c16c1a5e0e378e0e6a735f9555fa"
+          }
+        ],
+        "tests": 1,
+        "font": "1.0"
+      },
+      {
+        "log_sha256": "f8682a8031e692950afe4603751663b4ae251cb82cb9be051485a911e2d2a421",
+        "folder": "device-d425c1c6a5c14e4f929330dc7685d7d3",
+        "elapsed_seconds": 58.246,
+        "images": [
+          {
+            "path": "font-1.5/9e605535-e7b6-4344-ab98-161aa7b5101c/go-background-clock-enabled.png",
+            "sha256": "6bfc32560cf24eb59788fd2d34673bb11a3b373ae4bcfa2bee27d8a650e91f99"
+          },
+          {
+            "path": "font-1.5/9e605535-e7b6-4344-ab98-161aa7b5101c/go-background-clock-timeout.png",
+            "sha256": "64c54edddba6b24af9d61892d8147998590b60aa7c35239c4371d937c29bb50a"
+          }
+        ],
+        "tests": 1,
+        "font": "1.5"
+      }
+    ],
+    "restored_font": "1.0",
+    "abi": "x86_64",
+    "original_notification_granted": false,
+    "initial_white_remaining_ms": 300000,
+    "original_font": "1.0",
+    "api_test": "com.masterofchessstrategy.ui.GoAiProductionEntryInstrumentedTest#backgroundClockExpiresAndArchivesWhileTheScreenRemainsOff",
+    "screenshots_reviewed": 4
+  },
+  "expected_changed_paths": 4
+}

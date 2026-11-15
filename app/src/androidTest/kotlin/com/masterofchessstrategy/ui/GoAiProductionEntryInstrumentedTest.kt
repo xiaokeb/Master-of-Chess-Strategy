@@ -422,6 +422,98 @@ class GoAiProductionEntryInstrumentedTest {
         }
     }
 
+    @Test fun backgroundClockExpiresAndArchivesWhileTheScreenRemainsOff() {
+        check(Build.HARDWARE in setOf("ranchu", "goldfish"))
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        val power = context.getSystemService(PowerManager::class.java)
+        val notifications = context.getSystemService(NotificationManager::class.java)
+        check(notifications.areNotificationsEnabled()) { "Grant notifications before running the timed background check" }
+        val preferences = context.getSharedPreferences("go-auto-playback-v1", Context.MODE_PRIVATE)
+        val previousSpeed = preferences.all["speed"]
+        try {
+            withOwnedApp(completedLessons = 10, useActivityStore = true) { f ->
+                val clock = GoTurnClock(300_000L, 30_000L, 300_000L, GoPlayer.BLACK, System.currentTimeMillis())
+                val initial = NativeGoEngine(9).use { engine ->
+                    GoAiSavedMatch(UUID.randomUUID().toString(), GoAiMatchConfig(9, humanPlayer = null),
+                        engine.serialize(), clock = clock)
+                }
+                runBlocking { f.storage.formalAiRepository().save(initial) }
+                enterSetup()
+                compose.onNodeWithTag("go_ai_setup_continue").performScrollTo().performClick()
+                compose.waitUntil(20_000) {
+                    compose.onAllNodes(hasTestTag("go_ai_phase") and hasText("AI 已暂停")).fetchSemanticsNodes().isNotEmpty()
+                }
+                compose.onNodeWithTag("go_ai_speed").performScrollTo()
+                    .performSemanticsAction(SemanticsActions.SetProgress) { it(0.5f) }
+                compose.onNodeWithTag("go_ai_pause").performScrollTo().performClick()
+                compose.waitUntil(15_000) {
+                    compose.onAllNodes(hasTestTag("go_ai_background") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+                }
+                compose.onNodeWithTag("go_ai_background").performScrollTo().assertIsDisplayed().performClick()
+                fun notificationPosted() = notifications.activeNotifications.any { it.notification.channelId == GoBackgroundPlayback.CHANNEL }
+                fun wakeHeld() = shell("dumpsys power").substringAfter("Wake Locks:").substringBefore("Suspend Blockers:")
+                    .contains("MasterofChessStrategy:GoBackground")
+                fun await(stage: String, timeoutMillis: Long, condition: () -> Boolean) = runBlocking {
+                    try { withTimeout(timeoutMillis) { while (!condition()) delay(100) } }
+                    catch (failure: TimeoutCancellationException) {
+                        throw AssertionError("$stage interactive=${power.isInteractive} lease=${GoBackgroundPlayback.lease.value?.ready}", failure)
+                    }
+                }
+                await("service enabled", 10_000) { GoBackgroundPlayback.lease.value?.ready == true && notificationPosted() }
+                f.capture("go-background-clock-enabled")
+                try {
+                    shell("input keyevent 223")
+                    await("screen off", 10_000) {
+                        !power.isInteractive && GoBackgroundPlayback.lease.value?.visible == false && wakeHeld()
+                    }
+                    val sleepStartedAt = SystemClock.elapsedRealtime()
+                    val atSleep = checkNotNull(f.active())
+                    val sleepEvents = NativeGoEngine(9).use {
+                        assertEquals(RestoreResult.Restored, it.restore(atSleep.copyBytes()))
+                        it.eventHistory().size
+                    }
+                    await("timeout archived while asleep", 95_000) {
+                        check(!power.isInteractive) { "Screen turned on before timeout" }
+                        runBlocking { f.db.goAiCheckpointDao().listArchives().size } == 1
+                    }
+                    await("background resources released", 10_000) {
+                        GoBackgroundPlayback.lease.value == null && !notificationPosted() && !wakeHeld()
+                    }
+                    assertFalse(power.isInteractive)
+                    val finished = checkNotNull(f.active())
+                    assertEquals(initial.matchId, finished.matchId)
+                    assertEquals(0L, finished.clock?.blackMillis)
+                    assertTrue(checkNotNull(finished.clock).whiteMillis in 1 until clock.whiteMillis)
+                    assertNull(finished.clock?.active)
+                    NativeGoEngine(9).use {
+                        assertEquals(RestoreResult.Restored, it.restore(finished.copyBytes()))
+                        assertEquals(GameResult.SECOND_PLAYER_WIN, it.gameResult())
+                        val events = it.eventHistory()
+                        assertEquals(GoAction.Timeout(GoPlayer.BLACK), events.last())
+                        assertTrue("Expected a saved move after screen off", events.size > sleepEvents + 1)
+                        println("Go screen-off ${SystemClock.elapsedRealtime() - sleepStartedAt}ms, " +
+                            "events $sleepEvents to ${events.size}, white=${finished.clock?.whiteMillis}ms")
+                    }
+                } finally {
+                    shell("input keyevent 224")
+                    shell("wm dismiss-keyguard")
+                }
+                compose.onNodeWithTag("go_ai_timeout").performScrollTo().assertIsDisplayed().assertTextEquals("黑方超时")
+                f.capture("go-background-clock-timeout")
+                returnToSetup()
+                compose.onNodeWithTag("go_ai_setup_continue").performScrollTo().performClick()
+                compose.waitUntil(20_000) { compose.onAllNodesWithTag("go_ai_timeout").fetchSemanticsNodes().isNotEmpty() }
+                assertEquals(1, runBlocking { f.db.goAiCheckpointDao().listArchives().size })
+                assertEquals(initial.matchId, f.active()?.matchId)
+            }
+        } finally {
+            preferences.edit().apply {
+                if (previousSpeed is Float) putFloat("speed", previousSpeed) else remove("speed")
+            }.apply()
+        }
+    }
+
     private fun shell(command: String): String = ParcelFileDescriptor.AutoCloseInputStream(
         InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command),
     ).bufferedReader().use { it.readText() }
