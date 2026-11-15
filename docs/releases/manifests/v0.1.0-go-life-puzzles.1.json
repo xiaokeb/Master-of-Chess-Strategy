@@ -1,0 +1,122 @@
+{
+  "tag": "v0.1.0-go-life-puzzles.1",
+  "game": "go",
+  "debug_abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "kind": "source_prerelease",
+  "expected_changed_paths": 8,
+  "build": {
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.games.go.data.RoomGoProgressRepositoriesTest",
+        "tests": 14
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameChallengesTest",
+        "tests": 7
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameLibraryTest",
+        "tests": 13
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameProgressTest",
+        "tests": 9
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameViewModelTest",
+        "tests": 11
+      }
+    ],
+    "lint_errors": 0,
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "b4b2b91a8c23fd9ce263b5b5a86cb9a1eb13752f5a4077de4434a5c605c8a823",
+      "app/build/outputs/apk/debug/app-debug.apk": "4b63faebf9d9c51efa3b2ed501be9b7cd78a43f132619ce37a3c11b79a8a5be8"
+    },
+    "baseline": "b97d675c91894f0bd3790dc3713b5f7146b158a5",
+    "release_manifest": "processed",
+    "candidate": "go-life1",
+    "lint_warnings": 25,
+    "overlays": [
+      {
+        "sha256": "5ca4f13ce8f4ddfd7183eecd2315f133c63691afd4ff49460017599d19940d18",
+        "working_sha256": "5ca4f13ce8f4ddfd7183eecd2315f133c63691afd4ff49460017599d19940d18",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibrary.kt"
+      },
+      {
+        "sha256": "a2cfeefb2dd49897e3f65a74d3e81f80ed8bbface2753637d5ae27b8f844d33d",
+        "working_sha256": "a2cfeefb2dd49897e3f65a74d3e81f80ed8bbface2753637d5ae27b8f844d33d",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameRoute.kt"
+      },
+      {
+        "sha256": "cc69815d5628bd28e70c31d38bf8e317498adf5b05ac1fd028c46a64e8b10c23",
+        "working_sha256": "cc69815d5628bd28e70c31d38bf8e317498adf5b05ac1fd028c46a64e8b10c23",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibraryTest.kt"
+      },
+      {
+        "sha256": "5bf0397f0c9d18e66241cdb2fc0a69be8f4a6d3bd07d275356d1d22539398c50",
+        "working_sha256": "5bf0397f0c9d18e66241cdb2fc0a69be8f4a6d3bd07d275356d1d22539398c50",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoEndgameNativeInstrumentedTest.kt"
+      },
+      {
+        "sha256": "733475c03daa5d35ac968136f46d529a01a3c3afc091f31da388f67d61785207",
+        "working_sha256": "733475c03daa5d35ac968136f46d529a01a3c3afc091f31da388f67d61785207",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoLessonPracticeNavigationTest.kt"
+      }
+    ]
+  },
+  "pending": [
+    "life puzzles requiring several moves and defender variations",
+    "larger puzzle library",
+    "physical-device gameplay"
+  ],
+  "device": {
+    "abi": "x86_64",
+    "restored_font": "1.0",
+    "runs": [
+      {
+        "log_sha256": "069eb947151482c244627c8a649c89b7ebb2c4cc56c8d6b3200b2f56e4cc43a5",
+        "font": "1.0",
+        "images": [
+          {
+            "path": "font-1.0\\c8882530-5292-4266-8262-2da7d60917a7\\life-filter-locked.png",
+            "sha256": "79987c8bd078a977772c1c767db43cd606627afba184a2876499d8f48763bdc0"
+          },
+          {
+            "path": "font-1.0\\c8882530-5292-4266-8262-2da7d60917a7\\life-first-clear.png",
+            "sha256": "e6e27c2db0c266b9608c5c0d01d3fdaad35a5a58ee2fb08aa37f6892f08e9109"
+          },
+          {
+            "path": "font-1.0\\c8882530-5292-4266-8262-2da7d60917a7\\life-second-clear.png",
+            "sha256": "622581a527afad11929ba58279d3ae26b6ff56cae5e50558cc9a805c5f62c361"
+          }
+        ],
+        "tests": 4
+      },
+      {
+        "log_sha256": "70d07622e89f53d8f8bbcb7150fbabae578b7046afcc43442f16055f8e3e4ec7",
+        "font": "1.5",
+        "images": [
+          {
+            "path": "font-1.5\\7ac9443c-4e20-44b5-849c-07c04767ce51\\life-filter-locked.png",
+            "sha256": "f8a33a9b92077618c116446a2207d94e1562bf2eb6247635ac6d7bcfb1048a0f"
+          },
+          {
+            "path": "font-1.5\\7ac9443c-4e20-44b5-849c-07c04767ce51\\life-first-clear.png",
+            "sha256": "19e343e4462cac2e678dfe5d84b44576ff528462e5536861180bd51313c159ef"
+          },
+          {
+            "path": "font-1.5\\7ac9443c-4e20-44b5-849c-07c04767ce51\\life-second-clear.png",
+            "sha256": "056a319e34dfc0a5d23b6e1dda29704a812dd9d6af94241e6812efe9a2af3acc"
+          }
+        ],
+        "tests": 1
+      }
+    ],
+    "name": "Pixel_7_Pro",
+    "folder": "device-5c6b82c098c9426f81add9b0a797477b"
+  },
+  "assets": []
+}

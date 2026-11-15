@@ -3,7 +3,7 @@ package com.masterofchessstrategy.games.go
 import com.masterofchessstrategy.engine.*
 import com.masterofchessstrategy.progress.EndgameRewardTotals
 
-enum class GoEndgameTheme(val label: String) { CAPTURE("提子"), ESCAPE("逃出打吃"), CONNECTION("连接") }
+enum class GoEndgameTheme(val label: String) { CAPTURE("提子"), ESCAPE("逃出打吃"), CONNECTION("连接"), LIFE("做活") }
 enum class GoEndgameLevel(val label: String, internal val firstClearScore: Int) {
     SIMPLE("简单", 10), MEDIUM("中等", 20), HARD("困难", 40), MASTER("大师", 80),
 }
@@ -37,6 +37,7 @@ class GoEndgamePuzzle(
             GoEndgameTheme.CAPTURE -> captured.isNotEmpty() && targetStones.isEmpty()
             GoEndgameTheme.ESCAPE -> captured.isEmpty() && targetStones.size == 1
             GoEndgameTheme.CONNECTION -> captured.isEmpty() && targetStones.size >= 2
+            GoEndgameTheme.LIFE -> captured.isEmpty() && targetStones.isNotEmpty()
         })
     }
 }
@@ -57,6 +58,7 @@ data class GoEndgameState(
     val attempts: Int = 0,
     val lastMoveIndex: Int? = null,
     val feedback: String = puzzle.instruction,
+    val trueEyes: Set<BoardPosition> = emptySet(),
 )
 
 /** Project-authored seed positions. They are rules-verified exercises, not a licensed classic problem set. */
@@ -110,6 +112,18 @@ object GoEndgameLibrary {
                 "黑先：三手内提走标记的两颗白子。注意右下角白棋的两口气。", "目标白子已全部提走。",
                 puzzle.boardSize, puzzle.setup, puzzle.firstMove, captured = puzzle.targets, maxBlackMoves = puzzle.maxBlackMoves)
         },
+        puzzle("corner-separate-eyes", "三空分双眼", GoEndgameTheme.LIFE, GoEndgameLevel.MEDIUM,
+            "黑先：边角黑棋只剩三个相连的空点。下一手把它们分成两只真眼。",
+            "同一个黑棋棋组围住两只互不相连的真眼，已做活。",
+            0 to 1, 0 to 2, 1 to 1, 1 to 2, 2 to 1, 2 to 2,
+            3 to 1, 3 to 2, 3 to 0, 4 to 1, 4 to 0, 5 to 0,
+            answer = 1 to 0, targets = setOf(1 to 1)),
+        puzzle("link-one-eye-groups", "两组借眼", GoEndgameTheme.LIFE, GoEndgameLevel.HARD,
+            "黑先：标记处是两组各有一只眼的黑棋。找一手棋让两组共用双眼。",
+            "两组相连，保留原来的两只真眼，已做活。",
+            0 to 1, 0 to 2, 1 to 1, 1 to 2, 1 to 0, 2 to 1, 3 to 1, 2 to 2,
+            3 to 0, 3 to 2, 4 to 1, 4 to 2, 5 to 1, 5 to 2, 5 to 0, 6 to 1,
+            answer = 2 to 0, targets = setOf(0 to 1, 4 to 1)),
     )
 
     init { require(puzzles.map { it.id }.toSet().size == puzzles.size) }
@@ -142,6 +156,7 @@ object GoEndgameLibrary {
                 goEndgameLiberties(engine, goEndgameGroup(engine, puzzle.targetStones.single())).size == 1)
             if (puzzle.theme == GoEndgameTheme.CONNECTION) require(
                 puzzle.targetStones.map { goEndgameGroup(engine, it) }.distinct().size >= 2)
+            if (puzzle.theme == GoEndgameTheme.LIFE) require(!goEndgameGoalReached(puzzle, engine))
             engine.serialize()
         }
         engineFactory(puzzle.boardSize, 15, 0).use { solution ->
@@ -163,7 +178,7 @@ class GoEndgameSession(
 ) {
     private val tacticalCapture = plan.tacticalCapture?.let { GoTacticalCaptureSession(it, engineFactory) }
     private var state = initialState()
-    fun state() = state.copy(stones = state.stones.toList())
+    fun state() = state.copy(stones = state.stones.toList(), trueEyes = state.trueEyes.toSet())
     fun reset(): GoEndgameState {
         state = tacticalCapture?.reset()?.toEndgameState() ?: initialState()
         return state()
@@ -178,19 +193,25 @@ class GoEndgameSession(
         val puzzle = plan.puzzle
         var stones: List<Int>? = null
         var accepted = false
+        var eyes: Set<BoardPosition> = emptySet()
         engineFactory(puzzle.boardSize, 15, 0).use { candidate ->
             check(candidate.restore(plan.copyInitialBytes()) == RestoreResult.Restored)
             accepted = candidate.apply(GoAction.Place(point)) == ActionResult.Accepted
-            if (accepted && goEndgameGoalReached(puzzle, candidate, point)) {
-                stones = snapshot(candidate)
+            if (accepted) {
+                val reached = if (puzzle.theme == GoEndgameTheme.LIFE) {
+                    eyes = goEndgameTrueEyes(puzzle, candidate)
+                    eyes.size >= 2
+                } else goEndgameGoalReached(puzzle, candidate, point)
+                if (reached) stones = snapshot(candidate)
             }
         }
         state = when {
             !accepted -> state.copy(attempts = state.attempts + 1, feedback = "这手不符合当前围棋规则，题面保持不变。")
-            stones == null -> state.copy(attempts = state.attempts + 1, feedback = "这手合法，但没有完成本题目标；请继续观察局部的气。")
+            stones == null -> state.copy(attempts = state.attempts + 1, feedback = if (puzzle.theme == GoEndgameTheme.LIFE)
+                "这手合法，还需要让同一棋组围住两只真眼。" else "这手合法，但没有完成本题目标；请继续观察局部的气。")
             else -> state.copy(stones = checkNotNull(stones), completed = true,
                 attempts = state.attempts + 1, lastMoveIndex = point.y * puzzle.boardSize + point.x,
-                feedback = puzzle.success)
+                feedback = puzzle.success, trueEyes = eyes)
         }
         return state()
     }
@@ -227,6 +248,18 @@ internal fun goEndgameGoalReached(puzzle: GoEndgamePuzzle, engine: GoRuleEngine,
     GoEndgameTheme.CONNECTION -> {
         val group = goEndgameGroup(engine, move)
         engine.stoneAt(move) == GoStone.BLACK && group.containsAll(puzzle.targetStones)
+    }
+    GoEndgameTheme.LIFE -> goEndgameTrueEyes(puzzle, engine).size >= 2
+}
+
+private fun goEndgameTrueEyes(puzzle: GoEndgamePuzzle, engine: GoRuleEngine): Set<BoardPosition> {
+    val target = puzzle.targetStones.first()
+    if (engine.stoneAt(target) != GoStone.BLACK) return emptySet()
+    val group = goEndgameGroup(engine, target)
+    if (!group.containsAll(puzzle.targetStones)) return emptySet()
+    // Two isolated empty points surrounded by the same connected group are unfillable by White.
+    return goEndgameLiberties(engine, group).filterTo(mutableSetOf()) { eye ->
+        goEndgameNeighbors(eye, engine.boardSize).all { it in group }
     }
 }
 

@@ -372,6 +372,54 @@ class GoLessonPracticeNavigationTest {
         capture("master-first-clear")
     }
 
+    @Test fun lifeFilterUnlocksTheSecondPuzzleAfterAValidTwoEyeSolution() {
+        val first = checkNotNull(GoEndgameLibrary.puzzle("corner-separate-eyes"))
+        val second = checkNotNull(GoEndgameLibrary.puzzle("link-one-eye-groups"))
+        val preceding = GoEndgameLibrary.puzzles.takeWhile { it.id != first.id }.map { it.id }.toSet()
+        val repository = RoomGoEndgameProgressRepository(database)
+        runBlocking {
+            preceding.forEach { repository.complete(it) }
+            repository.select(first.id)
+        }
+        compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag(GO_ENDGAMES_ENTRY_TAG).performScrollTo().performClick()
+        awaitTitle(first.title)
+        fun openLifeFilter() {
+            compose.onNodeWithTag("go_endgame_catalog").performScrollTo().performClick()
+            compose.onNodeWithTag("go_endgame_filter_LIFE").performScrollTo().performClick()
+        }
+        val next = compose.onNodeWithTag("go_endgame_puzzle_${second.id}")
+        openLifeFilter()
+        next.performScrollTo().assertIsNotEnabled()
+        capture("life-filter-locked")
+        compose.onNodeWithText("关闭").performClick()
+        compose.onNodeWithTag("go_intersection_1_1").assertContentDescriptionEquals("第2行第2列，黑子，高亮点")
+        compose.onNodeWithTag("go_intersection_0_0").performClick()
+        compose.waitUntil(15_000) {
+            compose.onAllNodes(hasTestTag("go_endgame_feedback") and hasText("围住两只真眼", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        assertEquals(preceding, runBlocking { repository.load().completedIds })
+        compose.onNodeWithTag("go_intersection_1_0").performClick()
+        awaitTag("go_endgame_completed")
+        compose.onNodeWithTag("go_intersection_0_0").assertContentDescriptionEquals("第1行第1列，空点，高亮点")
+        compose.onNodeWithTag("go_intersection_2_0").assertContentDescriptionEquals("第1行第3列，空点，高亮点")
+        compose.onNodeWithTag("go_endgame_completed").performScrollTo().assertIsDisplayed()
+        capture("life-first-clear")
+        // Reopening the catalog preserves the selected theme.
+        compose.onNodeWithTag("go_endgame_catalog").performScrollTo().performClick()
+        next.performScrollTo().assertIsEnabled().performClick()
+        awaitTitle(second.title)
+        compose.onNodeWithTag("go_intersection_4_1").assertContentDescriptionEquals("第2行第5列，黑子，高亮点")
+        compose.onNodeWithTag("go_intersection_2_0").performClick()
+        awaitTag("go_endgame_completed")
+        compose.onNodeWithTag("go_intersection_4_0").assertContentDescriptionEquals("第1行第5列，空点，高亮点")
+        compose.onNodeWithTag("go_endgame_rewards").performScrollTo().assertTextEquals("残局奖励 12 星 · 340 分")
+        assertEquals(preceding + first.id + second.id, runBlocking { repository.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        capture("life-second-clear")
+    }
+
     private fun openLessons() {
         compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
         compose.onNodeWithTag(GO_LEARNING_ENTRY_TAG).performScrollTo().performClick()

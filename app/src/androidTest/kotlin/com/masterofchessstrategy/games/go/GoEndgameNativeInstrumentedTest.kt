@@ -1,6 +1,7 @@
 package com.masterofchessstrategy.games.go
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.GoAction
 import com.masterofchessstrategy.engine.GoStone
@@ -41,10 +42,12 @@ class GoEndgameNativeInstrumentedTest {
         }
     }
 
-    @Test fun counterCaptureAndDoubleConnectionAcceptExactlyTheVerifiedPlacements() {
+    @Test fun authoredTacticsAcceptExactlyTheVerifiedPlacements() {
         val expected = mapOf(
             "corner-counter-capture" to setOf(BoardPosition(0, 1)),
             "connect-between-white-groups" to setOf(BoardPosition(9, 8), BoardPosition(9, 9)),
+            "corner-separate-eyes" to setOf(BoardPosition(1, 0)),
+            "link-one-eye-groups" to setOf(BoardPosition(2, 0)),
         )
         for ((id, solutions) in expected) {
             val puzzle = checkNotNull(GoEndgameLibrary.puzzle(id))
@@ -58,6 +61,25 @@ class GoEndgameNativeInstrumentedTest {
                 action.point.takeIf { exercise.answer(it).completed }?.also { exercise.reset() }
             }
             assertEquals(id, solutions, accepted.toSet())
+        }
+    }
+
+    @Test fun eachCompletedLifeGroupRejectsImmediateWhitePlayInBothEyes() {
+        val eyesById = mapOf(
+            "corner-separate-eyes" to listOf(BoardPosition(0, 0), BoardPosition(2, 0)),
+            "link-one-eye-groups" to listOf(BoardPosition(0, 0), BoardPosition(4, 0)),
+        )
+        for ((id, eyes) in eyesById) {
+            val puzzle = checkNotNull(GoEndgameLibrary.puzzle(id))
+            val plan = GoEndgameLibrary.open(puzzle)
+            NativeGoEngine(puzzle.boardSize).use { engine ->
+                assertEquals(RestoreResult.Restored, engine.restore(plan.copyInitialBytes()))
+                assertEquals(ActionResult.Accepted, engine.apply(GoAction.Place(puzzle.answer)))
+                for (eye in eyes) {
+                    assertEquals(GoStone.EMPTY, engine.stoneAt(eye))
+                    assertFalse(engine.apply(GoAction.Place(eye)) == ActionResult.Accepted)
+                }
+            }
         }
     }
 }

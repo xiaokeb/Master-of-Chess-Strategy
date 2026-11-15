@@ -88,12 +88,18 @@ fun GoEndgameScreen(
                     state.lockedRequestedPuzzleId != null -> "对应练习尚未解锁，请先完成前置主线。"
                     else -> "残局暂不可用"
                 }) }
-                else GoBoard(exercise.puzzle.boardSize, exercise.stones,
-                    { x, y -> onAnswer(BoardPosition(x, y)) }, boardModifier,
-                    lastMoveIndex = exercise.lastMoveIndex,
-                    highlightedPoints = exercise.puzzle.captured.map { it.y * exercise.puzzle.boardSize + it.x }
-                        .filter { exercise.stones[it] == GoStone.WHITE.code }.toSet(),
-                    interactionEnabled = state.canOperate && !exercise.completed)
+                else {
+                    val puzzle = exercise.puzzle
+                    val highlighted = if (puzzle.theme == GoEndgameTheme.LIFE) {
+                        val points = if (exercise.completed) exercise.trueEyes else puzzle.targetStones
+                        points.map { it.y * puzzle.boardSize + it.x }.toSet()
+                    } else puzzle.captured.map { it.y * puzzle.boardSize + it.x }
+                        .filter { exercise.stones[it] == GoStone.WHITE.code }.toSet()
+                    GoBoard(puzzle.boardSize, exercise.stones,
+                        { x, y -> onAnswer(BoardPosition(x, y)) }, boardModifier,
+                        lastMoveIndex = exercise.lastMoveIndex, highlightedPoints = highlighted,
+                        interactionEnabled = state.canOperate && !exercise.completed)
+                }
             }
             val controls: @Composable (Modifier) -> Unit = { controlsModifier ->
                 Column(controlsModifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
