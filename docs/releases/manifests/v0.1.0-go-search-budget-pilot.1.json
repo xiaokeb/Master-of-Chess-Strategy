@@ -1,0 +1,85 @@
+{
+  "game": "go",
+  "expected_changed_paths": 5,
+  "summary": [
+    {
+      "max_us": 68009,
+      "difficulty": "SIMPLE",
+      "over_two_seconds": 0,
+      "legal": 6,
+      "min_us": 67024
+    },
+    {
+      "max_us": 198943,
+      "difficulty": "MEDIUM",
+      "over_two_seconds": 0,
+      "legal": 6,
+      "min_us": 193276
+    },
+    {
+      "max_us": 527219,
+      "difficulty": "HARD",
+      "over_two_seconds": 0,
+      "legal": 6,
+      "min_us": 514598
+    },
+    {
+      "max_us": 1771256,
+      "difficulty": "MASTER",
+      "over_two_seconds": 0,
+      "legal": 6,
+      "min_us": 1178941
+    }
+  ],
+  "pending": [
+    "physical-device timing",
+    "adjacent-tier strength",
+    "power consumption"
+  ],
+  "tag": "v0.1.0-go-search-budget-pilot.1",
+  "device": {
+    "csv_sha256": "fc940553e8a52a360b9a861088ff15a70d89cb3f4ab7c0b7a04edd02f702e542",
+    "tests": 1,
+    "candidate": "go-budget-pilot1",
+    "model_load_us": 3728575,
+    "log_sha256": "7ecd1b2ff9d33b940dd063ad371891be387dc43f74fed04dce2d51fa907ebd93",
+    "samples": 24,
+    "abi": "x86_64",
+    "folder": "device-abe12cca9a264edfa53ee5548993c1e2",
+    "products": {
+      "app-debug-androidTest.apk": "a8f378da89e0e504b24af66678a5a52f6828ab49387d99334a1ac4cae2652a20",
+      "app-debug.apk": "007540d0ea165f0c3eca85d9621e6e75eefe830139837d2140e1cf07355fe549"
+    },
+    "model": "Pixel_7_Pro",
+    "selector": "com.masterofchessstrategy.games.go.GoProductionSearchLatencyInstrumentedTest"
+  },
+  "kind": "source_prerelease",
+  "build": {
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "baseline": "29348e366babb17c051e5e906cd221c9504c1ad8",
+    "candidate": "go-budget-pilot1",
+    "inherited_candidate": "cm-auto-restore-integrated1",
+    "overlays": [
+      {
+        "sha256": "230353ba925bd2b89601a1be3a4d7c8c3cc723c63623fc9fc02c7cbe246504d6",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoProductionSearchLatencyInstrumentedTest.kt",
+        "working_sha256": "230353ba925bd2b89601a1be3a4d7c8c3cc723c63623fc9fc02c7cbe246504d6"
+      }
+    ],
+    "products": {
+      "app-debug-androidTest.apk": "a8f378da89e0e504b24af66678a5a52f6828ab49387d99334a1ac4cae2652a20",
+      "app-debug.apk": "007540d0ea165f0c3eca85d9621e6e75eefe830139837d2140e1cf07355fe549"
+    }
+  },
+  "production_reference": {
+    "path": "docs/testing/results/2026-11-15-go-production-search-latency.csv",
+    "sha256": "923102aafd73d873ed9356d31354c69dfe318f29c4f23124e33c437632a210c2"
+  },
+  "assets": [],
+  "evidence": {
+    "path": "docs/testing/results/2026-11-15-go-search-budget-pilot.csv",
+    "sha256": "a46e511094c5dedb630e74ea7e26b9ea12f73d31a420d75ad137a189195a3008"
+  },
+  "profile": "android-pilot-v1"
+}

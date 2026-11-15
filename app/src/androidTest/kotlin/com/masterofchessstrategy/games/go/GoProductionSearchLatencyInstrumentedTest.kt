@@ -22,6 +22,17 @@ import org.junit.Test
 class GoProductionSearchLatencyInstrumentedTest {
     @Test fun measureProductionBudgetsAcrossThreeBoardSizes() = runBlocking {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val profile = InstrumentationRegistry.getArguments().getString("go_search_profile") ?: "production"
+        val budgets = when (profile) {
+            "production" -> GoAiDifficulty.entries.associateWith { it.budget }
+            "android-pilot-v1" -> mapOf(
+                GoAiDifficulty.SIMPLE to GoAiSearchBudget(1, 1_000),
+                GoAiDifficulty.MEDIUM to GoAiSearchBudget(4, 1_000),
+                GoAiDifficulty.HARD to GoAiSearchBudget(12, 1_600),
+                GoAiDifficulty.MASTER to GoAiSearchBudget(40, 1_750),
+            )
+            else -> error("Unknown Go search budget profile: $profile")
+        }
         val loadStart = SystemClock.elapsedRealtimeNanos()
         val owner = GoAiAssetModelLoader(
             instrumentation.targetContext,
@@ -29,6 +40,7 @@ class GoProductionSearchLatencyInstrumentedTest {
         ).load()
         try {
             instrumentation.sendStatus(2, Bundle().apply {
+                putString("go_search_profile", profile)
                 putLong("go_model_load_us", elapsedMicros(loadStart))
             })
             var sampleIndex = 0L
@@ -42,7 +54,7 @@ class GoProductionSearchLatencyInstrumentedTest {
                     val positionHash = MessageDigest.getInstance("SHA-256").digest(bytes)
                         .joinToString("") { "%02x".format(it.toInt() and 0xff) }
                     for (difficulty in GoAiDifficulty.entries) {
-                        val budget = difficulty.budget
+                        val budget = budgets.getValue(difficulty)
                         val request = GoAiSearchRequest(
                             GoAiPositionSnapshot(GoAiPositionStamp("latency-$size-$kind", sampleIndex), bytes),
                             budget,
