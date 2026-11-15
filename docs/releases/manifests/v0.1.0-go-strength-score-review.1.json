@@ -1,0 +1,107 @@
+{
+  "assets": [],
+  "kind": "source_prerelease",
+  "expected_changed_paths": 4,
+  "tag": "v0.1.0-go-strength-score-review.1",
+  "game": "go",
+  "build": {
+    "working_sha256": "61ce1d3fc71200bd69c945d3406062092fde5792b5ce922d04e54047899b2b0e",
+    "base": "1bd6d6e4382c8349563dcced509f872b976e510b",
+    "source_sha256": "61ce1d3fc71200bd69c945d3406062092fde5792b5ce922d04e54047899b2b0e",
+    "source": "tools/android/go/go-strength-score-review.cpp",
+    "ndk": "30.0.16138531",
+    "products": [
+      {
+        "abi": "x86_64",
+        "build_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "core_sha256": "aae9a27ca0d8ac6d229c1f25c0018cb7546507ebaf3bc1185399a1ebeb63b752",
+        "path": "score-review-x86_64",
+        "sha256": "f2b00f12ad16245babd85d998f2133c7ce0d2a814fe5fd377d12e15519501b34"
+      },
+      {
+        "abi": "arm64-v8a",
+        "build_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "core_sha256": "8fca1d6db08d73726216adb71765647ca06fa13c9cd0c08dcdd57cc7766ae94f",
+        "path": "score-review-arm64-v8a",
+        "sha256": "ea99e5485aaef53895d629bc49c6c3c7d438d8725eee93536e28bf9e1d108957"
+      }
+    ]
+  },
+  "pending": [
+    "independent game adjudication and strength statistics",
+    "ARM64 device execution"
+  ],
+  "device": {
+    "model": "Pixel_7_Pro",
+    "negative": [
+      {
+        "exit_code": 1,
+        "path": "wrong-board.log",
+        "sha256": "07250d5963f76ade95241f23e9765f16fb636115d99f80c02c0179e7defb518f"
+      },
+      {
+        "exit_code": 1,
+        "path": "overwrite.log",
+        "sha256": "331333b210aab50f6318d1aaf28785d7c2379957e805309627bd2e652ce3cec8"
+      },
+      {
+        "exit_code": 1,
+        "path": "duplicate.log",
+        "sha256": "fa30076e0831151b3ac522e14c4750c31315dd0f0dcdfa96776e361f63583c35"
+      }
+    ],
+    "folder": "device-54f10846291b47c9a1ee0ac0a9226246",
+    "board_log_sha256": "8e380653dcfd3360d5daac78df9cd3d9376a668b45b970a1b4850d02eac2da44",
+    "explicit_group": {
+      "reviewed_sha256": "28c12813a3a602588b65d7764e71d0d0d5fb08b77b6427549f3abba15d28a80f",
+      "log_sha256": "f8547b8674904ff8ca2fcd1643c52266637742d31231696d4c4325871e045c24",
+      "point": "5,0"
+    },
+    "binary_sha256": "f2b00f12ad16245babd85d998f2133c7ce0d2a814fe5fd377d12e15519501b34",
+    "abi": "x86_64",
+    "agreements": [
+      {
+        "log": "match-000-empty.log",
+        "slot": 0,
+        "log_sha256": "e0ce846f666ee04021a2658a6b768ea52a4aa1fd7c0e80c0341e017c99a79837",
+        "output_sha256": "b8462b09b9ed5cd72a75e863bc10cae6e38d91a1b848ffc7b74b8d4f6275e251",
+        "input_sha256": "b8462b09b9ed5cd72a75e863bc10cae6e38d91a1b848ffc7b74b8d4f6275e251"
+      },
+      {
+        "log": "match-001-empty.log",
+        "slot": 1,
+        "log_sha256": "6d68576c037ca972d28e5a7edfbdaa479477ecf922bd78867c8dfab94c38fd9d",
+        "output_sha256": "8860e8228e552bae4593e967c8bde83f4836f566307d04660942f8268852ab74",
+        "input_sha256": "8860e8228e552bae4593e967c8bde83f4836f566307d04660942f8268852ab74"
+      },
+      {
+        "log": "match-002-empty.log",
+        "slot": 2,
+        "log_sha256": "9fce22c158db35d6ed1b307c34932ac8f1adea26e1b9571f86bbf0e34b0cf801",
+        "output_sha256": "b8bc2e312e83a790fb70aee2b8e7272a05f6d3ab04bce30ea24b85a7a7929f85",
+        "input_sha256": "b8bc2e312e83a790fb70aee2b8e7272a05f6d3ab04bce30ea24b85a7a7929f85"
+      },
+      {
+        "log": "match-003-empty.log",
+        "slot": 3,
+        "log_sha256": "605a576d2d967e5d9767c6200d37b5a228c7b3fdfc844095c25100c551cebb39",
+        "output_sha256": "e1cba7c9bce0754f1ae72caf576f45f3381633d00d06c9f2e95305b7d9609e1b",
+        "input_sha256": "e1cba7c9bce0754f1ae72caf576f45f3381633d00d06c9f2e95305b7d9609e1b"
+      },
+      {
+        "log": "match-004-empty.log",
+        "slot": 4,
+        "log_sha256": "c3ec064a1014a694795757863928caeb61ff08e86f58e4455f6d2c4fd590bafd",
+        "output_sha256": "6dd2713472d34e2086a92883973dc765889b98f3ff8cced76603d6d1bc30efe8",
+        "input_sha256": "6dd2713472d34e2086a92883973dc765889b98f3ff8cced76603d6d1bc30efe8"
+      },
+      {
+        "log": "match-005-empty.log",
+        "slot": 5,
+        "log_sha256": "605a576d2d967e5d9767c6200d37b5a228c7b3fdfc844095c25100c551cebb39",
+        "output_sha256": "247a92a0bc2517e14fa950f6b0a6e58964819bdbb86aa302c7d042634b146799",
+        "input_sha256": "247a92a0bc2517e14fa950f6b0a6e58964819bdbb86aa302c7d042634b146799"
+      }
+    ]
+  }
+}
