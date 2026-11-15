@@ -68,5 +68,5 @@ internal object GoAiBackupSnapshotGuard {
     // Same pure definition as GoAiCheckpointRepository; consolidate in a later shared-policy window.
     private fun terminalContent(match: GoAiSavedMatch): ByteArray = GoAiMatchFileCodec.encode(GoAiSavedMatch(
         match.matchId, match.config, match.copyBytes(), match.undoUsed, match.hintUsed, false,
-        match.rememberedHuman, match.automaticUsed, match.copyOpeningBytes()))
+        match.rememberedHuman, match.automaticUsed, match.copyOpeningBytes(), clock = match.clock))
 }

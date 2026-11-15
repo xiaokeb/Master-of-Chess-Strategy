@@ -79,6 +79,10 @@ fun GoAiMatchScreen(
                         if (match.hasSpecifiedOpening) Text("指定开局训练局 · 重开回到原开局 · 不计标准人机胜场")
                         Text(goAiMatchPhaseLabel(match), modifier = Modifier.testTag("go_ai_phase"))
                         game.resignedBy?.let { Text("${goReplayPlayer(it)}方认输", modifier = Modifier.testTag("go_ai_resigned")) }
+                        game.timedOutBy?.let { Text("${goReplayPlayer(it)}方超时", modifier = Modifier.testTag("go_ai_timeout")) }
+                        game.timeRemainingMillis?.let { (black, white) ->
+                            Text("黑 ${goClockText(black)} · 白 ${goClockText(white)}", modifier = Modifier.testTag("go_ai_clock"))
+                        }
                         if (game.loading) Text("正在恢复对局…")
                         if (game.saving) Text("正在保存对局…")
                         if (match.savesTerminalImmediately && game.phase == GoPhase.FINISHED &&
@@ -159,7 +163,7 @@ fun GoAiMatchScreen(
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Column(Modifier.weight(1f)) {
                                     Text("自动续局", style = MaterialTheme.typography.titleMedium)
-                                    Text("仅在双方确认正式终局并保存完成棋谱后开始下一局。")
+                                    Text("本局正式结束且棋谱保存后开始下一局。")
                                 }
                                 Switch(match.autoContinueEnabled, {
                                     onAutoContinuation(it, if (it) maxOf(3, match.autoContinueMaxGames) else 1)

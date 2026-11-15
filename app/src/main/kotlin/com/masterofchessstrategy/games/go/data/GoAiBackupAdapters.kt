@@ -142,7 +142,9 @@ internal object GoAiBackupWire {
     }
 
     fun canonical(bytes: ByteArray): GoAiSavedMatch {
-        require(bytes.size in 5..GoAiMatchFileCodec.MAX_BYTES && bytes[4] == 6.toByte()) { "Go AI backup requires GAI1 v6" }
+        require(bytes.size in 5..GoAiMatchFileCodec.MAX_BYTES && GoAiMatchFileCodec.canonicalVersion(bytes) != null) {
+            "Invalid Go AI backup envelope version"
+        }
         val match = requireNotNull(GoAiMatchFileCodec.decode(bytes)) { "Invalid Go AI backup checkpoint" }
         require(GoAiMatchFileCodec.encode(match).contentEquals(bytes)) { "Noncanonical Go AI backup checkpoint" }
         return match

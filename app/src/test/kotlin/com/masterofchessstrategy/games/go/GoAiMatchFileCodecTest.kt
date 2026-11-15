@@ -8,6 +8,22 @@ import java.nio.ByteOrder
 import java.util.zip.CRC32
 
 class GoAiMatchFileCodecTest {
+    @Test fun timedV7IsCanonicalAndV6RemainsUnlimited() {
+        val config = GoAiMatchConfig(9)
+        val native = byteArrayOf(9, 0)
+        val clock = GoTurnClock.start(300_000, GoPlayer.BLACK, 10).advance(20, GoPlayer.WHITE)
+        val bytes = GoAiMatchFileCodec.encode(GoAiSavedMatch("timed", config, native, clock = clock))
+        assertEquals(7, bytes[4].toInt())
+        val decoded = checkNotNull(GoAiMatchFileCodec.decode(bytes))
+        assertEquals(clock, decoded.clock)
+        assertArrayEquals(native, decoded.copyBytes())
+        assertArrayEquals(bytes, GoAiMatchFileCodec.encode(decoded))
+        assertNull(GoAiMatchFileCodec.decode(bytes.copyOf().also { it[72] = 2 }))
+        val unlimited = GoAiMatchFileCodec.encode(GoAiSavedMatch("untimed", config, native))
+        assertEquals(6, unlimited[4].toInt())
+        assertNull(checkNotNull(GoAiMatchFileCodec.decode(unlimited)).clock)
+    }
+
     @Test fun allPoliciesRoundTripIncludingPersistedUndoAllowance() {
         for (size in listOf(9, 13, 19)) for (handicap in listOf(0) + (2..9))
             for (difficulty in GoAiDifficulty.entries) for (human in listOf(null, GoPlayer.BLACK, GoPlayer.WHITE)) {

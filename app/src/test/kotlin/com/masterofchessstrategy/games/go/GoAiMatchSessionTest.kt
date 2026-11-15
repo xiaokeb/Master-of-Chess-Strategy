@@ -12,6 +12,61 @@ import java.io.IOException
 /** Session transaction doubles; Native legality and actual NN search are separate gates. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class GoAiMatchSessionTest {
+    @Test fun timeoutCancelsSearchAndDiscardsAnAiReplyAtTheDeadline() = runTest {
+        val config = GoAiMatchConfig(9, humanPlayer = GoPlayer.WHITE)
+        val repository = Repository().apply {
+            saved = GoAiSavedMatch("deadline", config, byteArrayOf(9, 0),
+                clock = GoTurnClock.start(1_000, GoPlayer.BLACK, 0))
+        }
+        val search = Search()
+        var now = 0L
+        val session = GoAiMatchSession(this, repository, config, search, StandardTestDispatcher(testScheduler),
+            nowMillis = { now }, engineFactory = { size, _, handicap -> Rules(size, handicap) })
+        try {
+            runCurrent()
+            assertFalse(session.humanAction(GoAction.Timeout(GoPlayer.BLACK)))
+            session.resume()
+            runCurrent()
+            assertEquals(1, search.requests.size)
+            now = 1_000
+            search.answers.trySend(move(place(0)))
+            runCurrent()
+            assertEquals(GoPlayer.BLACK, session.state.value.game.timedOutBy)
+            assertEquals(GameResult.SECOND_PLAYER_WIN, session.state.value.game.result)
+            assertEquals(0, session.state.value.game.stones[0])
+            assertEquals(0L, repository.saved?.clock?.blackMillis)
+            assertEquals(1, repository.history.size)
+        } finally { session.closeAndJoin() }
+    }
+
+    @Test fun automaticContinuationArchivesTheTimeoutAndStartsWithFullBalances() = runTest {
+        val config = GoAiMatchConfig(9, humanPlayer = null)
+        val repository = Repository().apply {
+            saved = GoAiSavedMatch("timed-series", config, byteArrayOf(9, 0),
+                autoContinueEnabled = true, autoContinueMaxGames = 2,
+                clock = GoTurnClock.start(300_000, GoPlayer.BLACK, 0))
+        }
+        val archives = mutableListOf<GoAiSavedMatch>()
+        var now = 0L
+        val session = GoAiMatchSession(this, repository, config, Search(), StandardTestDispatcher(testScheduler),
+            completedSink = GoAiCompletedMatchSink(archives::add), nowMillis = { now },
+            engineFactory = { size, _, handicap -> Rules(size, handicap) })
+        try {
+            runCurrent()
+            now = 300_000
+            advanceTimeBy(250L)
+            runCurrent()
+            val first = archives.single()
+            assertEquals("timed-series", first.matchId)
+            assertEquals(0L, first.clock?.blackMillis)
+            assertEquals(null, first.clock?.active)
+            val next = checkNotNull(repository.saved)
+            assertNotEquals(first.matchId, next.matchId)
+            assertEquals(2, next.autoContinueGameNumber)
+            assertEquals(GoTurnClock.start(300_000, GoPlayer.BLACK, now), next.clock)
+            assertEquals(GoPhase.PLAYING, session.state.value.game.phase)
+        } finally { session.closeAndJoin() }
+    }
     @Test fun initialCheckpointMustCommitBeforeHumanInputOrSearch() = runTest {
         val repository = Repository().apply { gate = CompletableDeferred() }
         val search = Search()
@@ -425,6 +480,7 @@ class GoAiMatchSessionTest {
         override val blackKomiQuarters get() = if (handicapStones == 0) 15 else 0
         override val currentPlayer: PlayerId get() = PlayerId((if (handicapStones > 0) 1 else 0) xor (events.count { it is GoAction.Place || it == GoAction.Pass } % 2))
         override val phase: GoPhase get() = when {
+            events.lastOrNull() is GoAction.Timeout -> GoPhase.FINISHED
             events.count { it is GoAction.ConfirmScore } == 2 -> GoPhase.FINISHED
             events.takeLast(2) == listOf(GoAction.Pass, GoAction.Pass) || events.lastOrNull() is GoAction.ConfirmScore -> GoPhase.SCORING
             else -> GoPhase.PLAYING
@@ -446,6 +502,7 @@ class GoAiMatchSessionTest {
                 is GoAction.Place -> (it.point.y * boardSize + it.point.x).toByte()
                 GoAction.Pass -> 81.toByte()
                 is GoAction.ConfirmScore -> (82 + it.actor.code).toByte()
+                is GoAction.Timeout -> (84 + it.actor.code).toByte()
                 else -> error("Unsupported transaction fixture")
             }
         }.toByteArray()
@@ -456,6 +513,7 @@ class GoAiMatchSessionTest {
             data.drop(2).forEach { events += when (val code = it.toInt()) {
                 81 -> GoAction.Pass
                 82, 83 -> GoAction.ConfirmScore(GoPlayer.entries[code - 82], 1)
+                84, 85 -> GoAction.Timeout(GoPlayer.entries[code - 84])
                 else -> GoAction.Place(BoardPosition(code % boardSize, code / boardSize))
             } }
             return RestoreResult.Restored
@@ -463,7 +521,11 @@ class GoAiMatchSessionTest {
         override fun scoringState() = GoScoringState(phase, 1, events.any { it is GoAction.ConfirmScore && it.actor == GoPlayer.BLACK },
             events.any { it is GoAction.ConfirmScore && it.actor == GoPlayer.WHITE }, emptyList())
         override fun eventHistory() = events.toList()
-        override fun gameResult() = if (phase == GoPhase.FINISHED) GameResult.FIRST_PLAYER_WIN else GameResult.ONGOING
+        override fun gameResult() = when {
+            events.lastOrNull() == GoAction.Timeout(GoPlayer.BLACK) -> GameResult.SECOND_PLAYER_WIN
+            phase == GoPhase.FINISHED -> GameResult.FIRST_PLAYER_WIN
+            else -> GameResult.ONGOING
+        }
         override fun reset() { events.clear() }
         override fun legalActions(): List<GoAction> = (0 until boardSize * boardSize).map {
             GoAction.Place(BoardPosition(it % boardSize, it / boardSize))

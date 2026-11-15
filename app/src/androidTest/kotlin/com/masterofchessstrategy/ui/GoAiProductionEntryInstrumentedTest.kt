@@ -137,6 +137,59 @@ class GoAiProductionEntryInstrumentedTest {
         assertRejectedPlayRoute(UUID.randomUUID().toString(), "missing-active-id")
     }
 
+    @Test fun expiredHumanAndAutomaticClocksFinalizeThroughProductionNavigation() {
+        withOwnedApp(completedLessons = 10) { f ->
+            f.mountApp()
+            compose.onNodeWithTag(HOME_SETTINGS_TAG).performScrollTo().performClick()
+            compose.onNodeWithTag("settings_game_duration_toggle").performScrollTo().assertIsOff().performClick()
+            compose.waitUntil(10_000) {
+                runBlocking { f.db.appSettingsDao().find()?.gameDurationMinutes } == 30
+            }
+            compose.onNodeWithText("返回").performScrollTo().performClick()
+            enterSetup()
+            compose.onNodeWithTag("go_ai_setup_size_9").performScrollTo().performClick()
+            compose.onNodeWithTag("go_ai_setup_create").performScrollTo().performClick()
+            awaitHumanTurn()
+            compose.onNodeWithTag("go_ai_clock").performScrollTo().assertIsDisplayed()
+            val first = checkNotNull(f.active())
+            assertEquals(1_800_000L, first.clock?.limitMillis)
+            f.capture("go-human-clock")
+            returnToSetup()
+            assertTrue(f.aiOwners().none { !it.retirementCompletion.isCompleted })
+            suspend fun expired() {
+                val current = checkNotNull(f.storage.formalAiRepository().load())
+                val clock = checkNotNull(current.clock).copy(startedAtMillis = System.currentTimeMillis() - 3_600_000L)
+                f.storage.formalAiRepository().save(GoAiSavedMatch(current.matchId, current.config, current.copyBytes(), clock = clock))
+            }
+            runBlocking { expired() }
+            fun awaitTimeout() {
+                compose.waitUntil(45_000) { compose.onAllNodesWithTag("go_ai_timeout").fetchSemanticsNodes().isNotEmpty() }
+                compose.onNodeWithTag("go_ai_timeout").performScrollTo().assertTextEquals("黑方超时")
+            }
+            compose.onNodeWithTag("go_ai_setup_continue").performScrollTo().performClick()
+            awaitTimeout()
+            assertEquals(0L, f.active()?.clock?.blackMillis)
+            returnToSetup()
+            compose.onNodeWithTag("go_ai_setup_color_2").performScrollTo().performClick()
+            compose.onNodeWithTag("go_ai_setup_create").performScrollTo().performClick()
+            compose.waitUntil(45_000) { compose.onAllNodesWithTag("go_ai_clock").fetchSemanticsNodes().isNotEmpty() }
+            assertTrue(checkNotNull(f.active()).config.automatic)
+            returnToSetup()
+            runBlocking { expired() }
+            compose.onNodeWithTag("go_ai_setup_continue").performScrollTo().performClick()
+            awaitTimeout()
+            compose.waitUntil(20_000) { runBlocking { f.db.goAiCheckpointDao().listArchives().size } == 2 }
+            val automatic = checkNotNull(f.active())
+            assertTrue(automatic.config.automatic)
+            assertEquals(0L, automatic.clock?.blackMillis)
+            NativeGoEngine(9).use {
+                assertEquals(RestoreResult.Restored, it.restore(automatic.copyBytes()))
+                assertEquals(listOf(GoAction.Timeout(GoPlayer.BLACK)), it.eventHistory())
+            }
+            f.capture("go-auto-clock-timeout")
+        }
+    }
+
     @Test fun humanResignationArchivesTheLossAndRestoresTheSameNativeResult() {
         withOwnedApp(completedLessons = 10) { f ->
             f.mountApp()

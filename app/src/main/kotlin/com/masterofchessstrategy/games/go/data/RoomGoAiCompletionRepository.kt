@@ -160,5 +160,5 @@ internal class RoomGoAiCompletionRepository(
 
     private fun terminalContent(match: GoAiSavedMatch): ByteArray = GoAiMatchFileCodec.encode(
         GoAiSavedMatch(match.matchId, match.config, match.copyBytes(), match.undoUsed, match.hintUsed,
-            false, match.rememberedHuman, match.automaticUsed, match.copyOpeningBytes()))
+            false, match.rememberedHuman, match.automaticUsed, match.copyOpeningBytes(), clock = match.clock))
 }

@@ -107,6 +107,34 @@ class GoAiProjectionIntegrationInstrumentedTest {
         } }
     }
 
+    @Test fun timedAiCheckpointAndTimeoutArchiveRoundTripTogether() = runBlocking {
+        withOwned { source -> withOwned { target ->
+            val sourceBundle = bundle(source)
+            val targetBundle = bundle(target)
+            val clock = GoTurnClock.start(300_000, GoPlayer.BLACK, 15L).advance(300_015L, null)
+            val match = NativeGoEngine(9).use { native ->
+                assertEquals(ActionResult.Accepted, native.apply(GoAction.Timeout(GoPlayer.BLACK)))
+                GoAiSavedMatch("timed-backup", GoAiMatchConfig(9), native.serialize(), completionReserved = true, clock = clock)
+            }
+            sourceBundle.aiRepository().save(match)
+            sourceBundle.completedMatchSink().storeCompleted(match)
+            val id = admitGoAiCheckpoint(match).recordId
+
+            fun productionBackup(db: MocsDatabase, owner: GoCompleteStorageBundle) =
+                owner.backupRepository { delegate(db, GameBackupRegistry(it)) }
+            val bytes = productionBackup(source, sourceBundle).export(400)
+            val backup = productionBackup(target, targetBundle)
+            assertEquals(1, backup.restore(bytes).gameRecordCount)
+            val restored = checkNotNull(targetBundle.aiRepository().load())
+            assertEquals(clock, restored.clock)
+            assertArrayEquals(match.copyBytes(), restored.copyBytes())
+            val record = GoStoredRecordLoader(target).load(id).record
+            assertEquals(5, record.engineFormatVersion)
+            assertEquals(GameResult.SECOND_PLAYER_WIN, record.result)
+            assertArrayEquals(bytes, backup.export(400))
+        } }
+    }
+
     @Test fun missingRawMissingRecordOrMismatchedFirstTimeRejectBeforeReplacingData() = runBlocking {
         withOwned { database ->
             val bundle = bundle(database)

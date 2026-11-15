@@ -41,9 +41,10 @@ internal fun GoOpeningStudyNavigationRoute(
     writers: LocalDataWriterRegistry,
     onOpen: (String) -> Unit,
     onBack: () -> Unit,
+    newGameLimitMinutes: Int? = null,
 ) {
     val epoch by storage.gate.epoch.collectAsState()
-    val repository = remember(storage, epoch) { storage.aiEntryRepository() }
+    val repository = remember(storage, epoch, newGameLimitMinutes) { storage.aiEntryRepository(newGameLimitMinutes) }
     val model: GoAiSetupViewModel = viewModel(key = "go-opening-study-setup-$epoch", factory = viewModelFactory {
         initializer { GoAiSetupViewModel(repository).also(writers::register) }
     })

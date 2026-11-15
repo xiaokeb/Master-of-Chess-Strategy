@@ -41,6 +41,7 @@ class GoAiSavedMatch(
     val autoContinueEnabled: Boolean = false,
     val autoContinueMaxGames: Int = 1,
     val autoContinueGameNumber: Int = 1,
+    val clock: GoTurnClock? = null,
 ) {
     private val saved = bytes.copyOf()
     private val opening = openingBytes?.copyOf()

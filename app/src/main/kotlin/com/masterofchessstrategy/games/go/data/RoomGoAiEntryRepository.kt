@@ -3,6 +3,7 @@ package com.masterofchessstrategy.games.go.data
 import androidx.room.withTransaction
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.engine.GoPhase
+import com.masterofchessstrategy.engine.GoPlayer
 import com.masterofchessstrategy.engine.NativeGoEngine
 import com.masterofchessstrategy.games.go.*
 import java.util.UUID
@@ -16,8 +17,9 @@ internal class RoomGoAiEntryRepository(
     private val gate: GoStorageEpochGate = GoStorageEpochGate.forDatabase(database),
     private val ownerEpoch: Long = gate.epoch.value,
     private val worker: CoroutineDispatcher = Dispatchers.Default,
-    clock: () -> Long = System::currentTimeMillis,
+    private val clock: () -> Long = System::currentTimeMillis,
     beforeCommit: suspend () -> Unit = {},
+    private val newGameLimitMinutes: Int? = null,
 ) : GoAiEntryRepository {
     private val creator = RoomGoRankedMatchCreator(database, checkpoints, learning, gate, ownerEpoch,
         worker, clock, beforeCommit)
@@ -43,12 +45,14 @@ internal class RoomGoAiEntryRepository(
             val id = UUID.randomUUID().toString()
             if (opening == null) {
                 NativeGoEngine(config.boardSize, if (config.handicapStones == 0) 15 else 0, config.handicapStones).use {
-                    GoAiSavedMatch(id, config, it.serialize())
+                    GoAiSavedMatch(id, config, it.serialize(), clock = newClock(GoPlayer.entries[it.currentPlayer.value]))
                 }
             } else {
                 require(config == opening.config(humanPlayer = null, difficulty = config.difficulty))
                 val bytes = opening.copyBytes()
-                GoAiSavedMatch(id, config, bytes, openingBytes = bytes)
+                opening.createEngine().use {
+                    GoAiSavedMatch(id, config, bytes, openingBytes = bytes, clock = newClock(GoPlayer.entries[it.currentPlayer.value]))
+                }
             }
         }
         database.withTransaction {
@@ -57,4 +61,5 @@ internal class RoomGoAiEntryRepository(
         }
     }
 
+    private fun newClock(first: GoPlayer) = newGameLimitMinutes?.let { GoTurnClock.start(it * 60_000L, first, clock()) }
 }

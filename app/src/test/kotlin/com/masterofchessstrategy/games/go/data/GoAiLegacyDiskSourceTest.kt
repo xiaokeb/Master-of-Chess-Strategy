@@ -54,7 +54,8 @@ class GoAiLegacyDiskSourceTest {
 
     @Test fun acceptsTheEntireEnvelopeBudgetNotJustTheTwoNativeImages() = runTest {
         val full = GoAiSavedMatch("a".repeat(128), GoAiMatchConfig(19), ByteArray(1_000_000) { 1 },
-            openingBytes = ByteArray(1_000_000) { 2 })
+            openingBytes = ByteArray(1_000_000) { 2 },
+            clock = GoTurnClock.start(300_000, GoPlayer.BLACK, 42))
         val bytes = image(full)
         assertEquals(GoAiMatchFileCodec.MAX_BYTES, bytes.size)
         val file = temporary.newFile("large.bin").apply { writeBytes(bytes) }

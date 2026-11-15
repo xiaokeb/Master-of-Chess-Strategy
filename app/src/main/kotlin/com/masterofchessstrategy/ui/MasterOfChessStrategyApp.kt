@@ -498,6 +498,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
             }
             composable(AppDestination.GO_AI_SETUP) {
                 GoAiSetupNavigationRoute(goStorage, gameWriters,
+                    newGameLimitMinutes = settingsViewModel.uiState.settings.gameDurationMinutes,
                     onOpen = { navController.navigate(AppDestination.goAiMatch(it)) },
                     onLearning = { navController.navigate(AppDestination.GO_TUTORIAL) },
                     onBack = navController::popBackStack)
@@ -575,6 +576,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
             }
             composable(AppDestination.GO_OPENING_STUDY) {
                 GoOpeningStudyNavigationRoute(goStorage, gameWriters,
+                    newGameLimitMinutes = settingsViewModel.uiState.settings.gameDurationMinutes,
                     onOpen = { navController.navigate(AppDestination.goAiMatch(it)) },
                     onBack = navController::popBackStack)
             }

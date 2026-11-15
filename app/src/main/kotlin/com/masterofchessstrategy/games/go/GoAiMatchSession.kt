@@ -50,7 +50,8 @@ data class GoAiMatchUiState(
     val humanCanPlay get() = !closed && game.canAct && game.phase == GoPhase.PLAYING && !config.isAi(game.currentPlayer)
     val canReviewScore get() = !closed && game.canAct && game.phase == GoPhase.SCORING
     val canRequestHint get() = humanCanPlay && !hintThinking && hintUsed < config.difficulty.hintLimit
-    val canUndo get() = !closed && game.canOperate && !completionReserved && !completionPending && eventCount > openingEventCount && undoUsed < config.difficulty.undoLimit
+    val canUndo get() = !closed && game.canOperate && game.timedOutBy == null && !completionReserved &&
+        !completionPending && eventCount > openingEventCount && undoUsed < config.difficulty.undoLimit
     val canSwitchMode get() = !closed && game.canAct && game.phase == GoPhase.PLAYING && !completionReserved
     val canConfigureAutoContinue get() = !closed && config.automatic && game.canAct &&
         game.phase == GoPhase.PLAYING && !completionReserved
@@ -74,6 +75,7 @@ class GoAiMatchSession(
     private val completeAutomaticImmediately: Boolean = false,
     initialSpeed: Float = 1f,
     private val onSound: (ChineseChessSoundCue) -> Unit = {},
+    private val nowMillis: () -> Long = System::currentTimeMillis,
     private val engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
 ) {
     init {
@@ -98,6 +100,8 @@ class GoAiMatchSession(
     private var durableMatch: GoAiSavedMatch? = null // worker mutex only; exact last acknowledged envelope
     private var opening: GoAiOpening? = null // worker mutex only
     private var advanceJob: Job? = null
+    private var clockJob: Job? = null
+    private var clock: GoTurnClock? = null // owner dispatcher only
     private var hintSearchStamp: GoAiPositionStamp? = null
     private var automaticResumeAllowed = false // Owner-only; explicit/lifecycle pause revokes continuation search.
     private var backgroundPlay = false
@@ -138,6 +142,7 @@ class GoAiMatchSession(
         scope.launch {
             var loadedBytes: ByteArray? = null
             var loadedState: GoAiMatchUiState? = null
+            var loadedClock: GoTurnClock? = null
             withContext(worker + NonCancellable) {
                 mutex.withLock {
                     var candidate: GoRecordEngine? = null
@@ -159,7 +164,8 @@ class GoAiMatchSession(
                         check(candidate.boardSize == config.boardSize && candidate.handicapStones == config.handicapStones &&
                             candidate.blackKomiQuarters == if (config.handicapStones == 0) 15 else 0)
                         selectedOpening?.checkContinuation(candidate)
-                        var game = snapshot(candidate)
+                        loadedClock = saved?.clock
+                        var game = snapshot(candidate).withClock(loadedClock)
                         val eventCount = candidate.eventHistory().size
                         val openingEventCount = selectedOpening?.eventCount ?: 0
                         check(saved?.completionReserved != true || (game.phase == GoPhase.FINISHED && game.result != GameResult.ONGOING))
@@ -181,7 +187,7 @@ class GoAiMatchSession(
                                 true, saved?.rememberedHuman ?: config.humanPlayer ?: GoPlayer.BLACK,
                                 saved?.automaticUsed ?: config.automatic, selectedOpening?.copyBytes(),
                                 saved?.autoContinueEnabled ?: false, saved?.autoContinueMaxGames ?: 1,
-                                saved?.autoContinueGameNumber ?: 1)
+                                saved?.autoContinueGameNumber ?: 1, loadedClock)
                             try {
                                 if (!reserved) { persistCheckpoint(finished); reserved = true }
                                 if (!disposed.get() && lifetime.isActive) {
@@ -216,7 +222,9 @@ class GoAiMatchSession(
             checkpoint = loadedBytes
             loadedState?.let {
                 if (!disposed.get()) {
+                    clock = loadedClock
                     mutableState.value = it.copy(speed = mutableState.value.speed)
+                    ensureClockTicker()
                     maybeAutoContinue()
                 }
             }
@@ -293,7 +301,7 @@ class GoAiMatchSession(
                         val finished = GoAiSavedMatch(matchId, previous.config, active.serialize(), previous.undoUsed,
                             previous.hintUsed, true, previous.rememberedHuman, previous.automaticUsed,
                             opening?.copyBytes(), previous.autoContinueEnabled, previous.autoContinueMaxGames,
-                            previous.autoContinueGameNumber)
+                            previous.autoContinueGameNumber, clock = durableMatch?.clock)
                         if (!reserved) { persistCheckpoint(finished); reserved = true }
                         if (disposed.get() || !lifetime.isActive) return@withLock
                         sink.storeCompleted(finished)
@@ -330,6 +338,7 @@ class GoAiMatchSession(
             search.cancelAndJoin()
             var bytes: ByteArray? = null
             var game: GoGameUiState? = null
+            var nextClock: GoTurnClock? = null
             var reserved = previous.completionReserved
             var failed = false
             withContext(worker + NonCancellable) {
@@ -342,6 +351,7 @@ class GoAiMatchSession(
                         candidate = opening?.createEngine(engineFactory)
                             ?: engineFactory(config.boardSize, if (config.handicapStones == 0) 15 else 0, config.handicapStones)
                         val nextGame = snapshot(candidate)
+                        nextClock = durableMatch?.clock?.let { GoTurnClock.start(it.limitMillis, nextGame.currentPlayer, nowMillis()) }
                         check(candidate.boardSize == config.boardSize && candidate.handicapStones == config.handicapStones &&
                             candidate.blackKomiQuarters == if (config.handicapStones == 0) 15 else 0)
                         check(nextGame.phase == GoPhase.PLAYING && nextGame.result == GameResult.ONGOING &&
@@ -350,7 +360,8 @@ class GoAiMatchSession(
                             check(active.phase == GoPhase.FINISHED && active.gameResult() != GameResult.ONGOING)
                             val old = GoAiSavedMatch(matchId, config, active.serialize(), previous.undoUsed, previous.hintUsed, true,
                                 previous.rememberedHuman, previous.automaticUsed, opening?.copyBytes(),
-                                previous.autoContinueEnabled, previous.autoContinueMaxGames, previous.autoContinueGameNumber)
+                                previous.autoContinueEnabled, previous.autoContinueMaxGames, previous.autoContinueGameNumber,
+                                clock = durableMatch?.clock)
                             // Seal before touching Room: a failed return or process death cannot allow
                             // undoing an already archived UUID into a different result.
                             if (!reserved) { persistCheckpoint(old); reserved = true }
@@ -361,13 +372,13 @@ class GoAiMatchSession(
                         val nextBytes = candidate.serialize()
                         persistCheckpoint(GoAiSavedMatch(nextId, config, nextBytes, rememberedHuman = previous.rememberedHuman,
                             openingBytes = opening?.copyBytes(), autoContinueEnabled = nextAutoEnabled,
-                            autoContinueMaxGames = nextAutoMax, autoContinueGameNumber = nextAutoNumber),
+                            autoContinueMaxGames = nextAutoMax, autoContinueGameNumber = nextAutoNumber, clock = nextClock),
                             freshStandard = config.humanPlayer != null && config.handicapStones == 0 && opening == null)
                         engine?.close(); engine = null
                         if (!disposed.get() && lifetime.isActive) {
                             engine = candidate; candidate = null
                             matchId = nextId
-                            bytes = nextBytes.copyOf(); game = nextGame
+                            bytes = nextBytes.copyOf(); game = nextGame.withClock(nextClock)
                         }
                     } catch (_: Exception) { failed = true }
                     finally { candidate?.close() }
@@ -375,6 +386,7 @@ class GoAiMatchSession(
             }
             if (disposed.get()) return@launch
             if (bytes != null) {
+                clock = nextClock
                 checkpoint = bytes
                 stamp.set(stamp.get().let { it.copy(revision = it.revision + 1) })
                 mutableState.value = GoAiMatchUiState(previous.config, checkNotNull(game),
@@ -387,6 +399,7 @@ class GoAiMatchSession(
                     autoContinueEnabled = nextAutoEnabled, autoContinueMaxGames = nextAutoMax,
                     autoContinueGameNumber = nextAutoNumber, matchId = nextId,
                     paused = !automaticContinuation || !automaticResumeAllowed)
+                ensureClockTicker()
                 if (!mutableState.value.paused) scheduleSearch()
             } else {
                 mutableState.value = mutableState.value.copy(completionReserved = reserved,
@@ -418,6 +431,7 @@ class GoAiMatchSession(
             search.cancelAndJoin()
             var bytes: ByteArray? = null
             var game: GoGameUiState? = null
+            var openingClock: GoTurnClock? = null
             var reserved = previous.completionReserved
             var failed = false
             withContext(worker + NonCancellable) {
@@ -428,6 +442,7 @@ class GoAiMatchSession(
                         val active = checkNotNull(engine)
                         candidate = replacement.createEngine(engineFactory)
                         val nextGame = snapshot(candidate)
+                        openingClock = durableMatch?.clock?.let { GoTurnClock.start(it.limitMillis, nextGame.currentPlayer, nowMillis()) }
                         check(replacement.config(nextConfig.humanPlayer, nextConfig.difficulty) == nextConfig)
                         check(nextGame.phase == GoPhase.PLAYING && nextGame.result == GameResult.ONGOING &&
                             candidate.eventHistory().size == replacement.eventCount)
@@ -436,7 +451,7 @@ class GoAiMatchSession(
                             val old = GoAiSavedMatch(matchId, previous.config, active.serialize(), previous.undoUsed,
                                 previous.hintUsed, true, previous.rememberedHuman, previous.automaticUsed,
                                 opening?.copyBytes(), previous.autoContinueEnabled,
-                                previous.autoContinueMaxGames, previous.autoContinueGameNumber)
+                                previous.autoContinueMaxGames, previous.autoContinueGameNumber, clock = durableMatch?.clock)
                             if (!reserved) { persistCheckpoint(old); reserved = true }
                             if (disposed.get() || !lifetime.isActive) return@withLock
                             if (!previous.completionStored) checkNotNull(completedSink).storeCompleted(old)
@@ -447,13 +462,13 @@ class GoAiMatchSession(
                             rememberedHuman = previous.rememberedHuman, openingBytes = replacement.copyBytes(),
                             autoContinueEnabled = previous.autoContinueEnabled && nextConfig.automatic,
                             autoContinueMaxGames = if (previous.autoContinueEnabled && nextConfig.automatic)
-                                previous.autoContinueMaxGames else 1))
+                                previous.autoContinueMaxGames else 1, clock = openingClock))
                         engine?.close(); engine = null
                         if (!disposed.get() && lifetime.isActive) {
                             engine = candidate; candidate = null
                             opening = replacement
                             matchId = nextId
-                            bytes = nextBytes.copyOf(); game = nextGame
+                            bytes = nextBytes.copyOf(); game = nextGame.withClock(openingClock)
                         }
                     } catch (_: Exception) { failed = true }
                     finally { candidate?.close() }
@@ -461,6 +476,7 @@ class GoAiMatchSession(
             }
             if (disposed.get()) return@launch
             if (bytes != null) {
+                clock = openingClock
                 checkpoint = bytes
                 stamp.set(stamp.get().let { it.copy(revision = it.revision + 1) })
                 mutableState.value = GoAiMatchUiState(nextConfig, checkNotNull(game),
@@ -471,6 +487,7 @@ class GoAiMatchSession(
                     hasSpecifiedOpening = true, autoContinueEnabled = previous.autoContinueEnabled && nextConfig.automatic,
                     autoContinueMaxGames = if (previous.autoContinueEnabled && nextConfig.automatic)
                         previous.autoContinueMaxGames else 1, matchId = nextId)
+                ensureClockTicker()
             } else {
                 mutableState.value = mutableState.value.copy(completionReserved = reserved,
                     game = previous.game.copy(error = if (failed) {
@@ -505,7 +522,8 @@ class GoAiMatchSession(
                             previous.completionReserved, previous.rememberedHuman, previous.automaticUsed || automatic,
                             opening?.copyBytes(), previous.autoContinueEnabled && automatic,
                             if (previous.autoContinueEnabled && automatic) previous.autoContinueMaxGames else 1,
-                            if (previous.autoContinueEnabled && automatic) previous.autoContinueGameNumber else 1))
+                            if (previous.autoContinueEnabled && automatic) previous.autoContinueGameNumber else 1,
+                            clock = durableMatch?.clock))
                         committedBytes = bytes.copyOf()
                     } catch (_: Exception) { failed = true }
                 }
@@ -555,7 +573,8 @@ class GoAiMatchSession(
                         val bytes = active.serialize()
                         persistCheckpoint(GoAiSavedMatch(matchId, previous.config, bytes, previous.undoUsed,
                             previous.hintUsed, previous.completionReserved, previous.rememberedHuman,
-                            previous.automaticUsed, opening?.copyBytes(), enabled, targetMax, targetNumber))
+                            previous.automaticUsed, opening?.copyBytes(), enabled, targetMax, targetNumber,
+                            clock = durableMatch?.clock))
                         committedBytes = bytes.copyOf()
                     } catch (_: Exception) { failed = true }
                 }
@@ -597,7 +616,7 @@ class GoAiMatchSession(
                         val finished = GoAiSavedMatch(matchId, previous.config, active.serialize(), previous.undoUsed,
                             previous.hintUsed, true, previous.rememberedHuman, previous.automaticUsed,
                             opening?.copyBytes(), previous.autoContinueEnabled, previous.autoContinueMaxGames,
-                            previous.autoContinueGameNumber)
+                            previous.autoContinueGameNumber, clock = durableMatch?.clock)
                         if (!reserved) { persistCheckpoint(finished); reserved = true }
                         if (disposed.get() || !lifetime.isActive) return@withLock
                         sink.storeCompleted(finished)
@@ -665,7 +684,7 @@ class GoAiMatchSession(
                             rememberedHuman = previous.rememberedHuman, automaticUsed = previous.automaticUsed,
                             openingBytes = opening?.copyBytes(), autoContinueEnabled = previous.autoContinueEnabled,
                             autoContinueMaxGames = previous.autoContinueMaxGames,
-                            autoContinueGameNumber = previous.autoContinueGameNumber))
+                            autoContinueGameNumber = previous.autoContinueGameNumber, clock = durableMatch?.clock))
                         committed = true
                         result = hint
                     } catch (_: Exception) {
@@ -731,6 +750,8 @@ class GoAiMatchSession(
         if (disposed.get() || !lifetime.isActive || !previous.game.canOperate) return
         mutableState.value = previous.copy(thinking = false, game = previous.game.copy(saving = true, error = null))
         scope.launch {
+            var committedAction = action
+            var committedClock: GoTurnClock? = null
             var committedBytes: ByteArray? = null
             var committedGame: GoGameUiState? = null
             var committedUndoUsed = previous.undoUsed
@@ -746,7 +767,13 @@ class GoAiMatchSession(
                         val active = checkNotNull(engine)
                         candidate = engineFactory(active.boardSize, 15, 0)
                         check(candidate.restore(active.serialize()) == RestoreResult.Restored)
-                        if (undo) {
+                        val now = nowMillis()
+                        val running = durableMatch?.clock
+                        val timeout = running?.expired(now)?.let(GoAction::Timeout)
+                        val undoMove = undo && timeout == null
+                        val applied = timeout ?: action
+                        if (action is GoAction.Timeout && timeout == null) return@withLock
+                        if (undoMove) {
                             check(candidate.undo()) { "No previous event" }
                             // Human undo restores their turn; review events and automatic mode step once.
                             if (!previous.config.automatic && previous.game.phase == GoPhase.PLAYING) {
@@ -755,15 +782,16 @@ class GoAiMatchSession(
                                     check(candidate.undo())
                                 }
                             }
-                        } else check(candidate.apply(checkNotNull(action)) == ActionResult.Accepted) { "Illegal AI or human action" }
-                        val next = snapshot(candidate)
+                        } else check(candidate.apply(checkNotNull(applied)) == ActionResult.Accepted) { "Illegal Go action" }
+                        val nextClock = running?.advance(now, player(candidate).takeIf { candidate.phase == GoPhase.PLAYING })
+                        val next = snapshot(candidate).withClock(nextClock)
                         val nextEventCount = candidate.eventHistory().size
                         val bytes = candidate.serialize()
-                        val undoUsed = previous.undoUsed + if (undo) 1 else 0
+                        val undoUsed = previous.undoUsed + if (undoMove) 1 else 0
                         // A finished record must never become a different game under the same archive key.
                         // Durable integration must retain the parent archive and classify this noninitial
                         // child as a continuation, not a fresh standard-ranked game.
-                        val nextMatchId = if (undo && previous.game.phase == GoPhase.FINISHED)
+                        val nextMatchId = if (undoMove && previous.game.phase == GoPhase.FINISHED)
                             UUID.randomUUID().toString() else matchId
                         val reserve = previous.savesTerminalImmediately && next.phase == GoPhase.FINISHED
                         if (disposed.get() || !lifetime.isActive) return@withLock
@@ -772,13 +800,15 @@ class GoAiMatchSession(
                             rememberedHuman = previous.rememberedHuman, automaticUsed = previous.automaticUsed,
                             openingBytes = opening?.copyBytes(), autoContinueEnabled = previous.autoContinueEnabled,
                             autoContinueMaxGames = previous.autoContinueMaxGames,
-                            autoContinueGameNumber = previous.autoContinueGameNumber))
+                            autoContinueGameNumber = previous.autoContinueGameNumber, clock = nextClock))
                         matchId = nextMatchId
                         engine?.close(); engine = null
                         if (!disposed.get() && lifetime.isActive) {
                             engine = candidate; candidate = null
                             committedBytes = bytes.copyOf()
                             committedGame = next
+                            committedAction = applied
+                            committedClock = nextClock
                             committedUndoUsed = undoUsed
                             committedEventCount = nextEventCount
                             committedMatchId = nextMatchId
@@ -797,6 +827,7 @@ class GoAiMatchSession(
                 }
             }
             if (committedBytes != null) {
+                clock = committedClock
                 checkpoint = committedBytes
                 stamp.set(stamp.get().let { it.copy(revision = it.revision + 1) })
                 search.positionChanged()
@@ -808,11 +839,14 @@ class GoAiMatchSession(
                     eventCount = committedEventCount, thinking = false, matchId = committedMatchId,
                     completionReserved = committedReserved, completionStored = completionStored,
                     completionPending = committedReserved && !completionStored)
-                goLiveSoundCue(action, previous.game, publishedGame, previous.config.humanPlayer)?.let(onSound)
+                goLiveSoundCue(committedAction, previous.game, publishedGame, previous.config.humanPlayer)?.let(onSound)
                 if (mutableState.value.game.phase != GoPhase.PLAYING) {
                     mutableState.value = mutableState.value.copy(paused = true)
                     if (mutableState.value.game.phase == GoPhase.FINISHED) maybeAutoContinue()
                 } else scheduleSearch()
+                ensureClockTicker()
+            } else if (mutableState.value.game.saving && !disposed.get()) {
+                mutableState.value = mutableState.value.copy(game = previous.game)
             }
         }
     }
@@ -857,7 +891,31 @@ class GoAiMatchSession(
             if (disposed.get() || ready.paused || !ready.game.canAct || ready.game.phase != GoPhase.PLAYING ||
                 !ready.config.isAi(ready.game.currentPlayer) || version != stamp.get()) return@launch
             val bytes = checkpoint ?: return@launch
-            search.start(GoAiPositionSnapshot(version, bytes), ready.config.difficulty.budget)
+            val time = clock?.remaining(ready.game.currentPlayer, nowMillis())
+            if (time == 0L) return@launch
+            val budget = ready.config.difficulty.budget
+            search.start(GoAiPositionSnapshot(version, bytes), if (time == null) budget
+                else budget.copy(maxTimeMillis = minOf(time, budget.maxTimeMillis)))
+        }
+    }
+
+    private fun ensureClockTicker() {
+        if (clock?.active == null || clockJob?.isActive == true) return
+        clockJob = scope.launch {
+            while (lifetime.isActive) {
+                val running = clock ?: break
+                val active = running.active ?: break
+                val current = mutableState.value
+                val now = nowMillis()
+                val expired = running.expired(now)
+                if (current.game.canAct && expired != null) {
+                    invalidateSearch()
+                    commit(GoAction.Timeout(expired), false)
+                } else if (current.game.canAct) {
+                    mutableState.value = current.copy(game = current.game.withClock(running, now))
+                }
+                delay(if (expired == null) running.remaining(active, now).coerceIn(1L, 250L) else 250L)
+            }
         }
     }
 
@@ -896,6 +954,9 @@ class GoAiMatchSession(
     }
 
     private fun player(source: GoRecordEngine) = GoPlayer.entries.first { it.code == source.currentPlayer.value }
+    private fun GoGameUiState.withClock(clock: GoTurnClock?, now: Long = nowMillis()) =
+        copy(timeRemainingMillis = clock?.let { it.remaining(GoPlayer.BLACK, now) to it.remaining(GoPlayer.WHITE, now) })
+
     private fun snapshot(source: GoRecordEngine): GoGameUiState {
         val scoring = source.scoringState()
         val history = source.eventHistory()
@@ -907,7 +968,8 @@ class GoAiMatchSession(
             lastMoveIndex = last?.let { it.y * source.boardSize + it.x }, proposalRevision = scoring.proposalRevision,
             blackConfirmed = scoring.blackConfirmed, whiteConfirmed = scoring.whiteConfirmed, previewScore = source.previewScore(),
             sessionReady = true, loading = false, recordAvailable = true,
-            resignedBy = (history.lastOrNull() as? GoAction.Resign)?.actor)
+            resignedBy = (history.lastOrNull() as? GoAction.Resign)?.actor,
+            timedOutBy = (history.lastOrNull() as? GoAction.Timeout)?.actor)
     }
 }
 

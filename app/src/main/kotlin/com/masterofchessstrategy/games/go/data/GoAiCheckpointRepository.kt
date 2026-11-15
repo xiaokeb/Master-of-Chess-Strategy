@@ -102,7 +102,7 @@ internal class GoAiCheckpointRepository(
 
     private fun decode(entry: GoAiCheckpointEntry): GoAiSavedMatch {
         val bytes = entry.copyBytes()
-        require(bytes.size > 4 && bytes[4].toInt() == 6) { "围棋人机事务快照版本无效" }
+        require(GoAiMatchFileCodec.canonicalVersion(bytes) != null) { "围棋人机事务快照版本无效" }
         return requireNotNull(GoAiMatchFileCodec.decode(bytes)) { "围棋人机事务快照损坏" }
     }
 
@@ -110,6 +110,9 @@ internal class GoAiCheckpointRepository(
         require(previous.config.boardSize == next.config.boardSize &&
             previous.config.handicapStones == next.config.handicapStones &&
             previous.config.difficulty == next.config.difficulty &&
+            previous.clock?.limitMillis == next.clock?.limitMillis &&
+            (previous.clock == null || (next.clock != null &&
+                next.clock.blackMillis <= previous.clock.blackMillis && next.clock.whiteMillis <= previous.clock.whiteMillis)) &&
             previous.copyOpeningBytes().sameBytes(next.copyOpeningBytes()) &&
             (!previous.automaticUsed || next.automaticUsed) &&
             (!previous.completionReserved || next.completionReserved) &&
@@ -130,7 +133,7 @@ internal class GoAiCheckpointRepository(
     // Reserving an existing result or ending its continuation series does not rewrite the first archive.
     private fun terminalContent(match: GoAiSavedMatch): ByteArray = GoAiMatchFileCodec.encode(
         GoAiSavedMatch(match.matchId, match.config, match.copyBytes(), match.undoUsed, match.hintUsed,
-            false, match.rememberedHuman, match.automaticUsed, match.copyOpeningBytes()))
+            false, match.rememberedHuman, match.automaticUsed, match.copyOpeningBytes(), clock = match.clock))
 
     private fun ByteArray?.sameBytes(other: ByteArray?) =
         if (this == null) other == null else other != null && contentEquals(other)

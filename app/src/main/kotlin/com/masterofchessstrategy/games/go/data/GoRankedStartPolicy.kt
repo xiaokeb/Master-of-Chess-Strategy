@@ -36,7 +36,9 @@ internal fun admitGoRankedStart(
     require(admitted.phase == GoPhase.PLAYING && admitted.result == GameResult.ONGOING && admitted.eventCount == 0 &&
         match.config.handicapStones == 0 && match.config.humanPlayer != null && !match.hasSpecifiedOpening &&
         !match.automaticUsed && match.undoUsed == 0 && match.hintUsed == 0 && !match.completionReserved &&
-        !match.autoContinueEnabled && match.autoContinueMaxGames == 1 && match.autoContinueGameNumber == 1) {
+        !match.autoContinueEnabled && match.autoContinueMaxGames == 1 && match.autoContinueGameNumber == 1 &&
+        (match.clock == null || (match.clock.blackMillis == match.clock.limitMillis &&
+            match.clock.whiteMillis == match.clock.limitMillis))) {
         "Ranked Go creation must be a fresh standard human game"
     }
     return GoRankedStart(admitted.recordId, bytes, time)
@@ -65,7 +67,8 @@ internal fun qualifiedGoOutcome(
     if (archive.completedAtEpochMillis < start.createdAtEpochMillis ||
         archive.checkpoint.lineage.origin != GoAiCheckpointOrigin.UNVERIFIED_SESSION ||
         archive.checkpoint.lineage.replacedTerminalRecordId != null || final.config != initial.config ||
-        final.rememberedHuman != initial.rememberedHuman || final.automaticUsed || final.hasSpecifiedOpening ||
+        final.rememberedHuman != initial.rememberedHuman || final.clock?.limitMillis != initial.clock?.limitMillis ||
+        final.automaticUsed || final.hasSpecifiedOpening ||
         final.autoContinueEnabled || final.autoContinueMaxGames != 1 || final.autoContinueGameNumber != 1 ||
         admitted.phase != GoPhase.FINISHED || admitted.result == GameResult.ONGOING) return null
     // Existing GAI construction/admission enforces each difficulty's allowed assistance quota.

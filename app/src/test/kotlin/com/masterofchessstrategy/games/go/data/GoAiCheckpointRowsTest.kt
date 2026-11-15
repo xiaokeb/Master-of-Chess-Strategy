@@ -83,7 +83,8 @@ class GoAiCheckpointRowsTest {
 
     @Test fun completeEnvelopeBudgetIsNotTruncatedToTheNativeImageBudget() {
         val saved = GoAiSavedMatch("a".repeat(128), GoAiMatchConfig(19), ByteArray(1_000_000) { 1 },
-            openingBytes = ByteArray(1_000_000) { 2 })
+            openingBytes = ByteArray(1_000_000) { 2 },
+            clock = GoTurnClock.start(300_000, GoPlayer.BLACK, 42))
         val image = GoAiMatchFileCodec.encode(saved)
         assertEquals(GoAiMatchFileCodec.MAX_BYTES, image.size)
         val restored = GoAiCheckpointRows.entry(GoAiCheckpointRows.active(GoAiCheckpointEntry(image,

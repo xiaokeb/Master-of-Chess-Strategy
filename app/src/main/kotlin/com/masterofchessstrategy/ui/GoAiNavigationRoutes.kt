@@ -46,9 +46,10 @@ internal fun GoProductionModesNavigationRoute(storage: GoLocalStorage, writers: 
 @Composable
 internal fun GoAiSetupNavigationRoute(storage: GoLocalStorage, writers: LocalDataWriterRegistry,
     onOpen: (String) -> Unit, onLearning: () -> Unit, onBack: () -> Unit,
+    newGameLimitMinutes: Int? = null,
 ) {
     val epoch by storage.gate.epoch.collectAsState()
-    val repository = remember(storage, epoch) { storage.aiEntryRepository() }
+    val repository = remember(storage, epoch, newGameLimitMinutes) { storage.aiEntryRepository(newGameLimitMinutes) }
     GoAiSetupRoute(repository, "go-ai-setup-$epoch", onOpen, onLearning, onBack, writers::register)
 }
 

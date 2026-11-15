@@ -86,31 +86,33 @@ internal object GoAiCheckpointRows {
     fun active(entry: GoAiCheckpointEntry, time: Long): GoAiSessionEntity {
         require(time >= 0)
         val bytes = canonical(entry.copyBytes())
-        return GoAiSessionEntity(GameType.GO.code, 6, bytes, code(entry.lineage.origin),
+        return GoAiSessionEntity(GameType.GO.code, bytes[4].toInt(), bytes, code(entry.lineage.origin),
             entry.lineage.replacedTerminalRecordId, time)
     }
 
     fun entry(row: GoAiSessionEntity): GoAiCheckpointEntry {
-        require(row.gameTypeCode == GameType.GO.code && row.envelopeVersion == 6 && row.updatedAtEpochMillis >= 0)
+        require(row.gameTypeCode == GameType.GO.code && row.envelopeVersion == GoAiMatchFileCodec.canonicalVersion(row.checkpoint) &&
+            row.updatedAtEpochMillis >= 0)
         return GoAiCheckpointEntry(canonical(row.checkpoint.copyOf()), lineage(row.originCode, row.replacedTerminalRecordId))
     }
 
     fun archive(archive: GoAiCheckpointArchive): GoAiArchiveEntity {
         require(archive.checkpoint.lineage.replacedTerminalRecordId != archive.recordId) { "AI archive cannot be its own parent" }
-        return GoAiArchiveEntity(archive.recordId, GameType.GO.code, 6, canonical(archive.checkpoint.copyBytes()),
+        val bytes = canonical(archive.checkpoint.copyBytes())
+        return GoAiArchiveEntity(archive.recordId, GameType.GO.code, bytes[4].toInt(), bytes,
             code(archive.checkpoint.lineage.origin), archive.checkpoint.lineage.replacedTerminalRecordId,
             archive.completedAtEpochMillis)
     }
 
     fun archive(row: GoAiArchiveEntity): GoAiCheckpointArchive {
-        require(row.gameTypeCode == GameType.GO.code && row.envelopeVersion == 6)
+        require(row.gameTypeCode == GameType.GO.code && row.envelopeVersion == GoAiMatchFileCodec.canonicalVersion(row.checkpoint))
         require(row.replacedTerminalRecordId != row.recordId) { "AI archive cannot be its own parent" }
         return GoAiCheckpointArchive(row.recordId, GoAiCheckpointEntry(canonical(row.checkpoint.copyOf()),
             lineage(row.originCode, row.replacedTerminalRecordId)), row.completedAtEpochMillis)
     }
 
     private fun canonical(bytes: ByteArray): ByteArray {
-        require(bytes.size > 4 && bytes[4] == 6.toByte()) { "AI Room checkpoint requires GAI1 v6" }
+        require(GoAiMatchFileCodec.canonicalVersion(bytes) != null) { "Invalid AI Room envelope version" }
         val saved = requireNotNull(GoAiMatchFileCodec.decode(bytes)) { "Invalid AI Room checkpoint" }
         require(GoAiMatchFileCodec.encode(saved).contentEquals(bytes)) { "Noncanonical AI Room checkpoint" }
         return bytes
