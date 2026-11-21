@@ -1,0 +1,116 @@
+{
+  "expected_changed_paths": 8,
+  "ndk": "30.0.16138531",
+  "distribution": "source-only",
+  "assets": [],
+  "tag": "v0.1.0-go-three-eyes.1",
+  "build": {
+    "lint_errors": 0,
+    "unit_tests": [
+      {
+        "tests": 14,
+        "name": "com.masterofchessstrategy.games.go.data.RoomGoProgressRepositoriesTest"
+      },
+      {
+        "tests": 7,
+        "name": "com.masterofchessstrategy.games.go.GoEndgameChallengesTest"
+      },
+      {
+        "tests": 14,
+        "name": "com.masterofchessstrategy.games.go.GoEndgameLibraryTest"
+      },
+      {
+        "tests": 9,
+        "name": "com.masterofchessstrategy.games.go.GoEndgameProgressTest"
+      },
+      {
+        "tests": 11,
+        "name": "com.masterofchessstrategy.games.go.GoEndgameViewModelTest"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "d6f71497112593ed9d2ac496ea38e71a3ec411ad0c6dfe966c08373daeb5ddfd",
+      "app/build/outputs/apk/debug/app-debug.apk": "990f77d99631d4aaf3e00d9f1b69fa577cd8f7315a33dd252aea75856b56ad54"
+    },
+    "overlays": [
+      {
+        "sha256": "d5f3c1fe33c78b725a462959138d55c783609fcc6efef822efe8ca98152ca50a",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibrary.kt",
+        "working_sha256": "d5f3c1fe33c78b725a462959138d55c783609fcc6efef822efe8ca98152ca50a"
+      },
+      {
+        "sha256": "e4146f405bcef9adbe3fb7920edf0818b0b4372d09ca07f8df5585d7177f89af",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibraryTest.kt",
+        "working_sha256": "e4146f405bcef9adbe3fb7920edf0818b0b4372d09ca07f8df5585d7177f89af"
+      },
+      {
+        "sha256": "9aae2b207b95b2a713b0525344f6b1a167e1ef302b79df1d1fc48342e082d291",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoEndgameNativeInstrumentedTest.kt",
+        "working_sha256": "9aae2b207b95b2a713b0525344f6b1a167e1ef302b79df1d1fc48342e082d291"
+      },
+      {
+        "sha256": "aa533f2d5ccc4c01c17e490c8c489f7e933252c429a59d329daaebefbbefe121",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoLessonPracticeNavigationTest.kt",
+        "working_sha256": "aa533f2d5ccc4c01c17e490c8c489f7e933252c429a59d329daaebefbbefe121"
+      },
+      {
+        "sha256": "f207cf85382fc0813deac9a3118e0571a0da389de025ede0790d65c1249d504b",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameChallengesTest.kt",
+        "working_sha256": "f207cf85382fc0813deac9a3118e0571a0da389de025ede0790d65c1249d504b"
+      }
+    ],
+    "lint_warnings": 25,
+    "candidate": "go-three-eyes1",
+    "release_manifest": "processed",
+    "baseline": "76700f66fc86d3f0e245dfbd0ae29a3dec426614"
+  },
+  "device": {
+    "original_font": "1.0",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "d6f71497112593ed9d2ac496ea38e71a3ec411ad0c6dfe966c08373daeb5ddfd",
+      "app/build/outputs/apk/debug/app-debug.apk": "990f77d99631d4aaf3e00d9f1b69fa577cd8f7315a33dd252aea75856b56ad54"
+    },
+    "restored_font": "1.0",
+    "candidate": "go-three-eyes1",
+    "runs": [
+      {
+        "images": [
+          {
+            "path": "font-1.0\\7b187055-94d6-43c3-b9b7-9f07b3682835\\interior-life-clear.png",
+            "sha256": "e548437bec37349d30923387b8f592329a4f6ffc19baae1ea21ab309f36bd665"
+          },
+          {
+            "path": "font-1.0\\7b187055-94d6-43c3-b9b7-9f07b3682835\\interior-life-start.png",
+            "sha256": "0ad26d9498e4a876f016b8b112131fd1a33061fb95495b6b2361e52be3addaf5"
+          }
+        ],
+        "tests": 5,
+        "log_sha256": "5a235877e3d04ec5dfd61789511d7f002012b778efd1ed82b564586ca6c91435",
+        "font": "1.0"
+      },
+      {
+        "images": [
+          {
+            "path": "font-1.5\\5ba26ae5-0cf0-44fa-8e11-0a27a253665a\\interior-life-clear.png",
+            "sha256": "91bdf2efbbcab3996bb96ddbb380b18d1421a1a0e9f909145b485bca012e710f"
+          },
+          {
+            "path": "font-1.5\\5ba26ae5-0cf0-44fa-8e11-0a27a253665a\\interior-life-start.png",
+            "sha256": "be15f17d80dd5f43170b45169a177a4eda2ec7cd427f8f8e609152fa646ad950"
+          }
+        ],
+        "tests": 1,
+        "log_sha256": "784159d8bcb693516805f4b1286612636e84d34f759dfb1b2c2f6cbab7a7c614",
+        "font": "1.5"
+      }
+    ],
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "folder": "device-3d31dd30f063417d9ce2e0a4aed8cb18",
+    "visual_review_sha256": "a875607c8e1608dd378d311f7d008fa5f0d8cccf2e3a58844b3e795c3b5a8cd0"
+  },
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ]
+}

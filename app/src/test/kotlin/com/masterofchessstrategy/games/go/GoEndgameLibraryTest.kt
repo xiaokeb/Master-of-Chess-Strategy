@@ -8,7 +8,7 @@ import org.junit.Test
 class GoEndgameLibraryTest {
     @Test fun catalogHasStableUniqueMetadataAndLinearDifficultyOrder() {
         val puzzles = GoEndgameLibrary.puzzles
-        assertEquals(13, puzzles.size); assertEquals(puzzles.size, puzzles.map { it.id }.toSet().size)
+        assertEquals(14, puzzles.size); assertEquals(puzzles.size, puzzles.map { it.id }.toSet().size)
         assertTrue(puzzles.all { it.setup.size % 2 == 0 })
         assertEquals(setOf(9, 13, 19), puzzles.map { it.boardSize }.toSet())
         assertEquals(GoEndgameLevel.entries, puzzles.map { it.level }.distinct())
@@ -39,7 +39,8 @@ class GoEndgameLibraryTest {
         assertEquals(EndgameRewardTotals(9, 9, 200), GoEndgameLibrary.rewards(puzzles.take(9).map { it.id }.toSet()))
         assertEquals(EndgameRewardTotals(10, 10, 280), GoEndgameLibrary.rewards(puzzles.take(10).map { it.id }.toSet()))
         assertEquals(EndgameRewardTotals(12, 12, 340), GoEndgameLibrary.rewards(puzzles.take(12).map { it.id }.toSet()))
-        assertEquals(EndgameRewardTotals(13, 13, 420), GoEndgameLibrary.rewards(puzzles.map { it.id }.toSet()))
+        assertEquals(EndgameRewardTotals(13, 13, 420), GoEndgameLibrary.rewards(puzzles.take(13).map { it.id }.toSet()))
+        assertEquals(EndgameRewardTotals(14, 14, 460), GoEndgameLibrary.rewards(puzzles.map { it.id }.toSet()))
         assertEquals(EndgameRewardTotals(), GoEndgameLibrary.rewards(setOf("unknown")))
         assertEquals(GoEndgameLibrary.rewards(older.completedIds),
             GoEndgameLibrary.rewards(older.complete(puzzles.first().id).completedIds))

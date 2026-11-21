@@ -450,6 +450,36 @@ class GoLessonPracticeNavigationTest {
         capture("life-counter-clear")
     }
 
+    @Test fun interiorLifeHighlightsThreeEyesOnThirteenLineBoard() {
+        val puzzle = checkNotNull(GoEndgameLibrary.puzzle("interior-three-eyes"))
+        val preceding = GoEndgameLibrary.puzzles.takeWhile { it.id != puzzle.id }.map { it.id }.toSet()
+        val repository = RoomGoEndgameProgressRepository(database)
+        runBlocking {
+            preceding.forEach { repository.complete(it) }
+            repository.select(puzzle.id)
+        }
+        compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag(GO_ENDGAMES_ENTRY_TAG).performScrollTo().performClick()
+        awaitTitle(puzzle.title)
+        capture("interior-life-start")
+
+        compose.onNodeWithTag("go_intersection_5_5").performClick()
+        compose.waitUntil(15_000) {
+            compose.onAllNodes(hasTestTag("go_endgame_feedback") and hasText("围住三只真眼", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        assertEquals(preceding, runBlocking { repository.load().completedIds })
+        compose.onNodeWithTag("go_intersection_6_5").performClick()
+        awaitTag("go_endgame_completed")
+        compose.onNodeWithTag("go_intersection_5_5").assertContentDescriptionEquals("第6行第6列，空点，高亮点")
+        compose.onNodeWithTag("go_intersection_7_5").assertContentDescriptionEquals("第6行第8列，空点，高亮点")
+        compose.onNodeWithTag("go_intersection_6_6").assertContentDescriptionEquals("第7行第7列，空点，高亮点")
+        compose.onNodeWithTag("go_endgame_rewards").performScrollTo().assertTextEquals("残局奖励 14 星 · 460 分")
+        assertEquals(preceding + puzzle.id, runBlocking { repository.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        capture("interior-life-clear")
+    }
+
     private fun openLessons() {
         compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
         compose.onNodeWithTag(GO_LEARNING_ENTRY_TAG).performScrollTo().performClick()

@@ -48,6 +48,7 @@ class GoEndgameNativeInstrumentedTest {
             "connect-between-white-groups" to setOf(BoardPosition(9, 8), BoardPosition(9, 9)),
             "corner-separate-eyes" to setOf(BoardPosition(1, 0)),
             "link-one-eye-groups" to setOf(BoardPosition(2, 0)),
+            "interior-three-eyes" to setOf(BoardPosition(6, 5)),
         )
         for ((id, solutions) in expected) {
             val puzzle = checkNotNull(GoEndgameLibrary.puzzle(id))
@@ -64,10 +65,11 @@ class GoEndgameNativeInstrumentedTest {
         }
     }
 
-    @Test fun eachCompletedLifeGroupRejectsImmediateWhitePlayInBothEyes() {
+    @Test fun eachCompletedLifeGroupRejectsImmediateWhitePlayInEveryEye() {
         val eyesById = mapOf(
             "corner-separate-eyes" to listOf(BoardPosition(0, 0), BoardPosition(2, 0)),
             "link-one-eye-groups" to listOf(BoardPosition(0, 0), BoardPosition(4, 0)),
+            "interior-three-eyes" to listOf(BoardPosition(5, 5), BoardPosition(7, 5), BoardPosition(6, 6)),
         )
         for ((id, eyes) in eyesById) {
             val puzzle = checkNotNull(GoEndgameLibrary.puzzle(id))
