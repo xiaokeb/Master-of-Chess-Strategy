@@ -1,0 +1,113 @@
+{
+  "assets": [],
+  "tag": "v0.1.0-competition-mahjong-wmo-challenge.1",
+  "device": {
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "f431a149a06edab2806a2949bc7dc1551333eb3bc64c8e63c91877ca79e1ef3e",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "32da4e726d36f6b4dc84c4aa6a4f582b97ac49c24b1f20ae864f4e267d67658f"
+    },
+    "folder": "device-8fc863307451459682535e2f04fe737b",
+    "runs": [
+      {
+        "log": "legacy-discard.log",
+        "tests": 1,
+        "selector": "com.masterofchessstrategy.ui.CompetitionMahjongChallengeNavigationTest#discardTrainingReplaysEveryChoiceAndSavesOnlyAfterConfirmedWin",
+        "sha256": "9715d6faa1b3aa5bbc5a217fb4ab3858ea6254547b77c9ae1dcb19e2df49e00e"
+      },
+      {
+        "font": "1.0",
+        "tests": 1,
+        "sha256": "db551e695aeb6702d3310ca65cc3186892248a0fbb3e432b5ef958e0124ce02d",
+        "images": [
+          {
+            "sha256": "a5ad63b8642ab033489ea0efe15b948f601116e92b022c2fda6fb56ca5bcb283",
+            "path": "font-1.0\\966e8131-4c23-407f-8ec7-b1f6509ca9fd\\nine-gates-hand.png"
+          },
+          {
+            "sha256": "043c913d072a89984a4dc7a65bae26ca57450b49ae4354c482c41a25c4f0b6fe",
+            "path": "font-1.0\\966e8131-4c23-407f-8ec7-b1f6509ca9fd\\nine-gates-scoring.png"
+          }
+        ],
+        "log": "navigation-1.0.log",
+        "selector": "com.masterofchessstrategy.ui.CompetitionMahjongChallengeNavigationTest#nativeNineGatesTeachesWmoExclusionAndSavesOneReward"
+      },
+      {
+        "font": "1.5",
+        "tests": 1,
+        "sha256": "5193831f84897d788031f9e5e9831451fef541765d683b49b836aee028421ef1",
+        "images": [
+          {
+            "sha256": "8a72e94354aeb0e3603b0e61acb75a5cb5a2dda6e9a05182ea38a0ae4b281ab2",
+            "path": "font-1.5\\1f6692e8-8447-47cc-b632-b91a108a9103\\nine-gates-hand.png"
+          },
+          {
+            "sha256": "9aada543d0a8e7fe0d28f7849cf99d750db69d7db261cc1b80b52958774d421e",
+            "path": "font-1.5\\1f6692e8-8447-47cc-b632-b91a108a9103\\nine-gates-scoring.png"
+          }
+        ],
+        "log": "navigation-1.5.log",
+        "selector": "com.masterofchessstrategy.ui.CompetitionMahjongChallengeNavigationTest#nativeNineGatesTeachesWmoExclusionAndSavesOneReward"
+      }
+    ],
+    "candidate": "cm-wmo-challenge1",
+    "restored_font": "1.0",
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "visual_review_sha256": "6cf323997cff3466ab544eed50ae6af3e82c85dea5f1e9f0567030e8669ae49e"
+  },
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeLibrary.kt",
+        "sha256": "1804b792b5d298d44ebbb03a527d159a773f7a7d8726df71764afa96668f84f4",
+        "working_sha256": "1804b792b5d298d44ebbb03a527d159a773f7a7d8726df71764afa96668f84f4"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeViewModel.kt",
+        "sha256": "aeeac853513bc74a8ceb78f0413f70b21171ad6d55ffd0fd9ee77697e6b7d4e0",
+        "working_sha256": "aeeac853513bc74a8ceb78f0413f70b21171ad6d55ffd0fd9ee77697e6b7d4e0"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongPracticePosition.kt",
+        "sha256": "931caec09ec5e0ea5bee25db7ed08a40fb67e13f857f647f9291149e2e1feca7",
+        "working_sha256": "931caec09ec5e0ea5bee25db7ed08a40fb67e13f857f647f9291149e2e1feca7"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeLibraryTest.kt",
+        "sha256": "3438ead0fced172eab727bd7fa70b5e5f213ab69a169fcdf08613cc42466c7d7",
+        "working_sha256": "3438ead0fced172eab727bd7fa70b5e5f213ab69a169fcdf08613cc42466c7d7"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongChallengeNavigationTest.kt",
+        "sha256": "3916f63bcdf41f3337daaefce3959967614e2c9da49ddea6ca2c6ec0d17d7531",
+        "working_sha256": "3916f63bcdf41f3337daaefce3959967614e2c9da49ddea6ca2c6ec0d17d7531"
+      }
+    ],
+    "release_manifest": "processed",
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeViewModelTest",
+        "tests": 5
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeLibraryTest",
+        "tests": 5
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "f431a149a06edab2806a2949bc7dc1551333eb3bc64c8e63c91877ca79e1ef3e",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "32da4e726d36f6b4dc84c4aa6a4f582b97ac49c24b1f20ae864f4e267d67658f"
+    },
+    "baseline": "f721d9014724924687a3d1694164d5c4eca0e6c8",
+    "candidate": "cm-wmo-challenge1"
+  },
+  "distribution": "source-only",
+  "ndk": "30.0.16138531",
+  "expected_changed_paths": 8
+}

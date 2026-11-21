@@ -8,6 +8,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeLibrary
 import com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongPracticePosition
 import com.masterofchessstrategy.games.competition_mahjong.challenge.RoomCompetitionMahjongChallengeProgress
+import com.masterofchessstrategy.games.competition_mahjong.competitionMahjongTileName
 import com.masterofchessstrategy.settings.LocalDataWriterRegistry
 import com.masterofchessstrategy.settings.awaitLocalDataWriters
 import java.io.File
@@ -143,6 +144,39 @@ class CompetitionMahjongChallengeNavigationTest {
         compose.onNodeWithTag("competition_mahjong_challenge_rewards").performScrollTo()
             .assertTextEquals("训练奖励 14 星 · 610 分")
         capture("discard-win")
+    }
+
+    @Test fun nativeNineGatesTeachesWmoExclusionAndSavesOneReward() {
+        val hand = CompetitionMahjongPracticePosition.verifyNineGates()
+        assertEquals(listOf(0, 0, 0, 1, 2, 3, 4, 4, 5, 6, 7, 8, 8, 8), hand)
+        val store = RoomCompetitionMahjongChallengeProgress(database)
+        val puzzle = CompetitionMahjongPracticePosition.NINE_GATES_PUZZLE_ID
+        val before = CompetitionMahjongChallengeLibrary.challenges.takeWhile { it.id != puzzle }.map { it.id }.toSet()
+        runBlocking {
+            before.forEach { store.complete(it) }
+            store.select(puzzle)
+        }
+        compose.onNodeWithTag(HOME_COMPETITION_MAHJONG_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag("competition_challenge_entry").performScrollTo().performClick()
+        waitFor("competition_mahjong_challenge_hand")
+        compose.onNodeWithTag("competition_mahjong_challenge_hand").performScrollTo().assertIsDisplayed()
+        compose.onAllNodesWithContentDescription(competitionMahjongTileName(0), useUnmergedTree = true).assertCountEquals(3)
+        compose.onAllNodesWithContentDescription("牌背", useUnmergedTree = true).assertCountEquals(0)
+        capture("nine-gates-hand")
+
+        compose.onNodeWithTag("competition_mahjong_challenge_choice_c").performScrollTo().performClick()
+        compose.onNodeWithTag("competition_mahjong_challenge_completed").assertDoesNotExist()
+        assertEquals(before, runBlocking { store.load().completedIds })
+
+        compose.onNodeWithTag("competition_mahjong_challenge_choice_b").performScrollTo().performClick()
+        waitFor("competition_mahjong_challenge_completed")
+        compose.onNodeWithTag("competition_mahjong_challenge_feedback").performScrollTo()
+            .assertTextContains("可以加计不求人 4 番", substring = true)
+        compose.onNodeWithTag("competition_mahjong_challenge_rewards").performScrollTo()
+            .assertTextEquals("训练奖励 15 星 · 690 分")
+        assertEquals(before + puzzle, runBlocking { store.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        capture("nine-gates-scoring")
     }
 
     private fun capture(name: String) {

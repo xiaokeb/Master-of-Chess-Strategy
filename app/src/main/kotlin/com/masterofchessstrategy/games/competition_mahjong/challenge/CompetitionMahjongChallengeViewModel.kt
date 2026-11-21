@@ -137,6 +137,7 @@ class CompetitionMahjongChallengeViewModel(
         val hand = when (id) {
             CompetitionMahjongPracticePosition.PUZZLE_ID -> CompetitionMahjongPracticePosition.verifySevenPairs()
             CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID -> CompetitionMahjongPracticePosition.discardOpeningHand()
+            CompetitionMahjongPracticePosition.NINE_GATES_PUZZLE_ID -> CompetitionMahjongPracticePosition.verifyNineGates()
             else -> emptyList()
         }
         return CompetitionMahjongChallengeSession(challenge, hand)

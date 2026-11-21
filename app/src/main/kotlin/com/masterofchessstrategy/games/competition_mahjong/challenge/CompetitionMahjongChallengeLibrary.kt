@@ -178,6 +178,11 @@ object CompetitionMahjongChallengeLibrary {
             CompetitionMahjongChallengeLevel.MASTER,
             "打出一张牌，保留六对及一张东风。本题中三家依次摸切，过一轮后轮到你摸牌。", "",
             "七对自摸成立，七对计 24 番。", setOf(19)),
+        challenge(CompetitionMahjongPracticePosition.NINE_GATES_PUZZLE_ID, "九莲宝灯怎样计番", CompetitionMahjongChallengeTheme.EXCLUSION,
+            CompetitionMahjongChallengeLevel.MASTER,
+            "东家起手自摸同色五，牌面已成九莲宝灯。根据新版计分，这手牌还可计不求人或幺九刻吗？", "b",
+            "九莲宝灯计 88 番，可以加计不求人 4 番。幺九刻已被九莲宝灯包含。", setOf(4, 56, 73),
+            choice("a", "可加计幺九刻"), choice("b", "可加计不求人"), choice("c", "两项均可加计")),
     ))
 
     init {

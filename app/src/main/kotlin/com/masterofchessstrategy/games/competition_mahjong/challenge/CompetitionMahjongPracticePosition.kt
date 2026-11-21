@@ -1,8 +1,10 @@
 package com.masterofchessstrategy.games.competition_mahjong.challenge
 
 import com.masterofchessstrategy.engine.CompetitionMahjongAction
+import com.masterofchessstrategy.engine.CompetitionMahjongFanView
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundActionKind
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundPhase
+import com.masterofchessstrategy.engine.CompetitionMahjongScoring
 import com.masterofchessstrategy.engine.NativeCompetitionMahjongSession
 import com.masterofchessstrategy.engine.RestoreResult
 import java.nio.ByteBuffer
@@ -13,19 +15,43 @@ import java.util.zip.CRC32
 internal object CompetitionMahjongPracticePosition {
     const val PUZZLE_ID = "live-seven-pairs"
     const val DISCARD_PUZZLE_ID = "discard-for-seven-pairs"
+    const val NINE_GATES_PUZZLE_ID = "live-nine-gates-exclusion"
     private val dealerHand = listOf(0, 0, 2, 2, 5, 5, 12, 12, 19, 19, 23, 23, 27, 27)
     private val discardHand = dealerHand.dropLast(1) + 31
     private val nextDraws = listOf(14, 15, 16, 27)
     private const val SEVEN_PAIRS = 19
+    private const val NINE_GATES = 4
+    private const val FULLY_CONCEALED_SELF_DRAW = 56
+    private const val TERMINAL_OR_HONOR_PUNG = 73
 
-    fun verifySevenPairs(): List<Int> = NativeCompetitionMahjongSession(0).use { session ->
-        check(session.restore(dealerOpening(dealerHand)) == RestoreResult.Restored) { "训练牌局无法通过 Native 恢复" }
+    fun verifySevenPairs(): List<Int> = verifyDealerWin(dealerHand, CompetitionMahjongScoring.LEGACY) { fan ->
+        fan.entries.any { it.id == SEVEN_PAIRS && it.points == 24 }
+    }
+
+    fun verifyNineGates(): List<Int> {
+        // The dealer's fourteenth tile is the extra five; keep the wall order before sorting the display hand.
+        val hand = listOf(0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8, 8, 4)
+        return verifyDealerWin(hand, CompetitionMahjongScoring.WMO_2021) { fan ->
+            fan.entries.any { it.id == NINE_GATES && it.points == 88 } &&
+                fan.entries.any { it.id == FULLY_CONCEALED_SELF_DRAW && it.points == 4 } &&
+                fan.entries.none { it.id == TERMINAL_OR_HONOR_PUNG }
+        }
+    }
+
+    private fun verifyDealerWin(
+        openingHand: List<Int>,
+        scoring: CompetitionMahjongScoring,
+        verifyFan: (CompetitionMahjongFanView) -> Boolean,
+    ): List<Int> = NativeCompetitionMahjongSession(0, scoring = scoring).use { session ->
+        check(session.restore(dealerOpening(openingHand, scoring = scoring)) == RestoreResult.Restored) {
+            "训练牌局无法通过 Native 恢复"
+        }
         val initial = session.snapshot()
         val hand = initial.seats.single { it.seat == initial.viewerSeat }.concealedTiles.sorted()
         check(initial.phase == CompetitionMahjongRoundPhase.DISCARD && initial.currentSeat == initial.viewerSeat) {
             "训练牌局未停在本机出牌阶段"
         }
-        check(hand == dealerHand && initial.seats.filter { it.seat != initial.viewerSeat }.all { it.concealedTiles.isEmpty() }) {
+        check(hand == openingHand.sorted() && initial.seats.filter { it.seat != initial.viewerSeat }.all { it.concealedTiles.isEmpty() }) {
             "训练牌局的本机手牌或隐私视图不一致"
         }
         val win = checkNotNull(session.legalActions().singleOrNull { it.kind == CompetitionMahjongRoundActionKind.WIN }) {
@@ -36,7 +62,7 @@ internal object CompetitionMahjongPracticePosition {
         val settled = session.snapshot()
         check(settled.phase == CompetitionMahjongRoundPhase.WON && settled.payerSeat == null &&
             settled.winnerSeat == initial.viewerSeat && settled.winningFan.qualifies &&
-            settled.winningFan.entries.any { it.id == SEVEN_PAIRS && it.points == 24 }) { "训练牌局未按七对结算" }
+            verifyFan(settled.winningFan)) { "训练牌局的结算与题面不一致" }
         hand
     }
 
@@ -86,8 +112,12 @@ internal object CompetitionMahjongPracticePosition {
         WinningTurn(frame.seats.first().concealedTiles.sorted(), checkNotNull(frame.drawnTile))
     }
 
-    /** MOCM v1 with a full physical wall. Native verifies the inventory and deals it. */
-    private fun dealerOpening(hand: List<Int>, draws: List<Int> = emptyList()): ByteArray {
+    /** Native verifies the complete physical wall before dealing. */
+    private fun dealerOpening(
+        hand: List<Int>,
+        draws: List<Int> = emptyList(),
+        scoring: CompetitionMahjongScoring = CompetitionMahjongScoring.LEGACY,
+    ): ByteArray {
         val wall = IntArray(144) { -1 }
         val dealerSlots = listOf(0, 1, 2, 3, 16, 17, 18, 19, 32, 33, 34, 35, 48, 49)
         val remaining = (0..41).flatMap { tile -> List(if (tile < 34) 4 else 1) { tile } }.toMutableList()
@@ -99,7 +129,7 @@ internal object CompetitionMahjongPracticePosition {
         for (slot in wall.indices) if (wall[slot] < 0) wall[slot] = rest.next()
         check(!rest.hasNext())
         val round = ByteBuffer.allocate(151).order(ByteOrder.LITTLE_ENDIAN)
-        round.put("MOCM".toByteArray(Charsets.US_ASCII)).put(byteArrayOf(1, 0, 0))
+        round.put("MOCM".toByteArray(Charsets.US_ASCII)).put(byteArrayOf(scoring.recordVersion.toByte(), 0, 0))
         wall.forEach { round.put(it.toByte()) }
         return withJournal(round.array(), byteArrayOf())
     }
@@ -116,7 +146,7 @@ internal object CompetitionMahjongPracticePosition {
 
         // The viewer-bound MCMS envelope is the public Native restore entry point.
         val record = ByteBuffer.allocate(round.capacity() + 16).order(ByteOrder.LITTLE_ENDIAN)
-        record.put("MCMS".toByteArray(Charsets.US_ASCII)).put(byteArrayOf(1, 0, 0, 0))
+        record.put("MCMS".toByteArray(Charsets.US_ASCII)).put(byteArrayOf(previous[4], 0, 0, 0))
             .putInt(round.capacity()).put(round.array())
         val crc = CRC32().apply { update(record.array(), 0, record.position()) }.value.toInt()
         return record.putInt(crc).array()
