@@ -9,4 +9,6 @@
 
 NDK 30 两个 ABI 已编译和链接。Pixel 7 Pro 模拟器对六场诊断记录重做空死子确认并比对全部字节，验证显示坐标及一例显式整组标记。错误规格、同组重复标记和已有输出文件均被拒绝。显式标记用于验证工具行为，正式样本的死子结论需逐局审校。
 
+批量写入已确认的死子决定时，准备两列表 `slot`、`dead_groups`，用制表符分隔。每组填一个零基 `x,y` 坐标，多组用分号分隔。已经确认无死子的槽填 `-`，有争议的槽暂缓填表。脚本调用设备上的原生审校程序，将新 MOCG、日志和 `adjudication.tsv` 写入独立目录；重复执行会核对已有证据。[批量审校脚本](../../../tools/android/go/review-strength-matches.ps1)
+
 [换色协议](2026-11-15-search-strength-protocol.md) · [验收清单](../../releases/manifests/v0.1.0-go-strength-score-review.1.json)

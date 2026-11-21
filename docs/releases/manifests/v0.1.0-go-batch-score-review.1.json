@@ -1,0 +1,56 @@
+{
+  "tag": "v0.1.0-go-batch-score-review.1",
+  "baseline": "9310c61fa690fdbac25b5ef56fd94b839b869b36",
+  "distribution": "source-only",
+  "strength_inputs": {
+    "cohort": "holdout-1",
+    "profile": "android-pilot-v1",
+    "serial": "emulator-5554",
+    "abi": "x86_64",
+    "model": "sdk_gphone16k_x86_64",
+    "fingerprint": "google/sdk_gphone16k_x86_64/emu64xa16k:17/CP31.260623.012/16064790:user/dev-keys",
+    "app_sha256": "007540d0ea165f0c3eca85d9621e6e75eefe830139837d2140e1cf07355fe549",
+    "test_sha256": "60bbf6b23c925ec1dd3f65100d46d682a615a61dab986e28b91f8a271380cdfc"
+  },
+  "interrupted_slot": {
+    "cohort": "holdout-1",
+    "slot": 112,
+    "status": "interrupted",
+    "observed": "2026-11-21",
+    "completed_slots": 112,
+    "log_sha256": "9b8e0aad98a7283946d423ddadda603ca84870faa4ca49f1fd6be11389cc32ff",
+    "evidence": "Original host sessions 37240 and 99989 are missing. ADB and emulator were stopped at resume.",
+    "continuation": "Preserve slot 112, continue slots 113..143 without replacement.",
+    "formal_acceptance": "Incomplete, requires full samples and dead-stone review."
+  },
+  "assets": [],
+  "offline_checks": [
+    "duplicate slot rejected",
+    "outside board rejected",
+    "same input/output rejected",
+    "altered receipt rejected",
+    "idempotent ledger"
+  ],
+  "device": {
+    "source_sha256": "8f5e42619004e9d679468d55cb01f2be898af786dfebb1258f00a128c98d7617",
+    "purpose": "technical batch review test only",
+    "official_dead_stone_review": false,
+    "repeated_review_byte_equal": true,
+    "ledger_sha256": "a5a5aad4e4a75a0450cab9ab6c780a3b00af469de0ec8025bff14d7d99474380",
+    "canonical_record_sha256": "d60ac541120bf64b36de07e106f4425c6c1922b3708c1d666868c4a5a9dafd81"
+  },
+  "sources": [
+    {
+      "working_sha256": "8f5e42619004e9d679468d55cb01f2be898af786dfebb1258f00a128c98d7617",
+      "path": "tools/android/go/review-strength-matches.ps1"
+    },
+    {
+      "working_sha256": "0942f56420a3d5459422ed37dc1cc59ec57919a75fdf5eb6a3273fbf4f44ab9d",
+      "path": "docs/games/go/2026-11-15-strength-score-review.md"
+    },
+    {
+      "working_sha256": "18cdc27ef2bdd5db66eae532a8d9ff1e91d94d238c82ce6892b47a224a69e7ea",
+      "path": "docs/development/implementation-progress-2026-11-21.md"
+    }
+  ]
+}
