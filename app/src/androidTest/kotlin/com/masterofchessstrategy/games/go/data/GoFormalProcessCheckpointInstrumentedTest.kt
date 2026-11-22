@@ -37,7 +37,8 @@ class GoFormalProcessCheckpointInstrumentedTest {
         require(UUID.fromString(token).toString() == token)
         require(mode in setOf("standard", "opening", "continuation", "long19", "resignation",
             "timed-human", "timed-auto", "per-move-human", "assessment-playing", "assessment-final",
-            "custom-playing", "custom-final", "streak-playing", "streak-final", "blind-playing", "blind-scoring"))
+            "custom-playing", "custom-final", "streak-playing", "streak-final", "blind-playing", "blind-scoring",
+            "blind-long19"))
         val name = "go-formal-process-qa-$token.db"
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         check(!context.getDatabasePath(name).exists())
@@ -68,12 +69,12 @@ class GoFormalProcessCheckpointInstrumentedTest {
                 println("GO_PROCESS_FIXTURE $name $matchId $mode")
                 return@runBlocking
             }
-            val longGame = mode == "long19"
+            val longGame = mode == "long19" || mode == "blind-long19"
             val perMove = mode == "per-move-human"
             val timed = mode == "timed-human" || mode == "timed-auto" || perMove
             val automatic = longGame || mode == "continuation" || mode == "timed-auto"
             val blind = mode.startsWith("blind-")
-            val ranked = mode == "standard" || mode == "resignation" || blind
+            val ranked = mode == "standard" || mode == "resignation" || (blind && !automatic)
             val config = GoAiMatchConfig(if (longGame) 19 else 9,
                 humanPlayer = if (automatic) null else GoPlayer.BLACK,
                 blind = blind,

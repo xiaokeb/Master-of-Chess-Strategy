@@ -1,0 +1,170 @@
+{
+  "tag": "v0.1.0-go-blind-long-game.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 5,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "candidate": "go-blind-long1",
+    "overlays": [
+      {
+        "working_sha256": "fa2f1f73c5899ec9a65bbd8a4e7f9bcf42f0138e92fa2775342c0ba70358efae",
+        "sha256": "fa2f1f73c5899ec9a65bbd8a4e7f9bcf42f0138e92fa2775342c0ba70358efae",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/data/GoFormalProcessCheckpointInstrumentedTest.kt"
+      },
+      {
+        "path": "tools/android/go/test-blind-long-game.py",
+        "working_sha256": "7275be604e576aeda40ea6b1e0b381bf0096eebd7666757424fa1c8b38144ef2",
+        "sha256": "7275be604e576aeda40ea6b1e0b381bf0096eebd7666757424fa1c8b38144ef2"
+      }
+    ],
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.games.go.GoAiBlindPlaySessionTest",
+        "tests": 2
+      }
+    ],
+    "lint_warnings": 25,
+    "release_manifest": "processed",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "59fd79c24b074753be6784bd75078528043b2b1ffff04aa2397e0baa488c1b3b",
+      "app/build/outputs/apk/debug/app-debug.apk": "29f78495fa4faf04e88408d3a3a0c5fc836b5bb92ea9421fc7f2d12fe9c31940"
+    },
+    "baseline": "ab24b191cb315d8b320b78ad6263c521d841b15e",
+    "lint_errors": 0
+  },
+  "device": {
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "folder": ".build/go-blind-long1/process",
+    "board_size": 19,
+    "difficulty": "SIMPLE",
+    "blind": true,
+    "automatic": true,
+    "midgame_events": 81,
+    "midgame_pids": [
+      6913,
+      8151
+    ],
+    "scoring_events": 355,
+    "final_events": 357,
+    "result": "SECOND_PLAYER_WIN",
+    "terminal_pids": [
+      8151,
+      14113
+    ],
+    "archives": 1,
+    "storage": {
+      "archives": [
+        [
+          "647c12f1c80833eed651515be0722bc259d196f2ced2a88055abe152c210397f"
+        ]
+      ],
+      "records": [
+        [
+          "647c12f1c80833eed651515be0722bc259d196f2ced2a88055abe152c210397f"
+        ]
+      ],
+      "projections": [
+        [
+          "647c12f1c80833eed651515be0722bc259d196f2ced2a88055abe152c210397f"
+        ]
+      ],
+      "outcomes": []
+    },
+    "evidence": [
+      {
+        "file": "black-confirmed.xml",
+        "sha256": "f16fbab5c4a820999b1cb3746497be31c78167c3e1c8978fa61a0cb11ff39394"
+      },
+      {
+        "file": "initial.json",
+        "sha256": "ad60c8d0ff2a631e5e81672f86ba7e882bfceb7243f2660d33ff45e12fdcc027"
+      },
+      {
+        "file": "initial.xml",
+        "sha256": "6c4345234c4518630cbd9c03d7ac0797aff65a23f32531f569a19f1b925a961f"
+      },
+      {
+        "file": "midgame-after.json",
+        "sha256": "cdfed6f5a424f9864f739b5450cb0ee2787b9da2a23b5890edf9391f1ba3e74c"
+      },
+      {
+        "file": "midgame-after.png",
+        "sha256": "29b23108f19e356d801ce9b4bd5be0cd13b9f623a38b82c4129c93e419a4ebab"
+      },
+      {
+        "file": "midgame-after.xml",
+        "sha256": "8c8270e8ded49a7f6ac25aae66316ebcd41b3223690a0e88fd6be87c89af1568"
+      },
+      {
+        "file": "midgame-before.json",
+        "sha256": "32b8e9813104f84cd800e82e4164d43976074bca84a9448fc419b592786d5b3d"
+      },
+      {
+        "file": "midgame-before.png",
+        "sha256": "29b23108f19e356d801ce9b4bd5be0cd13b9f623a38b82c4129c93e419a4ebab"
+      },
+      {
+        "file": "midgame-before.xml",
+        "sha256": "8c8270e8ded49a7f6ac25aae66316ebcd41b3223690a0e88fd6be87c89af1568"
+      },
+      {
+        "file": "midgame-running.xml",
+        "sha256": "00e52299833ae7726775f51f190273c70b4bf1be901fa7ba514ecf1294947f86"
+      },
+      {
+        "file": "progress.jsonl",
+        "sha256": "2a96309cb7288cf9c75f7d761e347cb0ca91e91c6059f35cde5db9ade8485b5f"
+      },
+      {
+        "file": "resumed-early.json",
+        "sha256": "bd27d1d6b537306f44d9d98094e57d6a6f962892958f35140a8a7f18cc8ed380"
+      },
+      {
+        "file": "resumed-early.xml",
+        "sha256": "feda8fbf7a180477083094218034adef067dab7a89e64cdcc356922f8ebbcb2a"
+      },
+      {
+        "file": "scoring.json",
+        "sha256": "29c5e23ec1b7020a97495da51a991dfc62db4e36cec37a26b8fdf011b5e55508"
+      },
+      {
+        "file": "scoring.png",
+        "sha256": "6ee3fb9d853dcb0f87c23a936dca373b1b6da6678bde60ea9f2eb1f8d36c368e"
+      },
+      {
+        "file": "scoring.xml",
+        "sha256": "43c44de7d9a285a5f44c38917880ba6759f999febf9e53547b1f8980447262ec"
+      },
+      {
+        "file": "seed.log",
+        "sha256": "54f7c88b9169aa15d57d07d39604ed4f4d02c9d44522395b595a3236be52f8db"
+      },
+      {
+        "file": "storage.json",
+        "sha256": "dccacfab09026f6aa6b2ad20054643027053c61b0659afd8c7b12eaaae551735"
+      },
+      {
+        "file": "terminal-after.json",
+        "sha256": "4cb970ec74cc8fd8eb9059bd56d983747e9773e4ad5aed651100455408f3d157"
+      },
+      {
+        "file": "terminal.json",
+        "sha256": "cb5cb66775664e6e46e20c351f492acc23058e065bf97a6b8b7a5010874c9e41"
+      },
+      {
+        "file": "terminal.png",
+        "sha256": "0f7d93c012889ce52109a619312b3d86f57000ab40c6307f2d02508d2d4e1cee"
+      },
+      {
+        "file": "terminal.xml",
+        "sha256": "f3ec6a26900812d7734ddb60b8e6b608311c787751adc769fe8c222edca71251"
+      }
+    ]
+  }
+}
