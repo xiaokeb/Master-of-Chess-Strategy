@@ -73,6 +73,8 @@ class GoFormalProcessCheckActivity : ComponentActivity() {
                             .put("current_player", match.game.currentPlayer.name)
                             .put("board_size", match.game.boardSize)
                             .put("board_sha256", sha256(match.game.stones.map(Int::toByte).toByteArray()))
+                            .put("blind", saved.config.blind)
+                            .put("dead_count", match.game.deadStoneIndices.size)
                             .put("resigned_by", match.game.resignedBy?.name ?: JSONObject.NULL)
                             .put("timed_out_by", match.game.timedOutBy?.name ?: JSONObject.NULL)
                             .put("clock_limit", saved.clock?.limitMillis ?: JSONObject.NULL)

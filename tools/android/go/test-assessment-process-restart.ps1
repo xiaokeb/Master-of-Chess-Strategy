@@ -3,7 +3,8 @@ param(
     [Parameter(Mandatory)][string]$Device,
     [Parameter(Mandatory)][string]$OutputDirectory,
     [switch]$CustomSetup,
-    [switch]$Streak
+    [switch]$Streak,
+    [switch]$Blind
 )
 
 $ErrorActionPreference = 'Stop'
@@ -52,11 +53,34 @@ function Wait-Proof([string]$Path, [int]$DifferentFrom, [scriptblock]$Ready) {
     throw "No matching Go placement receipt at $Path"
 }
 
+function Save-BlindBoardProof([string]$FilePrefix, [bool]$Scoring) {
+    $remote = "/sdcard/go-blind-qa-$([guid]::NewGuid().ToString('N'))"
+    try {
+        $null = Invoke-Device @('shell', 'uiautomator', 'dump', "$remote.xml")
+        $null = Invoke-Device @('pull', "$remote.xml", "$FilePrefix.xml")
+        $xml = [xml](Get-Content -LiteralPath "$FilePrefix.xml" -Raw -Encoding UTF8)
+        $stones = @($xml.SelectNodes('//node[@content-desc]') | ForEach-Object {
+            $_.GetAttribute('content-desc')
+        } | Where-Object { $_ -match '^第1行第[12]列，' })
+        $expected = if ($Scoring) { @('第1行第1列，黑子', '第1行第2列，白子') }
+            else { @('第1行第1列，棋子背面', '第1行第2列，棋子背面') }
+        if ($stones.Count -ne 2 -or @($expected | Where-Object {
+            $prefix = $_
+            -not @($stones | Where-Object { $_.StartsWith($prefix, [StringComparison]::Ordinal) }).Count
+        }).Count) { throw "Unexpected blind board accessibility in $FilePrefix" }
+        $null = Invoke-Device @('shell', 'screencap', '-p', "$remote.png")
+        $null = Invoke-Device @('pull', "$remote.png", "$FilePrefix.png")
+    } finally {
+        $null = Invoke-Device @('shell', 'rm', '-f', "$remote.xml", "$remote.png")
+    }
+}
+
 if (Get-OwnerPid) { throw 'A Go test process is already active' }
 $out = New-Item -ItemType Directory -Path $OutputDirectory
-if ($CustomSetup -and $Streak) { throw 'Choose one scenario set' }
+if (@($CustomSetup,$Streak,$Blind | Where-Object { $_ }).Count -gt 1) { throw 'Choose one scenario set' }
 $cases = if ($CustomSetup) { @('custom-playing', 'custom-final') }
 elseif ($Streak) { @('streak-playing', 'streak-final') }
+elseif ($Blind) { @('blind-playing', 'blind-scoring') }
 else { @('assessment-playing', 'assessment-final') }
 foreach ($mode in $cases) {
     $token = [guid]::NewGuid().ToString()
@@ -77,7 +101,8 @@ foreach ($mode in $cases) {
     $proofPath = "files/go-formal-process-qa/go-formal-process-qa-$token.json"
     $launch = @('shell', 'am', 'start', '-W', '-n', $activity, '--es', 'owned_database', $db, '--es', 'match_id', $match)
     $finished = $mode.EndsWith('-final')
-    $phase = if ($finished) { 'FINISHED' } else { 'PLAYING' }
+    $scoring = $mode -eq 'blind-scoring'
+    $phase = if ($finished) { 'FINISHED' } elseif ($scoring) { 'SCORING' } else { 'PLAYING' }
     $rounds = if ($finished) { 5 } else { 2 }
     $rating = if ($finished) { 400 } else { 500 }
     $events = if ($finished) { 1 } else { 0 }
@@ -115,6 +140,15 @@ foreach ($mode in $cases) {
                 $before.archive_count -ne 3 -or $before.record_count -ne 3) {
                 throw "Unexpected streak state for $mode"
             }
+        } elseif ($Blind) {
+            $expectedEvents = if ($scoring) { 6 } else { 2 }
+            $expectedDead = if ($scoring) { 1 } else { 0 }
+            if (!$before.blind -or $before.human_player -cne 'BLACK' -or $before.event_count -ne $expectedEvents -or
+                $before.dead_count -ne $expectedDead -or $before.black_confirmed -ne $scoring -or
+                $before.white_confirmed -or $before.archive_count -ne 0 -or $before.record_count -ne 0) {
+                throw "Unexpected blind match state for $mode"
+            }
+            Save-BlindBoardProof (Join-Path $out "$mode-before") $scoring
         } elseif ($before.assessment_rounds -ne $rounds -or $before.assessment_rating -ne $rating -or
             $before.assessment_finished -ne $finished -or $before.event_count -ne $events -or
             $before.archive_count -ne $rounds) {
@@ -130,6 +164,7 @@ foreach ($mode in $cases) {
                 throw "$mode changed $field after process restart"
             }
         }
+        if ($Blind) { Save-BlindBoardProof (Join-Path $out "$mode-after") $scoring }
         Write-Output "$mode verified: $($before.pid) -> $($after.pid)"
     } finally {
         $owner = Get-OwnerPid

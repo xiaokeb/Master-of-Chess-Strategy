@@ -37,7 +37,7 @@ class GoFormalProcessCheckpointInstrumentedTest {
         require(UUID.fromString(token).toString() == token)
         require(mode in setOf("standard", "opening", "continuation", "long19", "resignation",
             "timed-human", "timed-auto", "per-move-human", "assessment-playing", "assessment-final",
-            "custom-playing", "custom-final", "streak-playing", "streak-final"))
+            "custom-playing", "custom-final", "streak-playing", "streak-final", "blind-playing", "blind-scoring"))
         val name = "go-formal-process-qa-$token.db"
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         check(!context.getDatabasePath(name).exists())
@@ -72,9 +72,11 @@ class GoFormalProcessCheckpointInstrumentedTest {
             val perMove = mode == "per-move-human"
             val timed = mode == "timed-human" || mode == "timed-auto" || perMove
             val automatic = longGame || mode == "continuation" || mode == "timed-auto"
-            val ranked = mode == "standard" || mode == "resignation"
+            val blind = mode.startsWith("blind-")
+            val ranked = mode == "standard" || mode == "resignation" || blind
             val config = GoAiMatchConfig(if (longGame) 19 else 9,
                 humanPlayer = if (automatic) null else GoPlayer.BLACK,
+                blind = blind,
                 perMoveLimitSeconds = 30.takeIf { perMove })
             val repository = bundle.formalAiRepository()
             val saved = NativeGoEngine(config.boardSize).use { native ->
@@ -94,9 +96,11 @@ class GoFormalProcessCheckpointInstrumentedTest {
                 assertEquals(ActionResult.Accepted, native.apply(GoAction.Place(BoardPosition(0, 0))))
                 assertEquals(ActionResult.Accepted, native.apply(GoAction.Place(BoardPosition(1, 0))))
                 val opening = native.serialize().takeIf { !ranked }
-                if (mode == "continuation") {
+                if (mode == "continuation" || mode == "blind-scoring") {
                     assertEquals(ActionResult.Accepted, native.apply(GoAction.Pass))
                     assertEquals(ActionResult.Accepted, native.apply(GoAction.Pass))
+                    if (blind) assertEquals(ActionResult.Accepted, native.apply(GoAction.ToggleDeadGroup(
+                        BoardPosition(1, 0), GoPlayer.BLACK)))
                     assertEquals(ActionResult.Accepted, native.apply(GoAction.ConfirmScore(
                         GoPlayer.BLACK, native.scoringState().proposalRevision)))
                 } else if (mode == "opening") {

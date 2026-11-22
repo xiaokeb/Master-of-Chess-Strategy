@@ -1,0 +1,98 @@
+{
+  "tag": "v0.1.0-go-blind-process.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 6,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "candidate": "go-blind-process1",
+    "lint_warnings": 25,
+    "lint_errors": 0,
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "8f4096d8e5b2dce2e76f9ead26881ab9cec377c91f0a9745280e05d5d36e723f",
+      "app/build/outputs/apk/debug/app-debug.apk": "dcfac46bf62d577424b3452bf0a7ca36458bfff6c29d53afada2f9c9efdbbe89"
+    },
+    "baseline": "692468f6cc7d9db5593fe8a17a0308577189bfb4",
+    "overlays": [
+      {
+        "working_sha256": "6db3f61ded2097cec0f5a06653ecfd9f83b8bedd24e82d5566ffd8dc3b454442",
+        "sha256": "6db3f61ded2097cec0f5a06653ecfd9f83b8bedd24e82d5566ffd8dc3b454442",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/data/GoFormalProcessCheckpointInstrumentedTest.kt"
+      },
+      {
+        "working_sha256": "69fcebabb9d9facb71c3c843089ea656152348748331adfd68a7fac8cdea902f",
+        "sha256": "69fcebabb9d9facb71c3c843089ea656152348748331adfd68a7fac8cdea902f",
+        "path": "app/src/debug/kotlin/com/masterofchessstrategy/ui/GoFormalProcessCheckActivity.kt"
+      },
+      {
+        "working_sha256": "1d902424e6a83e99ed0ec543950e43920410ba8c0fc35371be82b1f6471c7ff9",
+        "sha256": "86ab6e9bcb96a1e0d10c8f9ad7c15e90d535c91a08f714f0deb4245a0f1690b3",
+        "path": "tools/android/go/test-assessment-process-restart.ps1"
+      }
+    ],
+    "unit_tests": [
+      {
+        "tests": 2,
+        "name": "com.masterofchessstrategy.games.go.GoAiBlindPlaySessionTest"
+      }
+    ],
+    "release_manifest": "processed"
+  },
+  "device": {
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "folder": ".build/go-blind-process1/process",
+    "process_restart": [
+      {
+        "scenario": "blind-playing",
+        "phase": "PLAYING",
+        "event_count": 2,
+        "dead_count": 0,
+        "black_confirmed": false,
+        "white_confirmed": false,
+        "archive_count": 0,
+        "record_count": 0,
+        "board_sha256": "88c8dd5d19e03153bc093a4f393d327181cb4a53419130999b2db26427d29f78",
+        "checkpoint_sha256": "d628a5a19cac4be7e4fbecde098c5113a386969436b3c8aaf70592fc26ecc59f",
+        "before_pid": 5366,
+        "after_pid": 5513,
+        "evidence": {
+          "seed": "1330ce519b6b8e45f4a879ae0709bf3bfc6662639e94fd4de2b6cac6a477daa1",
+          "before_checkpoint": "83a3bf9549f5afa7ce1dcb0ce516a28e7c9ae845d6feb73458a4804c6ee9c0f8",
+          "after_checkpoint": "ed3e0455bd25adfd31fefdaa192f077babe0f229d3537b2eb860ebbf1418bfd7",
+          "before_accessibility": "c0a05fbda53b1661f492408388ea278918987a5cd28c56b01b139a99c515fe3e",
+          "after_accessibility": "c0a05fbda53b1661f492408388ea278918987a5cd28c56b01b139a99c515fe3e",
+          "before_image": "86c5a0cfc9718ac9ddeb5941111873c8a90d199e3a38237c647584cb25a5218f",
+          "after_image": "507ead0596cfb0dd9da55d14ca6ae0edb3602902964eea8baa8c72cb2daff31c"
+        }
+      },
+      {
+        "scenario": "blind-scoring",
+        "phase": "SCORING",
+        "event_count": 6,
+        "dead_count": 1,
+        "black_confirmed": true,
+        "white_confirmed": false,
+        "archive_count": 0,
+        "record_count": 0,
+        "board_sha256": "88c8dd5d19e03153bc093a4f393d327181cb4a53419130999b2db26427d29f78",
+        "checkpoint_sha256": "8e70f6ddfd57af088519d138269abbe4db56289381a6c8b09f16b0d76c7a0785",
+        "before_pid": 5693,
+        "after_pid": 5829,
+        "evidence": {
+          "seed": "52ba3e6a68f9cc2661d723f276c08029481920c709a2473640717591780a957a",
+          "before_checkpoint": "e6568486cc38e4252ecbbaf0dec8d7079646be87fd5dc5443d83c8aa3f7bc05a",
+          "after_checkpoint": "7483b7680bff8ff303eb440dc7f0b6b09d861008b89973d599f1374c7ff144ec",
+          "before_accessibility": "0fe9433da611cbf40cc5e8b031a5de16a33f3c8c8ad91dcf7bf9529df0e8be8b",
+          "after_accessibility": "0fe9433da611cbf40cc5e8b031a5de16a33f3c8c8ad91dcf7bf9529df0e8be8b",
+          "before_image": "47664a2a8640e607c8b8f3ff46f97066399b27404de00498e73850733d2d3008",
+          "after_image": "9f81be177b7f9b74d92ebf3a12f168f95a93b0ed95bdbedb6941815a8d26aa37"
+        }
+      }
+    ]
+  }
+}
