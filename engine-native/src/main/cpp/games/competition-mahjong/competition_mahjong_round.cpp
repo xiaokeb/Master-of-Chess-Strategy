@@ -66,7 +66,8 @@ CompetitionMahjongRound::CompetitionMahjongRound(
       fan_rules_(fan_rules), dealer_(dealer), round_wind_(round_wind), current_player_(dealer) {
     if (!competition_mahjong_valid_wall(initial_wall_) || dealer >= 4 || round_wind >= 4)
         throw std::invalid_argument("invalid Mahjong wall, dealer or round wind");
-    if (fan_rules != CompetitionMahjongFanRules::legacy_v1 && fan_rules != CompetitionMahjongFanRules::wmo_2021)
+    if (fan_rules != CompetitionMahjongFanRules::legacy_v1 && fan_rules != CompetitionMahjongFanRules::wmo_2021 &&
+        fan_rules != CompetitionMahjongFanRules::wmo_2021_kongs)
         throw std::invalid_argument("invalid Mahjong scoring rules");
     for (int repeat = 0; repeat < 3; ++repeat) {
         for (int distance = 0; distance < 4; ++distance) {

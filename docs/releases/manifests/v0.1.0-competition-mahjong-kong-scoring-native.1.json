@@ -1,0 +1,87 @@
+{
+  "tag": "v0.1.0-competition-mahjong-kong-scoring-native.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 9,
+  "build": {
+    "overlays": [
+      {
+        "path": "engine-native/src/main/cpp/include/mocs/engine/competition_mahjong_fan.hpp",
+        "sha256": "126af8ceb02ae9448c7fcd45cbc9bdf8ee75fa767309ee73073280240edcb8ee",
+        "working_sha256": "126af8ceb02ae9448c7fcd45cbc9bdf8ee75fa767309ee73073280240edcb8ee"
+      },
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_fan.cpp",
+        "sha256": "4613338723edbec357f8883d2084a034733a2bbd37f9f3fc86391c42b6cbb739",
+        "working_sha256": "4613338723edbec357f8883d2084a034733a2bbd37f9f3fc86391c42b6cbb739"
+      },
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_round.cpp",
+        "sha256": "23faea2ee0f482863806f70158f410011ff79b52e49fff14b412d2f8dcc8e480",
+        "working_sha256": "23faea2ee0f482863806f70158f410011ff79b52e49fff14b412d2f8dcc8e480"
+      },
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_auto_session.cpp",
+        "sha256": "0d8c5f5016e2522581fcef9063bb75d08cd791b43016aae5f553b0c9fb9a7de3",
+        "working_sha256": "0d8c5f5016e2522581fcef9063bb75d08cd791b43016aae5f553b0c9fb9a7de3"
+      },
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_fan_examples_test.cpp",
+        "sha256": "ebf0b151c90058de1d3cb5d50941dc6367bf78eec29e66750c44fe5d801c6442",
+        "working_sha256": "ebf0b151c90058de1d3cb5d50941dc6367bf78eec29e66750c44fe5d801c6442"
+      },
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_auto_session_test.cpp",
+        "sha256": "b52023b4bc6e4852ee5f62a8ee64ababd72d2e20449cbb4c1346f61a868ad843",
+        "working_sha256": "b52023b4bc6e4852ee5f62a8ee64ababd72d2e20449cbb4c1346f61a868ad843"
+      }
+    ],
+    "cmake": "4.1.2",
+    "baseline": "21a278f02052eeb2172f42feb922e26167658895",
+    "products": [
+      {
+        "path": "x86_64/tests/mocs_competition_mahjong_fan_examples_test",
+        "abi": "x86_64",
+        "sha256": "e383c8e106c2f771bf3ac3a7f78046461c98097afdbeb0c6721cddad329528ed"
+      },
+      {
+        "path": "x86_64/tests/mocs_competition_mahjong_auto_session_test",
+        "abi": "x86_64",
+        "sha256": "9131586b7d939851633f81179e0e4da73989382184b0684ab8f0cd04197be88e"
+      },
+      {
+        "path": "arm64-v8a/tests/mocs_competition_mahjong_fan_examples_test",
+        "abi": "arm64-v8a",
+        "sha256": "6839baeb7ca0993f871ba4180113981bb199cddc6a0c3bb6484c96187e7a4497"
+      },
+      {
+        "path": "arm64-v8a/tests/mocs_competition_mahjong_auto_session_test",
+        "abi": "arm64-v8a",
+        "sha256": "5649f38d074413ba3aa8651312e04e8461ea3f78ea1aaa43add5f1c8c53b827b"
+      }
+    ],
+    "targets": [
+      "mocs_competition_mahjong_fan_examples_test",
+      "mocs_competition_mahjong_auto_session_test"
+    ],
+    "ndk": "30.0.16138531"
+  },
+  "device": {
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "evidence": [
+      {
+        "test": "mocs_competition_mahjong_fan_examples_test",
+        "exit_code": 0,
+        "sha256": "4194d0ba7c1ae5782307cbe8d665de96a6e2fb3db719792e834dd07324824edb",
+        "summary": "WMO fan examples: 81 positive, 21 negative, 18 threshold cases, 6 rule profile cases, 2 highest-scoring shape cases, 9 multi-kong cases, 0 failures"
+      },
+      {
+        "test": "mocs_competition_mahjong_auto_session_test",
+        "exit_code": 0,
+        "sha256": "7246100f245fa85cbd067643990fdab091413d007dd0e2943a7c3e147288aa2c",
+        "summary": "automatic Mahjong: 8 groups passed, including 6 complete games"
+      }
+    ]
+  }
+}

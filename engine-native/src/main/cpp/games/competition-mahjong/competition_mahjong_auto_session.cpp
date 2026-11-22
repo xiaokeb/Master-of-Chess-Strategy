@@ -98,9 +98,10 @@ CompetitionMahjongAutoSession::CompetitionMahjongAutoSession(
     const std::array<std::uint8_t, 4> levels, const std::uint64_t seed, const bool calibrated,
     const CompetitionMahjongFanRules fan_rules)
     : viewer_(viewer), levels_(levels), decision_seed_(seed),
-      record_version_(fan_rules == CompetitionMahjongFanRules::wmo_2021 ? 3 : calibrated ? 2 : 1),
+      record_version_(fan_rules == CompetitionMahjongFanRules::legacy_v1
+          ? (calibrated ? 2 : 1) : static_cast<std::uint8_t>(fan_rules) + 1),
       round_(std::move(wall), dealer, wind, fan_rules) {
-    if ((record_version_ == 3 && !calibrated) || viewer >= 4 || std::any_of(levels.begin(), levels.end(),
+    if ((record_version_ >= 3 && !calibrated) || viewer >= 4 || std::any_of(levels.begin(), levels.end(),
         [](const auto level) { return level > 3; }))
         throw std::invalid_argument("Invalid automatic Mahjong configuration");
 }

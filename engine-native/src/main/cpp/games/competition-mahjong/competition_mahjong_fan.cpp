@@ -43,6 +43,19 @@ void apply_wmo_exclusions(const std::array<int, 34>& counts, mahjong::fan_table_
     }
 }
 
+void score_concealed_kongs(const CompetitionMahjongFanInput& input, mahjong::fan_table_t& table) {
+    if (!table[mahjong::THREE_KONGS] && !table[mahjong::FOUR_KONGS]) return;
+    const auto count = std::count_if(input.packs.begin(), input.packs.end(), [](const auto& pack) {
+        return pack.kind == CompetitionMahjongFanPackKind::kong && pack.offer == 0;
+    });
+    // Three or four concealed kongs already receive the higher concealed-pung fan.
+    if (count == 1) table[mahjong::CONCEALED_KONG] = 1;
+    if (count == 2) {
+        table[mahjong::TWO_CONCEALED_KONGS] = 1;
+        table[mahjong::TWO_CONCEALED_PUNGS] = 0;
+    }
+}
+
 } // namespace
 
 CompetitionMahjongFanResult evaluateCompetitionMahjongFan(
@@ -53,7 +66,8 @@ CompetitionMahjongFanResult evaluateCompetitionMahjongFan(
 CompetitionMahjongFanResult evaluateCompetitionMahjongFan(
     const CompetitionMahjongFanInput& input, const CompetitionMahjongFanRules rules) {
     CompetitionMahjongFanResult result{};
-    if ((rules != CompetitionMahjongFanRules::legacy_v1 && rules != CompetitionMahjongFanRules::wmo_2021) ||
+    if ((rules != CompetitionMahjongFanRules::legacy_v1 && rules != CompetitionMahjongFanRules::wmo_2021 &&
+         rules != CompetitionMahjongFanRules::wmo_2021_kongs) ||
         input.win_tile < 0 || input.win_tile >= 34 || input.seat_wind < 0 ||
         input.seat_wind > 3 || input.round_wind < 0 || input.round_wind > 3 ||
         input.flower_count < 0 || input.flower_count > 8) {
@@ -153,7 +167,8 @@ CompetitionMahjongFanResult evaluateCompetitionMahjongFan(
         return result;
     }
     result.structure_valid = true;
-    if (rules == CompetitionMahjongFanRules::wmo_2021) apply_wmo_exclusions(counts, table);
+    if (rules != CompetitionMahjongFanRules::legacy_v1) apply_wmo_exclusions(counts, table);
+    if (rules == CompetitionMahjongFanRules::wmo_2021_kongs) score_concealed_kongs(input, table);
     const bool fully_concealed_self_draw = input.self_drawn &&
         std::all_of(input.packs.begin(), input.packs.end(), [](const auto& pack) {
             return pack.kind == CompetitionMahjongFanPackKind::kong && pack.offer == 0;

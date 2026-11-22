@@ -222,6 +222,25 @@ void complete_games_and_restore_terminal_frames() {
         assert(session.advance(1).terminal && session.serialize() == saved);
     }
 }
+
+void scoring_profiles_preserve_automatic_records() {
+    using Rules = CompetitionMahjongFanRules;
+    for (const auto rules : {Rules::wmo_2021, Rules::wmo_2021_kongs}) {
+        CompetitionMahjongAutoSession game(4000, 0, 0, 0, mixed_levels, 7000, true, rules);
+        for (int batch = 0; batch < 128 && !game.advance(32).terminal; ++batch) {}
+        const auto saved = game.serialize();
+        assert(game.advance(32).accepted_actions == 0);
+        assert(saved[4] == static_cast<std::uint8_t>(rules) + 1);
+        assert(saved[28] == static_cast<std::uint8_t>(rules));
+        CompetitionMahjongAutoSession restored(1, 0, 0, 0, mixed_levels, 7000, true, rules);
+        assert(restored.restore(saved) && restored.serialize() == saved);
+        assert(restored.snapshot().score_delta == game.snapshot().score_delta);
+        const auto other_rules = rules == Rules::wmo_2021 ? Rules::wmo_2021_kongs : Rules::wmo_2021;
+        CompetitionMahjongAutoSession other(1, 0, 0, 0, mixed_levels, 7000, true, other_rules);
+        const auto initial = other.serialize();
+        assert(!other.restore(saved) && other.serialize() == initial);
+    }
+}
 } // namespace
 
 int main() {
@@ -232,6 +251,7 @@ int main() {
     batching_restore_and_undo_are_deterministic();
     rejection_preserves_the_existing_round();
     complete_games_and_restore_terminal_frames();
-    std::puts("automatic Mahjong: 7 groups passed, including 4 complete games");
+    scoring_profiles_preserve_automatic_records();
+    std::puts("automatic Mahjong: 8 groups passed, including 6 complete games");
     return 0;
 }

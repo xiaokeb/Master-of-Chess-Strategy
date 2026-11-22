@@ -325,6 +325,33 @@ int fan_count(const CompetitionMahjongFanResult& result, int id) {
     return match == result.entries.end() ? 0 : match->count;
 }
 
+int check_multi_kong_profile() {
+    int failures = 0;
+    for (int kongs : {3, 4}) {
+        for (int concealed = 0; concealed <= kongs; ++concealed) {
+            auto input = kongs == 3
+                ? partial({kong(0), kong(9), kong(31)}, {21, 22, 23, 4, 4}, 4)
+                : exposed({kong(0), kong(9), kong(31), kong(18)}, 4);
+            for (int i = 0; i < concealed; ++i) input.packs[static_cast<std::size_t>(i)].offer = 0;
+            const auto old = evaluateCompetitionMahjongFan(input, CompetitionMahjongFanRules::wmo_2021);
+            const auto revised = evaluateCompetitionMahjongFan(input, CompetitionMahjongFanRules::wmo_2021_kongs);
+            const int gain = concealed == 1 ? 2 : concealed == 2 ? 6 : 0;
+            if (!old.qualifies || !revised.qualifies ||
+                fan_count(revised, kongs == 3 ? 17 : 5) != 1 ||
+                fan_count(old, 48) != 0 || fan_count(old, 67) != 0 ||
+                fan_count(revised, 48) != (concealed == 2) || fan_count(revised, 67) != (concealed == 1) ||
+                fan_count(revised, 66) != 0 || fan_count(revised, 57) != 0 || fan_count(revised, 74) != 0 ||
+                fan_count(revised, 33) != (concealed == 3) || fan_count(revised, 12) != (concealed == 4) ||
+                revised.total_fan != old.total_fan + gain) {
+                std::fprintf(stderr, "%d kongs, %d concealed: total %d -> %d (wanted delta %d)\n",
+                             kongs, concealed, old.total_fan, revised.total_fan, gain);
+                ++failures;
+            }
+        }
+    }
+    return failures;
+}
+
 int check_highest_scoring_shape() {
     struct ShapeCase {
         const char* name;
@@ -447,6 +474,7 @@ int main() {
     const auto negative = counterexamples(cases);
     for (const auto& example : negative) if (!check(example)) ++failures;
     failures += check_thresholds();
+    failures += check_multi_kong_profile();
     failures += check_highest_scoring_shape();
     failures += check_rule_profiles(cases);
     if (!check_round_profiles()) {
@@ -454,7 +482,7 @@ int main() {
         ++failures;
     }
     std::printf("WMO fan examples: %zu positive, %zu negative, 18 threshold cases, "
-                "6 rule profile cases, 2 highest-scoring shape cases, %d failures\n",
+                "6 rule profile cases, 2 highest-scoring shape cases, 9 multi-kong cases, %d failures\n",
                 cases.size(), negative.size(), failures);
     return failures == 0 ? 0 : 1;
 }
