@@ -200,6 +200,14 @@ object CompetitionMahjongChallengeLibrary {
             CompetitionMahjongChallengeLevel.MASTER,
             "你摸完起手牌。请选择一张弃牌，保留十三种不同的幺九牌和字牌。其他三家按题目逐次摸切，过一轮后轮到你自摸。", "",
             "十三种幺九字牌齐全，自摸白板成对，原生裁定十三幺计 88 番。", setOf(7)),
+        challenge(CompetitionMahjongPracticePosition.PURE_STRAIGHT_DISCARD_ID, "留万子成清龙",
+            CompetitionMahjongChallengeTheme.PATTERN, CompetitionMahjongChallengeLevel.MASTER,
+            "打一张牌，保留万子的一至九和一二三条。其他三家依次摸切，一轮后轮到你摸牌。", "",
+            "万子的一二三、四五六、七八九各为一副顺子，自摸五筒成将，原生裁定清龙计 16 番。", setOf(28)),
+        challenge(CompetitionMahjongPracticePosition.MIXED_TRIPLE_CHOW_DISCARD_ID, "留三色同顺",
+            CompetitionMahjongChallengeTheme.PATTERN, CompetitionMahjongChallengeLevel.MASTER,
+            "打一张牌，保留万、筒、条各一副一二三顺子。其他三家依次摸切，一轮后轮到你摸牌。", "",
+            "万、筒、条各有一二三顺子，自摸东风成将，原生裁定三色三同顺计 8 番。", setOf(41)),
     ))
 
     init {

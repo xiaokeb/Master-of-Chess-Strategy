@@ -10,10 +10,10 @@ import kotlin.random.Random
 class CompetitionMahjongChallengeLibraryTest {
     @Test fun catalogHasFourLevelsThemesAndTraceableOfficialFanIds() {
         val values = CompetitionMahjongChallengeLibrary.challenges
-        assertEquals(18, values.size)
+        assertEquals(20, values.size)
         assertEquals(values.size, values.map { it.id }.toSet().size)
         CompetitionMahjongChallengeLevel.entries.forEach { level ->
-            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 9 else 3, values.count { it.level == level })
+            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 11 else 3, values.count { it.level == level })
         }
         CompetitionMahjongChallengeTheme.entries.forEach { theme ->
             assertTrue(values.any { it.theme == theme })
@@ -59,7 +59,16 @@ class CompetitionMahjongChallengeLibraryTest {
         val restored = checkNotNull(CompetitionMahjongChallengeProgressCodec.decode(
             CompetitionMahjongChallengeProgressCodec.encode(progress)))
         assertEquals(progress.completedIds, restored.completedIds)
-        assertEquals(EndgameRewardTotals(18, 18, 930), competitionChallengeRewards(restored.complete(orphans.id).completedIds))
+        progress = restored.complete(orphans.id)
+        assertEquals(EndgameRewardTotals(18, 18, 930), competitionChallengeRewards(progress.completedIds))
+        assertEquals(values.take(18).map { it.id }.toSet(), progress.completedIds)
+        for ((id, points) in listOf(CompetitionMahjongPracticePosition.PURE_STRAIGHT_DISCARD_ID to 1010,
+            CompetitionMahjongPracticePosition.MIXED_TRIPLE_CHOW_DISCARD_ID to 1090)) {
+            assertTrue(progress.isUnlocked(id))
+            progress = progress.complete(id)
+            assertEquals(EndgameRewardTotals(progress.completedIds.size, progress.completedIds.size, points),
+                competitionChallengeRewards(progress.completedIds))
+        }
     }
 
     @Test fun sessionKeepsQuestionStableAcrossWrongAnswerAndLocksAfterCorrectAnswer() {

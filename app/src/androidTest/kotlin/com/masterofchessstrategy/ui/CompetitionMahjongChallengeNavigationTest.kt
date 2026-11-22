@@ -159,6 +159,16 @@ class CompetitionMahjongChallengeNavigationTest {
         capture("discard-win")
     }
 
+    @Test fun pureStraightTrainingConfirmsItsNativeFan() = verifyDiscardExercise(
+        CompetitionMahjongPracticePosition.PURE_STRAIGHT_DISCARD_ID, wrong = 0, correct = 32, draw = "5筒",
+        resultText = "清龙计 16 番", rewardText = "19 星 · 1010 分",
+    )
+
+    @Test fun mixedTripleChowTrainingConfirmsItsNativeFan() = verifyDiscardExercise(
+        CompetitionMahjongPracticePosition.MIXED_TRIPLE_CHOW_DISCARD_ID, wrong = 0, correct = 31, draw = "东",
+        resultText = "三色三同顺计 8 番", rewardText = "20 星 · 1090 分",
+    )
+
     @Test fun nativeNineGatesTeachesWmoExclusionAndSavesOneReward() {
         val hand = CompetitionMahjongPracticePosition.verifyNineGates()
         assertEquals(listOf(0, 0, 0, 1, 2, 3, 4, 4, 5, 6, 7, 8, 8, 8), hand)

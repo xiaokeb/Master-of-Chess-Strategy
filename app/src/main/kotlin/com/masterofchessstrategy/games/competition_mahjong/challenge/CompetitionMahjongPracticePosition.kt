@@ -16,12 +16,16 @@ internal object CompetitionMahjongPracticePosition {
     const val PUZZLE_ID = "live-seven-pairs"
     const val DISCARD_PUZZLE_ID = "discard-for-seven-pairs"
     const val ORPHANS_DISCARD_ID = "discard-for-thirteen-orphans"
+    const val PURE_STRAIGHT_DISCARD_ID = "discard-for-pure-straight"
+    const val MIXED_TRIPLE_CHOW_DISCARD_ID = "discard-for-mixed-triple-chow"
     const val NINE_GATES_PUZZLE_ID = "live-nine-gates-exclusion"
     const val ALL_GREEN_PUZZLE_ID = "live-all-green-half-flush"
     const val TERMINALS_PUZZLE_ID = "live-terminals-double-pungs"
     private val dealerHand = listOf(0, 0, 2, 2, 5, 5, 12, 12, 19, 19, 23, 23, 27, 27)
     private const val SEVEN_PAIRS = 19
     private const val THIRTEEN_ORPHANS = 7
+    private const val PURE_STRAIGHT = 28
+    private const val MIXED_TRIPLE_CHOW = 41
     private const val NINE_GATES = 4
     private const val FULLY_CONCEALED_SELF_DRAW = 56
     private const val TERMINAL_OR_HONOR_PUNG = 73
@@ -40,6 +44,12 @@ internal object CompetitionMahjongPracticePosition {
         ORPHANS_DISCARD_ID to DiscardExercise(
             listOf(0, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33, 4), listOf(14, 15, 16, 33),
             CompetitionMahjongScoring.WMO_2021, THIRTEEN_ORPHANS, 88),
+        PURE_STRAIGHT_DISCARD_ID to DiscardExercise(
+            (0..8).toList() + listOf(9, 10, 11, 22, 32), listOf(14, 15, 16, 22),
+            CompetitionMahjongScoring.WMO_2021, PURE_STRAIGHT, 16),
+        MIXED_TRIPLE_CHOW_DISCARD_ID to DiscardExercise(
+            listOf(0, 1, 2, 9, 10, 11, 18, 19, 20, 24, 25, 26, 27, 31), listOf(14, 15, 16, 27),
+            CompetitionMahjongScoring.WMO_2021, MIXED_TRIPLE_CHOW, 8),
     )
 
     fun isDiscardTraining(id: String): Boolean = id in discards

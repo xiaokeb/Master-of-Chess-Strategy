@@ -134,13 +134,12 @@ class CompetitionMahjongChallengeViewModel(
 
     private fun createSession(id: String): CompetitionMahjongChallengeSession {
         val challenge = checkNotNull(CompetitionMahjongChallengeLibrary.challenge(id)) { "牌型题不存在" }
-        val hand = when (id) {
-            CompetitionMahjongPracticePosition.PUZZLE_ID -> CompetitionMahjongPracticePosition.verifySevenPairs()
-            CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID,
-            CompetitionMahjongPracticePosition.ORPHANS_DISCARD_ID -> CompetitionMahjongPracticePosition.discardOpeningHand(challenge.id)
-            CompetitionMahjongPracticePosition.NINE_GATES_PUZZLE_ID -> CompetitionMahjongPracticePosition.verifyNineGates()
-            CompetitionMahjongPracticePosition.ALL_GREEN_PUZZLE_ID -> CompetitionMahjongPracticePosition.verifyAllGreen()
-            CompetitionMahjongPracticePosition.TERMINALS_PUZZLE_ID -> CompetitionMahjongPracticePosition.verifyTerminals()
+        val hand = when {
+            CompetitionMahjongPracticePosition.isDiscardTraining(id) -> CompetitionMahjongPracticePosition.discardOpeningHand(id)
+            id == CompetitionMahjongPracticePosition.PUZZLE_ID -> CompetitionMahjongPracticePosition.verifySevenPairs()
+            id == CompetitionMahjongPracticePosition.NINE_GATES_PUZZLE_ID -> CompetitionMahjongPracticePosition.verifyNineGates()
+            id == CompetitionMahjongPracticePosition.ALL_GREEN_PUZZLE_ID -> CompetitionMahjongPracticePosition.verifyAllGreen()
+            id == CompetitionMahjongPracticePosition.TERMINALS_PUZZLE_ID -> CompetitionMahjongPracticePosition.verifyTerminals()
             else -> emptyList()
         }
         return CompetitionMahjongChallengeSession(challenge, hand)
