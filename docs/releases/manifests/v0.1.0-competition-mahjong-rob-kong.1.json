@@ -1,0 +1,137 @@
+{
+  "tag": "v0.1.0-competition-mahjong-rob-kong.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 9,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "unit_tests": [
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeViewModelTest"
+      },
+      {
+        "tests": 6,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeLibraryTest"
+      }
+    ],
+    "candidate": "cm-rob-kong1",
+    "lint_errors": 0,
+    "overlays": [
+      {
+        "sha256": "c752d15ef373c655395fe15a902d0c326bbafa30a1f1fe3a230b2c1945d6f3d6",
+        "working_sha256": "c752d15ef373c655395fe15a902d0c326bbafa30a1f1fe3a230b2c1945d6f3d6",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeLibrary.kt"
+      },
+      {
+        "sha256": "73ebfd775aaa6f6f7633cf2ae34d7ddad73f90c317932204fd8ab24040c0f55d",
+        "working_sha256": "73ebfd775aaa6f6f7633cf2ae34d7ddad73f90c317932204fd8ab24040c0f55d",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeRoute.kt"
+      },
+      {
+        "sha256": "95efa525f4713712c2a2fd7dd47f3a47ef8858b3d256a403bf222b83cf55b36b",
+        "working_sha256": "95efa525f4713712c2a2fd7dd47f3a47ef8858b3d256a403bf222b83cf55b36b",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeViewModel.kt"
+      },
+      {
+        "sha256": "df96101f36ae8036252a765f3b6472dc1b5b9f059c3666e4903a524758301437",
+        "working_sha256": "df96101f36ae8036252a765f3b6472dc1b5b9f059c3666e4903a524758301437",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongPracticePosition.kt"
+      },
+      {
+        "sha256": "a54031ce3d6b510b402d0e531c5b422628764728bcca9d7ac6b823e49d8795a2",
+        "working_sha256": "a54031ce3d6b510b402d0e531c5b422628764728bcca9d7ac6b823e49d8795a2",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeLibraryTest.kt"
+      },
+      {
+        "sha256": "ff652ea66bdf45f216fb83cf22f137dd39cbd5ec21c76e1526827039f6798a1f",
+        "working_sha256": "ff652ea66bdf45f216fb83cf22f137dd39cbd5ec21c76e1526827039f6798a1f",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongChallengeNavigationTest.kt"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "ef8018f6beb5579376b6d5690ad7628528ffeefca2f6225fde3d3dea57fca8ac",
+      "app/build/outputs/apk/debug/app-debug.apk": "2bd27488e8a3e6f698b5ac08f294f5c563d29df047a3f982b7be62835ca68af6"
+    },
+    "lint_warnings": 25,
+    "release_manifest": "processed",
+    "baseline": "ca58d66f5a0892bd76a3972ea70651d670238407"
+  },
+  "device": {
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "ef8018f6beb5579376b6d5690ad7628528ffeefca2f6225fde3d3dea57fca8ac",
+      "app/build/outputs/apk/debug/app-debug.apk": "2bd27488e8a3e6f698b5ac08f294f5c563d29df047a3f982b7be62835ca68af6"
+    },
+    "runs": [
+      {
+        "images": [
+          {
+            "path": "font-1.0\\20315eb1-73a4-425d-9382-ce52f26b0d92\\false-win-explained.png",
+            "sha256": "362630e034fb51f721108e18fc2fa92baa26e88ed725a3b220a965059b351579"
+          },
+          {
+            "path": "font-1.0\\20315eb1-73a4-425d-9382-ce52f26b0d92\\false-win-rejected.png",
+            "sha256": "965189f7bf88e6962c2cfb735fde7f9ee21f04df98e2a22b086138a1a4665f59"
+          },
+          {
+            "path": "font-1.0\\ab1fd454-772b-4c6c-a730-6e9203fa33f0\\discard-next-draw.png",
+            "sha256": "168d79713269d7b26b4c71fa9c1fb4f9756558bd76906842d441bf08b139e443"
+          },
+          {
+            "path": "font-1.0\\ab1fd454-772b-4c6c-a730-6e9203fa33f0\\discard-rejected.png",
+            "sha256": "0d2fc7cbad9f0a87ddfc7524b61e9536732e7900a5a8451ea529c1f8145d762c"
+          },
+          {
+            "path": "font-1.0\\ab1fd454-772b-4c6c-a730-6e9203fa33f0\\discard-win.png",
+            "sha256": "898bc351109bb67f7d7ac1ca433d175cc493fb7af9f1bedd01eceabcae611867"
+          },
+          {
+            "path": "font-1.0\\b5ed845a-dc4c-4507-bb73-d0a4df0fb868\\robbing-pass.png",
+            "sha256": "dfa07549287773848f64e43e2bb73b4d9fa8a6f0386c61929269a9bfbb849c9d"
+          },
+          {
+            "path": "font-1.0\\b5ed845a-dc4c-4507-bb73-d0a4df0fb868\\robbing-settled.png",
+            "sha256": "ad443d3e61661a589cc9c03d2272710f89be9922af9ed89abbee19f5bfd2f96d"
+          },
+          {
+            "path": "font-1.0\\b5ed845a-dc4c-4507-bb73-d0a4df0fb868\\robbing-window.png",
+            "sha256": "49afc65d55348503ce1d8cffd1f7f0318b0ef3880bb7375f72df8b6b7310e32b"
+          }
+        ],
+        "log_sha256": "01229b7008b54ee00511f9bf5942eb6c15363ab1237a80a2ae47d2f8cfbb788b",
+        "tests": 3,
+        "font": "1.0"
+      },
+      {
+        "images": [
+          {
+            "path": "font-1.5\\2cf7cd14-f4ea-4989-b5ad-ff82a46e6d0d\\robbing-pass.png",
+            "sha256": "0ecc77310f73b50a3565bf5328cc4437bc32c12cc45e1d939cbe6985f7e75260"
+          },
+          {
+            "path": "font-1.5\\2cf7cd14-f4ea-4989-b5ad-ff82a46e6d0d\\robbing-settled.png",
+            "sha256": "6076c6ef669353e3474d92fd196b2b40ddd2c2e0a78bc09d4d71dbac2ed3b77e"
+          },
+          {
+            "path": "font-1.5\\2cf7cd14-f4ea-4989-b5ad-ff82a46e6d0d\\robbing-window.png",
+            "sha256": "8b4442633555fd7dfa0ab851c568496b0d620dacdcb3416581de46004c3ab264"
+          }
+        ],
+        "log_sha256": "9812e7334a628ecdd7e77bc99267a5cfc6b5debf7e5ee15710cb0eae2a409b5e",
+        "tests": 1,
+        "font": "1.5"
+      }
+    ],
+    "original_font": "1.0",
+    "candidate": "cm-rob-kong1",
+    "restored_font": "1.0",
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "folder": ".build/cm-rob-kong1/device-75dd9f59eb4f4421a8fd7bc78973ea42",
+    "visual_review_sha256": "1cd6d9988ae060a88f7741ebf9bf5e551fe500fb61e28a91bd88cef102004d7f"
+  }
+}

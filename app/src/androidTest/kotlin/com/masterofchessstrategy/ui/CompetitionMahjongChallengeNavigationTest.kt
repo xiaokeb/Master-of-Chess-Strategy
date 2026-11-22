@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
+import com.masterofchessstrategy.engine.CompetitionMahjongRoundActionKind
 import com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeLibrary
 import com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongPracticePosition
 import com.masterofchessstrategy.games.competition_mahjong.challenge.RoomCompetitionMahjongChallengeProgress
@@ -154,6 +155,46 @@ class CompetitionMahjongChallengeNavigationTest {
         assertEquals(preceding + id, runBlocking { store.load().completedIds })
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
         capture("false-win-explained")
+    }
+
+    @Test fun addedKongCanBePassedOrRobbedWithNativeSettlement() {
+        val id = CompetitionMahjongPracticePosition.ROB_KONG_ID
+        val store = RoomCompetitionMahjongChallengeProgress(database)
+        val preceding = CompetitionMahjongChallengeLibrary.challenges.takeWhile { it.id != id }.map { it.id }.toSet()
+        runBlocking {
+            preceding.forEach { store.complete(it) }
+            store.select(id)
+        }
+        compose.onNodeWithTag(HOME_COMPETITION_MAHJONG_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag("competition_challenge_entry").performScrollTo().performClick()
+        waitFor("competition_mahjong_challenge_hand")
+        compose.onNodeWithText("南家加杠 中").performScrollTo().assertIsDisplayed()
+        capture("robbing-window")
+
+        compose.onNodeWithTag("competition_mahjong_challenge_pass_kong").performScrollTo().performClick()
+        compose.onNodeWithTag("competition_mahjong_challenge_feedback").performScrollTo()
+            .assertTextContains("南家完成加杠并补牌", substring = true)
+        assertEquals(preceding, runBlocking { store.load().completedIds })
+        capture("robbing-pass")
+
+        compose.onNodeWithTag("competition_mahjong_challenge_confirm_win").performScrollTo()
+            .assertTextEquals("抢杠和").performClick()
+        waitFor("competition_mahjong_challenge_completed")
+        compose.onNodeWithTag("competition_mahjong_challenge_feedback").performScrollTo()
+            .assertTextContains("抢杠和计 8 番，和绝张不叠加", substring = true)
+        val settlement = CompetitionMahjongPracticePosition.robKong(CompetitionMahjongRoundActionKind.WIN)
+        val fan = checkNotNull(settlement.totalFan)
+        assertEquals(listOf(-8, -8 - fan, 24 + fan, -8), settlement.netScores)
+        compose.onNodeWithTag("competition_mahjong_challenge_settlement").performScrollTo()
+        for (label in listOf("本盘总番 $fan", "东 -8", "南 ${-8 - fan}", "西 +${24 + fan}", "北 -8")) {
+            compose.onNode(hasText(label) and hasAnyAncestor(hasTestTag("competition_mahjong_challenge_settlement")))
+                .assertIsDisplayed()
+        }
+        compose.onNodeWithTag("competition_mahjong_challenge_rewards").performScrollTo()
+            .assertTextEquals("训练奖励 24 星 · 1410 分")
+        assertEquals(preceding + id, runBlocking { store.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        capture("robbing-settled")
     }
 
     @Test fun concealedPungsTrainingClaimsTheDiscardAndShowsAsymmetricPayment() = verifyDiscardExercise(

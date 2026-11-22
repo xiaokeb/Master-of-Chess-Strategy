@@ -1,5 +1,6 @@
 package com.masterofchessstrategy.games.competition_mahjong.challenge
 
+import com.masterofchessstrategy.engine.CompetitionMahjongRoundActionKind
 import java.util.Collections
 
 enum class CompetitionMahjongChallengeTheme(val label: String) {
@@ -32,7 +33,7 @@ class CompetitionMahjongChallenge(
     init {
         require(id.matches(Regex("[a-z0-9-]{1,48}")) && title.isNotBlank())
         require(prompt.isNotBlank() && explanation.isNotBlank())
-        if (CompetitionMahjongPracticePosition.isDiscardTraining(id)) {
+        if (CompetitionMahjongPracticePosition.isDiscardTraining(id) || id == CompetitionMahjongPracticePosition.ROB_KONG_ID) {
             require(choices.isEmpty() && correctChoiceId.isEmpty())
         } else {
             require(choices.size in 2..4 && choices.map { it.id }.toSet().size == choices.size)
@@ -55,12 +56,22 @@ data class CompetitionMahjongChallengeState(
     val discardFromSeat: Int? = null,
     val roundFan: Int? = null,
     val roundDeltas: List<Int> = emptyList(),
-)
+) {
+    val robbingKong: Boolean get() = challenge.id == CompetitionMahjongPracticePosition.ROB_KONG_ID
+}
 
 class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjongChallenge, hand: List<Int> = emptyList()) {
     private val discardTraining = CompetitionMahjongPracticePosition.isDiscardTraining(challenge.id)
+    private val robbingKong = challenge.id == CompetitionMahjongPracticePosition.ROB_KONG_ID
     private val initial = CompetitionMahjongChallengeState(challenge, visibleHand = Collections.unmodifiableList(hand.toList()),
-        discardTraining = discardTraining, feedback = if (discardTraining) "请选择要打出的手牌。" else "请选择答案。")
+        discardTraining = discardTraining,
+        winningTile = CompetitionMahjongPracticePosition.ROB_KONG_TILE.takeIf { robbingKong },
+        discardFromSeat = CompetitionMahjongPracticePosition.ROB_KONG_PAYER.takeIf { robbingKong },
+        feedback = when {
+            robbingKong -> "请决定是否抢杠和。"
+            discardTraining -> "请选择要打出的手牌。"
+            else -> "请选择答案。"
+        })
     private var current = initial
     fun state(): CompetitionMahjongChallengeState = current
     fun reset(): CompetitionMahjongChallengeState {
@@ -69,7 +80,7 @@ class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjo
     }
     fun answer(choiceId: String): CompetitionMahjongChallengeState {
         if (current.completed) return current
-        require(!discardTraining)
+        require(!discardTraining && !robbingKong)
         require(challenge.choices.any { it.id == choiceId }) { "答案不属于当前牌型题" }
         val correct = choiceId == challenge.correctChoiceId
         current = current.copy(
@@ -97,13 +108,23 @@ class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjo
     }
 
     internal fun confirmWin(): CompetitionMahjongChallengeState {
-        require(discardTraining && !current.completed)
-        val turn = checkNotNull(CompetitionMahjongPracticePosition.playDiscard(
+        require((discardTraining || robbingKong) && !current.completed)
+        val turn = if (robbingKong) CompetitionMahjongPracticePosition.robKong(CompetitionMahjongRoundActionKind.WIN)
+        else checkNotNull(CompetitionMahjongPracticePosition.playDiscard(
             checkNotNull(current.chosenDiscard), challenge.id, settle = true))
         check(turn.hand == current.visibleHand && turn.tile == current.winningTile && turn.payerSeat == current.discardFromSeat)
         current = current.copy(completed = true, feedback = challenge.explanation,
+            attempts = current.attempts + if (robbingKong) 1 else 0,
             roundFan = turn.totalFan.takeIf { turn.payerSeat != null },
             roundDeltas = if (turn.payerSeat == null) emptyList() else Collections.unmodifiableList(turn.netScores.toList()))
+        return current
+    }
+
+    internal fun passKong(): CompetitionMahjongChallengeState {
+        require(robbingKong && !current.completed)
+        CompetitionMahjongPracticePosition.robKong(CompetitionMahjongRoundActionKind.PASS)
+        current = current.copy(attempts = current.attempts + 1,
+            feedback = "过牌后，南家完成加杠并补牌。重新选择可练习抢杠和。")
         return current
     }
 }
@@ -235,6 +256,10 @@ object CompetitionMahjongChallengeLibrary {
         falseWinReview(CompetitionMahjongPracticePosition.NOT_READY_ID, "未听却报和",
             "你坐东家，眼前的十三张手牌还未听牌。南家打出南风，你误报和牌。裁判如何处理？", "b",
             "报和时还未听牌。本盘停和，三家各得 20 分，东家共付 60 分。"),
+        challenge(CompetitionMahjongPracticePosition.ROB_KONG_ID, "实战抢杠和",
+            CompetitionMahjongChallengeTheme.CONTEXT, CompetitionMahjongChallengeLevel.MASTER,
+            "你坐西家，十三幺听红中。南家已经碰过红中，摸到第四张后宣布加杠。请选择如何回应。", "",
+            "红中补齐十三幺。抢杠和计 8 番，和绝张不叠加。南家原碰保留，本盘直接结算。", setOf(7, 47, 58)),
     ))
 
     init {

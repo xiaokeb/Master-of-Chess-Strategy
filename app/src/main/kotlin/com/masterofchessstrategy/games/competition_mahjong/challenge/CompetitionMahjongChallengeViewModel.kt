@@ -97,6 +97,7 @@ class CompetitionMahjongChallengeViewModel(
     internal fun discard(tile: Int): Job = answerWith { it.discard(tile) }
 
     internal fun confirmWin(): Job = answerWith { it.confirmWin() }
+    internal fun passKong(): Job = answerWith { it.passKong() }
 
     private fun answerWith(answer: (CompetitionMahjongChallengeSession) -> CompetitionMahjongChallengeState): Job =
         operation("牌型题操作失败，题面已保留") {
@@ -137,6 +138,7 @@ class CompetitionMahjongChallengeViewModel(
         val hand = when {
             CompetitionMahjongPracticePosition.isDiscardTraining(id) -> CompetitionMahjongPracticePosition.discardOpeningHand(id)
             CompetitionMahjongPracticePosition.isFalseWinReview(id) -> CompetitionMahjongPracticePosition.verifyFalseWin(id)
+            id == CompetitionMahjongPracticePosition.ROB_KONG_ID -> CompetitionMahjongPracticePosition.robKong().hand
             id == CompetitionMahjongPracticePosition.PUZZLE_ID -> CompetitionMahjongPracticePosition.verifySevenPairs()
             id == CompetitionMahjongPracticePosition.NINE_GATES_PUZZLE_ID -> CompetitionMahjongPracticePosition.verifyNineGates()
             id == CompetitionMahjongPracticePosition.ALL_GREEN_PUZZLE_ID -> CompetitionMahjongPracticePosition.verifyAllGreen()

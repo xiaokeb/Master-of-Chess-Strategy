@@ -2,6 +2,7 @@ package com.masterofchessstrategy.games.competition_mahjong.challenge
 
 import com.masterofchessstrategy.engine.CompetitionMahjongAction
 import com.masterofchessstrategy.engine.CompetitionMahjongFanView
+import com.masterofchessstrategy.engine.CompetitionMahjongMeldKind
 import com.masterofchessstrategy.engine.CompetitionMahjongPublicView
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundActionKind
 import com.masterofchessstrategy.engine.CompetitionMahjongRoundPhase
@@ -22,6 +23,10 @@ internal object CompetitionMahjongPracticePosition {
     const val FOUR_CONCEALED_CLAIM_ID = "claim-four-concealed-pungs"
     const val WRONG_TILE_ID = "false-win-wrong-tile"
     const val NOT_READY_ID = "false-win-not-ready"
+    const val ROB_KONG_ID = "respond-to-an-added-kong"
+    const val ROB_KONG_TILE = 31
+    const val ROB_KONG_PAYER = 1
+    private const val ROB_KONG_VIEWER = 2
     const val NINE_GATES_PUZZLE_ID = "live-nine-gates-exclusion"
     const val ALL_GREEN_PUZZLE_ID = "live-all-green-half-flush"
     const val TERMINALS_PUZZLE_ID = "live-terminals-double-pungs"
@@ -71,6 +76,66 @@ internal object CompetitionMahjongPracticePosition {
     )
 
     fun isFalseWinReview(id: String): Boolean = id in falseWins
+
+    /** A public added-Kong window with a fixed viewer and independently verified win/pass outcomes. */
+    fun robKong(decision: CompetitionMahjongRoundActionKind? = null): WinningTurn {
+        val hand = listOf(0, 8, 8, 9, 17, 18, 26, 27, 28, 29, 30, 32, 33)
+        val slots = (8..11).toList() + (24..27).toList() + (40..43).toList() + 51
+        val draws = listOf(21, 22, 23)
+        val fixed = listOf(0 to ROB_KONG_TILE, 4 to ROB_KONG_TILE, 5 to ROB_KONG_TILE, 6 to 32) +
+            slots.zip(hand) + (53..56).toList().zip(draws + ROB_KONG_TILE)
+        val score = CompetitionMahjongScoring.WMO_2021
+        val journal = TrainingJournal().apply {
+            event(CompetitionMahjongRoundActionKind.DISCARD, 0, ROB_KONG_TILE)
+            event(CompetitionMahjongRoundActionKind.PUNG, ROB_KONG_PAYER, ROB_KONG_TILE)
+            event(CompetitionMahjongRoundActionKind.PASS, ROB_KONG_VIEWER, ROB_KONG_TILE)
+            event(CompetitionMahjongRoundActionKind.PASS, 3, ROB_KONG_TILE)
+            event(CompetitionMahjongRoundActionKind.DISCARD, ROB_KONG_PAYER, 32)
+            passAfter(ROB_KONG_PAYER, 32)
+            for ((seat, tile) in listOf(2, 3, 0).zip(draws)) {
+                event(CompetitionMahjongRoundActionKind.DRAW, seat)
+                event(CompetitionMahjongRoundActionKind.DISCARD, seat, tile)
+                passAfter(seat, tile)
+            }
+            event(CompetitionMahjongRoundActionKind.DRAW, ROB_KONG_PAYER)
+            event(CompetitionMahjongRoundActionKind.ADDED_KONG, ROB_KONG_PAYER, ROB_KONG_TILE)
+            event(CompetitionMahjongRoundActionKind.PASS, 0, ROB_KONG_TILE)
+            event(CompetitionMahjongRoundActionKind.PASS, 3, ROB_KONG_TILE)
+        }
+        return NativeCompetitionMahjongSession(0, viewerSeat = ROB_KONG_VIEWER, scoring = score).use { session ->
+            check(session.restore(withJournal(roundOpening(fixed, score), journal.bytes(), ROB_KONG_VIEWER)) ==
+                RestoreResult.Restored)
+            val frame = session.snapshot()
+            val publicPung = frame.seats[ROB_KONG_PAYER].melds.single()
+            check(frame.phase == CompetitionMahjongRoundPhase.ROB_KONG && frame.pendingTile == ROB_KONG_TILE &&
+                frame.pendingSeat == ROB_KONG_PAYER && publicPung.kind == CompetitionMahjongMeldKind.PUNG &&
+                publicPung.tile == ROB_KONG_TILE && frame.drawnTile == null &&
+                frame.seats[ROB_KONG_VIEWER].concealedTiles.sorted() == hand &&
+                frame.seats.filter { it.seat != ROB_KONG_VIEWER }.all { it.concealedTiles.isEmpty() })
+            val option = WinningTurn(hand, ROB_KONG_TILE, ROB_KONG_PAYER)
+            if (decision == null) return@use option
+            require(decision == CompetitionMahjongRoundActionKind.WIN || decision == CompetitionMahjongRoundActionKind.PASS)
+            val action = CompetitionMahjongAction(decision, ROB_KONG_TILE)
+            check(action in session.legalActions())
+            val applied = session.apply(action)
+            check(applied.accepted && !applied.falseWin)
+            val result = session.snapshot()
+            val meld = result.seats[ROB_KONG_PAYER].melds.single()
+            if (decision == CompetitionMahjongRoundActionKind.PASS) {
+                check(result.phase == CompetitionMahjongRoundPhase.DISCARD && result.currentSeat == ROB_KONG_PAYER &&
+                    result.winnerSeat == null && meld.kind == CompetitionMahjongMeldKind.KONG && meld.addedKong &&
+                    result.wallRemaining < frame.wallRemaining && result.netScores.all { it == 0 })
+                option
+            } else {
+                check(result.phase == CompetitionMahjongRoundPhase.WON && result.winnerSeat == ROB_KONG_VIEWER &&
+                    result.payerSeat == ROB_KONG_PAYER && result.winningTile == ROB_KONG_TILE &&
+                    result.wallRemaining == frame.wallRemaining && meld == publicPung && result.winningFan.qualifies &&
+                    result.winningFan.entries.any { it.id == 47 && it.points == 8 } &&
+                    result.winningFan.entries.none { it.id == 58 })
+                option.copy(totalFan = result.winningFan.totalFan, netScores = result.netScores)
+            }
+        }
+    }
 
     /** Verify the actual rejected claim on a disposable round before showing the teaching hand. */
     fun verifyFalseWin(id: String): List<Int> {
@@ -208,27 +273,32 @@ internal object CompetitionMahjongPracticePosition {
         require(action in session.legalActions())
         check(session.apply(action).accepted)
         val opening = session.serialize()
-        val journal = mutableListOf<Byte>()
-        fun event(kind: CompetitionMahjongRoundActionKind, seat: Int, value: Int = 0) {
-            journal.addAll(listOf(kind.code.toByte(), seat.toByte(), value.toByte(), 0))
+        val journal = TrainingJournal().apply {
+            passAfter(0, tile)
+            for (seat in 1..(payer ?: nextDraws.lastIndex)) {
+                val discarded = nextDraws[seat - 1]
+                event(CompetitionMahjongRoundActionKind.DRAW, seat)
+                event(CompetitionMahjongRoundActionKind.DISCARD, seat, discarded)
+                if (seat == payer) {
+                    for (other in 1..3) if (other != payer) event(CompetitionMahjongRoundActionKind.PASS, other, discarded)
+                } else passAfter(seat, discarded)
+            }
+            if (payer == null) event(CompetitionMahjongRoundActionKind.DRAW, 0)
         }
-        fun pass(discarder: Int, discarded: Int) {
-            for (offset in 1..3) event(CompetitionMahjongRoundActionKind.PASS, (discarder + offset) % 4, discarded)
-        }
-        pass(0, tile)
-        for (seat in 1..(payer ?: nextDraws.lastIndex)) {
-            val discarded = nextDraws[seat - 1]
-            event(CompetitionMahjongRoundActionKind.DRAW, seat)
-            event(CompetitionMahjongRoundActionKind.DISCARD, seat, discarded)
-            if (seat == payer) {
-                // Leave only the local seat's decision pending.
-                for (other in 1..3) if (other != payer) event(CompetitionMahjongRoundActionKind.PASS, other, discarded)
-            } else pass(seat, discarded)
-        }
-        if (payer == null) event(CompetitionMahjongRoundActionKind.DRAW, 0)
         val round = opening.copyOfRange(12, opening.size - 4)
-        check(session.restore(withJournal(round, journal.toByteArray())) == RestoreResult.Restored)
+        check(session.restore(withJournal(round, journal.bytes())) == RestoreResult.Restored)
         return session.snapshot()
+    }
+
+    private class TrainingJournal {
+        private val events = mutableListOf<Byte>()
+        fun event(kind: CompetitionMahjongRoundActionKind, seat: Int, value: Int = 0) {
+            events.addAll(listOf(kind.code.toByte(), seat.toByte(), value.toByte(), 0))
+        }
+        fun passAfter(discarder: Int, tile: Int) {
+            for (offset in 1..3) event(CompetitionMahjongRoundActionKind.PASS, (discarder + offset) % 4, tile)
+        }
+        fun bytes() = events.toByteArray()
     }
 
     /** Native verifies the complete physical wall before dealing. */
@@ -237,10 +307,16 @@ internal object CompetitionMahjongPracticePosition {
         draws: List<Int> = emptyList(),
         scoring: CompetitionMahjongScoring = CompetitionMahjongScoring.LEGACY,
     ): ByteArray {
-        val wall = IntArray(144) { -1 }
         val dealerSlots = listOf(0, 1, 2, 3, 16, 17, 18, 19, 32, 33, 34, 35, 48, 49)
+        val fixed = dealerSlots.zip(hand) + draws.mapIndexed { index, tile -> 53 + index to tile }
+        return withJournal(roundOpening(fixed, scoring), byteArrayOf())
+    }
+
+    private fun roundOpening(fixed: List<Pair<Int, Int>>, scoring: CompetitionMahjongScoring): ByteArray {
+        val wall = IntArray(144) { -1 }
         val remaining = (0..41).flatMap { tile -> List(if (tile < 34) 4 else 1) { tile } }.toMutableList()
-        (dealerSlots.zip(hand) + draws.mapIndexed { index, tile -> 53 + index to tile }).forEach { (slot, tile) ->
+        fixed.forEach { (slot, tile) ->
+            check(wall[slot] == -1)
             check(remaining.remove(tile))
             wall[slot] = tile
         }
@@ -250,10 +326,10 @@ internal object CompetitionMahjongPracticePosition {
         val round = ByteBuffer.allocate(151).order(ByteOrder.LITTLE_ENDIAN)
         round.put("MOCM".toByteArray(Charsets.US_ASCII)).put(byteArrayOf(scoring.recordVersion.toByte(), 0, 0))
         wall.forEach { round.put(it.toByte()) }
-        return withJournal(round.array(), byteArrayOf())
+        return round.array()
     }
 
-    private fun withJournal(previous: ByteArray, suffix: ByteArray): ByteArray {
+    private fun withJournal(previous: ByteArray, suffix: ByteArray, viewer: Int = 0): ByteArray {
         val previousEvents = if (previous.size == 151) byteArrayOf() else previous.copyOfRange(155, previous.size - 4)
         val events = previousEvents + suffix
         check(events.size % 4 == 0)
@@ -265,7 +341,7 @@ internal object CompetitionMahjongPracticePosition {
 
         // The viewer-bound MCMS envelope is the public Native restore entry point.
         val record = ByteBuffer.allocate(round.capacity() + 16).order(ByteOrder.LITTLE_ENDIAN)
-        record.put("MCMS".toByteArray(Charsets.US_ASCII)).put(byteArrayOf(previous[4], 0, 0, 0))
+        record.put("MCMS".toByteArray(Charsets.US_ASCII)).put(byteArrayOf(previous[4], viewer.toByte(), 0, 0))
             .putInt(round.capacity()).put(round.array())
         val crc = CRC32().apply { update(record.array(), 0, record.position()) }.value.toInt()
         return record.putInt(crc).array()

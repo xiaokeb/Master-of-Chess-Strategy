@@ -48,6 +48,7 @@ fun CompetitionMahjongChallengeRoute(
         modifier = modifier,
         onDiscard = { game.discard(it) },
         onConfirmWin = { game.confirmWin() },
+        onPassKong = { game.passKong() },
     )
 }
 
@@ -65,6 +66,7 @@ internal fun CompetitionMahjongChallengeScreen(
     modifier: Modifier = Modifier,
     onDiscard: (Int) -> Unit = {},
     onConfirmWin: () -> Unit = {},
+    onPassKong: () -> Unit = {},
 ) {
     var catalogOpen by remember { mutableStateOf(false) }
     var theme by remember { mutableStateOf<CompetitionMahjongChallengeTheme?>(null) }
@@ -110,7 +112,11 @@ internal fun CompetitionMahjongChallengeScreen(
                         exercise.winningTile?.let { tile ->
                             val name = competitionMahjongTileName(tile)
                             val source = exercise.discardFromSeat
-                            Text(if (source == null) "本次摸牌 $name" else "${competitionMahjongTileName(27 + source)}家弃牌 $name")
+                            Text(when {
+                                source == null -> "本次摸牌 $name"
+                                exercise.robbingKong -> "${competitionMahjongTileName(27 + source)}家加杠 $name"
+                                else -> "${competitionMahjongTileName(27 + source)}家弃牌 $name"
+                            })
                         }
                         val source = exercise.challenge.sourceRuleSection?.let { "竞赛规则第 $it 节" }
                             ?: "官方番种 ID " + exercise.challenge.sourceFanIds.sorted().joinToString("、")
@@ -135,6 +141,14 @@ internal fun CompetitionMahjongChallengeScreen(
                             } else Button(onClick = onConfirmWin, enabled = state.canOperate,
                                 modifier = Modifier.testTag("competition_mahjong_challenge_confirm_win")) {
                                 Text(if (exercise.discardFromSeat == null) "自摸" else "点和")
+                            }
+                        }
+                        if (exercise.robbingKong && !exercise.completed) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedButton(onPassKong, enabled = state.canOperate,
+                                    modifier = Modifier.testTag("competition_mahjong_challenge_pass_kong")) { Text("过") }
+                                Button(onConfirmWin, enabled = state.canOperate,
+                                    modifier = Modifier.testTag("competition_mahjong_challenge_confirm_win")) { Text("抢杠和") }
                             }
                         }
                         exercise.challenge.choices.forEach { choice ->
