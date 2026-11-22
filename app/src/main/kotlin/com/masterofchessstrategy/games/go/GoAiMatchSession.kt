@@ -52,11 +52,16 @@ data class GoAiMatchUiState(
     val canRequestHint get() = humanCanPlay && !hintThinking && hintUsed < config.difficulty.hintLimit
     val canUndo get() = !closed && game.canOperate && game.timedOutBy == null && !completionReserved &&
         !completionPending && eventCount > openingEventCount && undoUsed < config.difficulty.undoLimit
-    val canSwitchMode get() = !closed && game.canAct && game.phase == GoPhase.PLAYING && !completionReserved
+    val canSwitchMode get() = config.streak == null && !closed && game.canAct &&
+        game.phase == GoPhase.PLAYING && !completionReserved
     val canConfigureAutoContinue get() = !closed && config.automatic && game.canAct &&
         game.phase == GoPhase.PLAYING && !completionReserved
     val autoContinuePending get() = autoContinueEnabled && config.automatic && game.phase == GoPhase.FINISHED &&
         autoContinueGameNumber < autoContinueMaxGames
+
+    internal val streakResult get() = config.streak?.takeIf {
+        game.phase == GoPhase.FINISHED && game.result != GameResult.ONGOING
+    }?.after(game.result, config.difficulty)
 }
 
 /** Control calls use the owner's dispatcher. Native candidates/save/disposal use one worker mutex.
@@ -179,7 +184,7 @@ class GoAiMatchSession(
                         if (saved == null) persistCheckpoint(GoAiSavedMatch(id, config, bytes, undoUsed,
                             openingBytes = selectedOpening?.copyBytes(), clock = loadedClock), freshStandard =
                             config.humanPlayer != null && config.handicapStones == 0 && selectedOpening == null &&
-                                config.perMoveLimitSeconds == null)
+                                config.perMoveLimitSeconds == null && config.streak == null)
                         var reserved = saved?.completionReserved ?: false
                         var stored = false
                         val immediateCompletion = if (config.automatic) {
@@ -325,6 +330,7 @@ class GoAiMatchSession(
         val previous = mutableState.value
         if (disposed.get() || !lifetime.isActive || !previous.game.canOperate || previous.completionPending) return false
         if (automaticContinuation && !previous.autoContinuePending) return false
+        if (previous.config.streak != null && previous.streakResult == null) return false
         if (previous.game.phase == GoPhase.FINISHED && completedSink == null) {
             mutableState.value = previous.copy(game = previous.game.copy(error = "本局已结束；完成棋谱保存功能准备好后才能重开。"))
             return false
@@ -334,6 +340,9 @@ class GoAiMatchSession(
         mutableState.value = mutableState.value.copy(paused = true, thinking = false,
             game = previous.game.copy(saving = true, error = null))
         val nextId = UUID.randomUUID().toString()
+        val config = previous.streakResult?.let { (difficulty, progress) ->
+            previous.config.copy(difficulty = difficulty, streak = progress)
+        } ?: previous.config
         val nextAutoEnabled = previous.autoContinueEnabled && previous.config.automatic
         val nextAutoMax = if (nextAutoEnabled) previous.autoContinueMaxGames else 1
         val nextAutoNumber = if (automaticContinuation) previous.autoContinueGameNumber + 1 else 1
@@ -351,7 +360,6 @@ class GoAiMatchSession(
                     try {
                         if (disposed.get() || !lifetime.isActive) return@withLock
                         val active = checkNotNull(engine)
-                        val config = previous.config
                         candidate = opening?.createEngine(engineFactory)
                             ?: engineFactory(config.boardSize, if (config.handicapStones == 0) 15 else 0, config.handicapStones)
                         val nextGame = snapshot(candidate)
@@ -362,7 +370,7 @@ class GoAiMatchSession(
                             candidate.eventHistory().size == previous.openingEventCount)
                         if (previous.game.phase == GoPhase.FINISHED) {
                             check(active.phase == GoPhase.FINISHED && active.gameResult() != GameResult.ONGOING)
-                            val old = GoAiSavedMatch(matchId, config, active.serialize(), previous.undoUsed, previous.hintUsed, true,
+                            val old = GoAiSavedMatch(matchId, previous.config, active.serialize(), previous.undoUsed, previous.hintUsed, true,
                                 previous.rememberedHuman, previous.automaticUsed, opening?.copyBytes(),
                                 previous.autoContinueEnabled, previous.autoContinueMaxGames, previous.autoContinueGameNumber,
                                 clock = durableMatch?.clock)
@@ -378,7 +386,7 @@ class GoAiMatchSession(
                             openingBytes = opening?.copyBytes(), autoContinueEnabled = nextAutoEnabled,
                             autoContinueMaxGames = nextAutoMax, autoContinueGameNumber = nextAutoNumber, clock = nextClock),
                             freshStandard = config.humanPlayer != null && config.handicapStones == 0 && opening == null &&
-                                config.perMoveLimitSeconds == null)
+                                config.perMoveLimitSeconds == null && config.streak == null)
                         engine?.close(); engine = null
                         if (!disposed.get() && lifetime.isActive) {
                             engine = candidate; candidate = null
@@ -394,7 +402,7 @@ class GoAiMatchSession(
                 clock = nextClock
                 checkpoint = bytes
                 stamp.set(stamp.get().let { it.copy(revision = it.revision + 1) })
-                mutableState.value = GoAiMatchUiState(previous.config, checkNotNull(game),
+                mutableState.value = GoAiMatchUiState(config, checkNotNull(game),
                     immediateHumanCompletion = completeHumanImmediately,
                     immediateAutomaticCompletion = completeAutomaticImmediately,
                     speed = mutableState.value.speed, rememberedHuman = previous.rememberedHuman,
@@ -420,6 +428,7 @@ class GoAiMatchSession(
     /** Replace this activity with a new training opening only after the caller confirms its preview. */
     fun replaceOpening(replacement: GoAiOpening, completedSink: GoAiCompletedMatchSink? = null): Boolean {
         val previous = mutableState.value
+        if (previous.config.streak != null) return false
         if (disposed.get() || !lifetime.isActive || !previous.game.canOperate || previous.completionPending) return false
         if (previous.game.phase == GoPhase.FINISHED && completedSink == null) {
             mutableState.value = previous.copy(game = previous.game.copy(

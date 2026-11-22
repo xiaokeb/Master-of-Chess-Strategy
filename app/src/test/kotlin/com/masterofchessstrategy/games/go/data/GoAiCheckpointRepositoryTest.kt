@@ -29,6 +29,21 @@ class GoAiCheckpointRepositoryTest {
     private fun bytes(match: GoAiSavedMatch) = GoAiMatchFileCodec.encode(match)
     private fun recordId(match: GoAiSavedMatch) = admitDouble(match).recordId
 
+    @Test fun streakNextGameRequiresTheDifficultyAndProgressFromTheArchivedResult() = runTest {
+        val repo = repository()
+        val config = GoAiMatchConfig(9, streak = GoStreakProgress())
+        val ongoing = GoAiSavedMatch("first", config, byteArrayOf(9, 0, 1, 0))
+        repo.save(ongoing)
+        val advanced = config.copy(streak = GoStreakProgress(1, 1, winsAtDifficulty = 1))
+        fun next(config: GoAiMatchConfig) = GoAiSavedMatch("second", config, byteArrayOf(9, 0, 0, 0))
+        failed { repo.save(next(advanced)) }
+        repo.save(GoAiSavedMatch("first", config, byteArrayOf(9, 1, 1, 0)))
+        failed { repo.save(next(advanced.copy(difficulty = GoAiDifficulty.MEDIUM))) }
+        repo.save(next(advanced))
+        assertEquals(advanced, repo.load()!!.config)
+        assertEquals(1, store.archives.size)
+    }
+
     @Test fun perMoveClockOnlyRefillsTheNextActorAndCannotChangeModeInPlace() = runTest {
         val repo = repository()
         val config = GoAiMatchConfig(9, perMoveLimitSeconds = 30)

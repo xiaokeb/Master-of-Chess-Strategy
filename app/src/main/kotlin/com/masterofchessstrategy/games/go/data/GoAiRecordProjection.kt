@@ -28,6 +28,7 @@ internal fun projectAdmittedGoAiRecord(archive: GoAiCheckpointArchive, admitted:
         admitted.result != GameResult.ONGOING) { "Go AI archive identity or terminal state is invalid" }
     val match = admitted.match()
     val mode = when {
+        match.config.streak != null -> StoredGameMode.STREAK_CHALLENGE
         match.config.automatic && match.hasSpecifiedOpening -> StoredGameMode.OPENING_AUTO_PLAY
         match.config.automatic -> StoredGameMode.AI_AUTO_PLAY
         else -> StoredGameMode.HUMAN_VS_AI

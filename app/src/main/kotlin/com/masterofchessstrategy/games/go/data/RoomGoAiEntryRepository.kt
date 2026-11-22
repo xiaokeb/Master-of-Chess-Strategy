@@ -64,7 +64,10 @@ internal class RoomGoAiEntryRepository(
         }
     }
 
-    private fun newClock(config: GoAiMatchConfig, first: GoPlayer) = config.perMoveLimitSeconds?.let {
-        GoTurnClock.start(it * 1_000L, first, matchTime(), GoClockMode.PER_MOVE)
-    } ?: newGameLimitMinutes?.let { GoTurnClock.start(it * 60_000L, first, matchTime()) }
+    private fun newClock(config: GoAiMatchConfig, first: GoPlayer): GoTurnClock? {
+        if (config.streak != null) return null
+        return config.perMoveLimitSeconds?.let {
+            GoTurnClock.start(it * 1_000L, first, matchTime(), GoClockMode.PER_MOVE)
+        } ?: newGameLimitMinutes?.let { GoTurnClock.start(it * 60_000L, first, matchTime()) }
+    }
 }

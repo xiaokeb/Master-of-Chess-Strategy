@@ -6,6 +6,7 @@ import com.masterofchessstrategy.games.go.GoClockMode
 import com.masterofchessstrategy.games.go.GoAiMatchFileCodec
 import com.masterofchessstrategy.games.go.GoAiMatchRepository
 import com.masterofchessstrategy.games.go.GoAiSavedMatch
+import com.masterofchessstrategy.games.go.GoStreakProgress
 import com.masterofchessstrategy.games.go.GoTurnClock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +26,9 @@ internal class GoAiCheckpointRepository(
         val next = prepare(match)
         store.transaction {
             val previous = current()
+            if (next.match().matchId != previous?.first?.match()?.matchId) {
+                validateStreakContinuation(previous?.first, next)
+            }
             val lineage = if (previous?.first?.match()?.matchId == next.match().matchId) {
                 validateSameMatch(previous.first.match(), next.match())
                 if (previous.first.phase == GoPhase.FINISHED)
@@ -35,6 +39,19 @@ internal class GoAiCheckpointRepository(
                 GoAiCheckpointLineage(GoAiCheckpointOrigin.TERMINAL_CONTINUATION, previous.first.recordId)
             } else GoAiCheckpointLineage(GoAiCheckpointOrigin.UNVERIFIED_SESSION)
             commit(next, lineage)
+        }
+    }
+
+    private fun validateStreakContinuation(previous: GoAdmittedAiCheckpoint?, next: GoAdmittedAiCheckpoint) {
+        val config = next.match().config
+        val progress = config.streak ?: return
+        if (progress == GoStreakProgress()) return // Explicit setup creates a new series.
+        val parent = requireNotNull(previous) { "围棋连胜续局缺少上局" }
+        val old = parent.match().config
+        require(parent.phase == GoPhase.FINISHED && old.streak != null &&
+            config.boardSize == old.boardSize && next.phase == GoPhase.PLAYING && next.eventCount == 0 &&
+            old.streak.after(parent.result, old.difficulty) == (config.difficulty to progress)) {
+            "围棋连胜续局与已结算的上一局不符"
         }
     }
 
@@ -114,6 +131,7 @@ internal class GoAiCheckpointRepository(
             previous.config.handicapStones == next.config.handicapStones &&
             previous.config.difficulty == next.config.difficulty &&
             previous.config.blind == next.config.blind &&
+            previous.config.streak == next.config.streak &&
             validClockTransition(previous.clock, next.clock) &&
             previous.copyOpeningBytes().sameBytes(next.copyOpeningBytes()) &&
             (!previous.automaticUsed || next.automaticUsed) &&

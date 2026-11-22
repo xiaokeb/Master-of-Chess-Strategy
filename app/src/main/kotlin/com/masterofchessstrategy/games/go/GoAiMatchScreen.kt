@@ -75,6 +75,15 @@ fun GoAiMatchScreen(
                     openingMessage?.let { Text(it, modifier = Modifier.testTag("go_ai_opening_message")) }
                     if (match != null && game != null) {
                         Text("${game.boardSize} 路 · ${goAiDifficultyLabel(match.config.difficulty)}")
+                        match.config.streak?.let { before ->
+                            val result = match.streakResult
+                            val progress = result?.second ?: before
+                            Text("连胜 ${progress.current} 局 · 最佳 ${progress.best} 局",
+                                Modifier.testTag("go_ai_streak_progress"))
+                            result?.let { (next, _) ->
+                                Text("下一局：${goAiDifficultyLabel(next)}", Modifier.testTag("go_ai_streak_next"))
+                            }
+                        }
                         if (match.config.blind) Text("盲棋 · 行棋时隐藏棋子颜色", Modifier.testTag("go_ai_blind_status"))
                         match.config.perMoveLimitSeconds?.let {
                             Text("每步 $it 秒 · 不计标准人机胜场", Modifier.testTag("go_ai_per_move_status"))
@@ -217,10 +226,12 @@ fun GoAiMatchScreen(
                             modifier = Modifier.testTag("go_ai_undo")) { Text("悔棋") }
                         if (match.config.difficulty.undoLimit != Int.MAX_VALUE) Text("剩余悔棋：${(match.config.difficulty.undoLimit - match.undoUsed).coerceAtLeast(0)}次")
                         OutlinedButton({ onPause(); restartDialog = true },
-                            enabled = page.canReplaceAiMatch(),
-                            modifier = Modifier.testTag("go_ai_restart")) { Text("重新开始") }
+                            enabled = page.canReplaceAiMatch() && (match.config.streak == null || match.streakResult != null),
+                            modifier = Modifier.testTag("go_ai_restart")) {
+                            Text(if (match.config.streak == null) "重新开始" else "开始下一局")
+                        }
                         OutlinedButton({ onPause(); onImportOpening() },
-                            enabled = page.canReplaceAiMatch(),
+                            enabled = page.canReplaceAiMatch() && match.config.streak == null,
                             modifier = Modifier.testTag("go_ai_import_opening")) { Text("指定开局") }
                         if (game.phase == GoPhase.FINISHED && !page.completedStorageReady)
                             Text("完成棋谱保存功能准备好后才能重开；本局已保留。")
@@ -254,9 +265,11 @@ fun GoAiMatchScreen(
     if (restartDialog) AlertDialog(
         modifier = Modifier.testTag("go_ai_restart_dialog"),
         onDismissRequest = { restartDialog = false },
-        title = { Text("重新开始本局？") },
+        title = { Text(if (page.match?.config?.streak != null) "开始下一局？" else "重新开始本局？") },
         text = { Column(Modifier.heightIn(max = LocalConfiguration.current.screenHeightDp.dp * 0.38f)
             .verticalScroll(rememberScrollState())) { Text(when {
+            page.match?.config?.streak != null ->
+                "将保存本局连胜棋谱，并以系统计算的难度开始下一局。"
             page.match?.game?.phase == GoPhase.FINISHED && page.match.hasSpecifiedOpening ->
                 "将先固定本局结果并保存完成棋谱，再回到同一指定开局。执色和难度保持，辅助次数重新计数。"
             page.match?.game?.phase == GoPhase.FINISHED ->
@@ -267,7 +280,9 @@ fun GoAiMatchScreen(
         }) } },
         confirmButton = { TextButton({ restartDialog = false; onRestart() },
             enabled = page.canReplaceAiMatch(),
-            modifier = Modifier.testTag("go_ai_restart_confirm")) { Text("确认重开") } },
+            modifier = Modifier.testTag("go_ai_restart_confirm")) {
+            Text(if (page.match?.config?.streak != null) "确认下一局" else "确认重开")
+        } },
         dismissButton = { TextButton({ restartDialog = false }, modifier = Modifier.testTag("go_ai_restart_cancel")) { Text("保留本局") } },
     )
     pendingOpening?.let { preview -> AlertDialog(

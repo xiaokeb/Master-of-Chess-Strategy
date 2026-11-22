@@ -40,7 +40,8 @@ internal class RoomGoRankedMatchCreator(
             "围棋新局需要全新规范身份"
         }
         val start = withContext(worker) {
-            if (!match.config.automatic && match.config.handicapStones == 0 && match.config.perMoveLimitSeconds == null)
+            if (!match.config.automatic && match.config.handicapStones == 0 &&
+                match.config.perMoveLimitSeconds == null && match.config.streak == null)
                 admitGoRankedStart(match, clock())
             else {
                 val admitted = admitGoAiCheckpoint(match)
@@ -48,6 +49,7 @@ internal class RoomGoRankedMatchCreator(
                 val atStart = if (opening == null) admitted.eventCount == 0 else
                     match.config.automatic && admitted.eventCount > 0 && opening.contentEquals(match.copyBytes())
                 require(admitted.phase == GoPhase.PLAYING && atStart &&
+                    (match.config.streak == null || match.config.streak == GoStreakProgress()) &&
                     !match.completionReserved && match.undoUsed == 0 && match.hintUsed == 0 &&
                     !match.autoContinueEnabled && match.autoContinueGameNumber == 1 && match.autoContinueMaxGames == 1 &&
                     GoAiMatchFileCodec.encode(admitted.match()).contentEquals(GoAiMatchFileCodec.encode(match))) {

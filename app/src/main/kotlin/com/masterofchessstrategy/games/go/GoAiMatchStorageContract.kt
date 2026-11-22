@@ -24,10 +24,13 @@ data class GoAiMatchConfig(
     val difficulty: GoAiDifficulty = GoAiDifficulty.SIMPLE,
     val blind: Boolean = false,
     val perMoveLimitSeconds: Int? = null,
+    val streak: GoStreakProgress? = null,
 ) {
     init {
         require(boardSize in setOf(9, 13, 19) && (handicapStones == 0 || handicapStones in 2..9))
         require(perMoveLimitSeconds == null || perMoveLimitSeconds in 1..600)
+        require(streak == null || (humanPlayer == GoPlayer.BLACK && handicapStones == 0 &&
+            !blind && perMoveLimitSeconds == null))
     }
     val automatic get() = humanPlayer == null
     fun isAi(player: GoPlayer) = humanPlayer != player
@@ -61,6 +64,7 @@ class GoAiSavedMatch(
         require(if (config.perMoveLimitSeconds == null) clock?.mode != GoClockMode.PER_MOVE
             else clock != null && clock.mode == GoClockMode.PER_MOVE &&
                 clock.limitMillis == config.perMoveLimitSeconds * 1_000L) { "围棋每步限时与存档配置不符" }
+        require(config.streak == null || (!automaticUsed && opening == null && clock == null))
     }
     fun copyBytes() = saved.copyOf()
     fun copyOpeningBytes() = opening?.copyOf()
