@@ -28,6 +28,8 @@ class GoOpeningStudyPlan internal constructor(val line: GoOpeningStudyLine, byte
     fun automaticConfig(difficulty: GoAiDifficulty) = opening.config(humanPlayer = null, difficulty = difficulty)
 }
 
+internal data class GoOpeningStudyBranch(val line: GoOpeningStudyLine, val sharedMoves: Int)
+
 /** Project-authored teaching lines. They illustrate opening direction and make no professional-joseki claim. */
 object GoOpeningStudyLibrary {
     val lines: List<GoOpeningStudyLine> = listOf(
@@ -77,11 +79,24 @@ object GoOpeningStudyLibrary {
             step(15, 9, "白占右边中央，比较另一侧相同的间距。"),
             step(9, 3, "黑转到上边中央，布局从一侧向相邻边展开。"),
             step(9, 15, "白占下边中央，比较双方的边上支点和中央空白。")),
+        line("19-star-side-switch", "19路：星位与换边", "四角相同，比较转向相邻边时的支援距离。", 19,
+            step(3, 3, "黑占左上星位。"),
+            step(15, 15, "白占右下星位。"),
+            step(15, 3, "黑占右上星位。"),
+            step(3, 15, "白占左下星位。"),
+            step(3, 5, "黑从左上沿左边展开，观察同一角子向另一侧发展的效果。"),
+            step(15, 13, "白从右下沿右边展开，比较两边还未连起的空当。")),
     )
 
     init { require(lines.map { it.id }.toSet().size == lines.size) }
 
     fun line(id: String): GoOpeningStudyLine? = lines.firstOrNull { it.id == id }
+
+    internal fun branches(line: GoOpeningStudyLine): List<GoOpeningStudyBranch> = lines.mapNotNull { other ->
+        if (other.id == line.id || other.boardSize != line.boardSize) return@mapNotNull null
+        val shared = line.steps.zip(other.steps).takeWhile { (a, b) -> a.point == b.point }.size
+        if (shared in 2 until minOf(line.steps.size, other.steps.size)) GoOpeningStudyBranch(other, shared) else null
+    }.sortedByDescending { it.sharedMoves }
 
     /** Applies every authored move through the formal rules engine; no diagram-only endpoint is accepted. */
     fun open(

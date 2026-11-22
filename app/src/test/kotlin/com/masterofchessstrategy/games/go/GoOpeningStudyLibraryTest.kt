@@ -7,9 +7,21 @@ import org.junit.Test
 class GoOpeningStudyLibraryTest {
     @Test fun authoredCatalogHasUniqueStableMetadataAcrossAllSupportedSizes() {
         val lines = GoOpeningStudyLibrary.lines
-        assertEquals(6, lines.size); assertEquals(lines.size, lines.map { it.id }.toSet().size)
+        assertEquals(7, lines.size); assertEquals(lines.size, lines.map { it.id }.toSet().size)
         assertEquals(setOf(9, 13, 19), lines.map { it.boardSize }.toSet())
         assertTrue(lines.all { it.steps.size >= 4 && it.title.isNotBlank() && it.focus.isNotBlank() })
+    }
+
+    @Test fun branchesUseTheLastSharedMoveAndNeverCrossBoardSizes() {
+        val primary = checkNotNull(GoOpeningStudyLibrary.line("19-star-approach"))
+        val branches = GoOpeningStudyLibrary.branches(primary)
+        assertEquals(listOf("19-star-side-switch" to 4, "19-wide-framework" to 2),
+            branches.map { it.line.id to it.sharedMoves })
+        branches.forEach { branch ->
+            val common = branch.sharedMoves
+            assertEquals(primary.steps.take(common).map { it.point }, branch.line.steps.take(common).map { it.point })
+            assertNotEquals(primary.steps[common].point, branch.line.steps[common].point)
+        }
     }
 
     @Test fun everyLineIsAppliedThroughRulesAndCreatesExactTrainingEndpoint() {

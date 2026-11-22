@@ -26,14 +26,21 @@ import kotlinx.coroutines.*
 class GoOpeningStudyViewModel(
     val line: GoOpeningStudyLine,
     worker: CoroutineDispatcher = Dispatchers.Default,
+    startEventIndex: Int = 0,
     engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
 ) : ViewModel() {
     @Volatile private var verifiedPlan: GoOpeningStudyPlan? = null
     val controller = GoReplayController(viewModelScope, {
         val plan = GoOpeningStudyLibrary.open(line, engineFactory)
         val reader = GoReplaySession.openSnapshot(plan.copySnapshotBytes()) { size -> engineFactory(size, 15, 0) }
-        verifiedPlan = plan
-        reader
+        try {
+            reader.seek(startEventIndex)
+            verifiedPlan = plan
+            reader
+        } catch (failure: Throwable) {
+            reader.close()
+            throw failure
+        }
     }, worker)
 
     fun trainingOpening() = verifiedPlan?.opening
@@ -55,15 +62,24 @@ fun GoOpeningStudyHub(
     modifier: Modifier = Modifier,
 ) {
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
+    var startEventIndex by rememberSaveable { mutableIntStateOf(0) }
+    fun open(id: String, index: Int) {
+        startEventIndex = index
+        selectedId = id
+    }
     val line = selectedId?.let(GoOpeningStudyLibrary::line)
-    if (line == null) GoOpeningStudyCatalog(availableDifficulties, { selectedId = it }, onBack, modifier)
+    if (line == null) GoOpeningStudyCatalog(availableDifficulties, { open(it, 0) }, onBack, modifier)
     else {
         BackHandler { selectedId = null }
         val store = remember(line.id) { ViewModelStore() }
         val owner = remember(store) { object : ViewModelStoreOwner { override val viewModelStore = store } }
         DisposableEffect(store) { onDispose { store.clear() } }
-        CompositionLocalProvider(LocalViewModelStoreOwner provides owner) {
-            GoOpeningStudyRoute(line, availableDifficulties, onStartAutomatic, { selectedId = null }, modifier)
+        // Reset the collected replay state together with the reader when changing lines.
+        key(line.id) {
+            CompositionLocalProvider(LocalViewModelStoreOwner provides owner) {
+                GoOpeningStudyRoute(line, startEventIndex, availableDifficulties, onStartAutomatic, { selectedId = null }, modifier,
+                    onBranch = { branch -> open(branch.line.id, branch.sharedMoves) })
+            }
         }
     }
 }
@@ -82,7 +98,7 @@ private fun GoOpeningStudyCatalog(
                 Text("围棋开局学习", style = MaterialTheme.typography.headlineSmall)
                 TextButton(onBack) { Text("返回") }
             }
-            Text("项目自编线路 · 每一着均由正式规则引擎验证 · 不标作职业定式结论")
+            Text("项目自编开局线路，每一着均经正式规则引擎验证。")
             if (difficulties.isEmpty()) Text("完成十课教程后开放简单难度的自动续弈。")
             else Text("可用自动演局难度：${difficulties.sortedBy { it.ordinal }.joinToString("、", transform = ::goAiDifficultyLabel)}")
             for (line in GoOpeningStudyLibrary.lines) ElevatedCard(Modifier.fillMaxWidth()) {
@@ -100,20 +116,24 @@ private fun GoOpeningStudyCatalog(
 @Composable
 private fun GoOpeningStudyRoute(
     line: GoOpeningStudyLine,
+    startEventIndex: Int,
     difficulties: Set<GoAiDifficulty>,
     onStartAutomatic: (GoAiOpening, GoAiMatchConfig) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier,
+    onBranch: (GoOpeningStudyBranch) -> Unit,
 ) {
     val model: GoOpeningStudyViewModel = viewModel(key = "go-opening-study-${line.id}", factory = remember(line) {
         object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T = GoOpeningStudyViewModel(line) as T
+            override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                GoOpeningStudyViewModel(line, startEventIndex = startEventIndex) as T
         }
     })
     val state by model.controller.state.collectAsState()
     var choice by rememberSaveable(line.id) { mutableStateOf<GoAiDifficulty?>(null) }
     val difficulty = choice?.takeIf { it in difficulties } ?: difficulties.minByOrNull { it.ordinal }
+    val branches = remember(line) { GoOpeningStudyLibrary.branches(line) }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { model.controller.pause() }
     GoReplayScreen(state, model.controller::seek, model.controller::play, model.controller::pause,
         model.controller::setSpeed, { model.controller.pause(); onBack() }, modifier, title = line.title) { frame ->
@@ -121,6 +141,12 @@ private fun GoOpeningStudyRoute(
         Text(line.focus)
         Text(if (frame.eventIndex == 0) "从空盘开始，使用下一步或播放查看线路。"
             else line.steps[frame.eventIndex - 1].explanation, modifier = Modifier.testTag("go_opening_explanation"))
+        for (branch in branches.filter { frame.eventIndex >= it.sharedMoves }) {
+            OutlinedButton(onClick = { model.controller.pause(); onBranch(branch) }, enabled = state.ready,
+                modifier = Modifier.testTag("go_opening_branch_${branch.line.id}")) {
+                Text("第 ${branch.sharedMoves} 手后改走：${branch.line.title}")
+            }
+        }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             for (candidate in difficulties.sortedBy { it.ordinal }) FilterChip(difficulty == candidate,
                 { choice = candidate }, label = { Text(goAiDifficultyLabel(candidate)) })

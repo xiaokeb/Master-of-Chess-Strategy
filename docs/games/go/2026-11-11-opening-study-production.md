@@ -12,4 +12,10 @@
 
 本次只发布源码。自编线路用于开局方向教学，职业定式、棋力分级和实体设备另行验收。[发布清单](../../releases/manifests/v0.1.0-go-opening-study.1.json)
 
+## 开局分支对照
+
+目录增加「十九路星位与换边」并扩至七条自编线路。匹配同一棋盘规格下完全相同的前缀，查看至分歧点后可从当前线路切换。切换会还原保留共同前缀的盘面，从下一手开始播放所选分支。以「星位与拆边」切换「星位与换边」为例，共同盘面为第 4 手。首次设备验证发现长度变化时会短暂沿用旧游标，已将页面和原生读取器按线路身份共同重建。
+
+18 项 JVM、Pixel 7 Pro 共 4 项仪器调用通过。两档字号均从八手线路切至六手线路的第 4 手，Activity 重建后继续走新分支。原生逐着验证全部七条线路及 SGF 回读，生产入口回归了真实 KataGo 续弈。核看七张画面。双 ABI、Debug 应用及仪器包、Release 主清单通过，Lint 为 0 错误、25 警告。职业定式内容及实体设备仍待验收。[分支发布清单](../../releases/manifests/v0.1.0-go-opening-branches.1.json)
+
 提交 `dd206003453a1fbee85229cf182de99454ee35da` 已推送到 `main`。[v0.1.0-go-opening-study.1](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-opening-study.1)

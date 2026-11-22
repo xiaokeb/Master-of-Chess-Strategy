@@ -99,6 +99,39 @@ class GoOpeningStudyNavigationTest {
         capture("katago-training")
     }
 
+    @Test fun switchingFromTheEndReturnsToTheSharedPositionThenPlaysTheSelectedBranch() {
+        val start = "19-star-approach"
+        val branch = "19-star-side-switch"
+        val store = storage()
+        openStudy()
+        compose.onNodeWithTag("go_opening_line_$start").performScrollTo().performClick()
+        awaitEvent("事件 0 / 8")
+        compose.onNodeWithTag("go_opening_branch_$branch").assertDoesNotExist()
+        compose.onNodeWithText("末步").performScrollTo().performClick()
+        awaitEvent("事件 8 / 8")
+        compose.onNodeWithTag("go_opening_branch_$branch").performScrollTo()
+            .assertTextContains("第 4 手后改走", substring = true)
+        capture("opening-branch-choice")
+        compose.onNodeWithTag("go_opening_branch_$branch").performClick()
+        awaitEvent("事件 4 / 6")
+        compose.onNodeWithTag("go_intersection_3_3").assertContentDescriptionEquals("第4行第4列，黑子")
+        compose.onNodeWithTag("go_intersection_15_15").assertContentDescriptionEquals("第16行第16列，白子")
+        compose.onNodeWithTag("go_intersection_5_3").assertContentDescriptionEquals("第4行第6列，空点")
+        capture("opening-shared-position")
+        compose.activityRule.scenario.recreate()
+        awaitEvent("事件 4 / 6")
+        compose.onNodeWithText("下一步").performScrollTo().performClick()
+        awaitEvent("事件 5 / 6")
+        compose.onNodeWithTag("go_intersection_3_5").assertContentDescriptionEquals("第6行第4列，黑子，最后落点")
+        compose.onNodeWithTag("go_opening_explanation").performScrollTo().assertTextContains("沿左边展开", substring = true)
+        capture("opening-branch-move")
+        assertNull(runBlocking { store.aiEntryRepository().load().active })
+    }
+
+    private fun awaitEvent(label: String) = compose.waitUntil(15_000) {
+        compose.onAllNodesWithText(label, substring = true).fetchSemanticsNodes().isNotEmpty()
+    }
+
     private fun storage(): GoLocalStorage {
         val activity = compose.activity
         val directory = activity.ownedLegacyDirectory

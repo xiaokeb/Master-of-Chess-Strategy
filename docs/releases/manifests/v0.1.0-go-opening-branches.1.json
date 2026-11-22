@@ -1,0 +1,121 @@
+{
+  "tag": "v0.1.0-go-opening-branches.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 9,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "lint_warnings": 25,
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.games.go.GoOpeningStudyLibraryTest",
+        "tests": 9
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoReplayControllerTest",
+        "tests": 9
+      }
+    ],
+    "lint_errors": 0,
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "f587ab82044ed07c2f93086633977d0135c136bcf33e8e9e5ebc22b109cae7a7",
+      "app/build/outputs/apk/debug/app-debug.apk": "5d24d5fec6130e65f1b58d08c74f04ab0d438bf0b9df05bee2dd93e9196a113a"
+    },
+    "baseline": "8e24113ee14b123c96fc154a22028f89e6702f0d",
+    "release_manifest": "processed",
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyLibrary.kt",
+        "working_sha256": "53eeada2eb429e6779541e6504c6834271541b24ec2ba9bfc943ee355d5f45e5",
+        "sha256": "53eeada2eb429e6779541e6504c6834271541b24ec2ba9bfc943ee355d5f45e5"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyRoute.kt",
+        "working_sha256": "9d206d03d1f7c0cf3ce1a9a9c891ced742625b53881bd9192aa3831e07412432",
+        "sha256": "9d206d03d1f7c0cf3ce1a9a9c891ced742625b53881bd9192aa3831e07412432"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyLibraryTest.kt",
+        "working_sha256": "85f67cec2fb2c35b778ad42c462b4a6cf1f76c4b0d8db2ca17029c9c7cfe7bc4",
+        "sha256": "85f67cec2fb2c35b778ad42c462b4a6cf1f76c4b0d8db2ca17029c9c7cfe7bc4"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyNativeInstrumentedTest.kt",
+        "working_sha256": "504a49fab6a80ef5868d2dde6f7a110455c14121c45db28177ca52706bf758d7",
+        "sha256": "504a49fab6a80ef5868d2dde6f7a110455c14121c45db28177ca52706bf758d7"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyScreenInstrumentedTest.kt",
+        "working_sha256": "22fedad52e4a24db99f077b57d2a578403d0715181c8b67c46d919fa98b42e9c",
+        "sha256": "22fedad52e4a24db99f077b57d2a578403d0715181c8b67c46d919fa98b42e9c"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoOpeningStudyNavigationTest.kt",
+        "working_sha256": "db78295792539158256fd2fff5130386801ecd3e1df3c42757bc96fcda5fe004",
+        "sha256": "db78295792539158256fd2fff5130386801ecd3e1df3c42757bc96fcda5fe004"
+      }
+    ],
+    "candidate": "go-opening-branches1"
+  },
+  "device": {
+    "candidate": "go-opening-branches1",
+    "runs": [
+      {
+        "log_sha256": "d3529e1d8d7ebf2de2ec0c8dc9621da076a40130ec4acc666262c032872c4a32",
+        "font": "1.0",
+        "tests": 3,
+        "images": [
+          {
+            "sha256": "8dac8001edad2b72c9a6b1059fd29fc86d636d0da36b25b294d4d364a576acf1",
+            "path": "font-1.0\\4091be52-b83a-4c29-91c9-888932896a08\\katago-training.png"
+          },
+          {
+            "sha256": "e8a2e105eb350e36c0cf6897805926d23e38df706c18d1ffeddf10730d6b489c",
+            "path": "font-1.0\\e0c5e5a3-b839-424b-97d2-079f893b9cd7\\opening-branch-choice.png"
+          },
+          {
+            "sha256": "3b749059562fa46e7b6b52bdb87eb40342319c6360f3427b5564f27c69e7e733",
+            "path": "font-1.0\\e0c5e5a3-b839-424b-97d2-079f893b9cd7\\opening-branch-move.png"
+          },
+          {
+            "sha256": "cd8d51044208cb3343059e8617e28a86de99a0f2ec7c4314d5a2ab535342477b",
+            "path": "font-1.0\\e0c5e5a3-b839-424b-97d2-079f893b9cd7\\opening-shared-position.png"
+          }
+        ]
+      },
+      {
+        "log_sha256": "4bd0833cabcc9ea90da59c482f42e855de430537c8c69124717b3220a44113f2",
+        "font": "1.5",
+        "tests": 1,
+        "images": [
+          {
+            "sha256": "14ef4d2607b6e7d3c0f7318312a89baa9cc63f97226744a52bef539c85c6e990",
+            "path": "font-1.5\\9a7a4e15-0252-43d6-8934-3bb919ae6da3\\opening-branch-choice.png"
+          },
+          {
+            "sha256": "d93a83a9b906d9b00bf011b08182b1da070f54eeafe8a41d439c27e0e33f2e1d",
+            "path": "font-1.5\\9a7a4e15-0252-43d6-8934-3bb919ae6da3\\opening-branch-move.png"
+          },
+          {
+            "sha256": "5e350318b9ee5346add7df66fe6c83abc8459570c92c23c2054d5162fb46571f",
+            "path": "font-1.5\\9a7a4e15-0252-43d6-8934-3bb919ae6da3\\opening-shared-position.png"
+          }
+        ]
+      }
+    ],
+    "restored_font": "1.0",
+    "original_font": "1.0",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "f587ab82044ed07c2f93086633977d0135c136bcf33e8e9e5ebc22b109cae7a7",
+      "app/build/outputs/apk/debug/app-debug.apk": "5d24d5fec6130e65f1b58d08c74f04ab0d438bf0b9df05bee2dd93e9196a113a"
+    },
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "folder": ".build/go-opening-branches1/device-634f03d8c96f402d9dd903db25fcdc6a",
+    "visual_review_sha256": "0d73eaeb37b17caccc6f64e6382134b27dadbbf8c88bb6b0290469008b27d114"
+  }
+}

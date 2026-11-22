@@ -17,7 +17,7 @@ class GoOpeningStudyScreenInstrumentedTest {
             GoOpeningStudyHub(setOf(GoAiDifficulty.SIMPLE, GoAiDifficulty.HARD),
                 { opening, config -> started = opening to config }, {})
         } }
-        composeRule.onNodeWithText("项目自编线路 · 每一着均由正式规则引擎验证 · 不标作职业定式结论").assertExists()
+        composeRule.onNodeWithText("项目自编开局线路，每一着均经正式规则引擎验证。").assertExists()
         composeRule.onNodeWithTag("go_opening_line_9-corners-center").performScrollTo().performClick()
         composeRule.waitUntil(15_000) { composeRule.onAllNodesWithText("行棋 0 / 6 着 · 事件 0 / 6").fetchSemanticsNodes().isNotEmpty() }
         composeRule.onNodeWithTag("go_opening_start_auto").performScrollTo().assertIsNotEnabled()
