@@ -154,6 +154,7 @@ internal object CompetitionMahjongMatchCheckpointCodec {
             CompetitionMahjongBotStrategy.POSITION_SEEDED_V1 -> 5
             CompetitionMahjongBotStrategy.POSITION_SEEDED_V2 -> 6
             CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO -> 7
+            CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO_KONGS -> 8
         }
         frame.putInt(MAGIC).put(version.toByte())
             .put(0.toByte()).put(0.toByte()).put(0.toByte()).putInt(body.size)
@@ -168,7 +169,7 @@ internal object CompetitionMahjongMatchCheckpointCodec {
         val input = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN)
         if (input.int != MAGIC) return null
         val version = input.get().toInt()
-        if (version !in 1..7) return null
+        if (version !in 1..8) return null
         repeat(3) { if (input.get().toInt() != 0) return null }
         if (input.int != bytes.size - HEADER_BYTES - FOOTER_BYTES ||
             crc(bytes, bytes.size - FOOTER_BYTES) != input.getInt(bytes.size - FOOTER_BYTES)) return null
@@ -195,6 +196,7 @@ internal object CompetitionMahjongMatchCheckpointCodec {
                 5 -> CompetitionMahjongBotStrategy.POSITION_SEEDED_V1
                 6 -> CompetitionMahjongBotStrategy.POSITION_SEEDED_V2
                 7 -> CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO
+                8 -> CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO_KONGS
                 else -> CompetitionMahjongBotStrategy.LEGACY_BATCH
             }
             val config = CompetitionMahjongCompetitionConfig(id, seed, viewer, level, strategy)

@@ -119,7 +119,7 @@ internal object CompetitionMahjongCheckpointCodec {
             input.get().toInt() != 0 || input.get().toInt() != 0) return null
         val payloadLength = input.int
         if (payloadLength <= 0 || payloadLength != record.size - 16) return null
-        if (scoring == CompetitionMahjongScoring.WMO_2021 &&
+        if (scoring != CompetitionMahjongScoring.LEGACY &&
             (payloadLength < 5 || input.getInt(12) != 0x4d434f4d || input.get(16).toInt() != version)) return null
         return scoring.takeIf { crc(record, record.size - FOOTER_BYTES) == input.getInt(record.size - FOOTER_BYTES) }
     }

@@ -15,4 +15,10 @@ WMO《麻将竞赛规则》附件一第 5、17 项允许三杠及四杠另计暗
 
 新版采用 MOCM v3、MCMA v4。一暗杠计暗杠 2 分，两暗杠计双暗杠 8 分并去除由同两组构成的双暗刻。三、四暗杠计相应的三暗刻或四暗刻，按就高计分处理同组暗杠。修复前的 MOCM v1／v2 和 MCMA v1／v2／v3 保留各自计分语义。[WMO 就高计分原则及附件一](https://mahjongclublausanne.ch/wp-content/uploads/2024/03/Greenbook2021_Chinese-EN.pdf)
 
-NDK 30 双 ABI 编译通过，Pixel 7 Pro 实跑 137 个计番场景（含 9 个杠组合）及 8 组自动演局测试（含 6 局完整对局）。用例验证新版与旧 WMO 自动对局各自恢复、结算一致，以及跨版本拒绝后状态不变。生产 JNI、正式与自动入口、备份仍待接入和验收。[证据清单](../../releases/manifests/v0.1.0-competition-mahjong-kong-scoring-native.1.json)
+NDK 30 双 ABI 编译通过，Pixel 7 Pro 实跑 137 个计番场景（含 9 个杠组合）及 8 组自动演局测试（含 6 局完整对局）。用例验证新版与旧 WMO 自动对局各自恢复、结算一致，以及跨版本拒绝后状态不变。[原生证据](../../releases/manifests/v0.1.0-competition-mahjong-kong-scoring-native.1.json)
+
+## Android 接入与验证
+
+标准正式赛事的新局使用 MCMS／MOCM v3，赛事检查点使用 MCMT v8。新标准自动演局使用 MCAU／MCMA v4。存档按原版本恢复，指定教学开局沿用其随档计分版本。正式备份沿用 MCTX，既存三种归档策略和新增策略分别编码。
+
+106 项定向 JVM 测试通过，双 ABI、Debug 主包、仪器包和 Release 主清单构建通过，Lint 0 错误、25 警告。Pixel 7 Pro 默认和 150% 字号各验证正式新局出牌与续局、自动新局单步与续局。另通过旧 WMO 十六盘重放、生产备份恢复和自动棋谱交换，共 7 项仪器测试。已核看 16 张画面。新版独立棋力、完整新版本赛事备份及实体设备继续验收。[Android 证据](../../releases/manifests/v0.1.0-competition-mahjong-kong-scoring.1.json)

@@ -39,7 +39,7 @@ Java_com_masterofchessstrategy_engine_internal_CompetitionMahjongAutoBindings_cr
     jintArray levels, jlong decision_seed, jint policy) {
     return guarded(env, static_cast<jlong>(0), [&]() -> jlong {
         if (seed < 0 || decision_seed < 0 || dealer < 0 || dealer > 3 ||
-            wind < 0 || wind > 3 || viewer < 0 || viewer > 3 || policy < 1 || policy > 3 || !levels ||
+            wind < 0 || wind > 3 || viewer < 0 || viewer > 3 || policy < 1 || policy > 4 || !levels ||
             env->GetArrayLength(levels) != 4) throw std::invalid_argument("Invalid setup");
         std::array<jint, 4> values{};
         env->GetIntArrayRegion(levels, 0, 4, values.data());

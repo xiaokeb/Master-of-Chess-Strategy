@@ -35,6 +35,7 @@ internal class CompetitionMahjongArchivedSeries(
             CompetitionMahjongBotStrategy.POSITION_SEEDED_V1 -> 1.toByte()
             CompetitionMahjongBotStrategy.POSITION_SEEDED_V2 -> 2.toByte()
             CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO -> 3.toByte()
+            CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO_KONGS -> 4.toByte()
             CompetitionMahjongBotStrategy.LEGACY_BATCH -> error("Archive requires a position-seeded strategy")
         })
         hands.forEach { hand ->
@@ -59,6 +60,7 @@ internal class CompetitionMahjongArchivedSeries(
                 1 -> CompetitionMahjongBotStrategy.POSITION_SEEDED_V1
                 2 -> CompetitionMahjongBotStrategy.POSITION_SEEDED_V2
                 3 -> CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO
+                4 -> CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO_KONGS
                 else -> return null
             }
             val config = CompetitionMahjongCompetitionConfig(id, seed, viewer, level, strategy)

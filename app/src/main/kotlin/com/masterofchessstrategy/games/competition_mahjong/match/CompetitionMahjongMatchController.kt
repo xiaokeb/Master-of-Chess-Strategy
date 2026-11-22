@@ -110,7 +110,8 @@ class CompetitionMahjongMatchController(
                 CompetitionMahjongBotStrategy.LEGACY_BATCH -> active.advanceBots(config.botLevel, randomSeed, maxActions)
                 CompetitionMahjongBotStrategy.POSITION_SEEDED_V1,
                 CompetitionMahjongBotStrategy.POSITION_SEEDED_V2,
-                CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO -> {
+                CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO,
+                CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO_KONGS -> {
                     var moved = 0
                     while (moved < maxActions && active.advancePositionSeededBot(config.botLevel, config.botStrategy) == 1)
                         moved++

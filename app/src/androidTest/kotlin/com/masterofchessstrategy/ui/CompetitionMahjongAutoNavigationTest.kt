@@ -103,9 +103,9 @@ class CompetitionMahjongAutoNavigationTest {
         openAutomatic()
         val reader = RoomCompetitionMahjongAutoStore(db, viewer)
         val initial = checkNotNull(runBlocking { reader.load(viewer) })
-        assertEquals(CompetitionMahjongAutoPolicy.CALIBRATED_WMO, initial.config.policy)
-        assertEquals(3, initial.engineRecord[4].toInt())
-        assertEquals(2, initial.engineRecord[28].toInt())
+        assertEquals(CompetitionMahjongAutoPolicy.CALIBRATED_WMO_KONGS, initial.config.policy)
+        assertEquals(4, initial.engineRecord[4].toInt())
+        assertEquals(3, initial.engineRecord[28].toInt())
         compose.onAllNodesWithText("返回").assertCountEquals(1)
         compose.onAllNodesWithText("设置").assertCountEquals(1)
         compose.onAllNodesWithText("悔棋").assertCountEquals(0)
@@ -124,7 +124,7 @@ class CompetitionMahjongAutoNavigationTest {
         openAutomatic()
         val resumed = checkNotNull(runBlocking { reader.load(viewer) })
         assertEquals(saved.config.runId, resumed.config.runId)
-        assertEquals(CompetitionMahjongAutoPolicy.CALIBRATED_WMO, resumed.config.policy)
+        assertEquals(CompetitionMahjongAutoPolicy.CALIBRATED_WMO_KONGS, resumed.config.policy)
         assertArrayEquals(saved.engineRecord, resumed.engineRecord)
         assertNull(runBlocking { RoomCompetitionMahjongAutoStore(db, 0).load(0) })
         capture("resumed")
@@ -190,7 +190,7 @@ class CompetitionMahjongAutoNavigationTest {
         openAutomatic()
         val initial = checkNotNull(runBlocking { store.load(viewer) })
         assertNull(initial.openingRecord)
-        assertEquals(CompetitionMahjongAutoPolicy.CALIBRATED_WMO, initial.config.policy)
+        assertEquals(CompetitionMahjongAutoPolicy.CALIBRATED_WMO_KONGS, initial.config.policy)
 
         val newRun = "competition_mahjong_auto_new"
         val openingTag = "competition_mahjong_auto_opening_${opening.id}"

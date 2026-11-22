@@ -113,9 +113,9 @@ class CompetitionMahjongNavigationIntegrationTest {
         clickReady("competition_formal_play")
         waitForTag("competition_mahjong_action_bar")
         val start = checkNotNull(activeMatch())
-        assertEquals(CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO, start.config.botStrategy)
-        assertEquals(2, start.engineRecord[4].toInt())
-        assertEquals(2, start.engineRecord[16].toInt())
+        assertEquals(CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO_KONGS, start.config.botStrategy)
+        assertEquals(3, start.engineRecord[4].toInt())
+        assertEquals(3, start.engineRecord[16].toInt())
         val discard = hasText("出 ", substring = true) and hasClickAction() and isEnabled()
         compose.waitUntil(10_000) { compose.onAllNodes(discard).fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("competition_mahjong_local_tiles").assertIsDisplayed()

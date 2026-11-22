@@ -162,7 +162,7 @@ internal fun CompetitionMahjongAutoProductionRoute(
             val config = remember(host, firstLevel) {
                 CompetitionMahjongAutoRunConfig(UUID.randomUUID().toString(),
                     System.nanoTime() and Long.MAX_VALUE, viewer, List(4) { firstLevel },
-                    policy = CompetitionMahjongAutoPolicy.CALIBRATED_WMO)
+                    policy = CompetitionMahjongAutoPolicy.CALIBRATED_WMO_KONGS)
             }
             CompetitionMahjongAutoRoute(host.store, onBack, policy, initialConfig = config, openings = holder.openings, ownerKey = host.key,
                 onWriterReady = writers::register, useBackgroundService = true, soundEnabled = soundEnabled)

@@ -10,7 +10,8 @@ enum class CompetitionMahjongBotStrategy(
     internal val scoring: CompetitionMahjongScoring = CompetitionMahjongScoring.LEGACY,
 ) {
     LEGACY_BATCH, POSITION_SEEDED_V1, POSITION_SEEDED_V2,
-    POSITION_SEEDED_WMO(CompetitionMahjongScoring.WMO_2021);
+    POSITION_SEEDED_WMO(CompetitionMahjongScoring.WMO_2021),
+    POSITION_SEEDED_WMO_KONGS(CompetitionMahjongScoring.WMO_2021_KONGS);
 
     internal val positionSeeded get() = this != LEGACY_BATCH
 }

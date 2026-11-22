@@ -4,6 +4,7 @@ enum class CompetitionMahjongAutoPolicy(val recordVersion: Int, val roundRecordV
     BASELINE(1, 1),
     CALIBRATED(2, 1),
     CALIBRATED_WMO(3, 2),
+    CALIBRATED_WMO_KONGS(4, 3),
 }
 
 /** Four physical-seat levels and an immutable bot and scoring policy for the hand. */

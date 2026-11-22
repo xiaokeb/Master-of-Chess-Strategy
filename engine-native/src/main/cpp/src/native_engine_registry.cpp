@@ -202,10 +202,10 @@ EngineHandle NativeEngineRegistry::create_competition_mahjong_auto(
     const std::uint64_t seed, const std::uint8_t dealer, const std::uint8_t wind,
     const std::uint8_t viewer, const std::array<std::uint8_t, 4> levels,
     const std::uint64_t decision_seed, const std::uint8_t policy_version) {
-    if (policy_version < 1 || policy_version > 3)
+    if (policy_version < 1 || policy_version > 4)
         throw std::invalid_argument("Invalid automatic Mahjong policy version");
-    const auto fan_rules = policy_version == 3 ? CompetitionMahjongFanRules::wmo_2021 :
-        CompetitionMahjongFanRules::legacy_v1;
+    const auto fan_rules = policy_version == 4 ? CompetitionMahjongFanRules::wmo_2021_kongs :
+        policy_version == 3 ? CompetitionMahjongFanRules::wmo_2021 : CompetitionMahjongFanRules::legacy_v1;
     auto session = std::make_shared<CompetitionMahjongAutoSession>(
         seed, dealer, wind, viewer, levels, decision_seed, policy_version != 1, fan_rules);
     std::lock_guard lock(mutex_);

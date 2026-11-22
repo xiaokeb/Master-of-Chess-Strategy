@@ -63,7 +63,8 @@ Java_com_masterofchessstrategy_engine_internal_NativeBindings_createCompetitionM
     return guarded(env,static_cast<jlong>(0),[&]() -> jlong {
         if (seed < 0 || dealer < 0 || dealer > 3 || wind < 0 || wind > 3 || viewer < 0 || viewer > 3 ||
             (scoring != static_cast<jint>(CompetitionMahjongFanRules::legacy_v1) &&
-             scoring != static_cast<jint>(CompetitionMahjongFanRules::wmo_2021)))
+             scoring != static_cast<jint>(CompetitionMahjongFanRules::wmo_2021) &&
+             scoring != static_cast<jint>(CompetitionMahjongFanRules::wmo_2021_kongs)))
             throw std::invalid_argument("Invalid setup");
         return NativeEngineRegistry::instance().create_competition_mahjong(
             seed, dealer, wind, viewer, static_cast<CompetitionMahjongFanRules>(scoring));
