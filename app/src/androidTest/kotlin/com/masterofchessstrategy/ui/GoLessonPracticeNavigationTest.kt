@@ -214,9 +214,9 @@ class GoLessonPracticeNavigationTest {
         capture("capture-lesson-returned")
     }
 
-    @Test fun allThreeLinkedExercisesUseTheActualProductionRulesAndReachTheirGoals() {
-        val links = GoLearningLibrary.lessons.mapNotNull { GoLessonPracticeLink.forLesson(it.id) }
-        assertEquals(3, links.size)
+    @Test fun allLinkedExercisesUseTheActualProductionRulesAndReachTheirGoals() {
+        val links = GoLearningLibrary.lessons.flatMap { GoLessonPracticeLink.forLesson(it.id) }
+        assertEquals(5, links.size)
         links.forEach { link ->
             val puzzle = checkNotNull(GoEndgameLibrary.puzzle(link.puzzleId))
             val plan = GoEndgameLibrary.open(puzzle)
@@ -226,6 +226,61 @@ class GoLessonPracticeNavigationTest {
         }
         assertTrue(runBlocking { database.goProgressDao().listAll().isEmpty() })
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+    }
+
+    @Test fun advancedPracticeKeepsUnlocksAndReturnsToItsOwnLesson() {
+        openLessons()
+        val lessons = RoomGoLearningProgressRepository(database)
+        val endgames = RoomGoEndgameProgressRepository(database)
+        val captureId = "shared-liberty-double-capture"
+        val connectionId = "join-three-groups"
+        val captureLesson = "提走最后一口气"
+        val connectionLesson = "连成一个棋组"
+        fun selectLesson(title: String) {
+            compose.onNodeWithText("知识点目录").performScrollTo().performClick()
+            compose.onNodeWithText(title).performScrollTo().performClick()
+            awaitLesson(title)
+        }
+        fun enterAdvanced(id: String) {
+            compose.onNodeWithTag("go_lesson_practice_$id").performScrollTo().performClick()
+        }
+        selectLesson(captureLesson)
+        compose.onNodeWithTag("go_lesson_practice").performScrollTo().assertTextEquals("练习：角上一口气")
+        compose.onNodeWithTag("go_lesson_practice_$captureId").performScrollTo().assertTextEquals("练习：一气双提")
+        capture("advanced-links")
+        enterAdvanced(captureId)
+        awaitTag("go_endgame_practice_locked")
+        compose.onNodeWithTag("go_endgame_practice_locked").performScrollTo().assertTextContains("一气双提", substring = true)
+        assertTrue(runBlocking { endgames.load().completedIds.isEmpty() })
+        capture("advanced-locked")
+        compose.onNodeWithTag("go_endgame_back").performScrollTo().performClick()
+        awaitLesson(captureLesson)
+        val beforeCapture = runBlocking { lessons.load() }
+        val prerequisites = GoEndgameLibrary.puzzles.takeWhile { it.id != captureId }.map { it.id }.toSet()
+        runBlocking { prerequisites.forEach { endgames.complete(it) } }
+        enterAdvanced(captureId)
+        awaitTitle("一气双提")
+        compose.onNodeWithTag("go_endgame_source_lesson").performScrollTo().assertTextContains(captureLesson, substring = true)
+        compose.onNodeWithTag("go_intersection_4_4").performClick()
+        awaitTag("go_endgame_completed")
+        capture("advanced-capture")
+        compose.onNodeWithTag("go_endgame_back").performScrollTo().performClick()
+        awaitLesson(captureLesson)
+        assertEquals(beforeCapture, runBlocking { lessons.load() })
+
+        selectLesson(connectionLesson)
+        val beforeConnection = runBlocking { lessons.load() }
+        compose.onNodeWithTag("go_lesson_practice").performScrollTo().assertTextEquals("练习：连接两子")
+        enterAdvanced(connectionId)
+        awaitTitle("一点接三组")
+        compose.onNodeWithTag("go_endgame_source_lesson").performScrollTo().assertTextContains(connectionLesson, substring = true)
+        compose.onNodeWithTag("go_intersection_6_6").performClick()
+        awaitTag("go_endgame_completed")
+        capture("advanced-connection")
+        compose.onNodeWithTag("go_endgame_back").performScrollTo().performClick()
+        awaitLesson(connectionLesson)
+        assertEquals(beforeConnection, runBlocking { lessons.load() })
+        assertEquals(prerequisites + captureId + connectionId, runBlocking { endgames.load().completedIds })
     }
 
     @Test fun twoMoveCaptureCompletesOnlyAfterBothTargetsAndPersistsProgress() {

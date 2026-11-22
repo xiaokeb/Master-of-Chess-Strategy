@@ -59,7 +59,7 @@ fun GoLearningRoute(
     GoLearningScreen(state, lessons::answer, lessons::selectLesson, { lessons.restart() },
         lessons::retry, onBack, modifier, onPractice = onPractice?.let { navigate -> { link ->
             val current = lessons.state.value
-            if (current.practiceLink() == link) navigate(link)
+            if (link in current.practiceLinks()) navigate(link)
         } })
 }
 
@@ -106,8 +106,12 @@ fun GoLearningScreen(
                         Text("${index + 1}. ${lesson.title}", style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.testTag("go_lesson_title"))
                         Text(lesson.explanation)
-                        Text(lesson.instruction, style = MaterialTheme.typography.bodyLarge)
-                        Text(exercise.feedback, modifier = Modifier.testTag("go_lesson_feedback"))
+                        if (exercise.feedback != lesson.instruction) {
+                            Text(lesson.instruction, style = MaterialTheme.typography.bodyLarge)
+                        }
+                        Text(exercise.feedback, modifier = Modifier.testTag("go_lesson_feedback"),
+                            style = if (exercise.feedback == lesson.instruction) MaterialTheme.typography.bodyLarge
+                                else MaterialTheme.typography.bodyMedium)
                         val enabled = state.canOperate && !exercise.completed
                         when (val goal = lesson.goal) {
                             GoLessonGoal.SecondPass -> Button(onClick = { onAnswer(GoLessonAnswer.Pass) }, enabled = enabled) {
@@ -128,11 +132,17 @@ fun GoLearningScreen(
                             else -> Unit
                         }
                         if (exercise.completed) Text("本项完成", color = MaterialTheme.colorScheme.primary)
-                        val practice = GoLessonPracticeLink.forLesson(lesson.id)
-                        if (practice != null && onPractice != null) {
-                            OutlinedButton(onClick = { onPractice(practice) },
-                                enabled = state.practiceLink() == practice,
-                                modifier = Modifier.testTag("go_lesson_practice")) { Text("对应残局练习") }
+                        if (onPractice != null) {
+                            val links = GoLessonPracticeLink.forLesson(lesson.id)
+                            val available = state.practiceLinks()
+                            for ((index, practice) in links.withIndex()) {
+                                val puzzleTitle = checkNotNull(GoEndgameLibrary.puzzle(practice.puzzleId)).title
+                                OutlinedButton(onClick = { onPractice(practice) }, enabled = practice in available,
+                                    modifier = Modifier.testTag(if (index == 0) "go_lesson_practice"
+                                        else "go_lesson_practice_${practice.puzzleId}")) {
+                                    Text(if (links.size == 1) "对应残局练习" else "练习：$puzzleTitle")
+                                }
+                            }
                         }
                         OutlinedButton(onClick = onRestart, enabled = state.canOperate) { Text("重新练习本项") }
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp),

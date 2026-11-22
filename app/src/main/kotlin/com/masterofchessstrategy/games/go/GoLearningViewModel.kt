@@ -25,9 +25,9 @@ data class GoLearningUiState(
 }
 
 /** Navigation is allowed only after the visible lesson selection is durably saved. */
-internal fun GoLearningUiState.practiceLink(): GoLessonPracticeLink? {
-    val lessonId = exercise?.lesson?.id ?: return null
-    if (!canOperate || error != null || progress.lastLessonId != lessonId) return null
+internal fun GoLearningUiState.practiceLinks(): List<GoLessonPracticeLink> {
+    val lessonId = exercise?.lesson?.id ?: return emptyList()
+    if (!canOperate || error != null || progress.lastLessonId != lessonId) return emptyList()
     return GoLessonPracticeLink.forLesson(lessonId)
 }
 

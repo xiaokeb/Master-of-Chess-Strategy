@@ -2,20 +2,20 @@ package com.masterofchessstrategy.games.go
 
 /** Only reviewed lesson/puzzle pairs can become navigation requests; progress is checked separately. */
 data class GoLessonPracticeLink(val lessonId: String, val puzzleId: String) {
-    init { require(pairs[lessonId] == puzzleId) }
+    init { require(puzzleId in pairs[lessonId].orEmpty()) }
 
     companion object {
         private val pairs = mapOf(
-            "liberties" to "escape-atari",
-            "connection" to "bridge-groups",
-            "capture" to "corner-capture",
+            "liberties" to listOf("escape-atari"),
+            "connection" to listOf("bridge-groups", "join-three-groups"),
+            "capture" to listOf("corner-capture", "shared-liberty-double-capture"),
         )
 
-        fun forLesson(lessonId: String): GoLessonPracticeLink? =
-            pairs[lessonId]?.let { resolve(lessonId, it) }
+        fun forLesson(lessonId: String): List<GoLessonPracticeLink> =
+            pairs[lessonId].orEmpty().mapNotNull { resolve(lessonId, it) }
 
         fun resolve(lessonId: String?, puzzleId: String?): GoLessonPracticeLink? {
-            if (lessonId == null || puzzleId == null || pairs[lessonId] != puzzleId) return null
+            if (lessonId == null || puzzleId == null || puzzleId !in pairs[lessonId].orEmpty()) return null
             if (GoLearningLibrary.lesson(lessonId) == null || GoEndgameLibrary.puzzle(puzzleId) == null) return null
             return GoLessonPracticeLink(lessonId, puzzleId)
         }

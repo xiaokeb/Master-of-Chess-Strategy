@@ -7,3 +7,9 @@
 本节点包括现有六道单步练习与三课入口。多步练习、统一奖励及实体设备继续验收。[发布清单](../../releases/manifests/v0.1.0-go-lesson-practice.1.json)
 
 发布提交为 `3c2473f1ec4a3a0edfb9bf9493a08315a292ccb7`。[源码预发布](https://github.com/xiaokeb/Master-of-Chess-Strategy/releases/tag/v0.1.0-go-lesson-practice.1)
+
+## 进阶练习
+
+提子课增加「一气双提」，连接课增加「一点接三组」，共五个已核验的课程与残局组合。两课分别显示基础、进阶题名。进阶继续使用残局主线顺序，未开放时说明前置关卡。解题只更新残局进度，返回恢复各自课程。课程初次打开时同一提示只显示一次。
+
+15 项 JVM、Pixel 7 Pro 两档字号 4 项仪器调用通过。实际走完就绪、锁定、解锁后进入、通关和返回课程，核看 11 张画面。双 ABI、Debug 和仪器包、Release 主清单通过，Lint 为 0 错误、25 警告。实体设备和其余教学拓展待验收。[进阶发布清单](../../releases/manifests/v0.1.0-go-advanced-lessons.1.json)

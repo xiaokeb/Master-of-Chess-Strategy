@@ -6,17 +6,17 @@ import com.masterofchessstrategy.engine.GoPhase
 import com.masterofchessstrategy.engine.GoPlayer
 
 class GoLessonPracticeLinkTest {
-    @Test fun onlyThreeRealReviewedPairsAreCurrentlyLinked() {
-        val links = GoLearningLibrary.lessons.mapNotNull { GoLessonPracticeLink.forLesson(it.id) }
-        assertEquals(3, links.size)
+    @Test fun reviewedBasicAndAdvancedLinksPreserveLessonOrder() {
+        val links = GoLearningLibrary.lessons.flatMap { GoLessonPracticeLink.forLesson(it.id) }
+        assertEquals(5, links.size)
         links.forEach { link ->
             assertNotNull(GoLearningLibrary.lesson(link.lessonId))
             assertNotNull(GoEndgameLibrary.puzzle(link.puzzleId))
             assertEquals(link, GoLessonPracticeLink.resolve(link.lessonId, link.puzzleId))
         }
-        assertEquals("escape-atari", GoLessonPracticeLink.forLesson("liberties")!!.puzzleId)
-        assertEquals("bridge-groups", GoLessonPracticeLink.forLesson("connection")!!.puzzleId)
-        assertEquals("corner-capture", GoLessonPracticeLink.forLesson("capture")!!.puzzleId)
+        assertEquals(listOf("escape-atari"), GoLessonPracticeLink.forLesson("liberties").map { it.puzzleId })
+        assertEquals(listOf("bridge-groups", "join-three-groups"), GoLessonPracticeLink.forLesson("connection").map { it.puzzleId })
+        assertEquals(listOf("corner-capture", "shared-liberty-double-capture"), GoLessonPracticeLink.forLesson("capture").map { it.puzzleId })
     }
 
     @Test fun unknownMissingAndMismatchedArgumentsAreRejected() {
@@ -30,26 +30,26 @@ class GoLessonPracticeLinkTest {
 
     @Test fun unrelatedLessonsDoNotAcquireFakeCorrespondingPuzzles() {
         listOf("suicide", "ko", "passes", "counting", "agreement", "dispute", "handicap").forEach {
-            assertNull(GoLessonPracticeLink.forLesson(it))
+            assertTrue(GoLessonPracticeLink.forLesson(it).isEmpty())
         }
     }
 
     @Test fun aDataClassCopyCannotForgeAnUnreviewedPair() {
-        val link = GoLessonPracticeLink.forLesson("capture")!!
+        val link = GoLessonPracticeLink.forLesson("capture").first()
         try { link.copy(puzzleId = "bridge-groups"); fail("Forged link accepted") }
         catch (_: IllegalArgumentException) { }
     }
 
     @Test fun pendingFailedOrUnsavedLessonStatesCannotNavigate() {
-        val lesson = GoLearningLibrary.lessons.first()
+        val lesson = checkNotNull(GoLearningLibrary.lesson("connection"))
         val exercise = GoLessonState(lesson, List(81) { 0 }, GoPhase.PLAYING, GoPlayer.BLACK,
             emptySet(), emptySet(), false, lesson.instruction)
-        val ready = GoLearningUiState(exercise = exercise, loading = false)
-        assertEquals(GoLessonPracticeLink.forLesson(lesson.id), ready.practiceLink())
+        val ready = GoLearningUiState(exercise = exercise, loading = false, progress = GoLearningProgress(lastLessonId = lesson.id))
+        assertEquals(GoLessonPracticeLink.forLesson(lesson.id), ready.practiceLinks())
         listOf(ready.copy(loading = true), ready.copy(saving = true), ready.copy(needsSave = true),
             ready.copy(error = "写入失败"), ready.copy(exercise = null),
             ready.copy(progress = GoLearningProgress(lastLessonId = "capture"))).forEach {
-            assertNull(it.practiceLink())
+            assertTrue(it.practiceLinks().isEmpty())
         }
     }
 }
