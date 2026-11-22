@@ -69,6 +69,10 @@ class GoFormalProcessCheckActivity : ComponentActivity() {
                         val value = JSONObject().put("database", name).put("pid", Process.myPid())
                             .put("match_id", saved.matchId).put("phase", match.game.phase.name)
                             .put("result", match.game.result.name)
+                            .put("human_player", saved.config.humanPlayer?.name ?: JSONObject.NULL)
+                            .put("current_player", match.game.currentPlayer.name)
+                            .put("board_size", match.game.boardSize)
+                            .put("board_sha256", sha256(match.game.stones.map(Int::toByte).toByteArray()))
                             .put("resigned_by", match.game.resignedBy?.name ?: JSONObject.NULL)
                             .put("timed_out_by", match.game.timedOutBy?.name ?: JSONObject.NULL)
                             .put("clock_limit", saved.clock?.limitMillis ?: JSONObject.NULL)
@@ -91,6 +95,7 @@ class GoFormalProcessCheckActivity : ComponentActivity() {
                             .put("assessment_finished", match.assessmentResult?.isFinished ?: false)
                             .put("black_confirmed", match.game.blackConfirmed).put("white_confirmed", match.game.whiteConfirmed)
                             .put("archive_count", withContext(Dispatchers.IO) { db.goAiCheckpointDao().listArchives().size })
+                            .put("record_count", withContext(Dispatchers.IO) { db.gameRecordDao().listAll().size })
                             .toString()
                         if (value != last) {
                             withContext(Dispatchers.IO) {

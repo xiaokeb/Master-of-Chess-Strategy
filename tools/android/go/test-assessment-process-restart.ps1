@@ -1,7 +1,8 @@
 param(
     [Parameter(Mandatory)][string]$Adb,
     [Parameter(Mandatory)][string]$Device,
-    [Parameter(Mandatory)][string]$OutputDirectory
+    [Parameter(Mandatory)][string]$OutputDirectory,
+    [switch]$CustomSetup
 )
 
 $ErrorActionPreference = 'Stop'
@@ -52,7 +53,8 @@ function Wait-Proof([string]$Path, [int]$DifferentFrom, [scriptblock]$Ready) {
 
 if (Get-OwnerPid) { throw 'A Go test process is already active' }
 $out = New-Item -ItemType Directory -Path $OutputDirectory
-foreach ($mode in @('assessment-playing', 'assessment-final')) {
+$cases = if ($CustomSetup) { @('custom-playing', 'custom-final') } else { @('assessment-playing', 'assessment-final') }
+foreach ($mode in $cases) {
     $token = [guid]::NewGuid().ToString()
     $log = Join-Path $out "$mode-seed.log"
     & $Adb -s $Device shell am instrument -w -r -e class $selector -e go_process_token $token -e go_process_case $mode "$app.test/androidx.test.runner.AndroidJUnitRunner" *> $log
@@ -70,7 +72,7 @@ foreach ($mode in @('assessment-playing', 'assessment-final')) {
     $match = [guid]::ParseExact([Convert]::ToHexString($hash), 'N').ToString()
     $proofPath = "files/go-formal-process-qa/go-formal-process-qa-$token.json"
     $launch = @('shell', 'am', 'start', '-W', '-n', $activity, '--es', 'owned_database', $db, '--es', 'match_id', $match)
-    $finished = $mode -eq 'assessment-final'
+    $finished = $mode.EndsWith('-final')
     $phase = if ($finished) { 'FINISHED' } else { 'PLAYING' }
     $rounds = if ($finished) { 5 } else { 2 }
     $rating = if ($finished) { 400 } else { 500 }
@@ -80,9 +82,27 @@ foreach ($mode in @('assessment-playing', 'assessment-final')) {
         $ready = { param($p) $p.phase -eq $phase -and (!$finished -or $p.completion_stored) }
         $before = Wait-Proof $proofPath 0 $ready
         if ($before.database -cne $db -or $before.match_id -cne $match -or
-            $before.assessment_rounds -ne $rounds -or $before.assessment_rating -ne $rating -or
+            $before.checkpoint_sha256 -cnotmatch '^[0-9a-f]{64}$') { throw "Unexpected checkpoint for $mode" }
+        if ($CustomSetup) {
+            $board = [byte[]]::new(13 * 13)
+            $board[0] = 1
+            $board[14] = 2
+            $board[28] = 1
+            $board[168] = 2
+            $boardHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($board)).ToLowerInvariant()
+            $expectedEvents = if ($finished) { 3 } else { 2 }
+            $expectedRecords = if ($finished) { 1 } else { 0 }
+            $result = if ($finished) { 'FIRST_PLAYER_WIN' } else { 'ONGOING' }
+            if ($before.board_size -ne 13 -or $before.board_sha256 -cne $boardHash -or
+                $before.human_player -cne 'WHITE' -or $before.current_player -cne 'WHITE' -or
+                $before.opening_sha256 -cnotmatch '^[0-9a-f]{64}$' -or $before.opening_event_count -ne 0 -or
+                $before.event_count -ne $expectedEvents -or $before.result -cne $result -or
+                $before.archive_count -ne $expectedRecords -or $before.record_count -ne $expectedRecords) {
+                throw "Unexpected custom setup state for $mode"
+            }
+        } elseif ($before.assessment_rounds -ne $rounds -or $before.assessment_rating -ne $rating -or
             $before.assessment_finished -ne $finished -or $before.event_count -ne $events -or
-            $before.archive_count -ne $rounds -or $before.checkpoint_sha256 -cnotmatch '^[0-9a-f]{64}$') {
+            $before.archive_count -ne $rounds) {
             throw "Unexpected placement result for $mode"
         }
         $before | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $out "$mode-before.json")

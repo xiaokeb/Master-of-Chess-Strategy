@@ -1,0 +1,74 @@
+{
+  "tag": "v0.1.0-go-free-setup-process.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 6,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "5fa4bf48c7713e60cd18d0ee1df4a0b34fff888f00600c628c66d4488018ea4b",
+      "app/build/outputs/apk/debug/app-debug.apk": "b6299ba7627602aba4cf956cda22ee9b3e0249f2885a36a2419228c37b0a746d"
+    },
+    "baseline": "770e09dd2cb08fc8b4acc3e358fb7a5ed245e9f2",
+    "lint_warnings": 25,
+    "lint_errors": 0,
+    "overlays": [
+      {
+        "sha256": "d1bcd6841003a6b2b90d0e7403afb864a6cf6101f70a15b20b8f3e32e457602b",
+        "working_sha256": "d1bcd6841003a6b2b90d0e7403afb864a6cf6101f70a15b20b8f3e32e457602b",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/data/GoFormalProcessCheckpointInstrumentedTest.kt"
+      },
+      {
+        "sha256": "9ffb9097a0a6baca2ee275b283abf7562c1f27772273b2c4410257484d42bcfd",
+        "working_sha256": "9ffb9097a0a6baca2ee275b283abf7562c1f27772273b2c4410257484d42bcfd",
+        "path": "app/src/debug/kotlin/com/masterofchessstrategy/ui/GoFormalProcessCheckActivity.kt"
+      },
+      {
+        "sha256": "ac7603f8a3561dcf7b8cde74e279521b1e0ab0fa210233c915dd8a3fc44eedd7",
+        "working_sha256": "409ba70bc7a972f714c11612ad77bc96c9a7fe060a1c2ab8ee9d08461f8343c6",
+        "path": "tools/android/go/test-assessment-process-restart.ps1"
+      }
+    ],
+    "candidate": "go-free-setup-process1",
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.games.go.data.GoAiCheckpointAdmissionTest",
+        "tests": 9
+      }
+    ],
+    "release_manifest": "processed"
+  },
+  "device": {
+    "abi": "x86_64",
+    "avd": "Pixel_7_Pro",
+    "process_restart": [
+      {
+        "checkpoint_sha256": "859e6fe9df6fe998f7bb9a49f36859d147aba9498cc3e4744117b52dfd751579",
+        "record_count": 0,
+        "scenario": "custom-playing",
+        "event_count": 2,
+        "opening_sha256": "801d7979072bae1db8db377e1cb2d10585ca4c121f9fdd676dc4585a5a3303b3",
+        "before_sha256": "255eddc93bea7acea82ab823d52a67c16ac20c3c3c5f570720862b8852146e6e",
+        "board_sha256": "1de3fa6e3d3620c8cc4664efa594bee2f83f73f012985275b6064a2f1920d218",
+        "seed_sha256": "5ee56d125dc0a282e8a0d38c1069efb4a578de3a967132a80812dbfcba558b46",
+        "after_sha256": "a1e6dcc1936f9706657910f42a4333246705ae7ba7936b4c9314e925e57fee47"
+      },
+      {
+        "checkpoint_sha256": "76fdfe4e386f78bcfd6d5c2689c3d39967c874ad9aea5892ca7549c8d9c1f360",
+        "record_count": 1,
+        "scenario": "custom-final",
+        "event_count": 3,
+        "opening_sha256": "801d7979072bae1db8db377e1cb2d10585ca4c121f9fdd676dc4585a5a3303b3",
+        "before_sha256": "4ecd0fe3406f506a92ecffd3bd8b7f154bc81556d9bb96cd617984c46850ee93",
+        "board_sha256": "1de3fa6e3d3620c8cc4664efa594bee2f83f73f012985275b6064a2f1920d218",
+        "seed_sha256": "ac374f2dde32ee1f635aed0b034dad45b2e93bbc074dc7ffc65095bc0230f6ab",
+        "after_sha256": "1c9cd57035f9001219ac1b80b4cdb16aff3a271f41b6fde40c1fa02c3bbdea37"
+      }
+    ],
+    "folder": ".build/go-free-setup-process1/process"
+  }
+}

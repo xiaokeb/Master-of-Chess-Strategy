@@ -13,6 +13,7 @@ import com.masterofchessstrategy.games.go.GoAiMatchConfig
 import com.masterofchessstrategy.games.go.GoAiDifficulty
 import com.masterofchessstrategy.games.go.GoAiMatchFileCodec
 import com.masterofchessstrategy.games.go.GoAiSavedMatch
+import com.masterofchessstrategy.games.go.GoAiOpening
 import com.masterofchessstrategy.games.go.GoClockMode
 import com.masterofchessstrategy.games.go.GoEndgameProgress
 import com.masterofchessstrategy.games.go.GoLearningLibrary
@@ -34,7 +35,8 @@ class GoFormalProcessCheckpointInstrumentedTest {
         val mode = args.getString("go_process_case") ?: "standard"
         require(UUID.fromString(token).toString() == token)
         require(mode in setOf("standard", "opening", "continuation", "long19", "resignation",
-            "timed-human", "timed-auto", "per-move-human", "assessment-playing", "assessment-final"))
+            "timed-human", "timed-auto", "per-move-human", "assessment-playing", "assessment-final",
+            "custom-playing", "custom-final"))
         val name = "go-formal-process-qa-$token.db"
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         check(!context.getDatabasePath(name).exists())
@@ -46,6 +48,13 @@ class GoFormalProcessCheckpointInstrumentedTest {
                 GoAiLegacySource { null })
             if (mode.startsWith("assessment-")) {
                 seedAssessment(bundle, matchId, terminal = mode == "assessment-final")
+                assertEquals(0, db.goRankedDao().starts().size)
+                assertEquals(0, db.goRankedDao().settlements().size)
+                println("GO_PROCESS_FIXTURE $name $matchId $mode")
+                return@runBlocking
+            }
+            if (mode.startsWith("custom-")) {
+                seedCustomSetup(bundle, matchId, terminal = mode == "custom-final")
                 assertEquals(0, db.goRankedDao().starts().size)
                 assertEquals(0, db.goRankedDao().settlements().size)
                 println("GO_PROCESS_FIXTURE $name $matchId $mode")
@@ -106,6 +115,25 @@ class GoFormalProcessCheckpointInstrumentedTest {
             if (externalToken == null) check(context.deleteDatabase(name))
         }
         Unit
+    }
+
+    private suspend fun seedCustomSetup(bundle: GoCompleteStorageBundle, matchId: String, terminal: Boolean) {
+        val opening = GoAiOpening.fromSgf("(;FF[4]GM[1]SZ[13]AB[aa]AW[mm]PL[W])")
+        val config = opening.config(GoPlayer.WHITE)
+        val repository = bundle.formalAiRepository()
+        opening.createEngine().use { native ->
+            val original = opening.copyBytes()
+            repository.save(GoAiSavedMatch(matchId, config, native.serialize(), openingBytes = original))
+            for (point in listOf(BoardPosition(1, 1), BoardPosition(2, 2))) {
+                assertEquals(ActionResult.Accepted, native.apply(GoAction.Place(point)))
+            }
+            if (terminal) assertEquals(ActionResult.Accepted, native.apply(GoAction.Resign(GoPlayer.WHITE)))
+            val saved = GoAiSavedMatch(matchId, config, native.serialize(), completionReserved = terminal,
+                openingBytes = original)
+            repository.save(saved)
+            if (terminal) bundle.completedMatchSink().storeCompleted(saved)
+            assertArrayEquals(GoAiMatchFileCodec.encode(saved), GoAiMatchFileCodec.encode(checkNotNull(repository.load())))
+        }
     }
 
     private suspend fun seedAssessment(bundle: GoCompleteStorageBundle, matchId: String, terminal: Boolean) {
