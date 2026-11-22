@@ -136,6 +136,7 @@ class CompetitionMahjongChallengeViewModel(
         val challenge = checkNotNull(CompetitionMahjongChallengeLibrary.challenge(id)) { "牌型题不存在" }
         val hand = when {
             CompetitionMahjongPracticePosition.isDiscardTraining(id) -> CompetitionMahjongPracticePosition.discardOpeningHand(id)
+            CompetitionMahjongPracticePosition.isFalseWinReview(id) -> CompetitionMahjongPracticePosition.verifyFalseWin(id)
             id == CompetitionMahjongPracticePosition.PUZZLE_ID -> CompetitionMahjongPracticePosition.verifySevenPairs()
             id == CompetitionMahjongPracticePosition.NINE_GATES_PUZZLE_ID -> CompetitionMahjongPracticePosition.verifyNineGates()
             id == CompetitionMahjongPracticePosition.ALL_GREEN_PUZZLE_ID -> CompetitionMahjongPracticePosition.verifyAllGreen()

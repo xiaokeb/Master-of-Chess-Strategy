@@ -10,16 +10,19 @@ import kotlin.random.Random
 class CompetitionMahjongChallengeLibraryTest {
     @Test fun catalogHasFourLevelsThemesAndTraceableOfficialFanIds() {
         val values = CompetitionMahjongChallengeLibrary.challenges
-        assertEquals(21, values.size)
+        assertEquals(23, values.size)
         assertEquals(values.size, values.map { it.id }.toSet().size)
         CompetitionMahjongChallengeLevel.entries.forEach { level ->
-            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 12 else 3, values.count { it.level == level })
+            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 14 else 3, values.count { it.level == level })
         }
         CompetitionMahjongChallengeTheme.entries.forEach { theme ->
             assertTrue(values.any { it.theme == theme })
         }
         values.forEach { challenge ->
             assertTrue(challenge.sourceFanIds.all { it in 1..81 })
+            if (CompetitionMahjongPracticePosition.isFalseWinReview(challenge.id))
+                assertEquals("3.11.6", challenge.sourceRuleSection)
+            else assertTrue(challenge.sourceFanIds.isNotEmpty())
             val expected = if (CompetitionMahjongPracticePosition.isDiscardTraining(challenge.id)) 0 else 1
             assertEquals(expected, challenge.choices.count { it.id == challenge.correctChoiceId })
         }
@@ -64,7 +67,9 @@ class CompetitionMahjongChallengeLibraryTest {
         assertEquals(values.take(18).map { it.id }.toSet(), progress.completedIds)
         for ((id, points) in listOf(CompetitionMahjongPracticePosition.PURE_STRAIGHT_DISCARD_ID to 1010,
             CompetitionMahjongPracticePosition.MIXED_TRIPLE_CHOW_DISCARD_ID to 1090,
-            CompetitionMahjongPracticePosition.FOUR_CONCEALED_CLAIM_ID to 1170)) {
+            CompetitionMahjongPracticePosition.FOUR_CONCEALED_CLAIM_ID to 1170,
+            CompetitionMahjongPracticePosition.WRONG_TILE_ID to 1250,
+            CompetitionMahjongPracticePosition.NOT_READY_ID to 1330)) {
             assertTrue(progress.isUnlocked(id))
             progress = progress.complete(id)
             assertEquals(EndgameRewardTotals(progress.completedIds.size, progress.completedIds.size, points),

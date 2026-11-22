@@ -24,6 +24,7 @@ class CompetitionMahjongChallenge(
     val correctChoiceId: String,
     val explanation: String,
     sourceFanIds: Set<Int>,
+    val sourceRuleSection: String? = null,
 ) {
     val choices: List<CompetitionMahjongChallengeChoice> = Collections.unmodifiableList(choices.toList())
     val sourceFanIds: Set<Int> = Collections.unmodifiableSet(sourceFanIds.toSet())
@@ -37,7 +38,7 @@ class CompetitionMahjongChallenge(
             require(choices.size in 2..4 && choices.map { it.id }.toSet().size == choices.size)
             require(choices.any { it.id == correctChoiceId })
         }
-        require(sourceFanIds.isNotEmpty() && sourceFanIds.all { it in 1..81 })
+        require(sourceFanIds.all { it in 1..81 } && (sourceFanIds.isNotEmpty() || !sourceRuleSection.isNullOrBlank()))
     }
 }
 
@@ -75,7 +76,11 @@ class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjo
             attempts = current.attempts + 1,
             selectedChoiceId = choiceId,
             completed = correct,
-            feedback = if (correct) challenge.explanation else "这项不符合题面条件，请结合番种定义和排斥关系再判断。",
+            feedback = when {
+                correct -> challenge.explanation
+                challenge.sourceRuleSection != null -> "这项不符合题面条件，请先核对是否听牌，再判断应付罚分。"
+                else -> "这项不符合题面条件，请结合番种定义和排斥关系再判断。"
+            },
         )
         return current
     }
@@ -111,6 +116,14 @@ object CompetitionMahjongChallengeLibrary {
                           level: CompetitionMahjongChallengeLevel, prompt: String, correct: String,
                           explanation: String, source: Set<Int>, vararg choices: CompetitionMahjongChallengeChoice) =
         CompetitionMahjongChallenge(id, title, theme, level, prompt, choices.toList(), correct, explanation, source)
+
+    private fun falseWinReview(id: String, title: String, prompt: String, correct: String, explanation: String) =
+        CompetitionMahjongChallenge(id, title, CompetitionMahjongChallengeTheme.CONTEXT,
+            CompetitionMahjongChallengeLevel.MASTER, prompt, listOf(
+                choice("a", "停和，各付 10 分"),
+                choice("b", "停和，各付 20 分"),
+                choice("c", "允许和牌"),
+            ), correct, explanation, emptySet(), sourceRuleSection = "3.11.6")
 
     val challenges: List<CompetitionMahjongChallenge> = Collections.unmodifiableList(listOf(
         challenge("seven-plus-flowers", "花牌不能补门槛", CompetitionMahjongChallengeTheme.THRESHOLD,
@@ -216,6 +229,12 @@ object CompetitionMahjongChallengeLibrary {
             CompetitionMahjongChallengeTheme.CONTEXT, CompetitionMahjongChallengeLevel.MASTER,
             "你是东家。打出一张牌，保留手中的四副暗刻。南家下一手摸切，观察南家的弃牌能否成将。", "",
             "四副暗刻已在手中，南家打出的东风组成将牌，四暗刻计 64 番。三家各付 8 分，南家另付本盘总番。", setOf(12)),
+        falseWinReview(CompetitionMahjongPracticePosition.WRONG_TILE_ID, "听东误报南",
+            "你坐东家，手中六对加一张东风。南家打出南风，你误报和牌。裁判如何处理？", "a",
+            "手牌已听东，南风不能完成七对。本盘停和，三家各得 10 分，东家共付 30 分。"),
+        falseWinReview(CompetitionMahjongPracticePosition.NOT_READY_ID, "未听却报和",
+            "你坐东家，眼前的十三张手牌还未听牌。南家打出南风，你误报和牌。裁判如何处理？", "b",
+            "报和时还未听牌。本盘停和，三家各得 20 分，东家共付 60 分。"),
     ))
 
     init {

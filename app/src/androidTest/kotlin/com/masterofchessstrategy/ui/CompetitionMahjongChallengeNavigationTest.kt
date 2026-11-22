@@ -120,6 +120,42 @@ class CompetitionMahjongChallengeNavigationTest {
         resultText = "十三幺计 88 番", rewardText = "18 星 · 930 分",
     )
 
+    @Test fun wrongTileWhileReadyPaysTenPerOpponent() = verifyFalseWinReview(
+        CompetitionMahjongPracticePosition.WRONG_TILE_ID, answer = "a", wrong = "b", points = 10, rewards = "22 星 · 1250 分",
+    )
+
+    @Test fun falseDeclarationBeforeTenpaiPaysTwentyPerOpponent() = verifyFalseWinReview(
+        CompetitionMahjongPracticePosition.NOT_READY_ID, answer = "b", wrong = "a", points = 20, rewards = "23 星 · 1330 分",
+    )
+
+    private fun verifyFalseWinReview(id: String, answer: String, wrong: String, points: Int, rewards: String) {
+        val store = RoomCompetitionMahjongChallengeProgress(database)
+        val preceding = CompetitionMahjongChallengeLibrary.challenges.takeWhile { it.id != id }.map { it.id }.toSet()
+        runBlocking {
+            preceding.forEach { store.complete(it) }
+            store.select(id)
+        }
+        compose.onNodeWithTag(HOME_COMPETITION_MAHJONG_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag("competition_challenge_entry").performScrollTo().performClick()
+        waitFor("competition_mahjong_challenge_hand")
+        compose.onNodeWithText("规则索引：竞赛规则第 3.11.6 节").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("competition_mahjong_challenge_choice_$wrong").performScrollTo().performClick()
+        compose.onNodeWithTag("competition_mahjong_challenge_feedback").performScrollTo()
+            .assertTextContains("先核对是否听牌", substring = true)
+        assertEquals(preceding, runBlocking { store.load().completedIds })
+        capture("false-win-rejected")
+
+        compose.onNodeWithTag("competition_mahjong_challenge_choice_$answer").performScrollTo().performClick()
+        waitFor("competition_mahjong_challenge_completed")
+        compose.onNodeWithTag("competition_mahjong_challenge_rewards").performScrollTo()
+            .assertTextEquals("训练奖励 $rewards")
+        compose.onNodeWithTag("competition_mahjong_challenge_feedback").performScrollTo()
+            .assertTextContains("三家各得 $points 分", substring = true)
+        assertEquals(preceding + id, runBlocking { store.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        capture("false-win-explained")
+    }
+
     @Test fun concealedPungsTrainingClaimsTheDiscardAndShowsAsymmetricPayment() = verifyDiscardExercise(
         CompetitionMahjongPracticePosition.FOUR_CONCEALED_CLAIM_ID, wrong = 0, correct = 31, draw = "东",
         resultText = "四暗刻计 64 番", rewardText = "21 星 · 1170 分", claim = true,

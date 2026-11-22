@@ -112,8 +112,9 @@ internal fun CompetitionMahjongChallengeScreen(
                             val source = exercise.discardFromSeat
                             Text(if (source == null) "本次摸牌 $name" else "${competitionMahjongTileName(27 + source)}家弃牌 $name")
                         }
-                        Text("规则索引：官方番种 ID " + exercise.challenge.sourceFanIds.sorted().joinToString("、"),
-                            style = MaterialTheme.typography.bodySmall)
+                        val source = exercise.challenge.sourceRuleSection?.let { "竞赛规则第 $it 节" }
+                            ?: "官方番种 ID " + exercise.challenge.sourceFanIds.sorted().joinToString("、")
+                        Text("规则索引：$source", style = MaterialTheme.typography.bodySmall)
                     } else Text(if (state.loading) "正在读取牌型题…" else "牌型题暂不可用")
                 }
             }
