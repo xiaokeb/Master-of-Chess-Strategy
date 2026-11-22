@@ -41,7 +41,7 @@ internal class RoomGoRankedMatchCreator(
         }
         val start = withContext(worker) {
             if (!match.config.automatic && match.config.handicapStones == 0 &&
-                match.config.perMoveLimitSeconds == null && match.config.streak == null && !match.hasSpecifiedOpening)
+                match.config.perMoveLimitSeconds == null && !match.config.seriesMode && !match.hasSpecifiedOpening)
                 admitGoRankedStart(match, clock())
             else {
                 val admitted = admitGoAiCheckpoint(match)
@@ -51,6 +51,7 @@ internal class RoomGoRankedMatchCreator(
                         opening.contentEquals(match.copyBytes())
                 require(admitted.phase == GoPhase.PLAYING && atStart &&
                     (match.config.streak == null || match.config.streak == GoStreakProgress()) &&
+                    (match.config.assessment == null || match.config.assessment.completedGames == 0) &&
                     !match.completionReserved && match.undoUsed == 0 && match.hintUsed == 0 &&
                     !match.autoContinueEnabled && match.autoContinueGameNumber == 1 && match.autoContinueMaxGames == 1 &&
                     GoAiMatchFileCodec.encode(admitted.match()).contentEquals(GoAiMatchFileCodec.encode(match))) {
@@ -96,7 +97,7 @@ internal class RoomGoRankedMatchCreator(
                 }
             } else require(checkExpected && abandonOngoing) { "请先完成并保存当前围棋对局" }
         }
-        val difficulty = when (match.config.difficulty) {
+        val difficulty = if (match.config.assessment != null) Difficulty.EASY else when (match.config.difficulty) {
             GoAiDifficulty.SIMPLE -> Difficulty.EASY
             GoAiDifficulty.MEDIUM -> Difficulty.MEDIUM
             GoAiDifficulty.HARD -> Difficulty.HARD

@@ -49,10 +49,11 @@ data class GoAiMatchUiState(
     } else immediateHumanCompletion
     val humanCanPlay get() = !closed && game.canAct && game.phase == GoPhase.PLAYING && !config.isAi(game.currentPlayer)
     val canReviewScore get() = !closed && game.canAct && game.phase == GoPhase.SCORING
-    val canRequestHint get() = humanCanPlay && !hintThinking && hintUsed < config.difficulty.hintLimit
-    val canUndo get() = !closed && game.canOperate && game.timedOutBy == null && !completionReserved &&
+    val canRequestHint get() = config.assessment == null && humanCanPlay &&
+        !hintThinking && hintUsed < config.difficulty.hintLimit
+    val canUndo get() = config.assessment == null && !closed && game.canOperate && game.timedOutBy == null && !completionReserved &&
         !completionPending && eventCount > openingEventCount && undoUsed < config.difficulty.undoLimit
-    val canSwitchMode get() = config.streak == null && !closed && game.canAct &&
+    val canSwitchMode get() = !config.seriesMode && !closed && game.canAct &&
         game.phase == GoPhase.PLAYING && !completionReserved
     val canConfigureAutoContinue get() = !closed && config.automatic && game.canAct &&
         game.phase == GoPhase.PLAYING && !completionReserved
@@ -62,6 +63,17 @@ data class GoAiMatchUiState(
     internal val streakResult get() = config.streak?.takeIf {
         game.phase == GoPhase.FINISHED && game.result != GameResult.ONGOING
     }?.after(game.result, config.difficulty)
+
+    internal val assessmentResult get() = config.assessment?.takeIf {
+        game.phase == GoPhase.FINISHED && game.result != GameResult.ONGOING
+    }?.after(game.result, config.difficulty)
+
+    internal val seriesNextConfig: GoAiMatchConfig? get() {
+        streakResult?.let { (difficulty, progress) -> return config.copy(difficulty = difficulty, streak = progress) }
+        if (game.phase != GoPhase.FINISHED || game.result == GameResult.ONGOING) return null
+        val (difficulty, progress) = config.assessment?.next(game.result, config.difficulty) ?: return null
+        return config.copy(difficulty = difficulty, assessment = progress)
+    }
 }
 
 /** Control calls use the owner's dispatcher. Native candidates/save/disposal use one worker mutex.
@@ -184,7 +196,7 @@ class GoAiMatchSession(
                         if (saved == null) persistCheckpoint(GoAiSavedMatch(id, config, bytes, undoUsed,
                             openingBytes = selectedOpening?.copyBytes(), clock = loadedClock), freshStandard =
                             config.humanPlayer != null && config.handicapStones == 0 && selectedOpening == null &&
-                                config.perMoveLimitSeconds == null && config.streak == null)
+                                config.perMoveLimitSeconds == null && !config.seriesMode)
                         var reserved = saved?.completionReserved ?: false
                         var stored = false
                         val immediateCompletion = if (config.automatic) {
@@ -330,7 +342,8 @@ class GoAiMatchSession(
         val previous = mutableState.value
         if (disposed.get() || !lifetime.isActive || !previous.game.canOperate || previous.completionPending) return false
         if (automaticContinuation && !previous.autoContinuePending) return false
-        if (previous.config.streak != null && previous.streakResult == null) return false
+        val continuation = previous.seriesNextConfig
+        if (previous.config.seriesMode && continuation == null) return false
         if (previous.game.phase == GoPhase.FINISHED && completedSink == null) {
             mutableState.value = previous.copy(game = previous.game.copy(error = "本局已结束；完成棋谱保存功能准备好后才能重开。"))
             return false
@@ -340,9 +353,7 @@ class GoAiMatchSession(
         mutableState.value = mutableState.value.copy(paused = true, thinking = false,
             game = previous.game.copy(saving = true, error = null))
         val nextId = UUID.randomUUID().toString()
-        val config = previous.streakResult?.let { (difficulty, progress) ->
-            previous.config.copy(difficulty = difficulty, streak = progress)
-        } ?: previous.config
+        val config = continuation ?: previous.config
         val nextAutoEnabled = previous.autoContinueEnabled && previous.config.automatic
         val nextAutoMax = if (nextAutoEnabled) previous.autoContinueMaxGames else 1
         val nextAutoNumber = if (automaticContinuation) previous.autoContinueGameNumber + 1 else 1
@@ -386,7 +397,7 @@ class GoAiMatchSession(
                             openingBytes = opening?.copyBytes(), autoContinueEnabled = nextAutoEnabled,
                             autoContinueMaxGames = nextAutoMax, autoContinueGameNumber = nextAutoNumber, clock = nextClock),
                             freshStandard = config.humanPlayer != null && config.handicapStones == 0 && opening == null &&
-                                config.perMoveLimitSeconds == null && config.streak == null)
+                                config.perMoveLimitSeconds == null && !config.seriesMode)
                         engine?.close(); engine = null
                         if (!disposed.get() && lifetime.isActive) {
                             engine = candidate; candidate = null
@@ -428,7 +439,7 @@ class GoAiMatchSession(
     /** Replace this activity with a new training opening only after the caller confirms its preview. */
     fun replaceOpening(replacement: GoAiOpening, completedSink: GoAiCompletedMatchSink? = null): Boolean {
         val previous = mutableState.value
-        if (previous.config.streak != null) return false
+        if (previous.config.seriesMode) return false
         if (disposed.get() || !lifetime.isActive || !previous.game.canOperate || previous.completionPending) return false
         if (previous.game.phase == GoPhase.FINISHED && completedSink == null) {
             mutableState.value = previous.copy(game = previous.game.copy(

@@ -79,7 +79,7 @@ internal class GoAiSetupViewModel(
         if (disposed.get() || current.loading || current.busy || current.readyMatch != null || current.pendingConfig != null) return
         if (!repository.isCurrent) { invalidate(); return }
         val snapshot = current.snapshot ?: return
-        val difficulty = when (config.difficulty) {
+        val difficulty = if (config.assessment != null) Difficulty.EASY else when (config.difficulty) {
             GoAiDifficulty.SIMPLE -> Difficulty.EASY
             GoAiDifficulty.MEDIUM -> Difficulty.MEDIUM
             GoAiDifficulty.HARD -> Difficulty.HARD

@@ -6,15 +6,18 @@ import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.BoardPosition
 import com.masterofchessstrategy.engine.GoAction
+import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GoPlayer
 import com.masterofchessstrategy.engine.NativeGoEngine
 import com.masterofchessstrategy.games.go.GoAiMatchConfig
+import com.masterofchessstrategy.games.go.GoAiDifficulty
 import com.masterofchessstrategy.games.go.GoAiMatchFileCodec
 import com.masterofchessstrategy.games.go.GoAiSavedMatch
 import com.masterofchessstrategy.games.go.GoEndgameProgress
 import com.masterofchessstrategy.games.go.GoLearningLibrary
 import com.masterofchessstrategy.games.go.GoLearningProgress
 import com.masterofchessstrategy.games.go.GoTurnClock
+import com.masterofchessstrategy.games.go.GoAssessmentProgress
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertArrayEquals
@@ -29,7 +32,8 @@ class GoFormalProcessCheckpointInstrumentedTest {
         val token = externalToken ?: UUID.randomUUID().toString()
         val mode = args.getString("go_process_case") ?: "standard"
         require(UUID.fromString(token).toString() == token)
-        require(mode in setOf("standard", "opening", "continuation", "long19", "resignation", "timed-human", "timed-auto"))
+        require(mode in setOf("standard", "opening", "continuation", "long19", "resignation",
+            "timed-human", "timed-auto", "assessment-playing", "assessment-final"))
         val name = "go-formal-process-qa-$token.db"
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         check(!context.getDatabasePath(name).exists())
@@ -39,6 +43,13 @@ class GoFormalProcessCheckpointInstrumentedTest {
             val bundle = GoCompleteStorageBundle(db, GoLocalLegacySource { null },
                 GoLearningLegacySource { GoLearningProgress() }, GoEndgameLegacySource { GoEndgameProgress() },
                 GoAiLegacySource { null })
+            if (mode.startsWith("assessment-")) {
+                seedAssessment(bundle, matchId, terminal = mode == "assessment-final")
+                assertEquals(0, db.goRankedDao().starts().size)
+                assertEquals(0, db.goRankedDao().settlements().size)
+                println("GO_PROCESS_FIXTURE $name $matchId $mode")
+                return@runBlocking
+            }
             val longGame = mode == "long19"
             val timed = mode == "timed-human" || mode == "timed-auto"
             val automatic = longGame || mode == "continuation" || mode == "timed-auto"
@@ -91,5 +102,29 @@ class GoFormalProcessCheckpointInstrumentedTest {
             if (externalToken == null) check(context.deleteDatabase(name))
         }
         Unit
+    }
+
+    private suspend fun seedAssessment(bundle: GoCompleteStorageBundle, matchId: String, terminal: Boolean) {
+        val repository = bundle.formalAiRepository()
+        val last = if (terminal) 5 else 3
+        var config = GoAiMatchConfig(9, difficulty = GoAiDifficulty.MEDIUM, assessment = GoAssessmentProgress())
+        for (round in 1..last) {
+            val id = if (round == last) matchId else UUID.nameUUIDFromBytes("$matchId:$round".toByteArray()).toString()
+            NativeGoEngine(9).use { native ->
+                repository.save(GoAiSavedMatch(id, config, native.serialize()))
+                if (round != last || terminal) {
+                    assertEquals(ActionResult.Accepted, native.apply(GoAction.Resign(GoPlayer.BLACK)))
+                    assertEquals(GameResult.SECOND_PLAYER_WIN, native.gameResult())
+                    val finished = GoAiSavedMatch(id, config, native.serialize(), completionReserved = true)
+                    repository.save(finished)
+                    bundle.completedMatchSink().storeCompleted(finished)
+                }
+            }
+            if (round != last) {
+                val (difficulty, progress) = checkNotNull(config.assessment?.next(GameResult.SECOND_PLAYER_WIN, config.difficulty))
+                config = config.copy(difficulty = difficulty, assessment = progress)
+            }
+        }
+        assertEquals(matchId, repository.load()?.matchId)
     }
 }

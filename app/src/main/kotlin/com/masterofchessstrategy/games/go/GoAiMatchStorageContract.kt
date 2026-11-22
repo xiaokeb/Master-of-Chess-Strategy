@@ -25,14 +25,19 @@ data class GoAiMatchConfig(
     val blind: Boolean = false,
     val perMoveLimitSeconds: Int? = null,
     val streak: GoStreakProgress? = null,
+    val assessment: GoAssessmentProgress? = null,
 ) {
     init {
         require(boardSize in setOf(9, 13, 19) && (handicapStones == 0 || handicapStones in 2..9))
         require(perMoveLimitSeconds == null || perMoveLimitSeconds in 1..600)
         require(streak == null || (humanPlayer == GoPlayer.BLACK && handicapStones == 0 &&
             !blind && perMoveLimitSeconds == null))
+        require(assessment == null || (streak == null && humanPlayer == GoPlayer.BLACK &&
+            handicapStones == 0 && !blind && perMoveLimitSeconds == null))
+        require(assessment == null || assessment.completedGames > 0 || difficulty == GoAiDifficulty.MEDIUM)
     }
     val automatic get() = humanPlayer == null
+    internal val seriesMode get() = streak != null || assessment != null
     fun isAi(player: GoPlayer) = humanPlayer != player
 }
 
@@ -64,7 +69,8 @@ class GoAiSavedMatch(
         require(if (config.perMoveLimitSeconds == null) clock?.mode != GoClockMode.PER_MOVE
             else clock != null && clock.mode == GoClockMode.PER_MOVE &&
                 clock.limitMillis == config.perMoveLimitSeconds * 1_000L) { "围棋每步限时与存档配置不符" }
-        require(config.streak == null || (!automaticUsed && opening == null && clock == null))
+        require(!config.seriesMode || (!automaticUsed && opening == null && clock == null))
+        require(config.assessment == null || (undoUsed == 0 && hintUsed == 0))
     }
     fun copyBytes() = saved.copyOf()
     fun copyOpeningBytes() = opening?.copyOf()

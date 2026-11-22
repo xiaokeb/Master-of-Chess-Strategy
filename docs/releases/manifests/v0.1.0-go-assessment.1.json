@@ -1,0 +1,258 @@
+{
+  "tag": "v0.1.0-go-assessment.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 20,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "2f795e000166a465ac8bde469373c49e718648d7b1833b46f93f23b65eefb86f",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "168a37eaefc0054c921320c718b46fee467d3e65d2a5eab3cf689209c708fd9f"
+    },
+    "overlays": [
+      {
+        "sha256": "7e5767dc4705e827b4b23bca3c19b267e77ae26b033fff8aceef509e21379431",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAssessmentProgress.kt",
+        "working_sha256": "7e5767dc4705e827b4b23bca3c19b267e77ae26b033fff8aceef509e21379431"
+      },
+      {
+        "sha256": "299263fcf0730dfae8276f82603ad8c8a08f38ca21c95ad27032d8d1daf5b2ab",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiMatchFileRepository.kt",
+        "working_sha256": "299263fcf0730dfae8276f82603ad8c8a08f38ca21c95ad27032d8d1daf5b2ab"
+      },
+      {
+        "sha256": "e7d846b2a081fb94ad0f45c541ee60423daedcd6ea81ab5939d5c331d4bd9049",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiMatchScreen.kt",
+        "working_sha256": "e7d846b2a081fb94ad0f45c541ee60423daedcd6ea81ab5939d5c331d4bd9049"
+      },
+      {
+        "sha256": "12d124dd9b5e9f11b74008333f36c495805f0b87d3969bc9fa295b71c9130468",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiMatchSession.kt",
+        "working_sha256": "12d124dd9b5e9f11b74008333f36c495805f0b87d3969bc9fa295b71c9130468"
+      },
+      {
+        "sha256": "1a12d0c570c6bc2b1c59b58668d7cd2d99345fd0d943022a98f03a57f687121c",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiMatchStorageContract.kt",
+        "working_sha256": "1a12d0c570c6bc2b1c59b58668d7cd2d99345fd0d943022a98f03a57f687121c"
+      },
+      {
+        "sha256": "2829e9c5f9e6be2464c0958068eb84abc87b8c15c61efe1528dcbb417f12e678",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiSetupScreen.kt",
+        "working_sha256": "2829e9c5f9e6be2464c0958068eb84abc87b8c15c61efe1528dcbb417f12e678"
+      },
+      {
+        "sha256": "f11857169ac21e6df4e855413d40d19835097864c40ae82f275aedb5b80cb5f3",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiSetupViewModel.kt",
+        "working_sha256": "f11857169ac21e6df4e855413d40d19835097864c40ae82f275aedb5b80cb5f3"
+      },
+      {
+        "sha256": "711688d6ac747ba869f4d8f292c19352cb57d1654f24dc5d92c3fe713a330e91",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/data/GoAiCheckpointRepository.kt",
+        "working_sha256": "711688d6ac747ba869f4d8f292c19352cb57d1654f24dc5d92c3fe713a330e91"
+      },
+      {
+        "sha256": "9ad8f9a2e40eeee14c43815d7ba0870e09c2474c6a8be1b955c346b8a78cde85",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/data/GoAiRecordProjection.kt",
+        "working_sha256": "9ad8f9a2e40eeee14c43815d7ba0870e09c2474c6a8be1b955c346b8a78cde85"
+      },
+      {
+        "sha256": "1349cf272fa344d23e60bf08cb401ff5f7cb041f7c5e5ac83b63c7e5da3058c4",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/data/GoRankedStartPolicy.kt",
+        "working_sha256": "1349cf272fa344d23e60bf08cb401ff5f7cb041f7c5e5ac83b63c7e5da3058c4"
+      },
+      {
+        "sha256": "b00467bc31de0ba7ccb163334c2c5e49a303b51e065d4aeca454271a6ddef266",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/data/RoomGoAiEntryRepository.kt",
+        "working_sha256": "b00467bc31de0ba7ccb163334c2c5e49a303b51e065d4aeca454271a6ddef266"
+      },
+      {
+        "sha256": "6bad1993f9e325816fd90cbc6d3772dbbf4561704a88b2d9c8da90b0b4c8d2e7",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/data/RoomGoRankedMatchCreator.kt",
+        "working_sha256": "6bad1993f9e325816fd90cbc6d3772dbbf4561704a88b2d9c8da90b0b4c8d2e7"
+      },
+      {
+        "sha256": "8e4dfea15b9fa5dc0f5226ed0467c78b98f6b7f6c7ab4063cd76afc6160c44bc",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoAssessmentChallengeTest.kt",
+        "working_sha256": "8e4dfea15b9fa5dc0f5226ed0467c78b98f6b7f6c7ab4063cd76afc6160c44bc"
+      },
+      {
+        "sha256": "58b6159098b7ba4d05b661819b1525691bba24800705ac8a9be125cb4c4bedc8",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoAssessmentProductionInstrumentedTest.kt",
+        "working_sha256": "ada265e9ee2d2d7ee581401ed3b08c00810e0e7b25b9e70c01a00a5152b2c690"
+      },
+      {
+        "sha256": "46cfaa03fd8c3408b256b919cb841f3cb77214519df5148d313c987f917515b4",
+        "path": "app/src/debug/kotlin/com/masterofchessstrategy/ui/GoFormalProcessCheckActivity.kt",
+        "working_sha256": "46cfaa03fd8c3408b256b919cb841f3cb77214519df5148d313c987f917515b4"
+      },
+      {
+        "sha256": "e18ddb4dce1f914518e6da42a25d332f8a0d8b66484659db5157a0697e734091",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/data/GoFormalProcessCheckpointInstrumentedTest.kt",
+        "working_sha256": "e18ddb4dce1f914518e6da42a25d332f8a0d8b66484659db5157a0697e734091"
+      },
+      {
+        "sha256": "afd0aa8260c9d2da6a0af02e21608dde422e235a4f27fed900929ccb0ec27d22",
+        "path": "tools/android/go/test-assessment-process-restart.ps1",
+        "working_sha256": "a92db49e2349b64bd9dc5ce040a0730cd606e34a645e5717689e777d0f0da023"
+      }
+    ],
+    "candidate": "go-assessment1",
+    "baseline": "292172081374a0be3988ce5ea38690f50904e699",
+    "lint_warnings": 25,
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.games.go.data.GoAiBackupAdaptersTest",
+        "tests": 9
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.data.GoAiCheckpointAdmissionTest",
+        "tests": 9
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.data.GoAiCheckpointRepositoryTest",
+        "tests": 20
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.data.GoAiCheckpointRowsTest",
+        "tests": 7
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.data.GoRankedStartPolicyTest",
+        "tests": 14
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoAiAutoContinuationTest",
+        "tests": 12
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoAiBlindPlaySessionTest",
+        "tests": 2
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoAiMatchFileCodecTest",
+        "tests": 17
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoAiMatchHintTest",
+        "tests": 10
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoAiMatchModeTest",
+        "tests": 10
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoAiMatchOpeningSessionTest",
+        "tests": 15
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoAiMatchRestartTest",
+        "tests": 10
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoAiMatchSessionTest",
+        "tests": 21
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoAiPerMovePolicyTest",
+        "tests": 6
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoAssessmentChallengeTest",
+        "tests": 3
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoBoardGeometryTest",
+        "tests": 5
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoPerMoveClockTest",
+        "tests": 6
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoStreakChallengeTest",
+        "tests": 4
+      }
+    ],
+    "release_manifest": "processed",
+    "lint_errors": 0
+  },
+  "device": {
+    "restored_font": "1.0",
+    "original_font": "1.0",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "2f795e000166a465ac8bde469373c49e718648d7b1833b46f93f23b65eefb86f",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "168a37eaefc0054c921320c718b46fee467d3e65d2a5eab3cf689209c708fd9f"
+    },
+    "candidate": "go-assessment1",
+    "runs": [
+      {
+        "images": [
+          {
+            "path": "font-1.0\\a4224559-3644-44c7-9f2b-e35ca9c03cd2\\final.png",
+            "sha256": "54f6d3d7ee7f102aab86561f1d41dcb2c5684db6d8a082bdbf60fe93dd04d032"
+          },
+          {
+            "path": "font-1.0\\a4224559-3644-44c7-9f2b-e35ca9c03cd2\\resumed.png",
+            "sha256": "7844c490dc8893c649ad94f822b6ffe46c8430064cf03f7cbb10a1ddd4b58e2d"
+          },
+          {
+            "path": "font-1.0\\a4224559-3644-44c7-9f2b-e35ca9c03cd2\\setup.png",
+            "sha256": "e679a3dc4fe1b83384c9cc665f286603b4e0741013e96898d541961106be69a7"
+          }
+        ],
+        "font": "1.0",
+        "tests": 1,
+        "log_sha256": "4aa285ae7b86d0f381b3c386adfab10105309a88814975e717bfa3b39bb654c1"
+      },
+      {
+        "images": [
+          {
+            "path": "font-1.5\\c55e1fe2-b653-441c-ad30-1a5ea643dccc\\final.png",
+            "sha256": "841f7a5ba5ac38310a6a787111c63a175b3d2329e93ee20f83524c45c517e605"
+          },
+          {
+            "path": "font-1.5\\c55e1fe2-b653-441c-ad30-1a5ea643dccc\\resumed.png",
+            "sha256": "ed94caa88a00c5fb09cab440276171dfb46bebc3d60f914bc61198a03e40ceba"
+          },
+          {
+            "path": "font-1.5\\c55e1fe2-b653-441c-ad30-1a5ea643dccc\\setup.png",
+            "sha256": "d9673dd5c84bece9295374b6f016a65286ff3a754fba5d18ea1e4960fe258341"
+          }
+        ],
+        "font": "1.5",
+        "tests": 1,
+        "log_sha256": "b6e08be195ebf312c7495437a9354ca4bdbefa3ef21a0742370242ea01343d5f"
+      }
+    ],
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "folder": ".build/go-assessment1/device-2d41cfe5e5cd4b2da3f8122164b2b3f9",
+    "visual_review_sha256": "efd446b87307c3d72d695b809cdf825f7edf97a8f4ebfec085b877a86102b60e",
+    "process_restart": [
+      {
+        "before_sha256": "08b000d0717c7d53e6e4839d019792ad6a39c4a4e4a8fb15097a3b3e5285409d",
+        "after_sha256": "b80521daf536fca92cc646afd8965a5f9b85c9c794a9a63f03bbb63a489e8d9e",
+        "assessment_rounds": 2,
+        "checkpoint_sha256": "82bce9e3ee62716c3ee0160fdae05d8e9dc224e61726c72106fb503187c5c7cd",
+        "seed_log_sha256": "51f7b9ebd1352fa5322cbab4bcf55e4c963d74e5c31bece80b8d5001d6e44e2f",
+        "scenario": "assessment-playing",
+        "assessment_rating": 500,
+        "archive_count": 2
+      },
+      {
+        "before_sha256": "d47674bc54bf3bc98eafb6e7352ce4c84fc7d7919cd1512e5b02a52c49c798f5",
+        "after_sha256": "ffead02887906d0ec9651ce8e6f4697effa11ccd0aef3456cb2654aab5b58d26",
+        "assessment_rounds": 5,
+        "checkpoint_sha256": "573ba8c0561b6ce8a1d9b7fb0f1f7f86546431bfbd7ae4467357a70bfdc12650",
+        "seed_log_sha256": "03868d517870099db894a51a9f77e749ce9be88d4d0e73cdc1e191a6904c32a0",
+        "scenario": "assessment-final",
+        "assessment_rating": 400,
+        "archive_count": 5
+      }
+    ]
+  }
+}

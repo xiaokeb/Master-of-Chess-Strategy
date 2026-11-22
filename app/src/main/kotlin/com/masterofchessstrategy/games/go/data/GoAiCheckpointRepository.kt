@@ -27,7 +27,7 @@ internal class GoAiCheckpointRepository(
         store.transaction {
             val previous = current()
             if (next.match().matchId != previous?.first?.match()?.matchId) {
-                validateStreakContinuation(previous?.first, next)
+                validateSeriesContinuation(previous?.first, next)
             }
             val lineage = if (previous?.first?.match()?.matchId == next.match().matchId) {
                 validateSameMatch(previous.first.match(), next.match())
@@ -42,17 +42,21 @@ internal class GoAiCheckpointRepository(
         }
     }
 
-    private fun validateStreakContinuation(previous: GoAdmittedAiCheckpoint?, next: GoAdmittedAiCheckpoint) {
+    private fun validateSeriesContinuation(previous: GoAdmittedAiCheckpoint?, next: GoAdmittedAiCheckpoint) {
         val config = next.match().config
-        val progress = config.streak ?: return
-        if (progress == GoStreakProgress()) return // Explicit setup creates a new series.
-        val parent = requireNotNull(previous) { "围棋连胜续局缺少上局" }
+        val streak = config.streak?.takeUnless { it == GoStreakProgress() }
+        val assessment = config.assessment?.takeIf { it.completedGames > 0 }
+        if (streak == null && assessment == null) return
+        val parent = requireNotNull(previous) { "围棋专项续局缺少上局" }
         val old = parent.match().config
-        require(parent.phase == GoPhase.FINISHED && old.streak != null &&
-            config.boardSize == old.boardSize && next.phase == GoPhase.PLAYING && next.eventCount == 0 &&
-            old.streak.after(parent.result, old.difficulty) == (config.difficulty to progress)) {
-            "围棋连胜续局与已结算的上一局不符"
+        require(parent.phase == GoPhase.FINISHED && config.boardSize == old.boardSize &&
+            next.phase == GoPhase.PLAYING && next.eventCount == 0) { "围棋专项续局初态无效" }
+        val matches = when {
+            streak != null -> old.streak?.after(parent.result, old.difficulty) == (config.difficulty to streak)
+            assessment != null -> old.assessment?.next(parent.result, old.difficulty) == (config.difficulty to assessment)
+            else -> false
         }
+        require(matches) { "围棋专项续局与已结算的上一局不符" }
     }
 
     suspend fun clear() = store.transaction {
@@ -132,6 +136,7 @@ internal class GoAiCheckpointRepository(
             previous.config.difficulty == next.config.difficulty &&
             previous.config.blind == next.config.blind &&
             previous.config.streak == next.config.streak &&
+            previous.config.assessment == next.config.assessment &&
             validClockTransition(previous.clock, next.clock) &&
             previous.copyOpeningBytes().sameBytes(next.copyOpeningBytes()) &&
             (!previous.automaticUsed || next.automaticUsed) &&

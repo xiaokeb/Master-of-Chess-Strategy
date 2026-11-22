@@ -84,6 +84,10 @@ class GoFormalProcessCheckActivity : ComponentActivity() {
                             .put("automatic", saved.config.automatic).put("automatic_used", saved.automaticUsed)
                             .put("auto_continue", saved.autoContinueEnabled).put("series_game", saved.autoContinueGameNumber)
                             .put("series_limit", saved.autoContinueMaxGames).put("completion_stored", match.completionStored)
+                            .put("assessment_rounds", match.assessmentResult?.completedGames
+                                ?: saved.config.assessment?.completedGames ?: JSONObject.NULL)
+                            .put("assessment_rating", match.assessmentResult?.rating ?: saved.config.assessment?.rating ?: JSONObject.NULL)
+                            .put("assessment_finished", match.assessmentResult?.isFinished ?: false)
                             .put("black_confirmed", match.game.blackConfirmed).put("white_confirmed", match.game.whiteConfirmed)
                             .put("archive_count", withContext(Dispatchers.IO) { db.goAiCheckpointDao().listArchives().size })
                             .toString()

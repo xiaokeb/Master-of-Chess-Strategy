@@ -29,6 +29,7 @@ internal fun projectAdmittedGoAiRecord(archive: GoAiCheckpointArchive, admitted:
     val match = admitted.match()
     val native = match.copyBytes()
     val mode = when {
+        match.config.assessment != null -> StoredGameMode.ASSESSMENT_CHALLENGE
         match.config.streak != null -> StoredGameMode.STREAK_CHALLENGE
         match.config.automatic && match.hasSpecifiedOpening -> StoredGameMode.OPENING_AUTO_PLAY
         match.config.automatic -> StoredGameMode.AI_AUTO_PLAY

@@ -34,7 +34,11 @@ internal fun GoAiSetupScreen(
     var blind by rememberSaveable { mutableStateOf(false) }
     var perMoveSeconds by rememberSaveable { mutableIntStateOf(0) }
     var streak by rememberSaveable { mutableStateOf(false) }
-    val selected = if (streak) GoAiMatchConfig(size, difficulty = GoAiDifficulty.entries[difficultyIndex],
+    var assessment by rememberSaveable { mutableStateOf(false) }
+    val series = streak || assessment
+    val selected = if (assessment) GoAiMatchConfig(size, difficulty = GoAiDifficulty.MEDIUM,
+        assessment = GoAssessmentProgress())
+    else if (streak) GoAiMatchConfig(size, difficulty = GoAiDifficulty.entries[difficultyIndex],
         streak = GoStreakProgress())
     else GoAiMatchConfig(size, handicap,
         when (color) { 0 -> GoPlayer.BLACK; 1 -> GoPlayer.WHITE; else -> null },
@@ -57,7 +61,8 @@ internal fun GoAiSetupScreen(
                     (active.config.humanPlayer?.let { "你执${goReplayPlayer(it)}" } ?: "自动演局") +
                     (if (active.config.blind) " · 盲棋" else "") +
                     (active.config.perMoveLimitSeconds?.let { " · 每步${it}秒" } ?: "") +
-                    (if (active.config.streak != null) " · 连胜挑战" else ""))
+                    (if (active.config.streak != null) " · 连胜挑战" else "") +
+                    (if (active.config.assessment != null) " · 棋力定级" else ""))
                 val unfinishedResult = facts.phase == GoPhase.FINISHED && !facts.completionStored
                 if (unfinishedResult) Text("上局结果待保存；请先查看并保存，不能通过新建跳过。")
                 Button(onContinue, enabled = enabled, modifier = Modifier.testTag("go_ai_setup_continue")) {
@@ -74,20 +79,23 @@ internal fun GoAiSetupScreen(
             Text("执色／模式")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("执黑", "执白", "自动演局").forEachIndexed { index, label ->
-                    FilterChip(!streak && color == index, { streak = false; color = index }, enabled = enabled,
+                    FilterChip(!series && color == index, { streak = false; assessment = false; color = index }, enabled = enabled,
                         label = { Text(label) }, modifier = Modifier.testTag("go_ai_setup_color_$index"))
                 }
-                FilterChip(streak, { streak = !streak }, enabled = enabled,
+                FilterChip(streak, { streak = !streak; assessment = false }, enabled = enabled,
                     label = { Text("连胜挑战") }, modifier = Modifier.testTag("go_ai_setup_streak"))
+                FilterChip(assessment, { assessment = !assessment; streak = false }, enabled = enabled,
+                    label = { Text("棋力定级") }, modifier = Modifier.testTag("go_ai_setup_assessment"))
             }
             if (streak) Text("执黑，不让子，不计时。三胜升档、两负降档，负局或和局中断连胜。")
+            if (assessment) Text("五局定级，从中等开始。胜升、负降、和棋保持。禁用提示和悔棋。")
             Text("难度与解锁")
             Text("教程 ${facts?.eligibility?.completedLessonCount ?: 0} / ${GoLearningLibrary.lessons.size} 课；解锁仅代表进度条件，不代表棋力已标定。")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 GoAiDifficulty.entries.forEachIndexed { index, level ->
                     val condition = facts?.eligibility?.condition(Difficulty.entries[index])
-                    FilterChip(difficultyIndex == index, { difficultyIndex = index },
-                        enabled = enabled && condition?.isUnlocked == true,
+                    FilterChip((if (assessment) GoAiDifficulty.MEDIUM.ordinal else difficultyIndex) == index, { difficultyIndex = index },
+                        enabled = enabled && !assessment && condition?.isUnlocked == true,
                         label = { Text(goAiDifficultyLabel(level)) }, modifier = Modifier.testTag("go_ai_setup_difficulty_$index"))
                 }
             }
@@ -96,27 +104,28 @@ internal fun GoAiSetupScreen(
             }
             OutlinedButton(onLearning, enabled = enabled) { Text("前往十课教程") }
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Switch(!streak && blind, { blind = it }, enabled = enabled && !streak,
+                Switch(!series && blind, { blind = it }, enabled = enabled && !series,
                     modifier = Modifier.testTag("go_ai_setup_blind").semantics { contentDescription = "盲棋（棋子背面）" })
                 Text("盲棋（棋子背面）")
             }
-            if (!streak && blind) Text("行棋时黑白棋子显示相同背面，数子与终局恢复原色。")
+            if (!series && blind) Text("行棋时黑白棋子显示相同背面，数子与终局恢复原色。")
             Text("计时方式")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(!streak && perMoveSeconds == 0, { perMoveSeconds = 0 }, enabled = enabled && !streak,
+                FilterChip(!series && perMoveSeconds == 0, { perMoveSeconds = 0 }, enabled = enabled && !series,
                     label = { Text("普通（使用全局主时限）") }, modifier = Modifier.testTag("go_ai_setup_clock_main"))
-                for (seconds in listOf(30, 60, 120)) FilterChip(!streak && perMoveSeconds == seconds,
-                    { perMoveSeconds = seconds }, enabled = enabled && !streak, label = { Text("每步${seconds}秒") },
+                for (seconds in listOf(30, 60, 120)) FilterChip(!series && perMoveSeconds == seconds,
+                    { perMoveSeconds = seconds }, enabled = enabled && !series, label = { Text("每步${seconds}秒") },
                     modifier = Modifier.testTag("go_ai_setup_per_move_$seconds"))
             }
-            if (!streak && perMoveSeconds > 0) Text("每次换手重新计时；暂停 AI 与后台时间计入。数子时暂停。每步限时为专项训练，不计标准胜场。")
+            if (!series && perMoveSeconds > 0) Text("每次换手重新计时；暂停 AI 与后台时间计入。数子时暂停。每步限时为专项训练，不计标准胜场。")
             Text("让子训练")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                for (count in listOf(0) + (2..9)) FilterChip(!streak && handicap == count, { handicap = count },
-                    enabled = enabled && !streak, label = { Text(if (count == 0) "不让子" else "让${count}子") })
+                for (count in listOf(0) + (2..9)) FilterChip(!series && handicap == count, { handicap = count },
+                    enabled = enabled && !series, label = { Text(if (count == 0) "不让子" else "让${count}子") })
             }
-            if (!streak && handicap > 0) Text("让子局白方先行、不贴子；不计标准人机胜场。")
-            val allowed = facts?.eligibility?.condition(Difficulty.entries[difficultyIndex])?.isUnlocked == true &&
+            if (!series && handicap > 0) Text("让子局白方先行、不贴子；不计标准人机胜场。")
+            val gateDifficulty = if (assessment) Difficulty.EASY else Difficulty.entries[difficultyIndex]
+            val allowed = facts?.eligibility?.condition(gateDifficulty)?.isUnlocked == true &&
                 !(facts.phase == GoPhase.FINISHED && !facts.completionStored)
             Button({ onCreate(selected) }, enabled = enabled && allowed,
                 modifier = Modifier.fillMaxWidth().testTag("go_ai_setup_create")) { Text("保存并开始新局") }

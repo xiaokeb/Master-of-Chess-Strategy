@@ -18,15 +18,15 @@ import java.nio.charset.CodingErrorAction
 import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.CRC32
 
-/** GAI1 v10 stores the start-of-game position in a streak series. */
+/** GAI1 v10 and v11 store opening counters for streak and placement series. */
 internal object GoAiMatchFileCodec {
     private const val MAGIC = 0x31494147
     private const val HEADER = 44
     private const val CLOCK_BYTES = 33
-    private const val STREAK_BYTES = 16
+    private const val SERIES_BYTES = 16
     const val MAX_BYTES = HEADER + CLOCK_BYTES + 128 + 2_000_000
 
-    fun canonicalVersion(bytes: ByteArray): Int? = bytes.getOrNull(4)?.toInt()?.takeIf { it in 6..10 }
+    fun canonicalVersion(bytes: ByteArray): Int? = bytes.getOrNull(4)?.toInt()?.takeIf { it in 6..11 }
 
     fun encode(match: GoAiSavedMatch): ByteArray {
         val id = Charsets.UTF_8.newEncoder().onMalformedInput(CodingErrorAction.REPORT)
@@ -37,13 +37,15 @@ internal object GoAiMatchFileCodec {
         require(idBytes.size in 1..128)
         val clock = match.clock
         val streak = match.config.streak
+        val assessment = match.config.assessment
         val header = when {
-            streak != null -> HEADER + STREAK_BYTES
+            match.config.seriesMode -> HEADER + SERIES_BYTES
             clock != null -> HEADER + CLOCK_BYTES
             else -> HEADER
         }
         val output = ByteBuffer.allocate(header + idBytes.size + state.size + opening.size).order(ByteOrder.LITTLE_ENDIAN)
         val version = when {
+            assessment != null -> 11
             streak != null -> 10
             match.config.perMoveLimitSeconds != null -> 9
             match.config.blind -> 8
@@ -64,6 +66,8 @@ internal object GoAiMatchFileCodec {
             .putLong(clock.startedAtMillis).put((clock.active?.code ?: 255).toByte())
         if (streak != null) output.putInt(streak.current).putInt(streak.best)
             .putInt(streak.winsAtDifficulty).putInt(streak.lossesAtDifficulty)
+        if (assessment != null) output.putInt(assessment.rating).putInt(assessment.wins)
+            .putInt(assessment.draws).putInt(assessment.losses)
         output.putInt(0).put(idBytes).put(state).put(opening)
         val bytes = output.array()
         output.putInt(header - 4, checksum(bytes, header))
@@ -75,13 +79,13 @@ internal object GoAiMatchFileCodec {
         val input = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
         if (input.int != MAGIC) return null
         val version = input.get().toInt()
-        if (version !in 1..10) return null
+        if (version !in 1..11) return null
         val timed = version == 7 || version == 9 || (version == 8 && (bytes[9].toInt() and 32) != 0)
         val header = when (version) {
             1 -> 28
             in 2..4 -> 32
             5 -> 36
-            10 -> HEADER + STREAK_BYTES
+            10, 11 -> HEADER + SERIES_BYTES
             else -> HEADER + if (timed) CLOCK_BYTES else 0
         }
         if (bytes.size < header) return null
@@ -92,10 +96,10 @@ internal object GoAiMatchFileCodec {
         val flags = input.get().toInt() and 255
         val remembered = input.get().toInt() and 255
         val reserved = input.get().toInt()
-        val maxFlags = when (version) { 8, 9 -> 63; 6, 7 -> 15; 5 -> 7; 4 -> 3; 3, 10 -> 1; else -> 0 }
+        val maxFlags = when (version) { 8, 9 -> 63; 6, 7 -> 15; 5 -> 7; 4 -> 3; 3, 10, 11 -> 1; else -> 0 }
         if (version == 8 && flags and 16 == 0) return null
         if (version == 9 && flags and 32 == 0) return null
-        if (version == 10 && (human != GoPlayer.BLACK.code || handicap != 0)) return null
+        if (version in 10..11 && (human != GoPlayer.BLACK.code || handicap != 0)) return null
         if (size !in setOf(9, 13, 19) || (handicap != 0 && handicap !in 2..9) || human !in setOf(0, 1, 255) ||
             difficulty !in GoAiDifficulty.entries.indices || flags !in 0..maxFlags ||
             remembered !in 0..(if (version >= 4) 1 else 0) || reserved != 0) return null
@@ -125,13 +129,20 @@ internal object GoAiMatchFileCodec {
             try { GoStreakProgress(input.int, input.int, input.int, input.int) }
             catch (_: IllegalArgumentException) { return null }
         } else null
+        val assessment = if (version == 11) {
+            if (undoUsed != 0 || hintUsed != 0) return null
+            val progress = try { GoAssessmentProgress(input.int, input.int, input.int, input.int) }
+                catch (_: IllegalArgumentException) { return null }
+            if (progress.completedGames == 0 && difficulty != GoAiDifficulty.MEDIUM.ordinal) return null
+            progress
+        } else null
         if (input.int != checksum(bytes, header) || idLength !in 1..128 || stateLength !in 1..1_000_000 ||
             openingLength !in 0..1_000_000 || idLength.toLong() + stateLength + openingLength != input.remaining().toLong() ||
             (flags and 4 != 0) != (openingLength > 0)) return null
         val config = GoAiMatchConfig(size, handicap, if (human == 255) null else GoPlayer.entries[human],
             GoAiDifficulty.entries[difficulty], blind = flags and 16 != 0,
             perMoveLimitSeconds = if (version == 9) (checkNotNull(clock).limitMillis / 1_000L).toInt() else null,
-            streak = streak)
+            streak = streak, assessment = assessment)
         val rememberedHuman = if (version >= 4) GoPlayer.entries[remembered] else config.humanPlayer ?: GoPlayer.BLACK
         val automaticUsed = if (version >= 4) flags and 2 != 0 else config.automatic
         val autoContinue = version >= 6 && flags and 8 != 0
