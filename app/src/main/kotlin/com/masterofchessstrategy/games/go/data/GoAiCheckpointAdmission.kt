@@ -31,7 +31,8 @@ internal fun admitGoAiCheckpoint(
     GoAiMatchFileCodec.encode(match)
     val config = match.config
     val opening = match.copyOpeningBytes()?.let { GoAiOpening.fromSnapshot(it, engineFactory) }
-    require(opening == null || opening.config(config.humanPlayer, config.difficulty, config.blind) == config) {
+    require(opening == null || opening.config(config.humanPlayer, config.difficulty,
+        config.blind, config.perMoveLimitSeconds) == config) {
         "围棋人机开局与存档配置不符"
     }
     val expectedKomi = if (config.handicapStones == 0) 15 else 0

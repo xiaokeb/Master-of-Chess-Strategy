@@ -29,6 +29,23 @@ class GoAiCheckpointRepositoryTest {
     private fun bytes(match: GoAiSavedMatch) = GoAiMatchFileCodec.encode(match)
     private fun recordId(match: GoAiSavedMatch) = admitDouble(match).recordId
 
+    @Test fun perMoveClockOnlyRefillsTheNextActorAndCannotChangeModeInPlace() = runTest {
+        val repo = repository()
+        val config = GoAiMatchConfig(9, perMoveLimitSeconds = 30)
+        fun timed(clock: GoTurnClock, policy: GoAiMatchConfig = config) =
+            GoAiSavedMatch("clock", policy, byteArrayOf(9, 0, 1, 0), clock = clock)
+        val white = GoTurnClock(30_000, 20_000, 25_000, GoPlayer.WHITE, 10_000, GoClockMode.PER_MOVE)
+        repo.save(timed(white))
+        val black = white.advance(15_000, GoPlayer.BLACK)
+        repo.save(timed(black))
+        assertEquals(30_000L, repo.load()!!.clock!!.blackMillis)
+        assertEquals(20_000L, repo.load()!!.clock!!.whiteMillis)
+        failed { repo.save(timed(black.copy(whiteMillis = 30_000))) }
+        failed { repo.save(timed(black, config.copy(blind = true))) }
+        failed { repo.save(timed(black.copy(mode = GoClockMode.MAIN), config.copy(perMoveLimitSeconds = null))) }
+        assertEquals(black, repo.load()!!.clock)
+    }
+
     @Test fun ongoingSaveOwnsAllPolicyBytesAndHasNoArchiveOrRewardWriter() = runTest {
         val match = match(automatic = true, undo = 1, hint = 2)
         val repository = repository()

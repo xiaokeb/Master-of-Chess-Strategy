@@ -2,16 +2,20 @@ package com.masterofchessstrategy.games.go
 
 import com.masterofchessstrategy.engine.GoPlayer
 
-/** Per-side main time. The active deadline is part of the durable checkpoint. */
+enum class GoClockMode { MAIN, PER_MOVE }
+
+/** The active deadline is durable; per-move time resets only on a change of turn. */
 data class GoTurnClock(
     val limitMillis: Long,
     val blackMillis: Long,
     val whiteMillis: Long,
     val active: GoPlayer?,
     val startedAtMillis: Long,
+    val mode: GoClockMode = GoClockMode.MAIN,
 ) {
     init {
         require(limitMillis in 1..MAX_LIMIT && blackMillis in 0..limitMillis && whiteMillis in 0..limitMillis)
+        require(mode != GoClockMode.PER_MOVE || limitMillis in 1_000L..600_000L && limitMillis % 1_000L == 0L)
         require(startedAtMillis >= 0 && (active != null || startedAtMillis == 0L))
         if (active != null) require(stored(active) > 0L)
     }
@@ -25,8 +29,9 @@ data class GoTurnClock(
 
     /** Commit the previous turn and optionally start the next at the same instant. */
     fun advance(nowMillis: Long, next: GoPlayer?): GoTurnClock {
-        val black = remaining(GoPlayer.BLACK, nowMillis)
-        val white = remaining(GoPlayer.WHITE, nowMillis)
+        val newTurn = mode == GoClockMode.PER_MOVE && next != null && next != active
+        val black = if (newTurn && next == GoPlayer.BLACK) limitMillis else remaining(GoPlayer.BLACK, nowMillis)
+        val white = if (newTurn && next == GoPlayer.WHITE) limitMillis else remaining(GoPlayer.WHITE, nowMillis)
         return copy(blackMillis = black, whiteMillis = white, active = next,
             startedAtMillis = if (next == null) 0 else nowMillis)
     }
@@ -38,8 +43,8 @@ data class GoTurnClock(
     companion object {
         const val MAX_LIMIT = 180 * 60_000L
 
-        fun start(limitMillis: Long, first: GoPlayer, nowMillis: Long) =
-            GoTurnClock(limitMillis, limitMillis, limitMillis, first, nowMillis)
+        fun start(limitMillis: Long, first: GoPlayer, nowMillis: Long, mode: GoClockMode = GoClockMode.MAIN) =
+            GoTurnClock(limitMillis, limitMillis, limitMillis, first, nowMillis, mode)
     }
 }
 

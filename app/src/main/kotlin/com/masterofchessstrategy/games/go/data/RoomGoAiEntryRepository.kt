@@ -46,13 +46,15 @@ internal class RoomGoAiEntryRepository(
             val id = UUID.randomUUID().toString()
             if (opening == null) {
                 NativeGoEngine(config.boardSize, if (config.handicapStones == 0) 15 else 0, config.handicapStones).use {
-                    GoAiSavedMatch(id, config, it.serialize(), clock = newClock(GoPlayer.entries[it.currentPlayer.value]))
+                    GoAiSavedMatch(id, config, it.serialize(), clock = newClock(config, GoPlayer.entries[it.currentPlayer.value]))
                 }
             } else {
-                require(config == opening.config(humanPlayer = null, difficulty = config.difficulty, blind = config.blind))
+                require(config == opening.config(humanPlayer = null, difficulty = config.difficulty,
+                    blind = config.blind, perMoveLimitSeconds = config.perMoveLimitSeconds))
                 val bytes = opening.copyBytes()
                 opening.createEngine().use {
-                    GoAiSavedMatch(id, config, bytes, openingBytes = bytes, clock = newClock(GoPlayer.entries[it.currentPlayer.value]))
+                    GoAiSavedMatch(id, config, bytes, openingBytes = bytes,
+                        clock = newClock(config, GoPlayer.entries[it.currentPlayer.value]))
                 }
             }
         }
@@ -62,5 +64,7 @@ internal class RoomGoAiEntryRepository(
         }
     }
 
-    private fun newClock(first: GoPlayer) = newGameLimitMinutes?.let { GoTurnClock.start(it * 60_000L, first, matchTime()) }
+    private fun newClock(config: GoAiMatchConfig, first: GoPlayer) = config.perMoveLimitSeconds?.let {
+        GoTurnClock.start(it * 1_000L, first, matchTime(), GoClockMode.PER_MOVE)
+    } ?: newGameLimitMinutes?.let { GoTurnClock.start(it * 60_000L, first, matchTime()) }
 }

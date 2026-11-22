@@ -31,9 +31,10 @@ internal fun GoAiSetupScreen(
     var difficultyIndex by rememberSaveable { mutableIntStateOf(0) }
     var handicap by rememberSaveable { mutableIntStateOf(0) }
     var blind by rememberSaveable { mutableStateOf(false) }
+    var perMoveSeconds by rememberSaveable { mutableIntStateOf(0) }
     val selected = GoAiMatchConfig(size, handicap,
         when (color) { 0 -> GoPlayer.BLACK; 1 -> GoPlayer.WHITE; else -> null },
-        GoAiDifficulty.entries[difficultyIndex], blind)
+        GoAiDifficulty.entries[difficultyIndex], blind, perMoveSeconds.takeIf { it > 0 })
     val facts = state.snapshot
     val enabled = !state.loading && !state.busy
     Surface(modifier.fillMaxSize()) {
@@ -50,7 +51,8 @@ internal fun GoAiSetupScreen(
                 HorizontalDivider()
                 Text("当前对局：${active.config.boardSize}路 · ${goAiDifficultyLabel(active.config.difficulty)} · " +
                     (active.config.humanPlayer?.let { "你执${goReplayPlayer(it)}" } ?: "自动演局") +
-                    if (active.config.blind) " · 盲棋" else "")
+                    (if (active.config.blind) " · 盲棋" else "") +
+                    (active.config.perMoveLimitSeconds?.let { " · 每步${it}秒" } ?: ""))
                 val unfinishedResult = facts.phase == GoPhase.FINISHED && !facts.completionStored
                 if (unfinishedResult) Text("上局结果待保存；请先查看并保存，不能通过新建跳过。")
                 Button(onContinue, enabled = enabled, modifier = Modifier.testTag("go_ai_setup_continue")) {
@@ -91,6 +93,15 @@ internal fun GoAiSetupScreen(
                 Text("盲棋（棋子背面）")
             }
             if (blind) Text("行棋时黑白棋子显示相同背面，数子与终局恢复原色。")
+            Text("计时方式")
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(perMoveSeconds == 0, { perMoveSeconds = 0 }, enabled = enabled,
+                    label = { Text("普通（使用全局主时限）") }, modifier = Modifier.testTag("go_ai_setup_clock_main"))
+                for (seconds in listOf(30, 60, 120)) FilterChip(perMoveSeconds == seconds,
+                    { perMoveSeconds = seconds }, enabled = enabled, label = { Text("每步${seconds}秒") },
+                    modifier = Modifier.testTag("go_ai_setup_per_move_$seconds"))
+            }
+            if (perMoveSeconds > 0) Text("每次换手重新计时；暂停 AI 与后台时间计入。数子时暂停。每步限时为专项训练，不计标准胜场。")
             Text("让子训练")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (count in listOf(0) + (2..9)) FilterChip(handicap == count, { handicap = count },

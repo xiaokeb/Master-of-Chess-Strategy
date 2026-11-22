@@ -40,7 +40,8 @@ internal class RoomGoRankedMatchCreator(
             "围棋新局需要全新规范身份"
         }
         val start = withContext(worker) {
-            if (!match.config.automatic && match.config.handicapStones == 0) admitGoRankedStart(match, clock())
+            if (!match.config.automatic && match.config.handicapStones == 0 && match.config.perMoveLimitSeconds == null)
+                admitGoRankedStart(match, clock())
             else {
                 val admitted = admitGoAiCheckpoint(match)
                 val opening = match.copyOpeningBytes()

@@ -1,9 +1,12 @@
 package com.masterofchessstrategy.games.go.data
 
 import com.masterofchessstrategy.engine.GoPhase
+import com.masterofchessstrategy.engine.GoPlayer
+import com.masterofchessstrategy.games.go.GoClockMode
 import com.masterofchessstrategy.games.go.GoAiMatchFileCodec
 import com.masterofchessstrategy.games.go.GoAiMatchRepository
 import com.masterofchessstrategy.games.go.GoAiSavedMatch
+import com.masterofchessstrategy.games.go.GoTurnClock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -110,15 +113,24 @@ internal class GoAiCheckpointRepository(
         require(previous.config.boardSize == next.config.boardSize &&
             previous.config.handicapStones == next.config.handicapStones &&
             previous.config.difficulty == next.config.difficulty &&
-            previous.clock?.limitMillis == next.clock?.limitMillis &&
-            (previous.clock == null || (next.clock != null &&
-                next.clock.blackMillis <= previous.clock.blackMillis && next.clock.whiteMillis <= previous.clock.whiteMillis)) &&
+            previous.config.blind == next.config.blind &&
+            validClockTransition(previous.clock, next.clock) &&
             previous.copyOpeningBytes().sameBytes(next.copyOpeningBytes()) &&
             (!previous.automaticUsed || next.automaticUsed) &&
             (!previous.completionReserved || next.completionReserved) &&
             next.undoUsed >= previous.undoUsed && next.hintUsed >= previous.hintUsed) {
             "围棋人机身份不能改变开局或回退辅助与来源标记"
         }
+    }
+
+    private fun validClockTransition(previous: GoTurnClock?, next: GoTurnClock?): Boolean {
+        if (previous == null || next == null) return previous == next
+        if (previous.limitMillis != next.limitMillis || previous.mode != next.mode) return false
+        // Only the new actor receives a full per-move allowance. Main time never increases.
+        val reset = next.active.takeIf { next.mode == GoClockMode.PER_MOVE && it != previous.active }
+        val black = if (reset == GoPlayer.BLACK) next.blackMillis == next.limitMillis else next.blackMillis <= previous.blackMillis
+        val white = if (reset == GoPlayer.WHITE) next.whiteMillis == next.limitMillis else next.whiteMillis <= previous.whiteMillis
+        return black && white
     }
 
     private fun validateTerminalControls(previous: GoAiSavedMatch, next: GoAiSavedMatch) {

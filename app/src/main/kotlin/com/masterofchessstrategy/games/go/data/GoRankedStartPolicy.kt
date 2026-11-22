@@ -35,6 +35,7 @@ internal fun admitGoRankedStart(
     require(GoAiMatchFileCodec.encode(admitted.match()).contentEquals(bytes)) { "Noncanonical Go creation history" }
     require(admitted.phase == GoPhase.PLAYING && admitted.result == GameResult.ONGOING && admitted.eventCount == 0 &&
         match.config.handicapStones == 0 && match.config.humanPlayer != null && !match.hasSpecifiedOpening &&
+        match.config.perMoveLimitSeconds == null && match.clock?.mode != GoClockMode.PER_MOVE &&
         !match.automaticUsed && match.undoUsed == 0 && match.hintUsed == 0 && !match.completionReserved &&
         !match.autoContinueEnabled && match.autoContinueMaxGames == 1 && match.autoContinueGameNumber == 1 &&
         (match.clock == null || (match.clock.blackMillis == match.clock.limitMillis &&
@@ -68,6 +69,7 @@ internal fun qualifiedGoOutcome(
         archive.checkpoint.lineage.origin != GoAiCheckpointOrigin.UNVERIFIED_SESSION ||
         archive.checkpoint.lineage.replacedTerminalRecordId != null || final.config != initial.config ||
         final.rememberedHuman != initial.rememberedHuman || final.clock?.limitMillis != initial.clock?.limitMillis ||
+        final.clock?.mode != initial.clock?.mode || final.config.perMoveLimitSeconds != null ||
         final.automaticUsed || final.hasSpecifiedOpening ||
         final.autoContinueEnabled || final.autoContinueMaxGames != 1 || final.autoContinueGameNumber != 1 ||
         admitted.phase != GoPhase.FINISHED || admitted.result == GameResult.ONGOING) return null

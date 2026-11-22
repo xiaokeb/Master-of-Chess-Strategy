@@ -157,14 +157,17 @@ class GoAiMatchSession(
                         val selectedOpening = if (saved != null) saved.copyOpeningBytes()?.let {
                             GoAiOpening.fromSnapshot(it, engineFactory)
                         } else initialOpening
-                        if (selectedOpening != null) check(selectedOpening.config(config.humanPlayer, config.difficulty, config.blind) == config)
+                        if (selectedOpening != null) check(selectedOpening.config(config.humanPlayer, config.difficulty,
+                            config.blind, config.perMoveLimitSeconds) == config)
                         candidate = if (saved == null && selectedOpening != null) selectedOpening.createEngine(engineFactory)
                             else engineFactory(config.boardSize, if (config.handicapStones == 0) 15 else 0, config.handicapStones)
                         if (saved != null) check(candidate.restore(saved.copyBytes()) == RestoreResult.Restored) { "Invalid AI checkpoint" }
                         check(candidate.boardSize == config.boardSize && candidate.handicapStones == config.handicapStones &&
                             candidate.blackKomiQuarters == if (config.handicapStones == 0) 15 else 0)
                         selectedOpening?.checkContinuation(candidate)
-                        loadedClock = saved?.clock
+                        loadedClock = saved?.clock ?: if (saved == null) config.perMoveLimitSeconds?.let {
+                            GoTurnClock.start(it * 1_000L, player(candidate), nowMillis(), GoClockMode.PER_MOVE)
+                        } else null
                         var game = snapshot(candidate).withClock(loadedClock)
                         val eventCount = candidate.eventHistory().size
                         val openingEventCount = selectedOpening?.eventCount ?: 0
@@ -174,8 +177,9 @@ class GoAiMatchSession(
                         val undoUsed = saved?.undoUsed ?: 0
                         if (disposed.get() || !lifetime.isActive) return@withLock
                         if (saved == null) persistCheckpoint(GoAiSavedMatch(id, config, bytes, undoUsed,
-                            openingBytes = selectedOpening?.copyBytes()), freshStandard =
-                            config.humanPlayer != null && config.handicapStones == 0 && selectedOpening == null)
+                            openingBytes = selectedOpening?.copyBytes(), clock = loadedClock), freshStandard =
+                            config.humanPlayer != null && config.handicapStones == 0 && selectedOpening == null &&
+                                config.perMoveLimitSeconds == null)
                         var reserved = saved?.completionReserved ?: false
                         var stored = false
                         val immediateCompletion = if (config.automatic) {
@@ -351,7 +355,7 @@ class GoAiMatchSession(
                         candidate = opening?.createEngine(engineFactory)
                             ?: engineFactory(config.boardSize, if (config.handicapStones == 0) 15 else 0, config.handicapStones)
                         val nextGame = snapshot(candidate)
-                        nextClock = durableMatch?.clock?.let { GoTurnClock.start(it.limitMillis, nextGame.currentPlayer, nowMillis()) }
+                        nextClock = durableMatch?.clock?.let { GoTurnClock.start(it.limitMillis, nextGame.currentPlayer, nowMillis(), it.mode) }
                         check(candidate.boardSize == config.boardSize && candidate.handicapStones == config.handicapStones &&
                             candidate.blackKomiQuarters == if (config.handicapStones == 0) 15 else 0)
                         check(nextGame.phase == GoPhase.PLAYING && nextGame.result == GameResult.ONGOING &&
@@ -373,7 +377,8 @@ class GoAiMatchSession(
                         persistCheckpoint(GoAiSavedMatch(nextId, config, nextBytes, rememberedHuman = previous.rememberedHuman,
                             openingBytes = opening?.copyBytes(), autoContinueEnabled = nextAutoEnabled,
                             autoContinueMaxGames = nextAutoMax, autoContinueGameNumber = nextAutoNumber, clock = nextClock),
-                            freshStandard = config.humanPlayer != null && config.handicapStones == 0 && opening == null)
+                            freshStandard = config.humanPlayer != null && config.handicapStones == 0 && opening == null &&
+                                config.perMoveLimitSeconds == null)
                         engine?.close(); engine = null
                         if (!disposed.get() && lifetime.isActive) {
                             engine = candidate; candidate = null
@@ -421,7 +426,8 @@ class GoAiMatchSession(
                 error = "本局已结束；完成棋谱保存功能准备好后才能导入指定开局。"))
             return false
         }
-        val nextConfig = replacement.config(previous.config.humanPlayer, previous.config.difficulty, previous.config.blind)
+        val nextConfig = replacement.config(previous.config.humanPlayer, previous.config.difficulty,
+            previous.config.blind, previous.config.perMoveLimitSeconds)
         automaticResumeAllowed = false
         invalidateSearch()
         mutableState.value = mutableState.value.copy(paused = true, thinking = false,
@@ -442,8 +448,9 @@ class GoAiMatchSession(
                         val active = checkNotNull(engine)
                         candidate = replacement.createEngine(engineFactory)
                         val nextGame = snapshot(candidate)
-                        openingClock = durableMatch?.clock?.let { GoTurnClock.start(it.limitMillis, nextGame.currentPlayer, nowMillis()) }
-                        check(replacement.config(nextConfig.humanPlayer, nextConfig.difficulty, nextConfig.blind) == nextConfig)
+                        openingClock = durableMatch?.clock?.let { GoTurnClock.start(it.limitMillis, nextGame.currentPlayer, nowMillis(), it.mode) }
+                        check(replacement.config(nextConfig.humanPlayer, nextConfig.difficulty,
+                            nextConfig.blind, nextConfig.perMoveLimitSeconds) == nextConfig)
                         check(nextGame.phase == GoPhase.PLAYING && nextGame.result == GameResult.ONGOING &&
                             candidate.eventHistory().size == replacement.eventCount)
                         if (previous.game.phase == GoPhase.FINISHED) {

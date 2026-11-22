@@ -23,8 +23,12 @@ data class GoAiMatchConfig(
     val humanPlayer: GoPlayer? = GoPlayer.BLACK, // null = AI versus AI.
     val difficulty: GoAiDifficulty = GoAiDifficulty.SIMPLE,
     val blind: Boolean = false,
+    val perMoveLimitSeconds: Int? = null,
 ) {
-    init { require(boardSize in setOf(9, 13, 19) && (handicapStones == 0 || handicapStones in 2..9)) }
+    init {
+        require(boardSize in setOf(9, 13, 19) && (handicapStones == 0 || handicapStones in 2..9))
+        require(perMoveLimitSeconds == null || perMoveLimitSeconds in 1..600)
+    }
     val automatic get() = humanPlayer == null
     fun isAi(player: GoPlayer) = humanPlayer != player
 }
@@ -53,7 +57,11 @@ class GoAiSavedMatch(
         (opening == null || opening.isNotEmpty() && opening.size <= 1_000_000) &&
         if (autoContinueEnabled) config.automatic && autoContinueMaxGames in 2..100 &&
             autoContinueGameNumber in 1..autoContinueMaxGames
-        else autoContinueMaxGames == 1 && autoContinueGameNumber == 1) }
+        else autoContinueMaxGames == 1 && autoContinueGameNumber == 1)
+        require(if (config.perMoveLimitSeconds == null) clock?.mode != GoClockMode.PER_MOVE
+            else clock != null && clock.mode == GoClockMode.PER_MOVE &&
+                clock.limitMillis == config.perMoveLimitSeconds * 1_000L) { "围棋每步限时与存档配置不符" }
+    }
     fun copyBytes() = saved.copyOf()
     fun copyOpeningBytes() = opening?.copyOf()
     val hasSpecifiedOpening get() = opening != null
