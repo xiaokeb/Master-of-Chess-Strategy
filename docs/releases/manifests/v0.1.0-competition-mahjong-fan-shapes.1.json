@@ -1,0 +1,40 @@
+{
+  "tag": "v0.1.0-competition-mahjong-fan-shapes.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 4,
+  "build": {
+    "products": [
+      {
+        "sha256": "87d52267feccbb3f06611170e5fd9bde1ac9f528bd59a1ff037e0d285283eed1",
+        "path": "x86_64/tests/mocs_competition_mahjong_fan_examples_test",
+        "abi": "x86_64"
+      },
+      {
+        "sha256": "c729153f0b5fc93cd34e11bb5d32d39dbc850a96cadeb37e7afe40675c4f60ef",
+        "path": "arm64-v8a/tests/mocs_competition_mahjong_fan_examples_test",
+        "abi": "arm64-v8a"
+      }
+    ],
+    "target": "mocs_competition_mahjong_fan_examples_test",
+    "cmake": "4.1.2",
+    "ndk": "30.0.16138531",
+    "baseline": "5f21abf9fffb40ee417b26a1efc34d4e564fc0c4",
+    "overlays": [
+      {
+        "path": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_fan_examples_test.cpp",
+        "sha256": "e42a4d1dc7bcc3f0a512dcb89165901b8802122bfeac2c4e0715312dee019cce",
+        "working_sha256": "e42a4d1dc7bcc3f0a512dcb89165901b8802122bfeac2c4e0715312dee019cce"
+      }
+    ]
+  },
+  "device": {
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "exit_code": 0,
+    "verified_binary_sha256": "87d52267feccbb3f06611170e5fd9bde1ac9f528bd59a1ff037e0d285283eed1",
+    "log_sha256": "1a569af7cb522681db5917393d6998719187974fcb4588b78fe251756651222f",
+    "summary": "WMO fan examples: 81 positive, 21 negative, 18 threshold cases, 6 rule profile cases, 2 highest-scoring shape cases, 0 failures",
+    "total_scenarios": 128
+  }
+}

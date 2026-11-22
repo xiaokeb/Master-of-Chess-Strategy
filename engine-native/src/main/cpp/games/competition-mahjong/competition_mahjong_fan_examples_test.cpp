@@ -325,6 +325,39 @@ int fan_count(const CompetitionMahjongFanResult& result, int id) {
     return match == result.entries.end() ? 0 : match->count;
 }
 
+int check_highest_scoring_shape() {
+    struct ShapeCase {
+        const char* name;
+        CompetitionMahjongFanInput input;
+        int total;
+        std::vector<int> fans;
+    };
+    const std::array<ShapeCase, 2> cases{{
+        // Also decomposes into two 123 chows, two 456 chows and a pair of 8s.
+        {"seven pairs over all chows", closed({0,0,1,1,2,2,3,3,4,4,5,5,7,7}, 7),
+            48, {19, 22}},
+        // The nine characters can form three identical 234 chows or three shifted pungs.
+        {"shifted pungs over identical chows",
+            partial({pung(31)}, {1,1,1,2,2,2,3,3,3,16,16}, 16),
+            50, {24, 33, 49, 59, 75, 79}},
+    }};
+    int failures = 0;
+    for (const auto& example : cases) {
+        const auto result = evaluateCompetitionMahjongFan(example.input, CompetitionMahjongFanRules::wmo_2021);
+        const bool exact_fans = result.entries.size() == example.fans.size() &&
+            std::equal(result.entries.begin(), result.entries.end(), example.fans.begin(),
+                [](const auto& entry, int id) { return entry.id == id && entry.count == 1; });
+        if (result.error != CompetitionMahjongFanError::none || !result.structure_valid || !result.qualifies ||
+            result.total_fan != example.total || result.fan_without_flowers != example.total || !exact_fans) {
+            std::fprintf(stderr, "%s: expected %d, got %d with fan IDs", example.name, example.total, result.total_fan);
+            for (const auto& entry : result.entries) std::fprintf(stderr, " %d x %d", entry.id, entry.count);
+            std::fputc('\n', stderr);
+            ++failures;
+        }
+    }
+    return failures;
+}
+
 int check_rule_profiles(const std::vector<Example>& cases) {
     const auto legacy = CompetitionMahjongFanRules::legacy_v1;
     const auto wmo = CompetitionMahjongFanRules::wmo_2021;
@@ -414,12 +447,14 @@ int main() {
     const auto negative = counterexamples(cases);
     for (const auto& example : negative) if (!check(example)) ++failures;
     failures += check_thresholds();
+    failures += check_highest_scoring_shape();
     failures += check_rule_profiles(cases);
     if (!check_round_profiles()) {
         std::fprintf(stderr, "versioned round scoring or restoration failed\n");
         ++failures;
     }
-    std::printf("WMO fan examples: %zu positive, %zu negative, 18 threshold cases, 6 rule profile cases, %d failures\n",
+    std::printf("WMO fan examples: %zu positive, %zu negative, 18 threshold cases, "
+                "6 rule profile cases, 2 highest-scoring shape cases, %d failures\n",
                 cases.size(), negative.size(), failures);
     return failures == 0 ? 0 : 1;
 }
