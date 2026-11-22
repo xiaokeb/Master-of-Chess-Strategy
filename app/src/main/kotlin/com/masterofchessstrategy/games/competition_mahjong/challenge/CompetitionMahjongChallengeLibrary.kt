@@ -183,6 +183,16 @@ object CompetitionMahjongChallengeLibrary {
             "东家起手自摸同色五，牌面已成九莲宝灯。根据新版计分，这手牌还可计不求人或幺九刻吗？", "b",
             "九莲宝灯计 88 番，可以加计不求人 4 番。幺九刻已被九莲宝灯包含。", setOf(4, 56, 73),
             choice("a", "可加计幺九刻"), choice("b", "可加计不求人"), choice("c", "两项均可加计")),
+        challenge(CompetitionMahjongPracticePosition.ALL_GREEN_PUZZLE_ID, "绿一色还可计混一色", CompetitionMahjongChallengeTheme.EXCLUSION,
+            CompetitionMahjongChallengeLevel.MASTER,
+            "当前手牌由二三四条、六条刻、八条刻、发刻和三条将组成，起手自摸三条。计绿一色后，还能加计哪项花色番？", "a",
+            "绿一色计 88 番。本题有发且其余都是条子，可以加计混一色 6 番，不能计清一色。", setOf(3, 22, 50),
+            choice("a", "混一色 6 番"), choice("b", "清一色 24 番"), choice("c", "两项都不计")),
+        challenge(CompetitionMahjongPracticePosition.TERMINALS_PUZZLE_ID, "清幺九的两组双同刻", CompetitionMahjongChallengeTheme.EXCLUSION,
+            CompetitionMahjongChallengeLevel.MASTER,
+            "当前手牌有一万、九万、一条、九条四副暗刻，以一筒作将起手自摸。清幺九成立后，两组独立的双同刻如何计？", "c",
+            "清幺九计 64 番。一万与一条、九万与九条分别组成双同刻，各计 2 番，共 4 番。碰碰和、全带幺、幺九刻和无字不重复计。", setOf(8, 49, 55, 65, 73, 76),
+            choice("a", "被清幺九包含，不计"), choice("b", "只能计一组，共 2 番"), choice("c", "两组分别计，共 4 番")),
     ))
 
     init {

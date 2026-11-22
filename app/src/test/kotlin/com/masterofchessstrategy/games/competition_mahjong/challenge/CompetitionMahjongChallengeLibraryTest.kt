@@ -2,6 +2,7 @@ package com.masterofchessstrategy.games.competition_mahjong.challenge
 
 import org.junit.Assert.*
 import org.junit.Test
+import com.masterofchessstrategy.progress.EndgameRewardTotals
 import java.time.LocalDate
 import java.util.zip.CRC32
 import kotlin.random.Random
@@ -9,10 +10,10 @@ import kotlin.random.Random
 class CompetitionMahjongChallengeLibraryTest {
     @Test fun catalogHasFourLevelsThemesAndTraceableOfficialFanIds() {
         val values = CompetitionMahjongChallengeLibrary.challenges
-        assertEquals(15, values.size)
+        assertEquals(17, values.size)
         assertEquals(values.size, values.map { it.id }.toSet().size)
         CompetitionMahjongChallengeLevel.entries.forEach { level ->
-            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 6 else 3, values.count { it.level == level })
+            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 8 else 3, values.count { it.level == level })
         }
         CompetitionMahjongChallengeTheme.entries.forEach { theme ->
             assertTrue(values.any { it.theme == theme })
@@ -22,6 +23,36 @@ class CompetitionMahjongChallengeLibraryTest {
             val expected = if (challenge.id == CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID) 0 else 1
             assertEquals(expected, challenge.choices.count { it.id == challenge.correctChoiceId })
         }
+    }
+
+    @Test fun priorFifteenQuestionPrefixAndRewardsStayStableWhileNewRulesUnlockInOrder() {
+        val values = CompetitionMahjongChallengeLibrary.challenges
+        val oldIds = listOf("seven-plus-flowers", "last-wall-self-draw", "edge-wait", "four-identical-chows",
+            "exact-eight", "concealed-self-draw", "seven-pairs-exclusion", "seven-honors-unconnected",
+            "robbing-fourth", "four-wind-pungs", "four-kongs", "nine-gates", "live-seven-pairs",
+            "discard-for-seven-pairs", "live-nine-gates-exclusion")
+        assertEquals(oldIds, values.take(15).map { it.id })
+        var progress = CompetitionMahjongChallengeProgress(oldIds.toSet(), oldIds.last())
+        assertEquals(oldIds.toSet(), checkNotNull(CompetitionMahjongChallengeProgressCodec.decode(
+            CompetitionMahjongChallengeProgressCodec.encode(progress))).completedIds)
+        assertEquals(EndgameRewardTotals(15, 15, 690), competitionChallengeRewards(progress.completedIds))
+        val green = values[15]
+        val terminals = values[16]
+        assertTrue(progress.isUnlocked(green.id))
+        assertFalse(progress.isUnlocked(terminals.id))
+        val session = CompetitionMahjongChallengeSession(green)
+        assertFalse(session.answer("b").completed)
+        assertTrue(session.answer("a").completed)
+        progress = progress.complete(green.id)
+        assertTrue(progress.isUnlocked(terminals.id))
+        assertEquals(EndgameRewardTotals(16, 16, 770), competitionChallengeRewards(progress.completedIds))
+        val terminalSession = CompetitionMahjongChallengeSession(terminals)
+        assertFalse(terminalSession.answer("b").completed)
+        assertTrue(terminalSession.answer("c").completed)
+        progress = progress.complete(terminals.id)
+        assertEquals(progress.completedIds, progress.complete(terminals.id).completedIds)
+        assertEquals(values.map { it.id }.toSet(), progress.completedIds)
+        assertEquals(EndgameRewardTotals(17, 17, 850), competitionChallengeRewards(progress.completedIds))
     }
 
     @Test fun sessionKeepsQuestionStableAcrossWrongAnswerAndLocksAfterCorrectAnswer() {

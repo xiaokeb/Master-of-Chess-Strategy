@@ -16,6 +16,8 @@ internal object CompetitionMahjongPracticePosition {
     const val PUZZLE_ID = "live-seven-pairs"
     const val DISCARD_PUZZLE_ID = "discard-for-seven-pairs"
     const val NINE_GATES_PUZZLE_ID = "live-nine-gates-exclusion"
+    const val ALL_GREEN_PUZZLE_ID = "live-all-green-half-flush"
+    const val TERMINALS_PUZZLE_ID = "live-terminals-double-pungs"
     private val dealerHand = listOf(0, 0, 2, 2, 5, 5, 12, 12, 19, 19, 23, 23, 27, 27)
     private val discardHand = dealerHand.dropLast(1) + 31
     private val nextDraws = listOf(14, 15, 16, 27)
@@ -37,6 +39,27 @@ internal object CompetitionMahjongPracticePosition {
                 fan.entries.none { it.id == TERMINAL_OR_HONOR_PUNG }
         }
     }
+
+    fun verifyAllGreen(): List<Int> = verifyDealerWin(
+        listOf(10, 11, 12, 14, 14, 14, 16, 16, 16, 32, 32, 32, 11, 11),
+        CompetitionMahjongScoring.WMO_2021,
+    ) { fan ->
+        exactFan(fan, mapOf(3 to (88 to 1), 33 to (16 to 1), 50 to (6 to 1),
+            56 to (4 to 1), 59 to (2 to 1), 78 to (1 to 1)), 117)
+    }
+
+    fun verifyTerminals(): List<Int> = verifyDealerWin(
+        listOf(0, 0, 0, 8, 8, 8, 9, 9, 9, 17, 17, 17, 18, 18),
+        CompetitionMahjongScoring.WMO_2021,
+    ) { fan ->
+        exactFan(fan, mapOf(8 to (64 to 1), 12 to (64 to 1), 56 to (4 to 1),
+            65 to (2 to 2), 79 to (1 to 1)), 137)
+    }
+
+    /** Full fan sets also reject accidentally included low fans and wrong multiplicities. */
+    private fun exactFan(fan: CompetitionMahjongFanView, entries: Map<Int, Pair<Int, Int>>, total: Int) =
+        fan.errorCode == 0 && fan.structureValid && fan.fanWithoutFlowers == total && fan.totalFan == total &&
+            fan.entries.size == entries.size && fan.entries.associate { it.id to (it.points to it.count) } == entries
 
     private fun verifyDealerWin(
         openingHand: List<Int>,

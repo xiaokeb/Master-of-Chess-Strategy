@@ -1,0 +1,121 @@
+{
+  "device": {
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "ef6eae7e7ef9d033bde33be8cdd87fbd4f0170eddb661c66a94c823dcf579a16",
+      "app/build/outputs/apk/debug/app-debug.apk": "c66a4ff733edd86135213b42293a24e384e41e601e27edc172c435b3fcaa1a6a"
+    },
+    "original_font": "1.0",
+    "candidate": "cm-wmo-exclusion1",
+    "runs": [
+      {
+        "font": "1.0",
+        "log_sha256": "71c391c3da366ada35c08b6baa0fe4057cfbd1ad2dac531e90e0a64721ce53b8",
+        "images": [
+          {
+            "sha256": "f765a38e07bac31f7e4a190c6c33bceebf06aa3736415693407cde896b0f16ef",
+            "path": "font-1.0\\bf945af1-0ccd-4a8c-abb6-2a14f829dd18\\live-terminals-double-pungs-hand.png"
+          },
+          {
+            "sha256": "e2e81f46d94a8f732f9276390d0dcae8a7f561100231d7975eef8a7439ce1363",
+            "path": "font-1.0\\bf945af1-0ccd-4a8c-abb6-2a14f829dd18\\live-terminals-double-pungs-scoring.png"
+          },
+          {
+            "sha256": "e52337e338d6fff76af10d8fb9be006ef7b457f7aedec5c0c21d60dc3d812989",
+            "path": "font-1.0\\ebf4534d-47a6-4f86-a993-5eb5f0f6e118\\live-all-green-half-flush-hand.png"
+          },
+          {
+            "sha256": "837bf90addf4fa41f1e3cc34dde7f2707dd0787e17d734d8e0f69bcd213afe98",
+            "path": "font-1.0\\ebf4534d-47a6-4f86-a993-5eb5f0f6e118\\live-all-green-half-flush-scoring.png"
+          }
+        ],
+        "tests": 2
+      },
+      {
+        "font": "1.5",
+        "log_sha256": "e91be4bdba023fec2b0dc760b63f4c1c047a2bd4c59d5a7af4653c31e803925d",
+        "images": [
+          {
+            "sha256": "40310d283dcf88b16ca3419834968f7492df7111204a528918af8d4e71babcca",
+            "path": "font-1.5\\7ed2b664-123f-4051-9c3c-56a5ba4e5116\\live-all-green-half-flush-hand.png"
+          },
+          {
+            "sha256": "b4d43de4d012c4ea97aff041bdeb01820387dec75243747da3ebb2e95c1e8d35",
+            "path": "font-1.5\\7ed2b664-123f-4051-9c3c-56a5ba4e5116\\live-all-green-half-flush-scoring.png"
+          },
+          {
+            "sha256": "0450daf389a4bdd63228b56d1bf2f2019fd033cddcbe4572d1d2ac4e893a16df",
+            "path": "font-1.5\\fa684ec4-4ae2-4e0b-b2d7-97e549925916\\live-terminals-double-pungs-hand.png"
+          },
+          {
+            "sha256": "119d23191b536c84d6aa232235e223d5ab2723c9431b3b93d0a021664d654e49",
+            "path": "font-1.5\\fa684ec4-4ae2-4e0b-b2d7-97e549925916\\live-terminals-double-pungs-scoring.png"
+          }
+        ],
+        "tests": 2
+      }
+    ],
+    "restored_font": "1.0",
+    "abi": "x86_64",
+    "folder": "device-90c0b87f4c57424da308c2d022081111",
+    "visual_review_sha256": "a094a109a0cf551b4e22b18c48aca6cae63539953746562bd3ec05d4049b326b",
+    "avd": "Pixel_7_Pro"
+  },
+  "ndk": "30.0.16138531",
+  "assets": [],
+  "distribution": "source-only",
+  "fan_probe_sha256": "d01a038eea402ac834507875a426dd95bf5c2f1ad3bc0432e033121bf0a02fe1",
+  "tag": "v0.1.0-competition-mahjong-wmo-exclusion.1",
+  "build": {
+    "lint_warnings": 25,
+    "release_manifest": "processed",
+    "lint_errors": 0,
+    "candidate": "cm-wmo-exclusion1",
+    "baseline": "adfe378d682f3b06fccf7d16f80fae9f2203c822",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "ef6eae7e7ef9d033bde33be8cdd87fbd4f0170eddb661c66a94c823dcf579a16",
+      "app/build/outputs/apk/debug/app-debug.apk": "c66a4ff733edd86135213b42293a24e384e41e601e27edc172c435b3fcaa1a6a"
+    },
+    "unit_tests": [
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeViewModelTest"
+      },
+      {
+        "tests": 6,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeLibraryTest"
+      }
+    ],
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeLibrary.kt",
+        "sha256": "5c565b5c440db9d228de202a95dcbe879033469e9b4e0335f17e3869959307cb",
+        "working_sha256": "5c565b5c440db9d228de202a95dcbe879033469e9b4e0335f17e3869959307cb"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeViewModel.kt",
+        "sha256": "f5bcbec0976e04b84198c2f8a1fb9b5013091828c8fa8983583c159b9fa85fcf",
+        "working_sha256": "f5bcbec0976e04b84198c2f8a1fb9b5013091828c8fa8983583c159b9fa85fcf"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongPracticePosition.kt",
+        "sha256": "d69389393ccaedf8bfb185dbff887256fb783162db0ffe38037f951b7a82d124",
+        "working_sha256": "d69389393ccaedf8bfb185dbff887256fb783162db0ffe38037f951b7a82d124"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeLibraryTest.kt",
+        "sha256": "f9f4200f0918d68198c3cdb52fb48c1694420b429643a1f07d7cc353808ca4ca",
+        "working_sha256": "f9f4200f0918d68198c3cdb52fb48c1694420b429643a1f07d7cc353808ca4ca"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/WmoExclusionTrainingInstrumentedTest.kt",
+        "sha256": "91b57d836ca803bf5f40310ae750507d77efbd914dbba04b8d997c0b4fb60f51",
+        "working_sha256": "91b57d836ca803bf5f40310ae750507d77efbd914dbba04b8d997c0b4fb60f51"
+      }
+    ]
+  },
+  "expected_changed_paths": 8,
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ]
+}

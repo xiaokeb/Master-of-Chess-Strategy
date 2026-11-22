@@ -138,6 +138,8 @@ class CompetitionMahjongChallengeViewModel(
             CompetitionMahjongPracticePosition.PUZZLE_ID -> CompetitionMahjongPracticePosition.verifySevenPairs()
             CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID -> CompetitionMahjongPracticePosition.discardOpeningHand()
             CompetitionMahjongPracticePosition.NINE_GATES_PUZZLE_ID -> CompetitionMahjongPracticePosition.verifyNineGates()
+            CompetitionMahjongPracticePosition.ALL_GREEN_PUZZLE_ID -> CompetitionMahjongPracticePosition.verifyAllGreen()
+            CompetitionMahjongPracticePosition.TERMINALS_PUZZLE_ID -> CompetitionMahjongPracticePosition.verifyTerminals()
             else -> emptyList()
         }
         return CompetitionMahjongChallengeSession(challenge, hand)
