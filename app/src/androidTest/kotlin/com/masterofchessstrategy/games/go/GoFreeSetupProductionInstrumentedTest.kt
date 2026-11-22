@@ -28,7 +28,14 @@ import org.junit.Test
 class GoFreeSetupProductionInstrumentedTest {
     @get:Rule val compose = createAndroidComposeRule<GoLocalDataCheckActivity>()
 
-    @Test fun whiteStartsFromCustomRootAndCanReplayTheFinishedGame() {
+    @Test fun whiteStartsFromCustomRootAndCanReplayTheFinishedGame() = verifyCustomRoot(size = 9)
+
+    @Test fun thirteenLineEditorRejectsAnInvalidRootAndCanStartAfterCorrection() =
+        verifyCustomRoot(size = 13, rejectInvalidRoot = true)
+
+    @Test fun nineteenLineEditorPreservesCornerStonesAndWhiteFirst() = verifyCustomRoot(size = 19)
+
+    private fun verifyCustomRoot(size: Int, rejectInvalidRoot: Boolean = false) {
         val activity = compose.activity
         val db = activity.ownedDatabase
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -44,28 +51,44 @@ class GoFreeSetupProductionInstrumentedTest {
             compose.onNodeWithTag("go_navigation_ai").performScrollTo().performClick()
             awaitSetup()
             compose.onNodeWithTag("go_ai_setup_free").performScrollTo().performClick()
-            compose.onNodeWithTag("go_free_size_9").performScrollTo().performClick()
+            compose.onNodeWithTag("go_free_size_$size").performScrollTo().performClick()
+            if (rejectInvalidRoot) {
+                compose.onNodeWithTag("go_intersection_1_0").performClick()
+                compose.onNodeWithTag("go_intersection_0_1").performClick()
+                compose.onNodeWithTag("go_free_tool_2").performScrollTo().performClick()
+                compose.onNodeWithTag("go_intersection_0_0").performClick()
+                compose.onNodeWithTag("go_free_start").performScrollTo().performClick()
+                val invalid = "原生规则拒绝该局面。请检查无气棋块或先行方是否有合法落子。"
+                compose.waitUntil(15_000) { compose.onAllNodesWithText(invalid).fetchSemanticsNodes().isNotEmpty() }
+                compose.onNodeWithText(invalid).performScrollTo().assertIsDisplayed()
+                assertNull(runBlocking { storage.aiRepository().load() })
+                capture(images, "invalid-root")
+                compose.onNodeWithText("清空棋盘").performScrollTo().performClick()
+                compose.onNodeWithTag("go_free_tool_1").performScrollTo().performClick()
+            }
+            val edge = size - 1
             compose.onNodeWithTag("go_intersection_0_0").performClick()
             compose.onNodeWithTag("go_free_tool_2").performScrollTo().performClick()
-            compose.onNodeWithTag("go_intersection_8_8").performClick()
+            compose.onNodeWithTag("go_intersection_${edge}_$edge").performClick()
             compose.onNodeWithTag("go_free_first_1").performScrollTo().performClick()
             compose.onNodeWithTag("go_free_human_1").performScrollTo().performClick()
             capture(images, "editor")
             compose.onNodeWithTag("go_free_start").performScrollTo().performClick()
             awaitTurn()
             val first = checkNotNull(runBlocking { storage.aiRepository().load() })
+            assertEquals(size, first.config.boardSize)
             assertEquals(GoPlayer.WHITE, first.config.humanPlayer)
             val opening = GoAiOpening.fromSnapshot(checkNotNull(first.copyOpeningBytes()))
             assertTrue(opening.hasCustomSetup)
             assertEquals(0, opening.eventCount)
             assertEquals(GoPlayer.WHITE, opening.currentPlayer)
-            opening.createEngine().use { assertEquals(GoStone.WHITE, it.stoneAt(BoardPosition(8, 8))) }
+            opening.createEngine().use { assertEquals(GoStone.WHITE, it.stoneAt(BoardPosition(edge, edge))) }
             capture(images, "playing")
 
             compose.onNodeWithTag("go_intersection_1_1").performClick()
             compose.waitUntil(60_000) {
                 val active = runBlocking { storage.aiRepository().load() } ?: return@waitUntil false
-                NativeGoEngine(9).use { engine ->
+                NativeGoEngine(size).use { engine ->
                     engine.restore(active.copyBytes()) == RestoreResult.Restored && engine.eventHistory().size == 2
                 }
             }
@@ -91,7 +114,8 @@ class GoFreeSetupProductionInstrumentedTest {
                 assertEquals(GoPlayer.WHITE, replay.frame().currentPlayer)
                 assertEquals(GoStone.BLACK.code, replay.frame().stones.first())
                 assertEquals(GoStone.WHITE.code, replay.frame().stones.last())
-                assertTrue(replay.exportSgf().contains("AB[aa]AW[ii]PL[W]"))
+                val edgeCoordinate = ('a' + edge).toString().repeat(2)
+                assertTrue(replay.exportSgf().contains("AB[aa]AW[$edgeCoordinate]PL[W]"))
             }
             capture(images, "terminal")
         } finally {

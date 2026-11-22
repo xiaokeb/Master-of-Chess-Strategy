@@ -1,0 +1,92 @@
+{
+  "tag": "v0.1.0-go-free-setup-boards.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 4,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "baseline": "ba83485799f28353141245d237fb4a1e2c661bfe",
+    "release_manifest": "processed",
+    "candidate": "go-free-setup-boards1",
+    "lint_warnings": 25,
+    "unit_tests": [
+      {
+        "tests": 7,
+        "name": "com.masterofchessstrategy.data.GameRecordPayloadPolicyTest"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "db1225341f8ba20df10d7dd65d1ade30ff162f3bb43fce58181c917fd3c60dd2",
+      "app/build/outputs/apk/debug/app-debug.apk": "286838629bbc55290c56c2d3a1de24ea762a321f7e4b47f94378aa32c1b90f98"
+    },
+    "lint_errors": 0,
+    "overlays": [
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoFreeSetupProductionInstrumentedTest.kt",
+        "working_sha256": "b0eff9ebcfb32b2f587e53ce0507730ad4ecc7415aff74a78ff72822de8764c1",
+        "sha256": "7330ce59da27d39027f09b1f850a846957b73f055c5c13a1d208ef1528a70940"
+      }
+    ]
+  },
+  "device": {
+    "candidate": "go-free-setup-boards1",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "db1225341f8ba20df10d7dd65d1ade30ff162f3bb43fce58181c917fd3c60dd2",
+      "app/build/outputs/apk/debug/app-debug.apk": "286838629bbc55290c56c2d3a1de24ea762a321f7e4b47f94378aa32c1b90f98"
+    },
+    "restored_font": "1.0",
+    "runs": [
+      {
+        "images": [
+          {
+            "sha256": "85c930400eecf820794cc1b8361deb4d37f1ae612f40562e4708289e647c67cb",
+            "path": "font-1.0\\d0c7334f-38b6-4fd5-8ac1-a7006479ab62\\editor.png"
+          },
+          {
+            "sha256": "492069b48c3f2a28fe3a1cb9080f426a8b5abe3e554a7402badabf89bdb2a0e1",
+            "path": "font-1.0\\d0c7334f-38b6-4fd5-8ac1-a7006479ab62\\invalid-root.png"
+          },
+          {
+            "sha256": "0c64c164410a5eca053859886165b16fdc966df9e721e9867373a7382bdceb7b",
+            "path": "font-1.0\\d0c7334f-38b6-4fd5-8ac1-a7006479ab62\\playing.png"
+          },
+          {
+            "sha256": "438b4e0e8c2cc6c23ecb2f568592e38d1e1f78adf43f1a171716ff8407a7cfac",
+            "path": "font-1.0\\d0c7334f-38b6-4fd5-8ac1-a7006479ab62\\terminal.png"
+          }
+        ],
+        "log_sha256": "797205db00d824c26a090570724a660ef0bee54515a0e6a6ef4ccac28e846d10",
+        "tests": 1,
+        "font": "1.0"
+      },
+      {
+        "images": [
+          {
+            "sha256": "45bc55d480f5c65db65e7e9ded8e742c30f14ee6356a6a7fd8782eb0de346b4e",
+            "path": "font-1.5\\21d75c76-0393-40f8-ba41-674bb4c6329e\\editor.png"
+          },
+          {
+            "sha256": "3a7106ada4adf8b66c22b42b43fc983b522da84100438e8c8de6e2c46fd79071",
+            "path": "font-1.5\\21d75c76-0393-40f8-ba41-674bb4c6329e\\playing.png"
+          },
+          {
+            "sha256": "ce7b07432bcc12c147d3ebd81145808bb70961e9ce1ce0b5708fbf03cdd6b720",
+            "path": "font-1.5\\21d75c76-0393-40f8-ba41-674bb4c6329e\\terminal.png"
+          }
+        ],
+        "log_sha256": "378cec1772115038e9af1dd986abebfd4ffb06c72a390d9aeb143a26dd962214",
+        "tests": 1,
+        "font": "1.5"
+      }
+    ],
+    "original_font": "1.0",
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "folder": ".build/go-free-setup-boards1/device-6e24bff1da62469d95ee636317b013ee",
+    "visual_review_sha256": "489bb87ddcfa2834a0f92815ea38c655e17045c20fc7e609c6f492c62d6094f9"
+  }
+}
