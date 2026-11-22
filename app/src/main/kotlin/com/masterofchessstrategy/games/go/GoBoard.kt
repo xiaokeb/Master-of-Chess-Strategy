@@ -71,11 +71,13 @@ internal fun goBoardPointDescription(
     isLastMove: Boolean,
     isDead: Boolean,
     isHighlighted: Boolean,
+    hideStoneColors: Boolean = false,
 ): String = buildString {
     append("第${y + 1}行第${x + 1}列，")
-    append(when (stone) {
-        1 -> "黑子"
-        2 -> "白子"
+    append(when {
+        hideStoneColors && stone != 0 -> "棋子背面"
+        stone == 1 -> "黑子"
+        stone == 2 -> "白子"
         else -> "空点"
     })
     if (isLastMove) append("，最后落点")
@@ -94,6 +96,7 @@ fun GoBoard(
     deadStoneIndices: Set<Int> = emptySet(),
     highlightedPoints: Set<Int> = emptySet(),
     interactionEnabled: Boolean = true,
+    hideStoneColors: Boolean = false,
 ) {
     require(size in setOf(9, 13, 19)) { "Go board must be 9, 13 or 19 lines" }
     require(stones.size == size * size && stones.all { it in 0..2 }) {
@@ -151,8 +154,8 @@ fun GoBoard(
                         val radius = cellPx * 0.43f
                         drawCircle(Color(0x55000000), radius,
                             center + Offset(1.dp.toPx(), 1.dp.toPx()))
-                        drawCircle(if (stone == 1) black else white, radius, center)
-                        if (stone == 2) drawCircle(ink, radius, center,
+                        drawCircle(if (hideStoneColors) Color(0xFF66756B) else if (stone == 1) black else white, radius, center)
+                        if (hideStoneColors || stone == 2) drawCircle(ink, radius, center,
                             style = Stroke(width = min(1.dp.toPx(), cellPx * 0.04f)))
                     }
                     if (index in highlightedPoints) {
@@ -164,7 +167,7 @@ fun GoBoard(
                         }
                     }
                     if (index == lastMoveIndex && stone != 0) {
-                        drawCircle(if (stone == 1) white else black, cellPx * 0.095f, center)
+                        drawCircle(if (hideStoneColors || stone == 1) white else black, cellPx * 0.095f, center)
                     }
                     if (index in deadStoneIndices && stone != 0) {
                         val half = cellPx * 0.21f
@@ -198,6 +201,7 @@ fun GoBoard(
                                     x, y, stones[index], index == lastMoveIndex,
                                     index in deadStoneIndices && stones[index] != 0,
                                     index in highlightedPoints,
+                                    hideStoneColors,
                                 )
                                 if (interactionEnabled) {
                                     onClick(label = "选择第${y + 1}行第${x + 1}列") {

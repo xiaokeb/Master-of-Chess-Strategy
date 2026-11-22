@@ -5,6 +5,15 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class GoBoardGeometryTest {
+    @Test fun blindSemanticsHidesBothColorsWhileKeepingCoordinatesAndEmptyPoints() {
+        for (stone in listOf(1, 2)) assertEquals("第2行第3列，棋子背面，最后落点",
+            goBoardPointDescription(2, 1, stone, true, false, false, hideStoneColors = true))
+        assertEquals("第2行第3列，空点",
+            goBoardPointDescription(2, 1, 0, false, false, false, hideStoneColors = true))
+        assertEquals("第2行第3列，黑子",
+            goBoardPointDescription(2, 1, 1, false, false, false))
+    }
+
     @Test
     fun tapsMapToAllFourCornersAndCenterAtEveryBoardSize() {
         for (size in listOf(9, 13, 19)) {

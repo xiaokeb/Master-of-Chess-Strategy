@@ -19,6 +19,23 @@ import org.junit.Test
 class GoRankedBackupInstrumentedTest {
     @get:Rule val migration = MigrationTestHelper(InstrumentationRegistry.getInstrumentation(), MocsDatabase::class.java)
 
+    @Test fun blindCreationTerminalAndGrowthRoundTripThroughProductionBackup() = runBlocking {
+        owned { source, target ->
+            val id = seed(source, blind = true)
+            val bytes = backup(source).export(500)
+            assertEquals(1, backup(target).restore(bytes).matchOutcomeCount)
+            val initial = checkNotNull(target.goRankedDao().start(id)).initialCheckpoint
+            val archived = target.goAiCheckpointDao().listArchives().single().checkpoint
+            for (checkpoint in listOf(initial, archived)) {
+                assertEquals(8, checkpoint[4].toInt())
+                assertTrue(checkNotNull(GoAiMatchFileCodec.decode(checkpoint)).config.blind)
+            }
+            assertEquals(1, target.goRankedDao().settlements().size)
+            assertEquals(1, statistics(target).totalWins)
+            assertArrayEquals(bytes, backup(target).export(500))
+        }
+    }
+
     @Test fun seventeenToEighteenPreservesUnknownRecordsAndDoesNotInventRankedFacts() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val name = "go-ranked-migration-${UUID.randomUUID()}.db"
@@ -196,12 +213,13 @@ class GoRankedBackupInstrumentedTest {
     }
     private suspend fun statistics(database: MocsDatabase) =
         (RoomMatchStatisticsRepository(database).load() as LoadMatchStatisticsResult.Loaded).statistics
-    private suspend fun seed(database: MocsDatabase, complete: Boolean = true): String {
+    private suspend fun seed(database: MocsDatabase, complete: Boolean = true, blind: Boolean = false): String {
         val learning = RoomGoLearningProgressRepository(database)
         learning.save(GoLearningProgress(GoLearningLibrary.lessons.map { it.id }.toSet()))
         val checkpoint = GoAiCheckpointRepository(RoomGoAiCheckpointStore(database), clock = { 200L })
         return NativeGoEngine(9).use { engine ->
-            val initial = GoAiSavedMatch(UUID.randomUUID().toString(), GoAiMatchConfig(9, humanPlayer = GoPlayer.WHITE), engine.serialize())
+            val initial = GoAiSavedMatch(UUID.randomUUID().toString(), GoAiMatchConfig(9, humanPlayer = GoPlayer.WHITE,
+                blind = blind), engine.serialize())
             val start = RoomGoRankedMatchCreator(database, checkpoint, learning, clock = { 100L }).create(initial)
             if (complete) {
                 repeat(2) { assertEquals(ActionResult.Accepted, engine.apply(GoAction.Pass)) }

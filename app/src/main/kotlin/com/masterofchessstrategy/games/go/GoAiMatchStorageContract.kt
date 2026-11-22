@@ -22,6 +22,7 @@ data class GoAiMatchConfig(
     val handicapStones: Int = 0,
     val humanPlayer: GoPlayer? = GoPlayer.BLACK, // null = AI versus AI.
     val difficulty: GoAiDifficulty = GoAiDifficulty.SIMPLE,
+    val blind: Boolean = false,
 ) {
     init { require(boardSize in setOf(9, 13, 19) && (handicapStones == 0 || handicapStones in 2..9)) }
     val automatic get() = humanPlayer == null

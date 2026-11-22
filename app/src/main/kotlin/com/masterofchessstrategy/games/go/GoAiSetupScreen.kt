@@ -8,6 +8,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.masterofchessstrategy.engine.*
 
@@ -28,9 +30,10 @@ internal fun GoAiSetupScreen(
     var color by rememberSaveable { mutableIntStateOf(0) } // 0 black, 1 white, 2 automatic.
     var difficultyIndex by rememberSaveable { mutableIntStateOf(0) }
     var handicap by rememberSaveable { mutableIntStateOf(0) }
+    var blind by rememberSaveable { mutableStateOf(false) }
     val selected = GoAiMatchConfig(size, handicap,
         when (color) { 0 -> GoPlayer.BLACK; 1 -> GoPlayer.WHITE; else -> null },
-        GoAiDifficulty.entries[difficultyIndex])
+        GoAiDifficulty.entries[difficultyIndex], blind)
     val facts = state.snapshot
     val enabled = !state.loading && !state.busy
     Surface(modifier.fillMaxSize()) {
@@ -46,7 +49,8 @@ internal fun GoAiSetupScreen(
             facts?.active?.let { active ->
                 HorizontalDivider()
                 Text("当前对局：${active.config.boardSize}路 · ${goAiDifficultyLabel(active.config.difficulty)} · " +
-                    (active.config.humanPlayer?.let { "你执${goReplayPlayer(it)}" } ?: "自动演局"))
+                    (active.config.humanPlayer?.let { "你执${goReplayPlayer(it)}" } ?: "自动演局") +
+                    if (active.config.blind) " · 盲棋" else "")
                 val unfinishedResult = facts.phase == GoPhase.FINISHED && !facts.completionStored
                 if (unfinishedResult) Text("上局结果待保存；请先查看并保存，不能通过新建跳过。")
                 Button(onContinue, enabled = enabled, modifier = Modifier.testTag("go_ai_setup_continue")) {
@@ -81,6 +85,12 @@ internal fun GoAiSetupScreen(
                 Text("${goAiDifficultyLabel(GoAiDifficulty.entries[Difficulty.entries.indexOf(it.difficulty)])}：上一档有效胜场 ${it.qualifyingWins} / ${it.requiredWins}")
             }
             OutlinedButton(onLearning, enabled = enabled) { Text("前往十课教程") }
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Switch(blind, { blind = it }, enabled = enabled,
+                    modifier = Modifier.testTag("go_ai_setup_blind").semantics { contentDescription = "盲棋（棋子背面）" })
+                Text("盲棋（棋子背面）")
+            }
+            if (blind) Text("行棋时黑白棋子显示相同背面，数子与终局恢复原色。")
             Text("让子训练")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (count in listOf(0) + (2..9)) FilterChip(handicap == count, { handicap = count },

@@ -49,7 +49,7 @@ internal class RoomGoAiEntryRepository(
                     GoAiSavedMatch(id, config, it.serialize(), clock = newClock(GoPlayer.entries[it.currentPlayer.value]))
                 }
             } else {
-                require(config == opening.config(humanPlayer = null, difficulty = config.difficulty))
+                require(config == opening.config(humanPlayer = null, difficulty = config.difficulty, blind = config.blind))
                 val bytes = opening.copyBytes()
                 opening.createEngine().use {
                     GoAiSavedMatch(id, config, bytes, openingBytes = bytes, clock = newClock(GoPlayer.entries[it.currentPlayer.value]))

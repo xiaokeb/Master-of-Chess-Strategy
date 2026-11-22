@@ -9,6 +9,8 @@ import android.os.ParcelFileDescriptor
 import android.os.PowerManager
 import android.os.SystemClock
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.state.ToggleableState
 import android.graphics.Bitmap
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
@@ -42,6 +44,57 @@ import org.junit.Test
 /** Production NavHost, Room and locked asset/Native model. No scripted search or user DB access. */
 class GoAiProductionEntryInstrumentedTest {
     @get:Rule val compose = createAndroidComposeRule<GoLocalDataCheckActivity>()
+
+    @Test fun blindStandardGameHidesColorsResumesAndRevealsTheFinishedBoard() {
+        withOwnedApp(completedLessons = 10) { f ->
+            f.mountApp()
+            enterSetup()
+            compose.onNodeWithTag("go_ai_setup_size_9").performScrollTo().performClick()
+            compose.onNodeWithTag("go_ai_setup_blind").performScrollTo()
+                .assertContentDescriptionEquals("盲棋（棋子背面）").assertIsOff().performClick()
+            compose.onNodeWithTag("go_ai_setup_create").performScrollTo().performClick()
+            awaitHumanTurn()
+            val first = checkNotNull(f.active())
+            assertTrue(first.config.blind)
+            assertEquals(8, GoAiMatchFileCodec.encode(first)[4].toInt())
+            assertEquals(1, runBlocking { f.db.goRankedDao().starts().size })
+            compose.onNodeWithTag("go_intersection_0_0").performClick()
+            compose.waitUntil(60_000) {
+                f.active()?.let { match ->
+                    NativeGoEngine(9).use { native ->
+                        native.restore(match.copyBytes()) == RestoreResult.Restored &&
+                            native.eventHistory().size == 2 && native.currentPlayer == PlayerId(GoPlayer.BLACK.code)
+                    }
+                } == true
+            }
+            awaitHumanTurn()
+            compose.onNodeWithTag("go_intersection_0_0").assertContentDescriptionEquals("第1行第1列，棋子背面")
+            compose.onAllNodes(hasContentDescription("黑子", substring = true)).assertCountEquals(0)
+            compose.onAllNodes(hasContentDescription("白子", substring = true)).assertCountEquals(0)
+            val saved = checkNotNull(f.active())
+            f.capture("blind-live")
+            returnToSetup()
+            val blindSetting = compose.onNodeWithTag("go_ai_setup_blind").performScrollTo()
+            if (blindSetting.fetchSemanticsNode().config[SemanticsProperties.ToggleableState] == ToggleableState.On) {
+                blindSetting.performClick()
+            }
+            blindSetting.assertIsOff()
+            compose.onNodeWithTag("go_ai_setup_continue").performScrollTo().performClick()
+            awaitHumanTurn()
+            val restored = checkNotNull(f.active())
+            assertEquals(saved.config, restored.config)
+            assertArrayEquals(saved.copyBytes(), restored.copyBytes())
+            assertEquals(saved.matchId, restored.matchId)
+            compose.onNodeWithTag("go_intersection_0_0").assertContentDescriptionEquals("第1行第1列，棋子背面")
+            f.capture("blind-restored")
+            compose.onNodeWithTag("go_ai_resign").performScrollTo().performClick()
+            compose.onNodeWithTag("go_resign_confirm").performClick()
+            compose.waitUntil(30_000) { runBlocking { f.db.goAiCheckpointDao().listArchives().size } == 1 }
+            compose.onNodeWithTag("go_intersection_0_0").assertContentDescriptionEquals("第1行第1列，黑子")
+            assertTrue(checkNotNull(f.active()).config.blind)
+            f.capture("blind-finished")
+        }
+    }
 
     @Test fun unfinishedTenLessonProgressKeepsNewGameDisabledInProductionSetup() {
         withOwnedApp(completedLessons = 9) { f ->

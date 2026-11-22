@@ -8,6 +8,30 @@ import java.nio.ByteOrder
 import java.util.zip.CRC32
 
 class GoAiMatchFileCodecTest {
+    @Test fun blindV8RoundTripsWithAndWithoutClockAndRejectsRelabelledFlags() {
+        for (clock in listOf(null, GoTurnClock.start(300_000, GoPlayer.BLACK, 10))) {
+            val config = GoAiMatchConfig(9, blind = true)
+            val bytes = GoAiMatchFileCodec.encode(GoAiSavedMatch("blind", config, byteArrayOf(9, 0), clock = clock))
+            assertEquals(8, bytes[4].toInt())
+            val restored = checkNotNull(GoAiMatchFileCodec.decode(bytes))
+            assertEquals(config, restored.config)
+            assertEquals(clock, restored.clock)
+            assertArrayEquals(bytes, GoAiMatchFileCodec.encode(restored))
+            assertEquals(8, GoAiMatchFileCodec.canonicalVersion(bytes))
+            val header = if (clock == null) 44 else 77
+            fun repair(data: ByteArray) {
+                val crc = CRC32().apply { update(data, 0, header - 4); update(data, header, data.size - header) }.value.toInt()
+                ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).putInt(header - 4, crc)
+            }
+            val missingBlind = bytes.copyOf().also { it[9] = (it[9].toInt() and 16.inv()).toByte(); repair(it) }
+            assertNull(GoAiMatchFileCodec.decode(missingBlind))
+            val wrongClock = bytes.copyOf().also { it[9] = (it[9].toInt() xor 32).toByte(); repair(it) }
+            assertNull(GoAiMatchFileCodec.decode(wrongClock))
+            val oldVersion = bytes.copyOf().also { it[4] = (if (clock == null) 6 else 7).toByte(); repair(it) }
+            assertNull(GoAiMatchFileCodec.decode(oldVersion))
+        }
+    }
+
     @Test fun timedV7IsCanonicalAndV6RemainsUnlimited() {
         val config = GoAiMatchConfig(9)
         val native = byteArrayOf(9, 0)

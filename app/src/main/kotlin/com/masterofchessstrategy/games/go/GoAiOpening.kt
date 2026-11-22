@@ -19,8 +19,8 @@ class GoAiOpening private constructor(
     private val initialEvents = events.toList()
     val eventCount get() = initialEvents.size
     fun copyBytes() = initialBytes.copyOf()
-    fun config(humanPlayer: GoPlayer? = GoPlayer.BLACK, difficulty: GoAiDifficulty = GoAiDifficulty.SIMPLE) =
-        GoAiMatchConfig(boardSize, handicapStones, humanPlayer, difficulty)
+    fun config(humanPlayer: GoPlayer? = GoPlayer.BLACK, difficulty: GoAiDifficulty = GoAiDifficulty.SIMPLE,
+               blind: Boolean = false) = GoAiMatchConfig(boardSize, handicapStones, humanPlayer, difficulty, blind)
 
     /** Own a separate candidate for a new match/restart; never mutate a viewer or active match. */
     fun createEngine(factory: (Int, Int, Int) -> GoRecordEngine = nativeFactory): GoRecordEngine {

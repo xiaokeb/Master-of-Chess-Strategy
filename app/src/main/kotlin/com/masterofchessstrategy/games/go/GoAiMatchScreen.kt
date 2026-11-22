@@ -58,7 +58,8 @@ fun GoAiMatchScreen(
                         else GoAction.Place(BoardPosition(x, y)))
                 }, target, lastMoveIndex = game.lastMoveIndex, deadStoneIndices = game.deadStoneIndices,
                     highlightedPoints = match.hint?.highlightedPoints ?: emptySet(),
-                    interactionEnabled = match.humanCanPlay || match.canReviewScore)
+                    interactionEnabled = match.humanCanPlay || match.canReviewScore,
+                    hideStoneColors = match.config.blind && game.phase == GoPhase.PLAYING)
             }
             val controls: @Composable (Modifier) -> Unit = { target ->
                 Column(target.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -74,6 +75,7 @@ fun GoAiMatchScreen(
                     openingMessage?.let { Text(it, modifier = Modifier.testTag("go_ai_opening_message")) }
                     if (match != null && game != null) {
                         Text("${game.boardSize} 路 · ${goAiDifficultyLabel(match.config.difficulty)}")
+                        if (match.config.blind) Text("盲棋 · 行棋时隐藏棋子颜色", Modifier.testTag("go_ai_blind_status"))
                         if (game.handicapStones > 0) Text("让 ${game.handicapStones} 子 · 白方先行")
                         match.config.humanPlayer?.let { Text("你执${goReplayPlayer(it)}") }
                         if (match.hasSpecifiedOpening) Text("指定开局训练局 · 重开回到原开局 · 不计标准人机胜场")

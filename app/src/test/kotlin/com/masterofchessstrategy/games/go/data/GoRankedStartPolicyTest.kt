@@ -27,6 +27,15 @@ class GoRankedStartPolicyTest {
         }
     }
 
+    @Test fun blindStandardGameRetainsItsOwnCreationIdentityAndCannotRelabelAnExistingGame() {
+        val blind = GoAiMatchConfig(9, blind = true)
+        val start = admitGoRankedStart(match(blind), 0, factory)
+        assertNotNull(qualifiedGoOutcome(start, archive(match(blind, finish)), factory))
+        assertNull(qualifiedGoOutcome(start, archive(match(blind.copy(blind = false), finish)), factory))
+        val normalStart = admitGoRankedStart(match(blind.copy(blind = false)), 0, factory)
+        assertNull(qualifiedGoOutcome(normalStart, archive(match(blind, finish)), factory))
+    }
+
     @Test fun allowedAssistanceDoesNotEraseEligibilityButCannotAppearAtCreation() {
         for (level in GoAiDifficulty.entries) {
             val config = GoAiMatchConfig(9, difficulty = level)
