@@ -1,7 +1,8 @@
 param(
     [Parameter(Mandatory)][string]$Adb,
     [Parameter(Mandatory)][string]$Device,
-    [Parameter(Mandatory)][string]$OutputDirectory
+    [Parameter(Mandatory)][string]$OutputDirectory,
+    [switch]$PerMove
 )
 
 $ErrorActionPreference = 'Stop'
@@ -52,7 +53,10 @@ function Wait-Proof([string]$Path, [int]$DifferentFrom, [scriptblock]$Ready) {
 
 if (Get-OwnerPid) { throw 'A Go test process is already active' }
 $out = New-Item -ItemType Directory -Path $OutputDirectory
-foreach ($mode in @('timed-human', 'timed-auto')) {
+$cases = if ($PerMove) { @('per-move-human') } else { @('timed-human', 'timed-auto') }
+$limit = if ($PerMove) { 30000L } else { 300000L }
+$clockMode = if ($PerMove) { 'PER_MOVE' } else { 'MAIN' }
+foreach ($mode in $cases) {
     $token = [guid]::NewGuid().ToString()
     $log = Join-Path $out "$mode-seed.log"
     & $Adb -s $Device shell am instrument -w -r -e class $selector -e go_process_token $token -e go_process_case $mode "$app.test/androidx.test.runner.AndroidJUnitRunner" *> $log
@@ -75,7 +79,7 @@ foreach ($mode in @('timed-human', 'timed-auto')) {
         $before | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $out "$mode-before.json")
         if ($before.database -ne $db -or $before.match_id -ne $match -or
             $before.automatic -ne ($mode -eq 'timed-auto') -or $before.clock_active -ne 'BLACK' -or
-            $before.clock_limit -ne 300000 -or $before.black_millis -ne 300000 -or
+            $before.clock_mode -ne $clockMode -or $before.clock_limit -ne $limit -or $before.black_millis -ne $limit -or
             $before.event_count -ne 0 -or $before.archive_count -ne 0) { throw "Unexpected initial clock for $mode" }
         Stop-Owner $before.pid
         $deadline = [long]$before.clock_started_at + [long]$before.black_millis
@@ -91,7 +95,8 @@ foreach ($mode in @('timed-human', 'timed-auto')) {
         $after | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $out "$mode-after.json")
         if ($after.database -ne $db -or $after.match_id -ne $match -or $after.automatic -ne $before.automatic -or
             $after.timed_out_by -ne 'BLACK' -or $after.result -ne 'SECOND_PLAYER_WIN' -or $after.clock_active -or
-            $after.clock_limit -ne $before.clock_limit -or $after.black_millis -ne 0 -or $after.white_millis -ne 300000 -or
+            $after.clock_mode -ne $clockMode -or $after.clock_limit -ne $limit -or
+            $after.black_millis -ne 0 -or $after.white_millis -ne $limit -or
             $after.event_count -ne 1 -or $after.archive_count -ne 1) { throw "Unexpected restored result for $mode" }
         Stop-Owner $after.pid
         if ((Invoke-Device $launch) -notmatch '(?m)^Status: ok\s*$') { throw "Could not reopen result for $mode" }

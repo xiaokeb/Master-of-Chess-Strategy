@@ -72,6 +72,7 @@ class GoFormalProcessCheckActivity : ComponentActivity() {
                             .put("resigned_by", match.game.resignedBy?.name ?: JSONObject.NULL)
                             .put("timed_out_by", match.game.timedOutBy?.name ?: JSONObject.NULL)
                             .put("clock_limit", saved.clock?.limitMillis ?: JSONObject.NULL)
+                            .put("clock_mode", saved.clock?.mode?.name ?: JSONObject.NULL)
                             .put("clock_started_at", saved.clock?.startedAtMillis ?: JSONObject.NULL)
                             .put("clock_active", saved.clock?.active?.name ?: JSONObject.NULL)
                             .put("black_millis", saved.clock?.blackMillis ?: JSONObject.NULL)

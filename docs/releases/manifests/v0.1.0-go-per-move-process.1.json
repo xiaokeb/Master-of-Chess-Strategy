@@ -1,0 +1,61 @@
+{
+  "tag": "v0.1.0-go-per-move-process.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 6,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "release_manifest": "processed",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "318b0cb3284c9e81743e39c5b71e33b0bec45d4ad9abfffb0dd3e7692d23ac60",
+      "app/build/outputs/apk/debug/app-debug.apk": "dd6585c87ecfcf479cc8bdbc6e50d41931a8870e385ff0a7a85064c203594368"
+    },
+    "candidate": "go-per-move-process1",
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.games.go.GoAiPerMovePolicyTest",
+        "tests": 6
+      }
+    ],
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "baseline": "1c1cc05258d9b5647fddf34ace3312066164eed1",
+    "overlays": [
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/data/GoFormalProcessCheckpointInstrumentedTest.kt",
+        "working_sha256": "ba2662ecc12ffc8978b5a92349f43f29fc26f92072f2d50450c1a1cc45f3808f",
+        "sha256": "ba2662ecc12ffc8978b5a92349f43f29fc26f92072f2d50450c1a1cc45f3808f"
+      },
+      {
+        "path": "app/src/debug/kotlin/com/masterofchessstrategy/ui/GoFormalProcessCheckActivity.kt",
+        "working_sha256": "6f167691d38932ef12e1beb38166ee5d4bbe400cd6101c5003301d0ede5bb4ff",
+        "sha256": "6f167691d38932ef12e1beb38166ee5d4bbe400cd6101c5003301d0ede5bb4ff"
+      },
+      {
+        "path": "tools/android/go/test-clock-process-restart.ps1",
+        "working_sha256": "d87ddc6449ead8ca24a555dcc4e1e5eb508b576191731536968f2ab5a348ad3a",
+        "sha256": "d87ddc6449ead8ca24a555dcc4e1e5eb508b576191731536968f2ab5a348ad3a"
+      }
+    ]
+  },
+  "device": {
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "folder": ".build/go-per-move-process1/process-r2",
+    "scenario": "per-move-human",
+    "changed_processes": 3,
+    "clock_limit": 30000,
+    "archive_count": 1,
+    "checkpoint_sha256": "135a7d8bfbfb56cd0f955809a5a9b3d5222fd666337db398e821bf735ac11194",
+    "evidence": {
+      "seed": "d672b6c73ed1ab461415d48ef7a803ff04fb1d06bb8b8e070f4a038d9e30e7ae",
+      "before": "07b7bd7e3e38aa9ed8692927028004db6b3edb6a6cf49380e197a408690b07fa",
+      "after": "52e245f293dff3e53ac47802ca7d83bb774c37440ecdd33dac557cf1464ce9aa",
+      "final": "7e7190f3d04780383e8df252e253bb2c42fdf3e270998c0977f9de54f0df2e42"
+    }
+  }
+}

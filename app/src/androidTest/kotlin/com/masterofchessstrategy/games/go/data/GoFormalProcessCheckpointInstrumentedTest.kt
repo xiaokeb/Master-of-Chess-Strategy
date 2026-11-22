@@ -13,6 +13,7 @@ import com.masterofchessstrategy.games.go.GoAiMatchConfig
 import com.masterofchessstrategy.games.go.GoAiDifficulty
 import com.masterofchessstrategy.games.go.GoAiMatchFileCodec
 import com.masterofchessstrategy.games.go.GoAiSavedMatch
+import com.masterofchessstrategy.games.go.GoClockMode
 import com.masterofchessstrategy.games.go.GoEndgameProgress
 import com.masterofchessstrategy.games.go.GoLearningLibrary
 import com.masterofchessstrategy.games.go.GoLearningProgress
@@ -33,7 +34,7 @@ class GoFormalProcessCheckpointInstrumentedTest {
         val mode = args.getString("go_process_case") ?: "standard"
         require(UUID.fromString(token).toString() == token)
         require(mode in setOf("standard", "opening", "continuation", "long19", "resignation",
-            "timed-human", "timed-auto", "assessment-playing", "assessment-final"))
+            "timed-human", "timed-auto", "per-move-human", "assessment-playing", "assessment-final"))
         val name = "go-formal-process-qa-$token.db"
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         check(!context.getDatabasePath(name).exists())
@@ -51,17 +52,20 @@ class GoFormalProcessCheckpointInstrumentedTest {
                 return@runBlocking
             }
             val longGame = mode == "long19"
-            val timed = mode == "timed-human" || mode == "timed-auto"
+            val perMove = mode == "per-move-human"
+            val timed = mode == "timed-human" || mode == "timed-auto" || perMove
             val automatic = longGame || mode == "continuation" || mode == "timed-auto"
             val ranked = mode == "standard" || mode == "resignation"
             val config = GoAiMatchConfig(if (longGame) 19 else 9,
-                humanPlayer = if (automatic) null else GoPlayer.BLACK)
+                humanPlayer = if (automatic) null else GoPlayer.BLACK,
+                perMoveLimitSeconds = 30.takeIf { perMove })
             val repository = bundle.formalAiRepository()
             val saved = NativeGoEngine(config.boardSize).use { native ->
                 if (timed) {
                     // Persist a real near-term deadline. The process driver waits while the owner is absent.
                     val now = System.currentTimeMillis()
-                    val clock = GoTurnClock.start(300_000L, GoPlayer.BLACK, now - 250_000L)
+                    val clock = if (perMove) GoTurnClock.start(30_000L, GoPlayer.BLACK, now - 8_000L, GoClockMode.PER_MOVE)
+                        else GoTurnClock.start(300_000L, GoPlayer.BLACK, now - 250_000L)
                     return@use GoAiSavedMatch(matchId, config, native.serialize(), clock = clock)
                 }
                 if (longGame) return@use GoAiSavedMatch(matchId, config, native.serialize(),
