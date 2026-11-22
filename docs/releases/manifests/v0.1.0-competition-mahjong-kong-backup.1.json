@@ -1,0 +1,54 @@
+{
+  "tag": "v0.1.0-competition-mahjong-kong-backup.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 4,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "a694a433ecda1abcb47f232ec7e6e34a5c71b57ab5e5bfd6e3fa9719b18cca1a",
+      "app/build/outputs/apk/debug/app-debug.apk": "ee9ad2e31f0162de17a99f37d5c375d8b509f88a8a812ba89caa6b93878a6a61"
+    },
+    "lint_warnings": 25,
+    "lint_errors": 0,
+    "candidate": "cm-kong-backup1",
+    "release_manifest": "processed",
+    "overlays": [
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/data/CompetitionMahjongFormalProductionBackupInstrumentedTest.kt",
+        "working_sha256": "50ea34637da90cecb4b85d391c995e64f6b1b19cf408b67a7b34b789412037f5",
+        "sha256": "50ea34637da90cecb4b85d391c995e64f6b1b19cf408b67a7b34b789412037f5"
+      }
+    ],
+    "unit_tests": [
+      {
+        "tests": 9,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalSnapshotCodecTest"
+      }
+    ],
+    "baseline": "7c87630c8f91141a67841559e2cbb1675264fc63"
+  },
+  "device": {
+    "runs": [
+      {
+        "sha256": "cd25d7fd7d2035eff1c89216c11945986f6b00aea057e56e15cc95730e7409e7",
+        "tests": 1,
+        "selector": "com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalProductionBackupInstrumentedTest#sixteenRealHandsSettleWithdrawAndReopenWithHistoryAndDeletionIntact",
+        "log": "sixteenRealHandsSettleWithdrawAndReopenWithHistoryAndDeletionIntact.log"
+      },
+      {
+        "sha256": "41d243558e7d34d1329872448ce5862d8fef8ea1e851f07a8d38307baee08283",
+        "tests": 1,
+        "selector": "com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalProductionBackupInstrumentedTest#revisedKongScoringSeriesRoundTripsAllSixteenHandsThroughProductionBackup",
+        "log": "revisedKongScoringSeriesRoundTripsAllSixteenHandsThroughProductionBackup.log"
+      }
+    ],
+    "abi": "x86_64",
+    "avd": "Pixel_7_Pro",
+    "folder": "device-46b79edbc6804d1d93488fe5c3090d88"
+  }
+}

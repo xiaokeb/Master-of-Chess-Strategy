@@ -21,4 +21,10 @@ NDK 30 双 ABI 编译通过，Pixel 7 Pro 实跑 137 个计番场景（含 9 个
 
 标准正式赛事的新局使用 MCMS／MOCM v3，赛事检查点使用 MCMT v8。新标准自动演局使用 MCAU／MCMA v4。存档按原版本恢复，指定教学开局沿用其随档计分版本。正式备份沿用 MCTX，既存三种归档策略和新增策略分别编码。
 
-106 项定向 JVM 测试通过，双 ABI、Debug 主包、仪器包和 Release 主清单构建通过，Lint 0 错误、25 警告。Pixel 7 Pro 默认和 150% 字号各验证正式新局出牌与续局、自动新局单步与续局。另通过旧 WMO 十六盘重放、生产备份恢复和自动棋谱交换，共 7 项仪器测试。已核看 16 张画面。新版独立棋力、完整新版本赛事备份及实体设备继续验收。[Android 证据](../../releases/manifests/v0.1.0-competition-mahjong-kong-scoring.1.json)
+106 项定向 JVM 测试通过，双 ABI、Debug 主包、仪器包和 Release 主清单构建通过，Lint 0 错误、25 警告。Pixel 7 Pro 默认和 150% 字号各验证正式新局出牌与续局、自动新局单步与续局。另通过旧 WMO 十六盘重放、生产备份恢复和自动棋谱交换，共 7 项仪器测试。已核看 16 张画面。[Android 证据](../../releases/manifests/v0.1.0-competition-mahjong-kong-scoring.1.json)
+
+## 完整正式赛事备份
+
+Pixel 7 Pro 分别以旧、新 WMO 计分跑完十六盘正式赛事。核对每盘原生日志的会话与计分版本，验证第八盘磁盘重开、末盘归档失败重试、撤回结算与重新结算。旧赛事和新版进行中赛事同包恢复后，旧、新计分策略仍分别匹配原始记录。新版完整赛事也通过生产备份恢复，重新生成的十六盘结果逐盘一致。错盘日志和损坏档案均拒绝导入，原库字节一致。
+
+9 项 JVM 测试及 2 项模拟器测试通过，双 ABI、Debug 主包、仪器包和 Release 主清单构建通过，Lint 0 错误、25 警告。该专项只改验收用例，生产界面证据见上一节点。[完整备份证据](../../releases/manifests/v0.1.0-competition-mahjong-kong-backup.1.json)

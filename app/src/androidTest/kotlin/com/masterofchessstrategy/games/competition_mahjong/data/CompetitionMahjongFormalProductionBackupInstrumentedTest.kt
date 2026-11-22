@@ -142,10 +142,16 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
         assertEquals(listOf(kept), f.db.matchOutcomeDao().listAll())
     }
 
-    @Test fun sixteenRealHandsSettleWithdrawAndReopenWithHistoryAndDeletionIntact() = withOwnedLanzhouDatabase { f ->
+    @Test fun sixteenRealHandsSettleWithdrawAndReopenWithHistoryAndDeletionIntact() =
+        verifyProductionSeriesBackup(CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO)
+
+    @Test fun revisedKongScoringSeriesRoundTripsAllSixteenHandsThroughProductionBackup() =
+        verifyProductionSeriesBackup(CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO_KONGS)
+
+    private fun verifyProductionSeriesBackup(strategy: CompetitionMahjongBotStrategy) = withOwnedLanzhouDatabase { f ->
         completeCourse(f.db)
-        val config = CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(), 20261009, 0, 0,
-            CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO)
+        val config = CompetitionMahjongCompetitionConfig(UUID.randomUUID().toString(), 20261009, 0, 0, strategy)
+        val scoringVersion = strategy.scoring.recordVersion
         var host = CompetitionMahjongFormalHost(f.db, 0)
         var session = (host.open() as CompetitionMahjongFormalHost.Entry.Ready).session
         var usage = session.policy.freshUsage(config.botLevel)
@@ -160,7 +166,7 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
             assertTrue(controller.open())
             assertEquals(0, storedSnapshot(f.db).settledHandRecords!!.size)
             assertEquals(config.botStrategy, storedSnapshot(f.db).active!!.config.botStrategy)
-            assertEquals(2, storedSnapshot(f.db).active!!.engineRecord[4].toInt())
+            assertEquals(scoringVersion, storedSnapshot(f.db).active!!.engineRecord[4].toInt())
             for (index in 0 until 16) {
                 val seating = CompetitionMahjongMatchSeating.forHand(index)
                 val frame = checkNotNull(controller.state.value.table)
@@ -250,6 +256,11 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
             assertEquals(4, beforeBackup[4].toInt())
             val recorded = storedSnapshot(f.db)
             val prefix = checkNotNull(recorded.settledHandRecords)
+            assertEquals(15, prefix.size)
+            for (record in prefix + listOf(checkNotNull(recorded.active).engineRecord)) {
+                assertEquals(scoringVersion, record[4].toInt())
+                assertEquals(scoringVersion, record[16].toInt())
+            }
             val wrongHand = recorded.withSettledHandRecords(listOf(prefix[1]) + prefix.drop(1))
             val wire = CompetitionMahjongFormalBackupWire.encode(0, CompetitionMahjongFormalSnapshotCodec.encode(wrongHand))
             val proof = f.db.withTransaction { CompetitionMahjongLearningBackupAdapter().read(f.db) }
@@ -273,7 +284,8 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
             assertTrue(session.history.load(0).entries.isEmpty())
             assertEquals(config.matchId, session.statistics.load(0).outcomes.single().matchId)
 
-            val next = config.copy(matchId = UUID.randomUUID().toString(), seed = config.seed + 1)
+            val next = config.copy(matchId = UUID.randomUUID().toString(), seed = config.seed + 1,
+                botStrategy = CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO_KONGS)
             val freshStore = object : CompetitionMahjongMatchStore {
                 override suspend fun load(viewerPlayerId: Int): CompetitionMahjongMatchCheckpoint? = null
                 override suspend fun save(checkpoint: CompetitionMahjongMatchCheckpoint) =
@@ -300,7 +312,10 @@ class CompetitionMahjongFormalProductionBackupInstrumentedTest {
             f.repository().restore(crossSeriesBackup)
             f.reopen()
             assertArrayEquals(bytesWithNewMatch, storedMctx(f.db))
-            assertEquals(config, storedSnapshot(f.db).archivedSeries.single().config)
+            val reopened = storedSnapshot(f.db)
+            assertEquals(next, reopened.active!!.config)
+            assertEquals(config, reopened.archivedSeries.single().config)
+            assertEquals(settled.hands, CompetitionMahjongPrivateSeriesReplay.replayArchive(reopened.archivedSeries.single()).results)
             assertEquals(1, (RoomMatchStatisticsRepository(f.db).load() as LoadMatchStatisticsResult.Loaded)
                 .statistics.byGame.getValue(GameType.STANDARD_MAHJONG).completedMatches)
         } finally {
