@@ -2,7 +2,8 @@ param(
     [Parameter(Mandatory)][string]$Adb,
     [Parameter(Mandatory)][string]$Device,
     [Parameter(Mandatory)][string]$OutputDirectory,
-    [switch]$CustomSetup
+    [switch]$CustomSetup,
+    [switch]$Streak
 )
 
 $ErrorActionPreference = 'Stop'
@@ -53,7 +54,10 @@ function Wait-Proof([string]$Path, [int]$DifferentFrom, [scriptblock]$Ready) {
 
 if (Get-OwnerPid) { throw 'A Go test process is already active' }
 $out = New-Item -ItemType Directory -Path $OutputDirectory
-$cases = if ($CustomSetup) { @('custom-playing', 'custom-final') } else { @('assessment-playing', 'assessment-final') }
+if ($CustomSetup -and $Streak) { throw 'Choose one scenario set' }
+$cases = if ($CustomSetup) { @('custom-playing', 'custom-final') }
+elseif ($Streak) { @('streak-playing', 'streak-final') }
+else { @('assessment-playing', 'assessment-final') }
 foreach ($mode in $cases) {
     $token = [guid]::NewGuid().ToString()
     $log = Join-Path $out "$mode-seed.log"
@@ -99,6 +103,17 @@ foreach ($mode in $cases) {
                 $before.event_count -ne $expectedEvents -or $before.result -cne $result -or
                 $before.archive_count -ne $expectedRecords -or $before.record_count -ne $expectedRecords) {
                 throw "Unexpected custom setup state for $mode"
+            }
+        } elseif ($Streak) {
+            $expectedEvents = if ($finished) { 5 } else { 0 }
+            $expectedDifficulty = if ($finished) { 'SIMPLE' } else { 'MEDIUM' }
+            $expectedNext = if ($finished) { 'MEDIUM' } else { $null }
+            $expectedResult = if ($finished) { 'FIRST_PLAYER_WIN' } else { 'ONGOING' }
+            if ($before.streak_current -ne 3 -or $before.streak_best -ne 3 -or
+                $before.difficulty -cne $expectedDifficulty -or $before.streak_next_difficulty -cne $expectedNext -or
+                $before.result -cne $expectedResult -or $before.event_count -ne $expectedEvents -or
+                $before.archive_count -ne 3 -or $before.record_count -ne 3) {
+                throw "Unexpected streak state for $mode"
             }
         } elseif ($before.assessment_rounds -ne $rounds -or $before.assessment_rating -ne $rating -or
             $before.assessment_finished -ne $finished -or $before.event_count -ne $events -or

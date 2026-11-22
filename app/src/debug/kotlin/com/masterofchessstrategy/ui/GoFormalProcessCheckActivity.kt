@@ -96,6 +96,10 @@ class GoFormalProcessCheckActivity : ComponentActivity() {
                             .put("black_confirmed", match.game.blackConfirmed).put("white_confirmed", match.game.whiteConfirmed)
                             .put("archive_count", withContext(Dispatchers.IO) { db.goAiCheckpointDao().listArchives().size })
                             .put("record_count", withContext(Dispatchers.IO) { db.gameRecordDao().listAll().size })
+                            .put("difficulty", saved.config.difficulty.name)
+                            .put("streak_current", (match.streakResult?.second ?: saved.config.streak)?.current ?: JSONObject.NULL)
+                            .put("streak_best", (match.streakResult?.second ?: saved.config.streak)?.best ?: JSONObject.NULL)
+                            .put("streak_next_difficulty", match.streakResult?.first?.name ?: JSONObject.NULL)
                             .toString()
                         if (value != last) {
                             withContext(Dispatchers.IO) {

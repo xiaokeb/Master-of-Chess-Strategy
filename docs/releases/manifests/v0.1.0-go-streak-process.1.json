@@ -1,0 +1,78 @@
+{
+  "tag": "v0.1.0-go-streak-process.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 6,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "release_manifest": "processed",
+    "candidate": "go-streak-process1",
+    "unit_tests": [
+      {
+        "tests": 4,
+        "name": "com.masterofchessstrategy.games.go.GoStreakChallengeTest"
+      }
+    ],
+    "lint_warnings": 25,
+    "baseline": "1f2599ab31e68e75285b237954b552bddc98ed3f",
+    "lint_errors": 0,
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "74e06a34614b97484bf8656d6d4e351942c3ed363d320051f3f80a3d62385cec",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "c7c784227c051b19373ca7e77b70461207c8a60dc7b723e8c5ca9fa1e24bea03"
+    },
+    "overlays": [
+      {
+        "sha256": "fbd2e9f7cca70d1c25e9ec7d7881c7eca3621203deae3e96d61f201df9f45ef6",
+        "working_sha256": "fbd2e9f7cca70d1c25e9ec7d7881c7eca3621203deae3e96d61f201df9f45ef6",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/data/GoFormalProcessCheckpointInstrumentedTest.kt"
+      },
+      {
+        "sha256": "7239f2af99f7a2e6671327a6ff287e07cca790d0fd13f2a835fa8285c62b8cf7",
+        "working_sha256": "7239f2af99f7a2e6671327a6ff287e07cca790d0fd13f2a835fa8285c62b8cf7",
+        "path": "app/src/debug/kotlin/com/masterofchessstrategy/ui/GoFormalProcessCheckActivity.kt"
+      },
+      {
+        "sha256": "0806568620eb2c1f1f4b2a030d82d41ab4393c54b07fbfa2ae715f0638615381",
+        "working_sha256": "d01f991686e55d85d8b8168753e9769cdb8b5783ddddfcda06723d223cc13df1",
+        "path": "tools/android/go/test-assessment-process-restart.ps1"
+      }
+    ]
+  },
+  "device": {
+    "avd": "Pixel_7_Pro",
+    "folder": ".build/go-streak-process1/process",
+    "abi": "x86_64",
+    "process_restart": [
+      {
+        "scenario": "streak-playing",
+        "difficulty": "MEDIUM",
+        "record_count": 3,
+        "seed_sha256": "3b1ac1d2133da6b905dbfdd1ce44d360860bb6640622a52a43901e19a4622f0f",
+        "after_sha256": "726acb74d30441a07cfd57605b36f05319ef9843c6fca0ac663c3422b317c078",
+        "next_difficulty": null,
+        "event_count": 0,
+        "before_sha256": "0be54f79bcad3b7a569588a6395b3dce4a66f3aa3f71463ff7b72c13b8868bb4",
+        "checkpoint_sha256": "02c1c334029cb3c651ce169551fe2512c96d2fc474848fa5121eb003f7a7d28f",
+        "best": 3,
+        "current": 3
+      },
+      {
+        "scenario": "streak-final",
+        "difficulty": "SIMPLE",
+        "record_count": 3,
+        "seed_sha256": "a3bcd880665afaf98d87b3e450f191c40a6b607b804d5a1dc586234365530fd5",
+        "after_sha256": "08c0e73d882a3ccb0f131ac3787170cfe90ba0436572f37e7faba743eeb38626",
+        "next_difficulty": "MEDIUM",
+        "event_count": 5,
+        "before_sha256": "f23afed37d836bb236bae25bff7eae4a6a1d8db671d5ec57294fa13fa035bf1b",
+        "checkpoint_sha256": "65d754043e5027aed0bd3c954263f70064dcb0826679555dc8b8e884ae09f22c",
+        "best": 3,
+        "current": 3
+      }
+    ]
+  }
+}

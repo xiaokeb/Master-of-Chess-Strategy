@@ -19,6 +19,7 @@ import com.masterofchessstrategy.games.go.GoEndgameProgress
 import com.masterofchessstrategy.games.go.GoLearningLibrary
 import com.masterofchessstrategy.games.go.GoLearningProgress
 import com.masterofchessstrategy.games.go.GoTurnClock
+import com.masterofchessstrategy.games.go.GoStreakProgress
 import com.masterofchessstrategy.games.go.GoAssessmentProgress
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
@@ -36,7 +37,7 @@ class GoFormalProcessCheckpointInstrumentedTest {
         require(UUID.fromString(token).toString() == token)
         require(mode in setOf("standard", "opening", "continuation", "long19", "resignation",
             "timed-human", "timed-auto", "per-move-human", "assessment-playing", "assessment-final",
-            "custom-playing", "custom-final"))
+            "custom-playing", "custom-final", "streak-playing", "streak-final"))
         val name = "go-formal-process-qa-$token.db"
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         check(!context.getDatabasePath(name).exists())
@@ -55,6 +56,13 @@ class GoFormalProcessCheckpointInstrumentedTest {
             }
             if (mode.startsWith("custom-")) {
                 seedCustomSetup(bundle, matchId, terminal = mode == "custom-final")
+                assertEquals(0, db.goRankedDao().starts().size)
+                assertEquals(0, db.goRankedDao().settlements().size)
+                println("GO_PROCESS_FIXTURE $name $matchId $mode")
+                return@runBlocking
+            }
+            if (mode.startsWith("streak-")) {
+                seedStreak(bundle, matchId, terminal = mode == "streak-final")
                 assertEquals(0, db.goRankedDao().starts().size)
                 assertEquals(0, db.goRankedDao().settlements().size)
                 println("GO_PROCESS_FIXTURE $name $matchId $mode")
@@ -115,6 +123,35 @@ class GoFormalProcessCheckpointInstrumentedTest {
             if (externalToken == null) check(context.deleteDatabase(name))
         }
         Unit
+    }
+
+    private suspend fun seedStreak(bundle: GoCompleteStorageBundle, matchId: String, terminal: Boolean) {
+        val repository = bundle.formalAiRepository()
+        val last = if (terminal) 3 else 4
+        var config = GoAiMatchConfig(9, difficulty = GoAiDifficulty.SIMPLE, streak = GoStreakProgress())
+        for (round in 1..last) {
+            val id = if (round == last) matchId else UUID.nameUUIDFromBytes("$matchId:$round".toByteArray(Charsets.UTF_8)).toString()
+            NativeGoEngine(9).use { native ->
+                repository.save(GoAiSavedMatch(id, config, native.serialize()))
+                if (round != last || terminal) {
+                    assertEquals(ActionResult.Accepted, native.apply(GoAction.Place(BoardPosition(4, 4))))
+                    repeat(2) { assertEquals(ActionResult.Accepted, native.apply(GoAction.Pass)) }
+                    val proposal = native.scoringState().proposalRevision
+                    for (side in GoPlayer.entries) {
+                        assertEquals(ActionResult.Accepted, native.apply(GoAction.ConfirmScore(side, proposal)))
+                    }
+                    assertEquals(GameResult.FIRST_PLAYER_WIN, native.gameResult())
+                    val finished = GoAiSavedMatch(id, config, native.serialize(), completionReserved = true)
+                    repository.save(finished)
+                    bundle.completedMatchSink().storeCompleted(finished)
+                }
+            }
+            if (round != last) {
+                val (difficulty, progress) = checkNotNull(config.streak).after(GameResult.FIRST_PLAYER_WIN, config.difficulty)
+                config = config.copy(difficulty = difficulty, streak = progress)
+            }
+        }
+        assertEquals(matchId, repository.load()?.matchId)
     }
 
     private suspend fun seedCustomSetup(bundle: GoCompleteStorageBundle, matchId: String, terminal: Boolean) {
