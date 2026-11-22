@@ -36,6 +36,43 @@ class GoRankedBackupInstrumentedTest {
         }
     }
 
+    @Test fun customSetupRestoresItsRootAndTrainingRecordWithoutRankedGrowth() = runBlocking {
+        owned { source, target ->
+            val opening = GoAiOpening.fromSgf("(;FF[4]GM[1]SZ[9]AB[aa]AW[ii]PL[W])")
+            val other = GoAiOpening.fromSgf("(;FF[4]GM[1]SZ[9]AB[ba]AW[ii]PL[W])")
+            val id = UUID.randomUUID().toString()
+            val config = opening.config(GoPlayer.WHITE)
+            val storage = bundle(source)
+            val checkpoint = storage.aiRepository()
+            opening.createEngine().use { engine ->
+                checkpoint.save(GoAiSavedMatch(id, config, engine.serialize(), openingBytes = opening.copyBytes()))
+                assertEquals(ActionResult.Accepted, engine.apply(GoAction.Place(BoardPosition(1, 1))))
+                assertEquals(ActionResult.Accepted, engine.apply(GoAction.Resign(GoPlayer.WHITE)))
+                val position = engine.serialize()
+                rejects { admitGoAiCheckpoint(GoAiSavedMatch(id, config, position)) }
+                rejects { admitGoAiCheckpoint(GoAiSavedMatch(id, config, position, openingBytes = other.copyBytes())) }
+                val terminal = GoAiSavedMatch(id, config, position,
+                    completionReserved = true, openingBytes = opening.copyBytes())
+                checkpoint.save(terminal)
+                storage.completedMatchSink().storeCompleted(terminal)
+            }
+
+            val bytes = backup(source).export(500)
+            assertEquals(0, backup(target).restore(bytes).matchOutcomeCount)
+            val archive = target.goAiCheckpointDao().listArchives().single()
+            val restored = checkNotNull(GoAiMatchFileCodec.decode(archive.checkpoint))
+            assertArrayEquals(opening.copyBytes(), restored.copyOpeningBytes())
+            val record = target.gameRecordDao().listAll().single()
+            assertEquals(archive.recordId, record.recordId)
+            assertEquals(StoredGameMode.CUSTOM_POSITION.code, record.modeCode)
+            assertEquals(GoPlayer.WHITE.code, record.playerIndex)
+            assertArrayEquals(restored.copyBytes(), record.engineState)
+            assertTrue(target.goRankedDao().settlements().isEmpty())
+            assertEquals(0, statistics(target).totalWins)
+            assertArrayEquals(bytes, backup(target).export(500))
+        }
+    }
+
     @Test fun seventeenToEighteenPreservesUnknownRecordsAndDoesNotInventRankedFacts() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val name = "go-ranked-migration-${UUID.randomUUID()}.db"

@@ -108,7 +108,7 @@ private:
 
 [[nodiscard]] bool parse_root(
     const Node& root, const std::uint8_t expected_size, std::int32_t& komi_quarters,
-    std::uint8_t& handicap_stones
+    std::uint8_t& handicap_stones, std::vector<GoStone>& board, std::uint8_t& actor
 ) {
     bool ff = false;
     bool gm = false;
@@ -116,17 +116,19 @@ private:
     bool km = false;
     bool ru = false;
     bool ha = false;
-    const Property* setup_stones = nullptr;
+    const Property* black_stones = nullptr;
+    const Property* white_stones = nullptr;
     const Property* first_player = nullptr;
     for (const auto& property : root) {
         const auto& name = property.name;
-        if (name == "B" || name == "W" || name == "AW" ||
+        if (name == "B" || name == "W" ||
             name == "AE" || name == "KO" || name == "RE") {
             return false;
         }
-        if (name == "AB") {
-            if (setup_stones) return false;
-            setup_stones = &property;
+        if (name == "AB" || name == "AW") {
+            auto*& stones = name == "AB" ? black_stones : white_stones;
+            if (stones) return false;
+            stones = &property;
             continue;
         }
         if (name == "PL") {
@@ -170,12 +172,12 @@ private:
     }
     if (handicap_stones != 0) {
         if (!km) komi_quarters = 0;
-        if (komi_quarters != 0 || !setup_stones ||
-            setup_stones->values.size() != handicap_stones ||
+        if (komi_quarters != 0 || !black_stones || white_stones ||
+            black_stones->values.size() != handicap_stones ||
             (first_player && first_player->values.front() != "W")) return false;
         const auto setup = make_go_handicap_setup(expected_size, handicap_stones);
         std::vector<bool> seen(static_cast<std::size_t>(expected_size) * expected_size, false);
-        for (const auto& value : setup_stones->values) {
+        for (const auto& value : black_stones->values) {
             if (value.size() != 2 || value[0] < 'a' || value[1] < 'a' ||
                 value[0] >= 'a' + expected_size || value[1] >= 'a' + expected_size) return false;
             const auto point = static_cast<std::size_t>(value[1] - 'a') * expected_size +
@@ -186,8 +188,26 @@ private:
         for (const auto point : setup->black_stones) {
             if (!seen[static_cast<std::size_t>(point.y) * expected_size + point.x]) return false;
         }
-    } else if (setup_stones || (first_player && first_player->values.front() != "B")) {
-        return false;
+    } else if (black_stones || white_stones || first_player) {
+        if (first_player) {
+            const auto& side = first_player->values.front();
+            if (side != "B" && side != "W") return false;
+            actor = side == "B" ? 0 : 1;
+        }
+        board.assign(static_cast<std::size_t>(expected_size) * expected_size, GoStone::empty);
+        const auto place = [&](const Property* stones, const GoStone color) {
+            if (!stones) return true;
+            for (const auto& value : stones->values) {
+                if (value.size() != 2 || value[0] < 'a' || value[1] < 'a' ||
+                    value[0] >= 'a' + expected_size || value[1] >= 'a' + expected_size) return false;
+                const auto point = static_cast<std::size_t>(value[1] - 'a') * expected_size +
+                    static_cast<std::size_t>(value[0] - 'a');
+                if (board[point] != GoStone::empty) return false;
+                board[point] = color;
+            }
+            return true;
+        };
+        if (!place(black_stones, GoStone::black) || !place(white_stones, GoStone::white)) return false;
     }
     return ff && gm && sz;
 }
@@ -250,6 +270,24 @@ std::string export_go_sgf(const GoEngine& game) {
         sgf += "PL[W]";
     }
     GoEngine replay(game.board_size(), game.black_komi_quarters(), game.handicap_stones());
+    if (game.has_custom_setup()) {
+        const auto& board = game.initial_board();
+        for (const auto color : {GoStone::black, GoStone::white}) {
+            bool first = true;
+            for (std::size_t point = 0; point < board.size(); ++point) {
+                if (board[point] != color) continue;
+                if (first) { sgf += color == GoStone::black ? "AB" : "AW"; first = false; }
+                sgf += '[';
+                sgf += static_cast<char>('a' + point % game.board_size());
+                sgf += static_cast<char>('a' + point / game.board_size());
+                sgf += ']';
+            }
+        }
+        sgf += game.initial_player() == 0 ? "PL[B]" : "PL[W]";
+        if (!replay.set_initial_position(board, game.initial_player()).restored) {
+            throw std::logic_error("Invalid Go initial position");
+        }
+    }
     for (const auto& action : game.event_history()) {
         if (action.kind == go_place_action_kind || action.kind == go_pass_action_kind) {
             sgf += replay.current_player() == 0 ? ";B[" : ";W[";
@@ -278,11 +316,14 @@ RestoreResult restore_go_sgf(GoEngine& game, const std::string_view sgf) {
     Node root;
     std::int32_t komi_quarters = 15;
     std::uint8_t handicap_stones = 0;
+    std::uint8_t actor = 0;
+    std::vector<GoStone> board;
     if (!parser.parse_node(root) ||
-        !parse_root(root, game.board_size(), komi_quarters, handicap_stones)) {
+        !parse_root(root, game.board_size(), komi_quarters, handicap_stones, board, actor)) {
         return bad_sgf();
     }
     GoEngine candidate(game.board_size(), komi_quarters, handicap_stones);
+    if (!board.empty() && !candidate.set_initial_position(board, actor).restored) return bad_sgf();
     while (parser.peek() == ';') {
         Node node;
         if (!parser.parse_node(node) || !apply_node(node, candidate)) return bad_sgf();

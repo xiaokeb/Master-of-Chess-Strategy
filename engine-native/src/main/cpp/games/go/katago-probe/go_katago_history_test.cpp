@@ -44,6 +44,19 @@ void expect_agreement_rejected(GoEngine& game) {
 int main() {
     try {
         Board::initHash();
+        for (const std::uint8_t actor : {0, 1}) {
+            GoEngine training(9);
+            std::vector<mocs::engine::GoStone> board(81, mocs::engine::GoStone::empty);
+            board[0] = mocs::engine::GoStone::black;
+            board[80] = mocs::engine::GoStone::white;
+            require(training.set_initial_position(board, actor).restored, "Training setup failed");
+            check(training);
+            apply(training, make_go_place(1, 1));
+            check(training);
+            GoEngine restored(9);
+            require(restored.restore(training.serialize()).restored, "Training history failed to restore");
+            check(restored);
+        }
         for (const std::uint8_t size : {9, 13, 19}) {
             GoEngine zero_komi(size, 0);
             check(zero_komi);

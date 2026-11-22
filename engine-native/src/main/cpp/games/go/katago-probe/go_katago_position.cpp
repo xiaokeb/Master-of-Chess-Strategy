@@ -27,11 +27,15 @@ KataGoPosition::KataGoPosition(const GoEngine& source)
     if (source.phase() != GoPhase::playing) throw std::runtime_error("Go agreement is not an AI turn");
     const auto original = source.serialize();
     GoEngine replay(source.board_size(), source.black_komi_quarters(), source.handicap_stones());
+    if (source.has_custom_setup() &&
+        !replay.set_initial_position(source.initial_board(), source.initial_player()).restored) {
+        throw std::runtime_error("Could not reproduce Go training setup");
+    }
     for (int y = 0; y < source.board_size(); ++y) for (int x = 0; x < source.board_size(); ++x) {
         const auto stone = replay.stone_at(x, y).value();
         if (stone != GoStone::empty && !board.setStone(
                 Location::getLoc(x, y, board.x_size), kata_stone(stone))) {
-            throw std::runtime_error("Could not reproduce Go fixed setup");
+            throw std::runtime_error("Could not reproduce Go initial stones");
         }
     }
     const Rules rules(Rules::KO_POSITIONAL, Rules::SCORING_AREA, Rules::TAX_NONE,

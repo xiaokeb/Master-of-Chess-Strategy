@@ -2,11 +2,13 @@ package com.masterofchessstrategy.games.go.data
 
 import com.masterofchessstrategy.data.GameRecord
 import com.masterofchessstrategy.data.GameRecordPayloadPolicy
+import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.GoAction
 import com.masterofchessstrategy.engine.GoPhase
 import com.masterofchessstrategy.engine.NativeGoEngine
 import com.masterofchessstrategy.engine.RestoreResult
+import com.masterofchessstrategy.games.go.goSetupRoot
 
 /** Worker-only admission. SGF's final passes or one confirmation are not a completed record. */
 internal fun requireCompletedGoRecord(record: GameRecord) {
@@ -15,6 +17,9 @@ internal fun requireCompletedGoRecord(record: GameRecord) {
         GameRecordPayloadPolicy.accepts(GameType.GO, record.engineFormatVersion, state))
     NativeGoEngine(boardSize = state[5].toInt() and 0xff).use { engine ->
         require(engine.restore(state) == RestoreResult.Restored) { "Invalid Go record history" }
+        require(record.mode != StoredGameMode.CUSTOM_POSITION || goSetupRoot(state) != null) {
+            "Custom Go record is missing its original board"
+        }
         val history = engine.eventHistory()
         val terminal = history.lastOrNull()
         require(engine.phase == GoPhase.FINISHED &&

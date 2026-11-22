@@ -17,6 +17,8 @@ class GoAiOpening private constructor(
 ) {
     private val initialBytes = bytes.copyOf()
     private val initialEvents = events.toList()
+    private val setupRoot = goSetupRoot(initialBytes)
+    internal val hasCustomSetup get() = setupRoot != null
     val eventCount get() = initialEvents.size
     fun copyBytes() = initialBytes.copyOf()
     fun config(humanPlayer: GoPlayer? = GoPlayer.BLACK, difficulty: GoAiDifficulty = GoAiDifficulty.SIMPLE,
@@ -38,11 +40,17 @@ class GoAiOpening private constructor(
     }
 
     /** The caller must first restore current bytes through Native, not decode a forged event list. */
-    fun checkContinuation(current: GoRecordEngine) {
+    fun checkContinuation(current: GoRecordEngine) = checkContinuation(current, current.serialize())
+
+    internal fun checkContinuation(current: GoRecordEngine, canonicalHistory: ByteArray) {
         require(current.boardSize == boardSize && current.handicapStones == handicapStones &&
             current.blackKomiQuarters == blackKomiQuarters) { "对局配置与指定开局不一致。" }
         val history = current.eventHistory()
         require(history.size >= eventCount && history.take(eventCount) == initialEvents) { "对局历史不属于指定开局。" }
+        val root = goSetupRoot(canonicalHistory)
+        require(if (setupRoot == null) root == null else root != null && setupRoot.contentEquals(root)) {
+            "对局原始摆局与指定开局不一致。"
+        }
     }
 
     companion object {

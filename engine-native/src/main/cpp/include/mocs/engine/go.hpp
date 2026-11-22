@@ -93,6 +93,11 @@ public:
     [[nodiscard]] std::int32_t black_komi_quarters() const noexcept;
     [[nodiscard]] std::uint8_t handicap_stones() const noexcept;
     [[nodiscard]] std::vector<GoPoint> handicap_points() const;
+    // Replace a board with a checked training initial position. Failure leaves the game intact.
+    [[nodiscard]] RestoreResult set_initial_position(const std::vector<GoStone>& board, std::uint8_t player);
+    [[nodiscard]] bool has_custom_setup() const noexcept;
+    [[nodiscard]] const std::vector<GoStone>& initial_board() const noexcept;
+    [[nodiscard]] std::uint8_t initial_player() const noexcept;
     // SGF moves exclude agreement events. Full events preserve resume actors.
     [[nodiscard]] std::vector<EngineAction> action_history() const;
     [[nodiscard]] std::vector<EngineAction> event_history() const;
@@ -129,6 +134,7 @@ private:
     std::uint8_t size_;
     std::int32_t black_komi_quarters_;
     std::uint8_t handicap_stones_;
+    bool custom_setup_{};
     std::uint32_t proposal_clock_{};
     std::size_t board_action_count_{};
     std::vector<Position> positions_;

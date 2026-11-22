@@ -1,13 +1,15 @@
 package com.masterofchessstrategy.data
 
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.games.go.GO_SETUP_BOARD_OFFSET
+import com.masterofchessstrategy.games.go.GO_SETUP_FORMAT_VERSION
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiSessionAdmission
 import java.io.IOException
 
 /** Envelope checks only. Go rule replay and terminal metadata still require Native admission. */
 internal object GameRecordPayloadPolicy {
     const val XIANGQI_MAX_BYTES = 64 * 1024
-    const val GO_MAX_BYTES = 16 + 21 * 16_386
+    const val GO_MAX_BYTES = GO_SETUP_BOARD_OFFSET + 19 * 19 + 21 * 16_386
     const val FANGQI_MAX_BYTES = 1_048_576
 
     fun currentVersion(gameType: GameType): Int = when (gameType) {
@@ -45,9 +47,9 @@ internal object GameRecordPayloadPolicy {
     } catch (_: IOException) { null }
 
     private fun acceptsGo(version: Int, state: ByteArray): Boolean {
-        val header = when (version) { 1 -> 10; 2 -> 11; in 3..5 -> 16; else -> return false }
+        val baseHeader = when (version) { 1 -> 10; 2 -> 11; in 3..GO_SETUP_FORMAT_VERSION -> 16; else -> return false }
         val width = when (version) { 1 -> 3; 2 -> 17; else -> 21 }
-        if (state.size !in header..GO_MAX_BYTES || state[0] != 'M'.code.toByte() ||
+        if (state.size !in baseHeader..GO_MAX_BYTES || state[0] != 'M'.code.toByte() ||
             state[1] != 'O'.code.toByte() || state[2] != 'C'.code.toByte() ||
             state[3] != 'G'.code.toByte() || unsigned(state[4]) != version ||
             unsigned(state[5]) !in setOf(9, 13, 19)
@@ -58,7 +60,14 @@ internal object GameRecordPayloadPolicy {
             if (handicap != 0 && (handicap !in 2..9 || state[6] != 0.toByte())) return false
             if (readUnsigned32(state, 8) > Int.MAX_VALUE) return false
         }
-        val events = readUnsigned32(state, header - 4)
+        val header = if (version == GO_SETUP_FORMAT_VERSION) {
+            val size = unsigned(state[5])
+            val end = GO_SETUP_BOARD_OFFSET + size * size
+            if (state.size < end || state[7] != 0.toByte() || unsigned(state[16]) > 1 ||
+                (GO_SETUP_BOARD_OFFSET until end).any { unsigned(state[it]) > 2 }) return false
+            end
+        } else baseHeader
+        val events = readUnsigned32(state, baseHeader - 4)
         val maximumEvents = if (version == 1) 4_096 else 16_386
         return events <= maximumEvents && state.size.toLong() == header + events * width
     }

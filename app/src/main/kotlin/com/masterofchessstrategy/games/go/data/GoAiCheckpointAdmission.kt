@@ -42,7 +42,9 @@ internal fun admitGoAiCheckpoint(
             candidate.handicapStones == config.handicapStones && candidate.blackKomiQuarters == expectedKomi) {
             "围棋人机历史与棋盘、让子或贴子不符"
         }
-        opening?.checkContinuation(candidate)
+        val canonicalHistory = candidate.serialize()
+        require(opening != null || goSetupRoot(canonicalHistory) == null) { "自由摆局必须保留原始开局。" }
+        opening?.checkContinuation(candidate, canonicalHistory)
         val phase = candidate.phase
         val result = candidate.gameResult()
         val finalScore = candidate.finalScore()
@@ -66,7 +68,7 @@ internal fun admitGoAiCheckpoint(
         require(finalScore == null || finalScore.result == result) { "围棋人机最终分数与胜负不符" }
         require(!match.completionReserved || phase == GoPhase.FINISHED) { "未终结的围棋人机局不能固定完成结果" }
         require(history.size <= 16_386)
-        val canonical = GoAiSavedMatch(match.matchId, config, candidate.serialize(), match.undoUsed, match.hintUsed,
+        val canonical = GoAiSavedMatch(match.matchId, config, canonicalHistory, match.undoUsed, match.hintUsed,
             match.completionReserved, match.rememberedHuman, match.automaticUsed, opening?.copyBytes(),
             match.autoContinueEnabled, match.autoContinueMaxGames, match.autoContinueGameNumber, clock)
         GoAiMatchFileCodec.encode(canonical)

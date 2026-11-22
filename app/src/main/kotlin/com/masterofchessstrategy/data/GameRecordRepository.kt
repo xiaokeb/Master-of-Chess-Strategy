@@ -36,7 +36,8 @@ internal data class GameRecord(
         require(GameRecordPayloadPolicy.acceptsMoveCount(gameType, engineFormatVersion, engineState, moveCount))
         require(completedAtEpochMillis >= 0L)
         require(isEndgame == (mode == StoredGameMode.ENDGAME))
-        require(mode.acceptsPlayerIndex(playerIndex))
+        require(mode.acceptsPlayerIndex(playerIndex) ||
+            (gameType == GameType.GO && mode == StoredGameMode.CUSTOM_POSITION && playerIndex == 1))
     }
 
     fun defensiveCopy(): GameRecord = copy(engineState = engineState.copyOf())

@@ -25,6 +25,7 @@ internal fun GoAiSetupScreen(
     onLearning: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onFreeSetup: (() -> Unit)? = null,
 ) {
     var size by rememberSaveable { mutableIntStateOf(19) }
     var color by rememberSaveable { mutableIntStateOf(0) } // 0 black, 1 white, 2 automatic.
@@ -119,6 +120,8 @@ internal fun GoAiSetupScreen(
                 !(facts.phase == GoPhase.FINISHED && !facts.completionStored)
             Button({ onCreate(selected) }, enabled = enabled && allowed,
                 modifier = Modifier.fillMaxWidth().testTag("go_ai_setup_create")) { Text("保存并开始新局") }
+            if (onFreeSetup != null) OutlinedButton(onFreeSetup, enabled = enabled && facts != null,
+                modifier = Modifier.testTag("go_ai_setup_free")) { Text("自由摆局") }
             OutlinedButton(onBack, enabled = !state.busy, modifier = Modifier.testTag("go_ai_setup_back")) { Text("返回") }
         }
     }

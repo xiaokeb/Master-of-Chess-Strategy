@@ -46,14 +46,14 @@ void unsupported_and_illegal_imports_are_atomic() {
     const char* invalid[] = {
         "(;FF[4]GM[1]SZ[9];B[aa];W[aa])",  // occupied point
         "(;FF[4]GM[1]SZ[13];B[aa])",       // different board
-        "(;FF[4]GM[1]SZ[9]AB[aa])",        // setup not implemented
+        "(;FF[4]GM[1]SZ[9]AB[aa]AW[aa])",  // overlapping stones
         "(;FF[4]GM[1]SZ[9]KM[6.5])",       // unsupported scoring
         "(;FF[4]GM[1]SZ[9]RU[Japanese])",  // different rules
         "(;FF[4]GM[1]SZ[9];B[zz])",        // off board
         "(;FF[4]GM[1]SZ[9];W[aa])",        // wrong side
         "(;FF[4]GM[1]SZ[9](;B[aa])(;B[bb]))",  // variation
         "(;FF[4]GM[1]SZ[9];B[aa];W[bb];B[];W[];B[cc])",  // after double pass
-        "(;FF[4]GM[1]SZ[9]PL[W])",        // setup remains unsupported
+        "(;FF[4]GM[1]SZ[9]PL[X])",        // unknown setup actor
         "(;FF[4]GM[1]SZ[9];PL[W])",       // cannot skip a normal turn
         "(;FF[4]GM[1]SZ[9];B[];W[];PL[W]W[aa])",  // separate resume required
         "(;FF[4]GM[1]SZ[9];B[];W[];PL[X])",
@@ -170,6 +170,54 @@ void undone_scoring_proposal_does_not_break_sgf_export() {
     assert(restore_go_sgf(restored, text).restored);
     assert(restored.phase() == GoPhase::scoring);
 }
+
+void training_setup_preserves_its_root_and_records_real_moves() {
+    GoEngine game(9);
+    assert(restore_go_sgf(game, "(;FF[4]GM[1]SZ[9]AB[aa]AW[ii]PL[W];W[bb];B[cc])").restored);
+    assert(game.has_custom_setup());
+    assert(game.initial_player() == 1 && game.current_player() == 1);
+    assert(game.initial_board()[0] == GoStone::black && game.initial_board()[80] == GoStone::white);
+    assert(game.event_history().size() == 2);
+    assert(game.serialize()[4] == 6);
+    GoEngine copy(9);
+    assert(copy.restore(game.serialize()).restored);
+    assert(copy.serialize() == game.serialize());
+    assert(restore_go_sgf(copy, export_go_sgf(game)).restored);
+    assert(copy.serialize() == game.serialize());
+    assert(copy.undo() && copy.undo() && !copy.undo());
+    assert(copy.stone_at(0, 0) == GoStone::black && copy.stone_at(8, 8) == GoStone::white);
+    assert(copy.apply(make_go_place(1, 1)).accepted);
+    assert(copy.apply(mocs::engine::make_go_resign(0)).accepted);
+    assert(game.restore(copy.serialize()).restored);
+    assert(game.game_result() == GameResult::second_player_win);
+    game.reset();
+    assert(game.current_player() == 1 && game.event_history().empty());
+    assert(game.stone_at(1, 1) == GoStone::empty);
+    assert(game.stone_at(8, 8) == GoStone::white);
+}
+
+void invalid_training_groups_and_records_leave_the_game_intact() {
+    GoEngine game(9);
+    assert(restore_go_sgf(game, "(;FF[4]GM[1]SZ[9]AB[aa]AW[ii]PL[B])").restored);
+    const auto original = game.serialize();
+    assert(!restore_go_sgf(game, "(;FF[4]GM[1]SZ[9]AB[aa]AW[ab][ba]PL[B])").restored);
+    assert(game.serialize() == original);
+    for (const std::size_t offset : {7, 16, 17}) {
+        auto invalid = original;
+        invalid[offset] = 255;
+        assert(!game.restore(invalid).restored);
+        assert(game.serialize() == original);
+    }
+    auto truncated = original;
+    truncated.pop_back();
+    assert(!game.restore(truncated).restored);
+    assert(game.serialize() == original);
+    GoEngine standard(9);
+    assert(game.restore(standard.serialize()).restored);
+    assert(!game.has_custom_setup());
+    game.reset();
+    assert(game.serialize() == standard.serialize());
+}
 }  // namespace
 
 int main() {
@@ -180,4 +228,6 @@ int main() {
     handicap_setup_round_trips_on_all_boards();
     malformed_handicap_setup_is_atomic();
     undone_scoring_proposal_does_not_break_sgf_export();
+    training_setup_preserves_its_root_and_records_real_moves();
+    invalid_training_groups_and_records_leave_the_game_intact();
 }

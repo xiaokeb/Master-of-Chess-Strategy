@@ -27,15 +27,16 @@ internal fun projectAdmittedGoAiRecord(archive: GoAiCheckpointArchive, admitted:
         admitted.recordId == archive.recordId && admitted.phase == GoPhase.FINISHED &&
         admitted.result != GameResult.ONGOING) { "Go AI archive identity or terminal state is invalid" }
     val match = admitted.match()
+    val native = match.copyBytes()
     val mode = when {
         match.config.streak != null -> StoredGameMode.STREAK_CHALLENGE
         match.config.automatic && match.hasSpecifiedOpening -> StoredGameMode.OPENING_AUTO_PLAY
         match.config.automatic -> StoredGameMode.AI_AUTO_PLAY
+        goSetupRoot(native) != null -> StoredGameMode.CUSTOM_POSITION
         else -> StoredGameMode.HUMAN_VS_AI
     }
     // automaticUsed is a permanent mixed-participation fact, not the current mode. It remains
     // in the authoritative GAI; a mixed human game must never be relabelled as pure automatic.
-    val native = match.copyBytes()
     return GameRecord(archive.recordId, GameType.GO, mode, when (match.config.difficulty) {
         GoAiDifficulty.SIMPLE -> Difficulty.EASY
         GoAiDifficulty.MEDIUM -> Difficulty.MEDIUM

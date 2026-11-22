@@ -41,13 +41,14 @@ internal class RoomGoRankedMatchCreator(
         }
         val start = withContext(worker) {
             if (!match.config.automatic && match.config.handicapStones == 0 &&
-                match.config.perMoveLimitSeconds == null && match.config.streak == null)
+                match.config.perMoveLimitSeconds == null && match.config.streak == null && !match.hasSpecifiedOpening)
                 admitGoRankedStart(match, clock())
             else {
                 val admitted = admitGoAiCheckpoint(match)
                 val opening = match.copyOpeningBytes()
                 val atStart = if (opening == null) admitted.eventCount == 0 else
-                    match.config.automatic && admitted.eventCount > 0 && opening.contentEquals(match.copyBytes())
+                    (goSetupRoot(opening) != null || match.config.automatic && admitted.eventCount > 0) &&
+                        opening.contentEquals(match.copyBytes())
                 require(admitted.phase == GoPhase.PLAYING && atStart &&
                     (match.config.streak == null || match.config.streak == GoStreakProgress()) &&
                     !match.completionReserved && match.undoUsed == 0 && match.hintUsed == 0 &&

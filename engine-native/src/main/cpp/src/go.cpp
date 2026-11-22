@@ -12,6 +12,7 @@ namespace {
 constexpr std::uint8_t scored_format_version = 3;
 constexpr std::uint8_t resignation_format_version = 4;
 constexpr std::uint8_t timeout_format_version = 5;
+constexpr std::uint8_t setup_format_version = 6;
 constexpr std::size_t legacy_header_size = 10;
 constexpr std::size_t v2_header_size = 11;
 constexpr std::size_t header_size = 16;
@@ -98,15 +99,17 @@ std::uint8_t GoEngine::current_player() const noexcept {
 }
 
 void GoEngine::reset() {
+    const auto points = static_cast<std::size_t>(size_) * size_;
+    auto board = custom_setup_ ? initial_board() : std::vector<GoStone>(points, GoStone::empty);
+    const auto player = custom_setup_ ? initial_player() : std::uint8_t{0};
     positions_.clear();
     hashes_.clear();
     actions_.clear();
     board_action_count_ = 0;
     proposal_clock_ = 0;
     positions_.push_back({
-        std::vector<GoStone>(static_cast<std::size_t>(size_) * size_, GoStone::empty),
-        0, 0, GoPhase::playing,
-        std::vector<bool>(static_cast<std::size_t>(size_) * size_, false),
+        std::move(board), player, 0, GoPhase::playing,
+        std::vector<bool>(points, false),
         0, 0, GameResult::ongoing
     });
     if (handicap_stones_ != 0) {
@@ -118,6 +121,42 @@ void GoEngine::reset() {
     }
     hashes_.push_back(board_hash(positions_.back().board));
 }
+
+RestoreResult GoEngine::set_initial_position(const std::vector<GoStone>& board,
+                                             const std::uint8_t player) {
+    if (handicap_stones_ != 0 || player > 1 || board.size() != initial_board().size() ||
+        std::any_of(board.begin(), board.end(), [](const GoStone stone) {
+            return stone != GoStone::empty && stone != GoStone::black && stone != GoStone::white;
+        })) {
+        return {false, EngineError::invalid_state};
+    }
+    std::vector<bool> visited(board.size(), false);
+    std::vector<std::size_t> group;
+    for (std::size_t point = 0; point < board.size(); ++point) {
+        if (visited[point] || board[point] == GoStone::empty) continue;
+        if (!group_has_liberty(board, point, group)) return {false, EngineError::invalid_state};
+        for (const auto member : group) visited[member] = true;
+    }
+    GoEngine candidate(size_, black_komi_quarters_);
+    candidate.custom_setup_ = true;
+    candidate.positions_.front().board = board;
+    candidate.positions_.front().player = player;
+    candidate.hashes_.front() = board_hash(board);
+    std::vector<GoStone> next;
+    for (std::int32_t y = 0; y < size_; ++y) {
+        for (std::int32_t x = 0; x < size_; ++x) {
+            if (candidate.placement_board(x, y, next)) {
+                *this = std::move(candidate);
+                return {true, EngineError::none};
+            }
+        }
+    }
+    return {false, EngineError::invalid_state};
+}
+
+bool GoEngine::has_custom_setup() const noexcept { return custom_setup_; }
+const std::vector<GoStone>& GoEngine::initial_board() const noexcept { return positions_.front().board; }
+std::uint8_t GoEngine::initial_player() const noexcept { return positions_.front().player; }
 
 std::uint64_t GoEngine::board_hash(const std::vector<GoStone>& board) noexcept {
     std::uint64_t hash = 14695981039346656037ULL;
@@ -395,12 +434,17 @@ std::vector<std::uint8_t> GoEngine::serialize() const {
         if (actions_.back().kind == go_resign_action_kind) version = resignation_format_version;
         if (actions_.back().kind == go_timeout_action_kind) version = timeout_format_version;
     }
+    if (custom_setup_) version = setup_format_version;
     std::vector<std::uint8_t> result{'M', 'O', 'C', 'G', version, size_,
                                   static_cast<std::uint8_t>(black_komi_quarters_),
                                   handicap_stones_};
     const auto count = static_cast<std::uint32_t>(actions_.size());
     append_u32(result, proposal_clock_);
     append_u32(result, count);
+    if (custom_setup_) {
+        result.push_back(initial_player());
+        for (const auto stone : initial_board()) result.push_back(static_cast<std::uint8_t>(stone));
+    }
     for (std::size_t i = 0; i < actions_.size(); ++i) {
         const auto& action = actions_[i];
         result.push_back(static_cast<std::uint8_t>(action.kind));
@@ -415,14 +459,16 @@ std::vector<std::uint8_t> GoEngine::serialize() const {
 RestoreResult GoEngine::restore(const std::vector<std::uint8_t>& data) {
     if (data.size() < legacy_header_size || data[0] != 'M' || data[1] != 'O' ||
         data[2] != 'C' || data[3] != 'G' || data[4] < 1 ||
-        data[4] > timeout_format_version ||
+        data[4] > setup_format_version ||
         data[5] != size_) {
         return {false, EngineError::corrupted_data};
     }
     const bool legacy = data[4] == 1;
     const bool has_revisions = data[4] >= scored_format_version;
-    const auto start = legacy ? legacy_header_size :
+    const bool setup = data[4] == setup_format_version;
+    const auto base_header = legacy ? legacy_header_size :
         data[4] == 2 ? v2_header_size : header_size;
+    const auto start = base_header + (setup ? 1 + static_cast<std::size_t>(size_) * size_ : 0);
     const auto record_size = legacy ? 3 : data[4] == 2 ? action_size : v3_action_size;
     if (data.size() < start || (!legacy && data[6] != 0 && data[6] != 15)) {
         return {false, EngineError::corrupted_data};
@@ -431,12 +477,20 @@ RestoreResult GoEngine::restore(const std::vector<std::uint8_t>& data) {
     if (handicap != 0 && (handicap < 2 || handicap > 9 || data[6] != 0)) {
         return {false, EngineError::corrupted_data};
     }
-    const auto count = read_u32(data, start - 4);
+    const auto count = read_u32(data, base_header - 4);
     if (count > (legacy ? max_board_actions : max_events + 2) ||
         data.size() != start + record_size * count) {
         return {false, EngineError::corrupted_data};
     }
     GoEngine candidate(size_, legacy ? 15 : data[6], static_cast<std::uint8_t>(handicap));
+    if (setup) {
+        std::vector<GoStone> board;
+        board.reserve(start - base_header - 1);
+        for (auto at = base_header + 1; at < start; ++at) board.push_back(static_cast<GoStone>(data[at]));
+        if (!candidate.set_initial_position(board, data[base_header]).restored) {
+            return {false, EngineError::corrupted_data};
+        }
+    }
     for (std::size_t i = start; i < data.size(); i += record_size) {
         EngineAction action{};
         if (!legacy) {
@@ -454,8 +508,8 @@ RestoreResult GoEngine::restore(const std::vector<std::uint8_t>& data) {
         } else {
             return {false, EngineError::corrupted_data};
         }
-        if ((action.kind == go_resign_action_kind && data[4] != resignation_format_version) ||
-            (action.kind == go_timeout_action_kind && data[4] != timeout_format_version)) {
+        if (!setup && ((action.kind == go_resign_action_kind && data[4] != resignation_format_version) ||
+            (action.kind == go_timeout_action_kind && data[4] != timeout_format_version))) {
             return {false, EngineError::corrupted_data};
         }
         const bool new_proposal = action.kind == go_toggle_dead_action_kind ||
@@ -495,6 +549,7 @@ RestoreResult GoEngine::restore(const std::vector<std::uint8_t>& data) {
     board_action_count_ = candidate.board_action_count_;
     black_komi_quarters_ = candidate.black_komi_quarters_;
     handicap_stones_ = candidate.handicap_stones_;
+    custom_setup_ = candidate.custom_setup_;
     proposal_clock_ = candidate.proposal_clock_;
     return {true, EngineError::none};
 }
