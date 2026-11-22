@@ -1,5 +1,6 @@
 package com.masterofchessstrategy.games.competition_mahjong.challenge
 
+import com.masterofchessstrategy.games.competition_mahjong.competitionMahjongTileName
 import java.util.Collections
 
 enum class CompetitionMahjongChallengeTheme(val label: String) {
@@ -31,7 +32,7 @@ class CompetitionMahjongChallenge(
     init {
         require(id.matches(Regex("[a-z0-9-]{1,48}")) && title.isNotBlank())
         require(prompt.isNotBlank() && explanation.isNotBlank())
-        if (id == CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID) {
+        if (CompetitionMahjongPracticePosition.isDiscardTraining(id)) {
             require(choices.isEmpty() && correctChoiceId.isEmpty())
         } else {
             require(choices.size in 2..4 && choices.map { it.id }.toSet().size == choices.size)
@@ -54,7 +55,7 @@ data class CompetitionMahjongChallengeState(
 )
 
 class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjongChallenge, hand: List<Int> = emptyList()) {
-    private val discardTraining = challenge.id == CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID
+    private val discardTraining = CompetitionMahjongPracticePosition.isDiscardTraining(challenge.id)
     private val initial = CompetitionMahjongChallengeState(challenge, visibleHand = Collections.unmodifiableList(hand.toList()),
         discardTraining = discardTraining, feedback = if (discardTraining) "请选择要打出的手牌。" else "请选择答案。")
     private var current = initial
@@ -79,17 +80,19 @@ class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjo
 
     internal fun discard(tile: Int): CompetitionMahjongChallengeState {
         require(discardTraining && !current.completed && current.chosenDiscard == null && tile in current.visibleHand)
-        val next = CompetitionMahjongPracticePosition.discardAndDraw(tile)
+        val next = CompetitionMahjongPracticePosition.discardAndDraw(tile, id = challenge.id)
         current = if (next == null) current.copy(attempts = current.attempts + 1,
             feedback = "按题目给定的摸打继续后无法和牌。请重新选择弃牌。")
         else current.copy(attempts = current.attempts + 1, visibleHand = Collections.unmodifiableList(next.hand),
-            chosenDiscard = tile, drawnTile = next.drawnTile, feedback = "三家按题目走完一轮，你已摸到东风。请确认自摸。")
+            chosenDiscard = tile, drawnTile = next.drawnTile,
+            feedback = "三家按题目走完一轮，你已摸到${competitionMahjongTileName(next.drawnTile)}。请确认自摸。")
         return current
     }
 
     internal fun confirmWin(): CompetitionMahjongChallengeState {
         require(discardTraining && !current.completed)
-        val turn = checkNotNull(CompetitionMahjongPracticePosition.discardAndDraw(checkNotNull(current.chosenDiscard), settle = true))
+        val turn = checkNotNull(CompetitionMahjongPracticePosition.discardAndDraw(
+            checkNotNull(current.chosenDiscard), settle = true, id = challenge.id))
         check(turn.hand == current.visibleHand && turn.drawnTile == current.drawnTile)
         current = current.copy(completed = true, feedback = challenge.explanation)
         return current
@@ -193,6 +196,10 @@ object CompetitionMahjongChallengeLibrary {
             "当前手牌有一万、九万、一条、九条四副暗刻，以一筒作将起手自摸。清幺九成立后，两组独立的双同刻如何计？", "c",
             "清幺九计 64 番。一万与一条、九万与九条分别组成双同刻，各计 2 番，共 4 番。碰碰和、全带幺、幺九刻和无字不重复计。", setOf(8, 49, 55, 65, 73, 76),
             choice("a", "被清幺九包含，不计"), choice("b", "只能计一组，共 2 番"), choice("c", "两组分别计，共 4 番")),
+        challenge(CompetitionMahjongPracticePosition.ORPHANS_DISCARD_ID, "留十三种幺九字", CompetitionMahjongChallengeTheme.PATTERN,
+            CompetitionMahjongChallengeLevel.MASTER,
+            "你摸完起手牌。请选择一张弃牌，保留十三种不同的幺九牌和字牌。其他三家按题目逐次摸切，过一轮后轮到你自摸。", "",
+            "十三种幺九字牌齐全，自摸白板成对，原生裁定十三幺计 88 番。", setOf(7)),
     ))
 
     init {

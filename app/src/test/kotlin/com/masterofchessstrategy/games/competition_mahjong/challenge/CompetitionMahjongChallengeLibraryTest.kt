@@ -10,17 +10,17 @@ import kotlin.random.Random
 class CompetitionMahjongChallengeLibraryTest {
     @Test fun catalogHasFourLevelsThemesAndTraceableOfficialFanIds() {
         val values = CompetitionMahjongChallengeLibrary.challenges
-        assertEquals(17, values.size)
+        assertEquals(18, values.size)
         assertEquals(values.size, values.map { it.id }.toSet().size)
         CompetitionMahjongChallengeLevel.entries.forEach { level ->
-            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 8 else 3, values.count { it.level == level })
+            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 9 else 3, values.count { it.level == level })
         }
         CompetitionMahjongChallengeTheme.entries.forEach { theme ->
             assertTrue(values.any { it.theme == theme })
         }
         values.forEach { challenge ->
             assertTrue(challenge.sourceFanIds.all { it in 1..81 })
-            val expected = if (challenge.id == CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID) 0 else 1
+            val expected = if (CompetitionMahjongPracticePosition.isDiscardTraining(challenge.id)) 0 else 1
             assertEquals(expected, challenge.choices.count { it.id == challenge.correctChoiceId })
         }
     }
@@ -51,8 +51,15 @@ class CompetitionMahjongChallengeLibraryTest {
         assertTrue(terminalSession.answer("c").completed)
         progress = progress.complete(terminals.id)
         assertEquals(progress.completedIds, progress.complete(terminals.id).completedIds)
-        assertEquals(values.map { it.id }.toSet(), progress.completedIds)
+        assertEquals(values.take(17).map { it.id }.toSet(), progress.completedIds)
         assertEquals(EndgameRewardTotals(17, 17, 850), competitionChallengeRewards(progress.completedIds))
+        val orphans = values[17]
+        assertEquals(CompetitionMahjongPracticePosition.ORPHANS_DISCARD_ID, orphans.id)
+        assertTrue(progress.isUnlocked(orphans.id))
+        val restored = checkNotNull(CompetitionMahjongChallengeProgressCodec.decode(
+            CompetitionMahjongChallengeProgressCodec.encode(progress)))
+        assertEquals(progress.completedIds, restored.completedIds)
+        assertEquals(EndgameRewardTotals(18, 18, 930), competitionChallengeRewards(restored.complete(orphans.id).completedIds))
     }
 
     @Test fun sessionKeepsQuestionStableAcrossWrongAnswerAndLocksAfterCorrectAnswer() {

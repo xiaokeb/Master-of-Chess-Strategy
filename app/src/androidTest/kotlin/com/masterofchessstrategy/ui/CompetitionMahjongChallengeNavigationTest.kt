@@ -110,13 +110,24 @@ class CompetitionMahjongChallengeNavigationTest {
         capture("native-verified-fan")
     }
 
-    @Test fun discardTrainingReplaysEveryChoiceAndSavesOnlyAfterConfirmedWin() {
-        val hand = CompetitionMahjongPracticePosition.discardOpeningHand()
+    @Test fun discardTrainingReplaysEveryChoiceAndSavesOnlyAfterConfirmedWin() = verifyDiscardExercise(
+        CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID, wrong = 27, correct = 31, draw = "东",
+        resultText = "七对计 24 番", rewardText = "14 星 · 610 分",
+    )
+
+    @Test fun orphansTrainingRequiresUniqueDiscardAndConfirmsNativeWin() = verifyDiscardExercise(
+        CompetitionMahjongPracticePosition.ORPHANS_DISCARD_ID, wrong = 0, correct = 4, draw = "白",
+        resultText = "十三幺计 88 番", rewardText = "18 星 · 930 分",
+    )
+
+    private fun verifyDiscardExercise(
+        puzzleId: String, wrong: Int, correct: Int, draw: String, resultText: String, rewardText: String,
+    ) {
+        val hand = CompetitionMahjongPracticePosition.discardOpeningHand(puzzleId)
         assertEquals(14, hand.size)
-        val winningDiscards = hand.distinct().filter { CompetitionMahjongPracticePosition.discardAndDraw(it) != null }
-        assertEquals(listOf(31), winningDiscards)
+        val winningDiscards = hand.distinct().filter { CompetitionMahjongPracticePosition.discardAndDraw(it, id = puzzleId) != null }
+        assertEquals(listOf(correct), winningDiscards)
         val store = RoomCompetitionMahjongChallengeProgress(database)
-        val puzzleId = CompetitionMahjongPracticePosition.DISCARD_PUZZLE_ID
         val prerequisites = CompetitionMahjongChallengeLibrary.challenges.takeWhile { it.id != puzzleId }.map { it.id }.toSet()
         runBlocking {
             prerequisites.forEach { store.complete(it) }
@@ -125,24 +136,26 @@ class CompetitionMahjongChallengeNavigationTest {
         compose.onNodeWithTag(HOME_COMPETITION_MAHJONG_TAG).performScrollTo().performClick()
         compose.onNodeWithTag("competition_challenge_entry").performScrollTo().performClick()
         waitFor("competition_mahjong_challenge_hand")
-        compose.onNodeWithTag("competition_mahjong_challenge_discard_27").performScrollTo().performClick()
+        compose.onNodeWithTag("competition_mahjong_challenge_discard_$wrong").performScrollTo().performClick()
         compose.onNodeWithTag("competition_mahjong_challenge_feedback").performScrollTo()
             .assertTextContains("无法和牌", substring = true)
         assertEquals(prerequisites, runBlocking { store.load().completedIds })
         capture("discard-rejected")
 
-        compose.onNodeWithTag("competition_mahjong_challenge_discard_31").performScrollTo().performClick()
+        compose.onNodeWithTag("competition_mahjong_challenge_discard_$correct").performScrollTo().performClick()
         waitFor("competition_mahjong_challenge_confirm_win")
-        compose.onNodeWithText("本次摸牌 东").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("本次摸牌 $draw").performScrollTo().assertIsDisplayed()
         assertEquals(prerequisites, runBlocking { store.load().completedIds })
         capture("discard-next-draw")
 
         compose.onNodeWithTag("competition_mahjong_challenge_confirm_win").performScrollTo().performClick()
         waitFor("competition_mahjong_challenge_completed")
+        compose.onNodeWithTag("competition_mahjong_challenge_feedback").performScrollTo()
+            .assertTextContains(resultText, substring = true)
         assertEquals(prerequisites + puzzleId, runBlocking { store.load().completedIds })
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
         compose.onNodeWithTag("competition_mahjong_challenge_rewards").performScrollTo()
-            .assertTextEquals("训练奖励 14 星 · 610 分")
+            .assertTextEquals("训练奖励 $rewardText")
         capture("discard-win")
     }
 
