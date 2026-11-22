@@ -107,7 +107,11 @@ internal fun CompetitionMahjongChallengeScreen(
                                 exercise.visibleHand.forEach { MahjongTile(it, faceUp = true) }
                             }
                         }
-                        exercise.drawnTile?.let { tile -> Text("本次摸牌 ${competitionMahjongTileName(tile)}") }
+                        exercise.winningTile?.let { tile ->
+                            val name = competitionMahjongTileName(tile)
+                            val source = exercise.discardFromSeat
+                            Text(if (source == null) "本次摸牌 $name" else "${competitionMahjongTileName(27 + source)}家弃牌 $name")
+                        }
                         Text("规则索引：官方番种 ID " + exercise.challenge.sourceFanIds.sorted().joinToString("、"),
                             style = MaterialTheme.typography.bodySmall)
                     } else Text(if (state.loading) "正在读取牌型题…" else "牌型题暂不可用")
@@ -128,7 +132,9 @@ internal fun CompetitionMahjongChallengeScreen(
                                     }
                                 }
                             } else Button(onClick = onConfirmWin, enabled = state.canOperate,
-                                modifier = Modifier.testTag("competition_mahjong_challenge_confirm_win")) { Text("自摸") }
+                                modifier = Modifier.testTag("competition_mahjong_challenge_confirm_win")) {
+                                Text(if (exercise.discardFromSeat == null) "自摸" else "点和")
+                            }
                         }
                         exercise.challenge.choices.forEach { choice ->
                             val selected = exercise.selectedChoiceId == choice.id
@@ -144,6 +150,18 @@ internal fun CompetitionMahjongChallengeScreen(
                         }
                         Text(exercise.feedback, modifier = Modifier.testTag("competition_mahjong_challenge_feedback"),
                             color = if (exercise.completed) MaterialTheme.colorScheme.primary else LocalContentColor.current)
+                        exercise.roundFan?.let { fan ->
+                            Column(Modifier.testTag("competition_mahjong_challenge_settlement"),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text("本盘总番 $fan")
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    exercise.roundDeltas.forEachIndexed { seat, delta ->
+                                        val wind = competitionMahjongTileName(27 + seat)
+                                        Text("$wind ${if (delta > 0) "+$delta" else "$delta"}", maxLines = 1)
+                                    }
+                                }
+                            }
+                        }
                         Text("尝试 ${exercise.attempts} 次")
                         if (exercise.completed && !state.needsSave) {
                             val index = CompetitionMahjongChallengeLibrary.challenges.indexOfFirst {

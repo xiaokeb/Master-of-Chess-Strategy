@@ -10,10 +10,10 @@ import kotlin.random.Random
 class CompetitionMahjongChallengeLibraryTest {
     @Test fun catalogHasFourLevelsThemesAndTraceableOfficialFanIds() {
         val values = CompetitionMahjongChallengeLibrary.challenges
-        assertEquals(20, values.size)
+        assertEquals(21, values.size)
         assertEquals(values.size, values.map { it.id }.toSet().size)
         CompetitionMahjongChallengeLevel.entries.forEach { level ->
-            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 11 else 3, values.count { it.level == level })
+            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 12 else 3, values.count { it.level == level })
         }
         CompetitionMahjongChallengeTheme.entries.forEach { theme ->
             assertTrue(values.any { it.theme == theme })
@@ -63,7 +63,8 @@ class CompetitionMahjongChallengeLibraryTest {
         assertEquals(EndgameRewardTotals(18, 18, 930), competitionChallengeRewards(progress.completedIds))
         assertEquals(values.take(18).map { it.id }.toSet(), progress.completedIds)
         for ((id, points) in listOf(CompetitionMahjongPracticePosition.PURE_STRAIGHT_DISCARD_ID to 1010,
-            CompetitionMahjongPracticePosition.MIXED_TRIPLE_CHOW_DISCARD_ID to 1090)) {
+            CompetitionMahjongPracticePosition.MIXED_TRIPLE_CHOW_DISCARD_ID to 1090,
+            CompetitionMahjongPracticePosition.FOUR_CONCEALED_CLAIM_ID to 1170)) {
             assertTrue(progress.isUnlocked(id))
             progress = progress.complete(id)
             assertEquals(EndgameRewardTotals(progress.completedIds.size, progress.completedIds.size, points),

@@ -120,12 +120,17 @@ class CompetitionMahjongChallengeNavigationTest {
         resultText = "十三幺计 88 番", rewardText = "18 星 · 930 分",
     )
 
+    @Test fun concealedPungsTrainingClaimsTheDiscardAndShowsAsymmetricPayment() = verifyDiscardExercise(
+        CompetitionMahjongPracticePosition.FOUR_CONCEALED_CLAIM_ID, wrong = 0, correct = 31, draw = "东",
+        resultText = "四暗刻计 64 番", rewardText = "21 星 · 1170 分", claim = true,
+    )
+
     private fun verifyDiscardExercise(
-        puzzleId: String, wrong: Int, correct: Int, draw: String, resultText: String, rewardText: String,
+        puzzleId: String, wrong: Int, correct: Int, draw: String, resultText: String, rewardText: String, claim: Boolean = false,
     ) {
         val hand = CompetitionMahjongPracticePosition.discardOpeningHand(puzzleId)
         assertEquals(14, hand.size)
-        val winningDiscards = hand.distinct().filter { CompetitionMahjongPracticePosition.discardAndDraw(it, id = puzzleId) != null }
+        val winningDiscards = hand.distinct().filter { CompetitionMahjongPracticePosition.playDiscard(it, puzzleId) != null }
         assertEquals(listOf(correct), winningDiscards)
         val store = RoomCompetitionMahjongChallengeProgress(database)
         val prerequisites = CompetitionMahjongChallengeLibrary.challenges.takeWhile { it.id != puzzleId }.map { it.id }.toSet()
@@ -144,7 +149,9 @@ class CompetitionMahjongChallengeNavigationTest {
 
         compose.onNodeWithTag("competition_mahjong_challenge_discard_$correct").performScrollTo().performClick()
         waitFor("competition_mahjong_challenge_confirm_win")
-        compose.onNodeWithText("本次摸牌 $draw").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(if (claim) "南家弃牌 $draw" else "本次摸牌 $draw").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("competition_mahjong_challenge_confirm_win").assertTextEquals(if (claim) "点和" else "自摸")
+        compose.onNodeWithTag("competition_mahjong_challenge_settlement").assertDoesNotExist()
         assertEquals(prerequisites, runBlocking { store.load().completedIds })
         capture("discard-next-draw")
 
@@ -156,6 +163,19 @@ class CompetitionMahjongChallengeNavigationTest {
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
         compose.onNodeWithTag("competition_mahjong_challenge_rewards").performScrollTo()
             .assertTextEquals("训练奖励 $rewardText")
+        if (claim) {
+            val result = checkNotNull(CompetitionMahjongPracticePosition.playDiscard(correct, puzzleId, settle = true))
+            val fan = checkNotNull(result.totalFan)
+            assertEquals(1, result.payerSeat)
+            assertEquals(13, result.hand.size)
+            assertTrue(fan >= 64)
+            assertEquals(listOf(24 + fan, -8 - fan, -8, -8), result.netScores)
+            compose.onNodeWithTag("competition_mahjong_challenge_settlement").performScrollTo()
+            for (label in listOf("本盘总番 $fan", "东 +${24 + fan}", "南 ${-8 - fan}", "西 -8", "北 -8")) {
+                compose.onNode(hasText(label) and hasAnyAncestor(hasTestTag("competition_mahjong_challenge_settlement")))
+                    .assertIsDisplayed()
+            }
+        }
         capture("discard-win")
     }
 

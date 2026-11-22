@@ -18,12 +18,14 @@ internal object CompetitionMahjongPracticePosition {
     const val ORPHANS_DISCARD_ID = "discard-for-thirteen-orphans"
     const val PURE_STRAIGHT_DISCARD_ID = "discard-for-pure-straight"
     const val MIXED_TRIPLE_CHOW_DISCARD_ID = "discard-for-mixed-triple-chow"
+    const val FOUR_CONCEALED_CLAIM_ID = "claim-four-concealed-pungs"
     const val NINE_GATES_PUZZLE_ID = "live-nine-gates-exclusion"
     const val ALL_GREEN_PUZZLE_ID = "live-all-green-half-flush"
     const val TERMINALS_PUZZLE_ID = "live-terminals-double-pungs"
     private val dealerHand = listOf(0, 0, 2, 2, 5, 5, 12, 12, 19, 19, 23, 23, 27, 27)
     private const val SEVEN_PAIRS = 19
     private const val THIRTEEN_ORPHANS = 7
+    private const val FOUR_CONCEALED_PUNGS = 12
     private const val PURE_STRAIGHT = 28
     private const val MIXED_TRIPLE_CHOW = 41
     private const val NINE_GATES = 4
@@ -36,6 +38,7 @@ internal object CompetitionMahjongPracticePosition {
         val scoring: CompetitionMahjongScoring,
         val fanId: Int,
         val patternPoints: Int,
+        val fromDiscard: Boolean = false,
     )
 
     private val discards = mapOf(
@@ -50,6 +53,9 @@ internal object CompetitionMahjongPracticePosition {
         MIXED_TRIPLE_CHOW_DISCARD_ID to DiscardExercise(
             listOf(0, 1, 2, 9, 10, 11, 18, 19, 20, 24, 25, 26, 27, 31), listOf(14, 15, 16, 27),
             CompetitionMahjongScoring.WMO_2021, MIXED_TRIPLE_CHOW, 8),
+        FOUR_CONCEALED_CLAIM_ID to DiscardExercise(
+            listOf(0, 0, 0, 3, 3, 3, 12, 12, 12, 25, 25, 25, 27, 31), listOf(27),
+            CompetitionMahjongScoring.WMO_2021, FOUR_CONCEALED_PUNGS, 64, fromDiscard = true),
     )
 
     fun isDiscardTraining(id: String): Boolean = id in discards
@@ -128,10 +134,16 @@ internal object CompetitionMahjongPracticePosition {
         }
     }
 
-    data class WinningTurn(val hand: List<Int>, val drawnTile: Int)
+    data class WinningTurn(
+        val hand: List<Int>,
+        val tile: Int,
+        val payerSeat: Int?,
+        val totalFan: Int? = null,
+        val netScores: List<Int> = emptyList(),
+    )
 
-    /** Applies the player's real discard and replays the fixed teaching line through the next draw. */
-    fun discardAndDraw(tile: Int, settle: Boolean = false, id: String = DISCARD_PUZZLE_ID): WinningTurn? {
+    /** Replays the fixed teaching line through the local draw or an opponent's pending discard. */
+    fun playDiscard(tile: Int, id: String, settle: Boolean = false): WinningTurn? {
         val puzzle = discards.getValue(id)
         val nextDraws = puzzle.draws
         return NativeCompetitionMahjongSession(0, scoring = puzzle.scoring).use { session ->
@@ -148,25 +160,35 @@ internal object CompetitionMahjongPracticePosition {
                 for (offset in 1..3) event(CompetitionMahjongRoundActionKind.PASS, (discarder + offset) % 4, discarded)
             }
             pass(0, tile)
-            for (seat in 1..3) {
+            val payer = nextDraws.size.takeIf { puzzle.fromDiscard }
+            val opponentTurns = payer ?: nextDraws.lastIndex
+            for (seat in 1..opponentTurns) {
                 event(CompetitionMahjongRoundActionKind.DRAW, seat)
                 event(CompetitionMahjongRoundActionKind.DISCARD, seat, nextDraws[seat - 1])
-                pass(seat, nextDraws[seat - 1])
+                if (seat == payer) {
+                    // Leave only the local seat's decision pending.
+                    for (other in 1..3) if (other != payer)
+                        event(CompetitionMahjongRoundActionKind.PASS, other, nextDraws.last())
+                } else pass(seat, nextDraws[seat - 1])
             }
-            event(CompetitionMahjongRoundActionKind.DRAW, 0)
+            if (payer == null) event(CompetitionMahjongRoundActionKind.DRAW, 0)
             val round = opening.copyOfRange(12, opening.size - 4)
             check(session.restore(withJournal(round, journal.toByteArray())) == RestoreResult.Restored)
             val frame = session.snapshot()
-            check(frame.currentSeat == 0 && frame.drawnTile == nextDraws.last())
+            val winningTile = nextDraws.last()
+            if (payer == null) check(frame.currentSeat == 0 && frame.drawnTile == winningTile)
+            else check(frame.phase == CompetitionMahjongRoundPhase.CLAIM && frame.pendingSeat == payer &&
+                frame.pendingTile == winningTile && frame.drawnTile == null)
             val win = session.legalActions().singleOrNull { it.kind == CompetitionMahjongRoundActionKind.WIN } ?: return@use null
-            if (settle) {
-                val accepted = session.apply(win)
-                val result = session.snapshot()
-                check(accepted.accepted && !accepted.falseWin && result.phase == CompetitionMahjongRoundPhase.WON &&
-                    result.winnerSeat == 0 && result.payerSeat == null && result.winningFan.qualifies &&
-                    result.winningFan.entries.any { it.id == puzzle.fanId && it.points == puzzle.patternPoints })
-            }
-            WinningTurn(frame.seats.first().concealedTiles.sorted(), checkNotNull(frame.drawnTile))
+            val hand = frame.seats.first().concealedTiles.sorted()
+            if (!settle) return@use WinningTurn(hand, winningTile, payer)
+            val accepted = session.apply(win)
+            val result = session.snapshot()
+            check(accepted.accepted && !accepted.falseWin && result.phase == CompetitionMahjongRoundPhase.WON &&
+                result.winnerSeat == 0 && result.payerSeat == payer && result.winningTile == winningTile &&
+                result.winningFan.qualifies &&
+                result.winningFan.entries.any { it.id == puzzle.fanId && it.points == puzzle.patternPoints })
+            WinningTurn(hand, winningTile, payer, result.winningFan.totalFan, result.netScores)
         }
     }
 

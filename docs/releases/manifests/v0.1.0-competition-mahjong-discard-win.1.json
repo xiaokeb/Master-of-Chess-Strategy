@@ -1,0 +1,124 @@
+{
+  "tag": "v0.1.0-competition-mahjong-discard-win.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 8,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "unit_tests": [
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeViewModelTest"
+      },
+      {
+        "tests": 6,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeLibraryTest"
+      }
+    ],
+    "release_manifest": "processed",
+    "candidate": "cm-discard-win1",
+    "baseline": "5588a67663e63d33ad58d6e1ce15c91a925d7510",
+    "overlays": [
+      {
+        "working_sha256": "c488515d77a7bf8282dcd7ba94ec8b12dfd7d12fe0ddc47ac344cf566aa7215a",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeLibrary.kt",
+        "sha256": "c488515d77a7bf8282dcd7ba94ec8b12dfd7d12fe0ddc47ac344cf566aa7215a"
+      },
+      {
+        "working_sha256": "27d598c4eb9100042f4b065c080aa364346821f9df03b6d60e3408c6463386ed",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeRoute.kt",
+        "sha256": "27d598c4eb9100042f4b065c080aa364346821f9df03b6d60e3408c6463386ed"
+      },
+      {
+        "working_sha256": "cd5e74c67f8f9185a9dbbb9d00043dde844be482ac21a5bee398d1dee8c3296c",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongPracticePosition.kt",
+        "sha256": "cd5e74c67f8f9185a9dbbb9d00043dde844be482ac21a5bee398d1dee8c3296c"
+      },
+      {
+        "working_sha256": "3304148a4523fd2fdad2df34935e172ee28221bf1a2b7e92b2b95f838eb76de7",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeLibraryTest.kt",
+        "sha256": "3304148a4523fd2fdad2df34935e172ee28221bf1a2b7e92b2b95f838eb76de7"
+      },
+      {
+        "working_sha256": "7cc26297ee339bddbea86d79fc5493321cc3befa9933aa5283de5d7259122b75",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongChallengeNavigationTest.kt",
+        "sha256": "7cc26297ee339bddbea86d79fc5493321cc3befa9933aa5283de5d7259122b75"
+      }
+    ],
+    "lint_warnings": 25,
+    "lint_errors": 0,
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "ef58c8ab2b0ff701e6680475ba27390a13d2834934a681a33c04cae25ae8fc87",
+      "app/build/outputs/apk/debug/app-debug.apk": "c606604e9839ce871d7095c0033785c9b53d4f832fc7b8a21cb08623cf7f5958"
+    }
+  },
+  "device": {
+    "original_font": "1.0",
+    "candidate": "cm-discard-win1",
+    "runs": [
+      {
+        "font": "1.0",
+        "tests": 2,
+        "images": [
+          {
+            "sha256": "0ca73afd9654943b5ae51e73f8c70eb9d1ae7eda6bddfe7bd478158552437a8e",
+            "path": "font-1.0\\189e05d2-8c06-42aa-a7cb-387765cbf18a\\discard-next-draw.png"
+          },
+          {
+            "sha256": "c3dd2a93f6007ecf3a3996aa7fffb17ba60f24fdc645c44ea74b9904124c3cf3",
+            "path": "font-1.0\\189e05d2-8c06-42aa-a7cb-387765cbf18a\\discard-rejected.png"
+          },
+          {
+            "sha256": "e752064ad5b5f6c5ae98f80d16d08cd8afac8d62df22b3a45ef356fc6365deae",
+            "path": "font-1.0\\189e05d2-8c06-42aa-a7cb-387765cbf18a\\discard-win.png"
+          },
+          {
+            "sha256": "168d79713269d7b26b4c71fa9c1fb4f9756558bd76906842d441bf08b139e443",
+            "path": "font-1.0\\7b0c8e26-d87b-4456-9caa-c27334b0abed\\discard-next-draw.png"
+          },
+          {
+            "sha256": "7c6dfa04d70cda40465d6c2719e9b150d73abfbff8063b4de3b1f19838be460a",
+            "path": "font-1.0\\7b0c8e26-d87b-4456-9caa-c27334b0abed\\discard-rejected.png"
+          },
+          {
+            "sha256": "69d2e7b40ac8113cb8ca940e97f94188971e494a305e9388c35cdc7e296d0f5b",
+            "path": "font-1.0\\7b0c8e26-d87b-4456-9caa-c27334b0abed\\discard-win.png"
+          }
+        ],
+        "log_sha256": "e4460fedf737c906c6829ad34a23eda85322d269d02ec6a687b1d1b1ff92ed55"
+      },
+      {
+        "font": "1.5",
+        "tests": 1,
+        "images": [
+          {
+            "sha256": "189c72d1b5608e722c9941a432684a5932268efcc3b3ef6bba3d770fd99cf406",
+            "path": "font-1.5\\c35b20d7-363a-4f41-9031-247e82e78b2b\\discard-next-draw.png"
+          },
+          {
+            "sha256": "9bd3cbab2d1a2f3d384e5424a379e8a1f1997f00e70830a34efe8cd55be83a31",
+            "path": "font-1.5\\c35b20d7-363a-4f41-9031-247e82e78b2b\\discard-rejected.png"
+          },
+          {
+            "sha256": "c516ec59743d9b6db8ad40353907fa1a922453dc778e1a637dbdeb95453f1fd6",
+            "path": "font-1.5\\c35b20d7-363a-4f41-9031-247e82e78b2b\\discard-win.png"
+          }
+        ],
+        "log_sha256": "2ecbd695b395bb1597c0b88d4385f43af92eab4e6cb551b1e8e55ce5ffa81d45"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "ef58c8ab2b0ff701e6680475ba27390a13d2834934a681a33c04cae25ae8fc87",
+      "app/build/outputs/apk/debug/app-debug.apk": "c606604e9839ce871d7095c0033785c9b53d4f832fc7b8a21cb08623cf7f5958"
+    },
+    "restored_font": "1.0",
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "folder": ".build/cm-discard-win1/device-91ba2bd2ae434adea89bf4d9b69e68d3",
+    "visual_review_sha256": "6d5a1e5f027bdec1f7a06b74139781f757f8ec0845e83ef69ccc4762bf0abd35"
+  }
+}

@@ -1,6 +1,5 @@
 package com.masterofchessstrategy.games.competition_mahjong.challenge
 
-import com.masterofchessstrategy.games.competition_mahjong.competitionMahjongTileName
 import java.util.Collections
 
 enum class CompetitionMahjongChallengeTheme(val label: String) {
@@ -51,7 +50,10 @@ data class CompetitionMahjongChallengeState(
     val visibleHand: List<Int> = emptyList(),
     val discardTraining: Boolean = false,
     val chosenDiscard: Int? = null,
-    val drawnTile: Int? = null,
+    val winningTile: Int? = null,
+    val discardFromSeat: Int? = null,
+    val roundFan: Int? = null,
+    val roundDeltas: List<Int> = emptyList(),
 )
 
 class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjongChallenge, hand: List<Int> = emptyList()) {
@@ -80,21 +82,23 @@ class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjo
 
     internal fun discard(tile: Int): CompetitionMahjongChallengeState {
         require(discardTraining && !current.completed && current.chosenDiscard == null && tile in current.visibleHand)
-        val next = CompetitionMahjongPracticePosition.discardAndDraw(tile, id = challenge.id)
+        val next = CompetitionMahjongPracticePosition.playDiscard(tile, challenge.id)
         current = if (next == null) current.copy(attempts = current.attempts + 1,
             feedback = "按题目给定的摸打继续后无法和牌。请重新选择弃牌。")
         else current.copy(attempts = current.attempts + 1, visibleHand = Collections.unmodifiableList(next.hand),
-            chosenDiscard = tile, drawnTile = next.drawnTile,
-            feedback = "三家按题目走完一轮，你已摸到${competitionMahjongTileName(next.drawnTile)}。请确认自摸。")
+            chosenDiscard = tile, winningTile = next.tile, discardFromSeat = next.payerSeat,
+            feedback = if (next.payerSeat == null) "三家按题目走完一轮，请确认自摸。" else "请确认点和。")
         return current
     }
 
     internal fun confirmWin(): CompetitionMahjongChallengeState {
         require(discardTraining && !current.completed)
-        val turn = checkNotNull(CompetitionMahjongPracticePosition.discardAndDraw(
-            checkNotNull(current.chosenDiscard), settle = true, id = challenge.id))
-        check(turn.hand == current.visibleHand && turn.drawnTile == current.drawnTile)
-        current = current.copy(completed = true, feedback = challenge.explanation)
+        val turn = checkNotNull(CompetitionMahjongPracticePosition.playDiscard(
+            checkNotNull(current.chosenDiscard), challenge.id, settle = true))
+        check(turn.hand == current.visibleHand && turn.tile == current.winningTile && turn.payerSeat == current.discardFromSeat)
+        current = current.copy(completed = true, feedback = challenge.explanation,
+            roundFan = turn.totalFan.takeIf { turn.payerSeat != null },
+            roundDeltas = if (turn.payerSeat == null) emptyList() else Collections.unmodifiableList(turn.netScores.toList()))
         return current
     }
 }
@@ -208,6 +212,10 @@ object CompetitionMahjongChallengeLibrary {
             CompetitionMahjongChallengeTheme.PATTERN, CompetitionMahjongChallengeLevel.MASTER,
             "打一张牌，保留万、筒、条各一副一二三顺子。其他三家依次摸切，一轮后轮到你摸牌。", "",
             "万、筒、条各有一二三顺子，自摸东风成将，原生裁定三色三同顺计 8 番。", setOf(41)),
+        challenge(CompetitionMahjongPracticePosition.FOUR_CONCEALED_CLAIM_ID, "四暗刻点和",
+            CompetitionMahjongChallengeTheme.CONTEXT, CompetitionMahjongChallengeLevel.MASTER,
+            "你是东家。打出一张牌，保留手中的四副暗刻。南家下一手摸切，观察南家的弃牌能否成将。", "",
+            "四副暗刻已在手中，南家打出的东风组成将牌，四暗刻计 64 番。三家各付 8 分，南家另付本盘总番。", setOf(12)),
     ))
 
     init {
