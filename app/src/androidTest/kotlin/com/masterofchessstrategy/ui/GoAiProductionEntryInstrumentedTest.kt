@@ -571,6 +571,61 @@ class GoAiProductionEntryInstrumentedTest {
         }
     }
 
+    @Test fun perMoveClockArchivesWhileTheHumanMatchStaysInTheBackground() {
+        check(Build.HARDWARE in setOf("ranchu", "goldfish"))
+        val power = InstrumentationRegistry.getInstrumentation().targetContext.getSystemService(PowerManager::class.java)
+        withOwnedApp(completedLessons = 10, useActivityStore = true) { f ->
+            val initial = NativeGoEngine(9).use { engine ->
+                GoAiSavedMatch(UUID.randomUUID().toString(), GoAiMatchConfig(9, perMoveLimitSeconds = 30),
+                    engine.serialize(), clock = GoTurnClock.start(30_000L, GoPlayer.BLACK, System.currentTimeMillis(),
+                        GoClockMode.PER_MOVE))
+            }
+            runBlocking { f.storage.formalAiRepository().save(initial) }
+            enterSetup()
+            compose.onNodeWithTag("go_ai_setup_continue").performScrollTo().performClick()
+            awaitHumanTurn()
+            val owner = f.aiOwners().single()
+            compose.onNodeWithTag("go_ai_per_move_status").performScrollTo().assertIsDisplayed()
+            f.capture("go-per-move-before-screen-off")
+            try {
+                shell("input keyevent 223")
+                runBlocking {
+                    withTimeout(10_000) { while (power.isInteractive) delay(100) }
+                    assertTrue(f.db.goAiCheckpointDao().listArchives().isEmpty())
+                    withTimeout(40_000) {
+                        while (f.db.gameRecordDao().listAll().isEmpty()) {
+                            check(!power.isInteractive) { "Screen turned on before the timeout was saved" }
+                            delay(100)
+                        }
+                    }
+                    assertFalse(power.isInteractive)
+                    assertEquals(1, f.db.goAiCheckpointDao().listArchives().size)
+                    assertEquals(1, f.db.gameRecordDao().listAll().size)
+                    assertTrue(f.db.goRankedDao().starts().isEmpty())
+                    assertTrue(f.db.goRankedDao().settlements().isEmpty())
+                }
+                val finished = checkNotNull(f.active())
+                assertEquals(initial.matchId, finished.matchId)
+                val clock = checkNotNull(finished.clock)
+                assertEquals(GoClockMode.PER_MOVE, clock.mode)
+                assertEquals(0L, clock.blackMillis)
+                assertEquals(30_000L, clock.whiteMillis)
+                assertNull(clock.active)
+                NativeGoEngine(9).use {
+                    assertEquals(RestoreResult.Restored, it.restore(finished.copyBytes()))
+                    assertEquals(GameResult.SECOND_PLAYER_WIN, it.gameResult())
+                    assertEquals(listOf(GoAction.Timeout(GoPlayer.BLACK)), it.eventHistory())
+                }
+            } finally {
+                shell("input keyevent 224")
+                shell("wm dismiss-keyguard")
+            }
+            compose.onNodeWithTag("go_ai_timeout").performScrollTo().assertTextEquals("黑方超时")
+            assertSame(owner, f.aiOwners().single())
+            f.capture("go-per-move-after-screen-on")
+        }
+    }
+
     private fun shell(command: String): String = ParcelFileDescriptor.AutoCloseInputStream(
         InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command),
     ).bufferedReader().use { it.readText() }

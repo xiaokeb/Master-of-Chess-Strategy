@@ -1,0 +1,80 @@
+{
+  "tag": "v0.1.0-go-per-move-background.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 4,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "release_manifest": "processed",
+    "lint_errors": 0,
+    "candidate": "go-per-move-background1",
+    "baseline": "39d8d2cde304b8e593a370d8e0f473760ffac005",
+    "lint_warnings": 25,
+    "overlays": [
+      {
+        "sha256": "8a7ab1e614185a781547fc0c3ca073b43257b28378d228b88b37bde4500535be",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoAiProductionEntryInstrumentedTest.kt",
+        "working_sha256": "8a7ab1e614185a781547fc0c3ca073b43257b28378d228b88b37bde4500535be"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "337911e2543fd65e93b15f1bd0f3160cdb99e9cc0573d16163386d48fa08e965",
+      "app/build/outputs/apk/debug/app-debug.apk": "2dc7d23b47383dc30876a4ce6935e072d6e0f5e2f8ce5d517f55aa677bc470a9"
+    },
+    "unit_tests": [
+      {
+        "tests": 6,
+        "name": "com.masterofchessstrategy.games.go.GoAiPerMovePolicyTest"
+      }
+    ]
+  },
+  "device": {
+    "restored_font": "1.0",
+    "runs": [
+      {
+        "images": [
+          {
+            "path": "font-1.0\\2969a851-7a0f-4c7c-a2ba-e0068547d4ed\\go-per-move-after-screen-on.png",
+            "sha256": "de89faa38779fc89d08e237422f60535198129402b43d0ee46e80902534e9c05"
+          },
+          {
+            "path": "font-1.0\\2969a851-7a0f-4c7c-a2ba-e0068547d4ed\\go-per-move-before-screen-off.png",
+            "sha256": "028e3f8b9507213071490598f41b0bbb3e9c6a4096636d0ff0ed98e817376c44"
+          }
+        ],
+        "tests": 1,
+        "font": "1.0",
+        "log_sha256": "ee96744ebd768937a3ffbefa855778ea1efa49b446c393798c9bfcc4b02b8cf8"
+      },
+      {
+        "images": [
+          {
+            "path": "font-1.5\\ce50576e-7cdd-43e4-8b5e-71815c2b34e1\\go-per-move-after-screen-on.png",
+            "sha256": "f99ab4b2613ac9da2e397bbb8b4aeb32b872bedfab7848cb5f610448b26c9852"
+          },
+          {
+            "path": "font-1.5\\ce50576e-7cdd-43e4-8b5e-71815c2b34e1\\go-per-move-before-screen-off.png",
+            "sha256": "b6b13a637a57ee109546df34335870677dbf8ab1a04d8c2d673194e17713727a"
+          }
+        ],
+        "tests": 1,
+        "font": "1.5",
+        "log_sha256": "9b078d81bc2e0bf2cf16478dde301db32c3f467d76fcd5da5e792ca8cd5709ee"
+      }
+    ],
+    "original_font": "1.0",
+    "candidate": "go-per-move-background1",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "337911e2543fd65e93b15f1bd0f3160cdb99e9cc0573d16163386d48fa08e965",
+      "app/build/outputs/apk/debug/app-debug.apk": "2dc7d23b47383dc30876a4ce6935e072d6e0f5e2f8ce5d517f55aa677bc470a9"
+    },
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "folder": ".build/go-per-move-background1/device-5a43ad6701244266b7b40d7010b614a6",
+    "visual_review_sha256": "88f7c200d726486b5392d1ce6c280591528979999a821ee5b4610b6392794fc3"
+  }
+}
