@@ -143,6 +143,17 @@ object GoEndgameLibrary {
                 black.zip(white).flatMap { (own, other) -> listOf(own, other) },
                 p(6, 5), targetStones = setOf(p(5, 4), p(6, 7)), requiredEyes = 3)
         },
+        puzzle("shared-liberty-double-capture", "一气双提", GoEndgameTheme.CAPTURE, GoEndgameLevel.HARD,
+            "黑先。两颗白子各只剩一口气，找出它们共有的气，一手提掉两子。",
+            "两颗白子虽不相连，却因共同的最后一口气被填，同时被提走。",
+            2 to 4, 3 to 4, 3 to 3, 5 to 4, 3 to 5, 0 to 0,
+            6 to 4, 1 to 0, 5 to 3, 2 to 0, 5 to 5, 3 to 0,
+            answer = 4 to 4, captured = setOf(3 to 4, 5 to 4)),
+        GoEndgamePuzzle("join-three-groups", "一点接三组", GoEndgameTheme.CONNECTION, GoEndgameLevel.HARD,
+            "黑先。把标出的三组黑棋用一手连成同一组。",
+            "三组棋共用同一连接点，现在可以合在一起计算气。", 13,
+            listOf(p(5, 6), p(5, 5), p(7, 6), p(7, 5), p(6, 5), p(6, 7)),
+            p(6, 6), targetStones = setOf(p(5, 6), p(7, 6), p(6, 5))),
     )
 
     init { require(puzzles.map { it.id }.toSet().size == puzzles.size) }

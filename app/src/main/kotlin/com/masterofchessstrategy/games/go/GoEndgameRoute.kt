@@ -90,11 +90,15 @@ fun GoEndgameScreen(
                 }) }
                 else {
                     val puzzle = exercise.puzzle
-                    val highlighted = if (puzzle.theme == GoEndgameTheme.LIFE) {
-                        val points = if (exercise.completed) exercise.trueEyes else puzzle.targetStones
-                        points.map { it.y * puzzle.boardSize + it.x }.toSet()
-                    } else puzzle.captured.map { it.y * puzzle.boardSize + it.x }
-                        .filter { exercise.stones[it] == GoStone.WHITE.code }.toSet()
+                    val marked = when {
+                        puzzle.theme == GoEndgameTheme.CAPTURE -> puzzle.captured.filter {
+                            exercise.stones[it.y * puzzle.boardSize + it.x] == GoStone.WHITE.code
+                        }
+                        !exercise.completed -> puzzle.targetStones
+                        puzzle.theme == GoEndgameTheme.LIFE -> exercise.trueEyes
+                        else -> emptySet()
+                    }
+                    val highlighted = marked.map { it.y * puzzle.boardSize + it.x }.toSet()
                     GoBoard(puzzle.boardSize, exercise.stones,
                         { x, y -> onAnswer(BoardPosition(x, y)) }, boardModifier,
                         lastMoveIndex = exercise.lastMoveIndex, highlightedPoints = highlighted,
@@ -140,7 +144,7 @@ fun GoEndgameScreen(
                         Text("${exercise.puzzle.level.label} · ${exercise.puzzle.theme.label}")
                         Text(if (exercise.puzzle.id in state.completedIds) "首通奖励已计入"
                             else "首通奖励 1 星 · ${exercise.puzzle.level.firstClearScore} 分")
-                        Text(exercise.puzzle.instruction)
+                        if (exercise.feedback != exercise.puzzle.instruction) Text(exercise.puzzle.instruction)
                         Text(exercise.feedback, modifier = Modifier.testTag("go_endgame_feedback"))
                         Text("尝试 ${exercise.attempts} 次")
                         if (exercise.completed && !state.needsSave) Text("本关完成", color = MaterialTheme.colorScheme.primary,

@@ -1,0 +1,137 @@
+{
+  "tag": "v0.1.0-go-tactical-groups.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 9,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "overlays": [
+      {
+        "sha256": "0ecd54584fbdad2f23790b3f4f75f42432050d7bbe644251d28882b03493e98e",
+        "working_sha256": "0ecd54584fbdad2f23790b3f4f75f42432050d7bbe644251d28882b03493e98e",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibrary.kt"
+      },
+      {
+        "sha256": "022fcfd73636428f617ef43b0b46138642da0a1be8ea130f0eb75480f6566e93",
+        "working_sha256": "022fcfd73636428f617ef43b0b46138642da0a1be8ea130f0eb75480f6566e93",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameRoute.kt"
+      },
+      {
+        "sha256": "27c497e8f6ddae2591529d834ee4dc7bd994663d27db1b70c90fbd6f7b448f32",
+        "working_sha256": "27c497e8f6ddae2591529d834ee4dc7bd994663d27db1b70c90fbd6f7b448f32",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameChallengesTest.kt"
+      },
+      {
+        "sha256": "4dd9d1403c021a302102323e5cdb2fcb04b3665fdff7fd1a6eeac304cdeffd03",
+        "working_sha256": "4dd9d1403c021a302102323e5cdb2fcb04b3665fdff7fd1a6eeac304cdeffd03",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibraryTest.kt"
+      },
+      {
+        "sha256": "0a23db0c6184fdef64b7ff604d95c84575d58a7874b09a4357a140600f3d75f2",
+        "working_sha256": "0a23db0c6184fdef64b7ff604d95c84575d58a7874b09a4357a140600f3d75f2",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoEndgameNativeInstrumentedTest.kt"
+      },
+      {
+        "sha256": "90d540b08cb1bba258aedd639076c9ae2682e177525a46c006c6a6750f5f5511",
+        "working_sha256": "90d540b08cb1bba258aedd639076c9ae2682e177525a46c006c6a6750f5f5511",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoLessonPracticeNavigationTest.kt"
+      }
+    ],
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.games.go.data.RoomGoProgressRepositoriesTest",
+        "tests": 14
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameChallengesTest",
+        "tests": 7
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameLibraryTest",
+        "tests": 14
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameProgressTest",
+        "tests": 9
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameViewModelTest",
+        "tests": 11
+      }
+    ],
+    "lint_errors": 0,
+    "release_manifest": "processed",
+    "baseline": "d5ffa22fae608cce28ddece6ef01347796b189d4",
+    "lint_warnings": 25,
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "72aace61257873e8dfc22e13e740744b4c77b9ef6ad922dbe9477c166201ffe6",
+      "app/build/outputs/apk/debug/app-debug.apk": "5bdba25071c3c0d5d9ea6a3253b1526d1dab4f155ea3045a8be30c2bd4a20373"
+    },
+    "candidate": "go-shared-liberty1"
+  },
+  "device": {
+    "restored_font": "1.0",
+    "runs": [
+      {
+        "images": [
+          {
+            "path": "font-1.0\\598e95e5-6751-405e-a19b-9113cdb309b6\\double-capture-clear.png",
+            "sha256": "76df786e16f67aff3186453d9927051266b5aef1c9798586e87a704d7fa92712"
+          },
+          {
+            "path": "font-1.0\\598e95e5-6751-405e-a19b-9113cdb309b6\\double-capture-start.png",
+            "sha256": "4e16bf4a0e35dc69d4b40c95118b7af28ccfc5218427b72d05c884bbbf85b877"
+          },
+          {
+            "path": "font-1.0\\598e95e5-6751-405e-a19b-9113cdb309b6\\three-groups-clear.png",
+            "sha256": "13497bcc0b68a44fe20d16da235e625aeff38c5fe2eaba1eab3b45b31086db83"
+          },
+          {
+            "path": "font-1.0\\598e95e5-6751-405e-a19b-9113cdb309b6\\three-groups-start.png",
+            "sha256": "1dab42e848543b7c06ccea4c30ddf9ff37b45fbcbb21d535c58c84ec80d934cb"
+          }
+        ],
+        "tests": 5,
+        "log_sha256": "8f325b19516ca70c817d40545a644d01572ad5d20872fc829e6cad0708053f44",
+        "font": "1.0"
+      },
+      {
+        "images": [
+          {
+            "path": "font-1.5\\e9d91fd5-1037-44ff-a9f7-bf95cc65c2f5\\double-capture-clear.png",
+            "sha256": "b5cc3892f0c82acb0ecab334cd079bd5287298b91b4b354e68869456a00adf6c"
+          },
+          {
+            "path": "font-1.5\\e9d91fd5-1037-44ff-a9f7-bf95cc65c2f5\\double-capture-start.png",
+            "sha256": "507962ec9e50651a3d3feb91528e49e5133f00de13b4a7a19e306078ebf5dd13"
+          },
+          {
+            "path": "font-1.5\\e9d91fd5-1037-44ff-a9f7-bf95cc65c2f5\\three-groups-clear.png",
+            "sha256": "64136cb862b01aa08e78151518c3913bd57cb74d537c1add2d7af7257a026137"
+          },
+          {
+            "path": "font-1.5\\e9d91fd5-1037-44ff-a9f7-bf95cc65c2f5\\three-groups-start.png",
+            "sha256": "277be0827d82be16d2f3998642effd532c7f1a7fc2721e55e5ea79174f01ea48"
+          }
+        ],
+        "tests": 1,
+        "log_sha256": "a491eeb6eeace507d832c3146608917b58dbefd423be5bcabed048124b5e41db",
+        "font": "1.5"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "72aace61257873e8dfc22e13e740744b4c77b9ef6ad922dbe9477c166201ffe6",
+      "app/build/outputs/apk/debug/app-debug.apk": "5bdba25071c3c0d5d9ea6a3253b1526d1dab4f155ea3045a8be30c2bd4a20373"
+    },
+    "original_font": "1.0",
+    "candidate": "go-shared-liberty1",
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "folder": ".build/go-shared-liberty1/device-9242ceca083445b2a66ef6e66be551a2",
+    "visual_review_sha256": "7448d48914e98bc43248a6705161bd12c1f003f3b14b1bad846c56940eda6551"
+  }
+}

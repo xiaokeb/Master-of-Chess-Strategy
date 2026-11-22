@@ -291,6 +291,9 @@ class GoLessonPracticeNavigationTest {
 
         compose.onNodeWithText("下一关").performScrollTo().performClick()
         awaitTitle(connection.title)
+        compose.onNodeWithTag("go_intersection_5_6").assertContentDescriptionEquals("第7行第6列，黑子，高亮点")
+        compose.onNodeWithTag("go_intersection_7_6").assertContentDescriptionEquals("第7行第8列，黑子，高亮点")
+        compose.onNodeWithTag("go_intersection_6_5").assertContentDescriptionEquals("第6行第7列，黑子，高亮点")
         compose.onNodeWithTag("go_intersection_9_9").performClick()
         awaitTag("go_endgame_completed")
         compose.onNodeWithTag("go_endgame_completed").performScrollTo().assertIsDisplayed()
@@ -478,6 +481,36 @@ class GoLessonPracticeNavigationTest {
         assertEquals(preceding + puzzle.id, runBlocking { repository.load().completedIds })
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
         capture("interior-life-clear")
+    }
+
+    @Test fun captureAndConnectionExercisesAdvanceTheMainlineAndSaveRewards() {
+        val capturePuzzle = checkNotNull(GoEndgameLibrary.puzzle("shared-liberty-double-capture"))
+        val connection = checkNotNull(GoEndgameLibrary.puzzle("join-three-groups"))
+        val preceding = GoEndgameLibrary.puzzles.takeWhile { it.id != capturePuzzle.id }.map { it.id }.toSet()
+        val repository = RoomGoEndgameProgressRepository(database)
+        runBlocking {
+            preceding.forEach { repository.complete(it) }
+            repository.select(capturePuzzle.id)
+        }
+        compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag(GO_ENDGAMES_ENTRY_TAG).performScrollTo().performClick()
+        awaitTitle(capturePuzzle.title)
+        capture("double-capture-start")
+        compose.onNodeWithTag("go_intersection_4_4").performClick()
+        awaitTag("go_endgame_completed")
+        compose.onNodeWithTag("go_intersection_3_4").assertContentDescriptionEquals("第5行第4列，空点")
+        compose.onNodeWithTag("go_intersection_5_4").assertContentDescriptionEquals("第5行第6列，空点")
+        compose.onNodeWithTag("go_endgame_rewards").performScrollTo().assertTextEquals("残局奖励 15 星 · 500 分")
+        capture("double-capture-clear")
+        compose.onNodeWithText("下一关").performScrollTo().performClick()
+        awaitTitle(connection.title)
+        capture("three-groups-start")
+        compose.onNodeWithTag("go_intersection_6_6").performClick()
+        awaitTag("go_endgame_completed")
+        compose.onNodeWithTag("go_endgame_rewards").performScrollTo().assertTextEquals("残局奖励 16 星 · 540 分")
+        assertEquals(preceding + capturePuzzle.id + connection.id, runBlocking { repository.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        capture("three-groups-clear")
     }
 
     private fun openLessons() {

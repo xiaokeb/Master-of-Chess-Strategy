@@ -10,7 +10,7 @@ class GoEndgameChallengesTest {
     private val date = LocalDate.of(2026, 10, 14)
 
     @Test fun themeAndLevelFiltersPreserveMainlineOrderWithoutChangingUnlocks() {
-        assertEquals(listOf(ids[0], ids[1], ids[4], ids[6], "corner-liberty-race"),
+        assertEquals(listOf(ids[0], ids[1], ids[4], ids[6], "corner-liberty-race", "shared-liberty-double-capture"),
             GoEndgameChallenges.catalog(GoEndgameTheme.CAPTURE).map { it.id })
         assertEquals(listOf(ids[4]), GoEndgameChallenges.catalog(GoEndgameTheme.CAPTURE, GoEndgameLevel.MEDIUM).map { it.id })
         assertTrue(GoEndgameChallenges.available(GoEndgameProgress(), level = GoEndgameLevel.MEDIUM).isEmpty())
