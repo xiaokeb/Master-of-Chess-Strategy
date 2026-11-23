@@ -266,6 +266,15 @@ class CompetitionMahjongChallengeNavigationTest {
         resultText = "三色三同顺计 8 番", rewardText = "20 星 · 1090 分",
     )
 
+    @Test fun triplePungTrainingExcludesDoublePungsUnderCurrentScoring() {
+        val id = CompetitionMahjongPracticePosition.TRIPLE_PUNG_DISCARD_ID
+        val win = checkNotNull(CompetitionMahjongPracticePosition.playDiscard(31, id, settle = true))
+        assertEquals(37, win.totalFan)
+        assertEquals(listOf(135, -45, -45, -45), win.netScores)
+        verifyDiscardExercise(id, wrong = 4, correct = 31, draw = "南",
+            resultText = "三同刻计 16 番", rewardText = "25 星 · 1490 分")
+    }
+
     @Test fun nativeNineGatesTeachesWmoExclusionAndSavesOneReward() {
         val hand = CompetitionMahjongPracticePosition.verifyNineGates()
         assertEquals(listOf(0, 0, 0, 1, 2, 3, 4, 4, 5, 6, 7, 8, 8, 8), hand)

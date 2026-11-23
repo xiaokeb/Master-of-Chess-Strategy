@@ -260,6 +260,10 @@ object CompetitionMahjongChallengeLibrary {
             CompetitionMahjongChallengeTheme.CONTEXT, CompetitionMahjongChallengeLevel.MASTER,
             "你坐西家，十三幺听红中。南家已经碰过红中，摸到第四张后宣布加杠。请选择如何回应。", "",
             "红中补齐十三幺。抢杠和计 8 番，和绝张不叠加。南家原碰保留，本盘直接结算。", setOf(7, 47, 58)),
+        challenge(CompetitionMahjongPracticePosition.TRIPLE_PUNG_DISCARD_ID, "保留三色五刻",
+            CompetitionMahjongChallengeTheme.EXCLUSION, CompetitionMahjongChallengeLevel.MASTER,
+            "你坐东家。请保留三种花色的五刻和一张南风，打出多余的一张。其他三家依次摸切后轮到你摸牌。", "",
+            "南风作将，三同刻计 16 番。同组三副刻子已用于三同刻，双同刻不重复计。", setOf(32, 65)),
     ))
 
     init {

@@ -20,6 +20,7 @@ internal object CompetitionMahjongPracticePosition {
     const val ORPHANS_DISCARD_ID = "discard-for-thirteen-orphans"
     const val PURE_STRAIGHT_DISCARD_ID = "discard-for-pure-straight"
     const val MIXED_TRIPLE_CHOW_DISCARD_ID = "discard-for-mixed-triple-chow"
+    const val TRIPLE_PUNG_DISCARD_ID = "discard-for-triple-pung"
     const val FOUR_CONCEALED_CLAIM_ID = "claim-four-concealed-pungs"
     const val WRONG_TILE_ID = "false-win-wrong-tile"
     const val NOT_READY_ID = "false-win-not-ready"
@@ -64,6 +65,9 @@ internal object CompetitionMahjongPracticePosition {
         FOUR_CONCEALED_CLAIM_ID to DiscardExercise(
             listOf(0, 0, 0, 3, 3, 3, 12, 12, 12, 25, 25, 25, 27, 31), listOf(27),
             CompetitionMahjongScoring.WMO_2021, FOUR_CONCEALED_PUNGS, 64, fromDiscard = true),
+        TRIPLE_PUNG_DISCARD_ID to DiscardExercise(
+            listOf(4, 4, 4, 6, 7, 8, 13, 13, 13, 22, 22, 22, 28, 31), listOf(14, 15, 16, 28),
+            CompetitionMahjongScoring.WMO_2021_KONGS, 32, 16),
     )
 
     fun isDiscardTraining(id: String): Boolean = id in discards
@@ -262,6 +266,9 @@ internal object CompetitionMahjongPracticePosition {
                 result.winnerSeat == 0 && result.payerSeat == payer && result.winningTile == winningTile &&
                 result.winningFan.qualifies &&
                 result.winningFan.entries.any { it.id == puzzle.fanId && it.points == puzzle.patternPoints })
+            if (id == TRIPLE_PUNG_DISCARD_ID) {
+                check(result.winningFan.entries.none { it.id == 65 })
+            }
             WinningTurn(hand, winningTile, payer, result.winningFan.totalFan, result.netScores)
         }
     }
