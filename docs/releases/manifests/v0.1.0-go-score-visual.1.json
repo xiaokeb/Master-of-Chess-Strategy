@@ -1,0 +1,42 @@
+{
+  "tag": "v0.1.0-go-score-visual.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 4,
+  "build": {
+    "base": "893fd27ef11ee41d6e3dd58444c1b6eb1f286839",
+    "inputs": [
+      {
+        "sha256": "8fa62395dc0928ea076977fcfef5b0a69b74a92dfe7be529a9f1125d6b225164",
+        "path": "tools/android/go/review-strength-groups.py"
+      }
+    ]
+  },
+  "evidence": {
+    "test_log_sha256": "19de77c8cb4d808f686cf8ef2ab77e4cc96e1e8073331575d8f10f8d0e64e86b",
+    "inspection_sha256": "bd60e2108ba2a3e25a2759ae6ee28a20be0110f55662b0244002800e8d76b811",
+    "boards": 140,
+    "groups": 2412,
+    "pass_alive": 554,
+    "unresolved": 1770,
+    "priority_review": 88,
+    "fully_adjudicated": 0,
+    "visual_samples": [
+      {
+        "slot": 48,
+        "sha256": "38e34501da4e7529f82096cdbac05eaf89d053c7e3c37fc8efc5d05b5f173418",
+        "board_size": 9
+      },
+      {
+        "slot": 16,
+        "sha256": "443f85ba978fe44528cd66db07f954407cc3aa801582999e5c9f97d884e04d0f",
+        "board_size": 13
+      },
+      {
+        "slot": 32,
+        "sha256": "21efb0677a484f7aa7e96a1f14028cfb11fa8f27ceffe598567246326e3dbc79",
+        "board_size": 19
+      }
+    ]
+  }
+}
