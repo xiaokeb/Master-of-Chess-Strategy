@@ -1,0 +1,93 @@
+{
+  "tag": "v0.1.0-competition-mahjong-kong-strength.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 7,
+  "assets": [],
+  "build": {
+    "inputs": [
+      {
+        "sha256": "5ee943bb0ff882682802ac3cf90e730bf44f87041d33a9cab8daaa28f4c93fdf",
+        "path": "tools/android/competition-mahjong/competition-mahjong-strength-driver.cpp",
+        "working_sha256": "5ee943bb0ff882682802ac3cf90e730bf44f87041d33a9cab8daaa28f4c93fdf"
+      },
+      {
+        "sha256": "8ccbe833fc59852cddfbea520df2e59da97a4449008387b22da257d14fcd5b1e",
+        "path": "tools/android/competition-mahjong/summarize-strength.ps1",
+        "working_sha256": "8ccbe833fc59852cddfbea520df2e59da97a4449008387b22da257d14fcd5b1e"
+      },
+      {
+        "sha256": "d503df8f506a2924ca38d0e20ca7f841ad7dfff832bd20c8eebb3f598a5dfcf4",
+        "path": "docs/games/competition-mahjong/2026-11-23-kong-strength-v2-protocol.md",
+        "working_sha256": "d503df8f506a2924ca38d0e20ca7f841ad7dfff832bd20c8eebb3f598a5dfcf4"
+      }
+    ],
+    "ndk": "30.0.16138531",
+    "profile": "held-out-wmo-kongs-v2",
+    "products": [
+      {
+        "abi": "x86_64",
+        "core_sha256": "f73e71cc3152960469c623a70bf0d61f71e91ae3931a9b566e96b0f54304e1a1",
+        "bin": "driver-x86_64",
+        "sha256": "790c11b47477c31c6b42ae52ccda8301aff1e7b91ec5881e04344ff04348c0ec"
+      },
+      {
+        "abi": "arm64-v8a",
+        "core_sha256": "25e4f7999755823d77e2ec2d402e1c5b9db5ce7c92ee49cfaed96b65599e7839",
+        "bin": "driver-arm64-v8a",
+        "sha256": "58495c1f6520ad5df8f6d16c2ae475eefdf86b3cfcb9d7982a9f920f29fea215"
+      }
+    ],
+    "base": "44f8fe3a66ddfd7684df6af7b978b89fd20e568e"
+  },
+  "device": {
+    "folder": "device-d8272e9daeb940ebaaa0c6069ecd5b52",
+    "abi": "x86_64",
+    "summary_sha256": "b6638ff53f2dfc40abaaad1ecee84431226c9f3b9d4e193ef228208e01e7383a",
+    "raw_sha256": "d6c51d731ca5f7a227b5172bd81f30ffd76d7c0976a2d353c39cf6592ca2230d",
+    "summary": [
+      {
+        "lower": 0,
+        "series": 96,
+        "hands": 1536,
+        "wins": 266,
+        "ties": 1,
+        "losses": 117,
+        "draws": 348,
+        "mean": 0.6940104166666666,
+        "interval_lower": 0.6347440112094845,
+        "interval_upper": 0.7532768221238487,
+        "meets_protocol": true
+      },
+      {
+        "lower": 1,
+        "series": 96,
+        "hands": 1536,
+        "wins": 269,
+        "ties": 1,
+        "losses": 114,
+        "draws": 113,
+        "mean": 0.7018229166666666,
+        "interval_lower": 0.6290273062360343,
+        "interval_upper": 0.774618527097299,
+        "meets_protocol": true
+      },
+      {
+        "lower": 2,
+        "series": 96,
+        "hands": 1536,
+        "wins": 262,
+        "ties": 2,
+        "losses": 120,
+        "draws": 109,
+        "mean": 0.6848958333333334,
+        "interval_lower": 0.6286525533583586,
+        "interval_upper": 0.7411391133083082,
+        "meets_protocol": true
+      }
+    ],
+    "binary_sha256": "790c11b47477c31c6b42ae52ccda8301aff1e7b91ec5881e04344ff04348c0ec",
+    "profile": "held-out-wmo-kongs-v2",
+    "avd": "Pixel_7_Pro",
+    "raw_path": "docs/testing/results/2026-11-23-competition-mahjong-held-out-wmo-kongs-v2.tsv"
+  }
+}

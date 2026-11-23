@@ -86,7 +86,8 @@ void run_series(int lower, std::uint64_t seed, int rotation, CompetitionMahjongB
 int main(int argc, char** argv) {
     if (argc != 2 && argc != 5) return 2;
     const std::string_view profile = argv[1];
-    const bool kong_revision = profile == "held-out-wmo-kongs-v1";
+    const bool second_kong_cohort = profile == "held-out-wmo-kongs-v2";
+    const bool kong_revision = profile == "held-out-wmo-kongs-v1" || second_kong_cohort;
     const bool wmo = profile == "held-out-wmo-calibrated-v1" || kong_revision;
     const auto scoring = kong_revision ? CompetitionMahjongFanRules::wmo_2021_kongs :
         wmo ? CompetitionMahjongFanRules::wmo_2021 : CompetitionMahjongFanRules::legacy_v1;
@@ -107,6 +108,7 @@ int main(int argc, char** argv) {
     if (medium_training) first = 71551001ULL;
     if (profile == "held-out-medium-bucket-8") first = 5920152401ULL;
     if (wmo) first = kong_revision ? 9261122001ULL : 9226102001ULL;
+    if (second_kong_cohort) first = 9261123001ULL;
     const int seed_count = held_out ? 24 : 8;
     int selected_lower = -1;
     int selected_rotation = -1;
