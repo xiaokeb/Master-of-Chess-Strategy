@@ -1,0 +1,112 @@
+{
+  "tag": "v0.1.0-go-join-eyes-practice.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 6,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoLessonPracticeLink.kt",
+        "working_sha256": "adfce95dab0acc84f55d59950482fe47c4a95b2851c9c61601cfef86fee456b8",
+        "sha256": "adfce95dab0acc84f55d59950482fe47c4a95b2851c9c61601cfef86fee456b8"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoLessonPracticeLinkTest.kt",
+        "working_sha256": "25584ac2997b4910c360a8e8933339e9f94e910e996de3701517e53bb0d213cd",
+        "sha256": "25584ac2997b4910c360a8e8933339e9f94e910e996de3701517e53bb0d213cd"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoLessonPracticeNavigationTest.kt",
+        "working_sha256": "d175bedd607351c4fe300fee33201830be7b5d56a76ea727a3b132b9582c7706",
+        "sha256": "d175bedd607351c4fe300fee33201830be7b5d56a76ea727a3b132b9582c7706"
+      }
+    ],
+    "release_manifest": "processed",
+    "lint_warnings": 25,
+    "baseline": "893fd27ef11ee41d6e3dd58444c1b6eb1f286839",
+    "unit_tests": [
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.go.GoLessonPracticeLinkTest"
+      },
+      {
+        "tests": 10,
+        "name": "com.masterofchessstrategy.games.go.GoLessonPracticeViewModelTest"
+      }
+    ],
+    "candidate": "go-join-eyes-lesson1",
+    "lint_errors": 0,
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "f9700ba4338a0e7e7235ac372afd78370f366f5f711fcad7e9971969a6272160",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "30565cd1caf95c53b0f00f6d23d8faee2327a01748672f82712e50c6ee0db01a"
+    }
+  },
+  "device": {
+    "restored_font": "1.0",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "f9700ba4338a0e7e7235ac372afd78370f366f5f711fcad7e9971969a6272160",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "30565cd1caf95c53b0f00f6d23d8faee2327a01748672f82712e50c6ee0db01a"
+    },
+    "runs": [
+      {
+        "tests": 3,
+        "font": "1.0",
+        "log_sha256": "39bf0536daa2e1dd843c4d3916f0803142541876ced58b6a8f4c7b388b96b9c1",
+        "selector": "com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#connectionLessonBuildsLifeByJoiningTwoOneEyeGroups,com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#allLinkedExercisesUseTheActualProductionRulesAndReachTheirGoals,com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#lockedPracticeExplainsPrerequisitesAndReturnsWithoutCompletingTheLesson",
+        "images": [
+          {
+            "path": "font-1.0\\39ce23c3-b583-44d4-9f07-3868ccdd05e2\\locked-prerequisite.png",
+            "sha256": "b41a94eb1d6641be0b36faa16e36101566a0cd218445e7d711a3bfed2b8e585a"
+          },
+          {
+            "path": "font-1.0\\39ce23c3-b583-44d4-9f07-3868ccdd05e2\\original-lesson-returned.png",
+            "sha256": "646ca678b3611f573e6c6b0bca7000d276bba2093aca44c4fc21fdf20c5341b5"
+          },
+          {
+            "path": "font-1.0\\39ce23c3-b583-44d4-9f07-3868ccdd05e2\\prerequisite-completed.png",
+            "sha256": "82d41c9b015ea69a9e0464dd84b7071bfcc34ae78da55052620e873d3144bad1"
+          },
+          {
+            "path": "font-1.0\\6cabd1c5-1480-49b5-9544-bc1205c66387\\join-eyes-completed.png",
+            "sha256": "7890218a9282b22e28d57bfa1810479eb59d4bf536f9e185561ac1e1bd65b910"
+          },
+          {
+            "path": "font-1.0\\6cabd1c5-1480-49b5-9544-bc1205c66387\\join-eyes-locked.png",
+            "sha256": "64c02bdb99acf843e42ed0e4a4c26d2cfb4a4a5754e7be776649ef1b00151a65"
+          },
+          {
+            "path": "font-1.0\\6cabd1c5-1480-49b5-9544-bc1205c66387\\join-eyes-ready.png",
+            "sha256": "b746d5e5f48949f7ca564195fde765eb1cebd5073e9e2b8132956c8d938646bd"
+          }
+        ]
+      },
+      {
+        "tests": 1,
+        "font": "1.5",
+        "log_sha256": "e214a73efe1d30b31095e49a41bd47406ae6aee91e15b9d1c94f9aa17037f0d7",
+        "selector": "com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#connectionLessonBuildsLifeByJoiningTwoOneEyeGroups",
+        "images": [
+          {
+            "path": "font-1.5\\fb96ffda-d416-4567-b088-7f4d2be695d5\\join-eyes-completed.png",
+            "sha256": "ebcf9b5f1f3af5ed12a85fd51b0791f9373989ce4935f05608cd86eff4fdface"
+          },
+          {
+            "path": "font-1.5\\fb96ffda-d416-4567-b088-7f4d2be695d5\\join-eyes-locked.png",
+            "sha256": "84ab567d4c4a26d91086e6215755951220b55a56e58db0ae9030db5853570e2a"
+          },
+          {
+            "path": "font-1.5\\fb96ffda-d416-4567-b088-7f4d2be695d5\\join-eyes-ready.png",
+            "sha256": "b763991ac92cc89c912ccebbd99f432d3959df5acd6e61d88d4f14094995a034"
+          }
+        ]
+      }
+    ],
+    "original_font": "1.0",
+    "candidate": "go-join-eyes-lesson1"
+  }
+}

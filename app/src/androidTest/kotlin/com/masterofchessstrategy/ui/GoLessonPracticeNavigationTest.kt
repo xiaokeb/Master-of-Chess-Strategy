@@ -216,7 +216,7 @@ class GoLessonPracticeNavigationTest {
 
     @Test fun allLinkedExercisesUseTheActualProductionRulesAndReachTheirGoals() {
         val links = GoLearningLibrary.lessons.flatMap { GoLessonPracticeLink.forLesson(it.id) }
-        assertEquals(6, links.size)
+        assertEquals(7, links.size)
         links.forEach { link ->
             val puzzle = checkNotNull(GoEndgameLibrary.puzzle(link.puzzleId))
             val plan = GoEndgameLibrary.open(puzzle)
@@ -320,6 +320,45 @@ class GoLessonPracticeNavigationTest {
         awaitLesson(connectionLesson)
         assertEquals(beforeConnection, runBlocking { lessons.load() })
         assertEquals(prerequisites + captureId + connectionId, runBlocking { endgames.load().completedIds })
+    }
+
+    @Test fun connectionLessonBuildsLifeByJoiningTwoOneEyeGroups() {
+        openLessons()
+        val lesson = "连成一个棋组"
+        val puzzle = checkNotNull(GoEndgameLibrary.puzzle("link-one-eye-groups"))
+        val lessons = RoomGoLearningProgressRepository(database)
+        val endgames = RoomGoEndgameProgressRepository(database)
+        compose.onNodeWithText("知识点目录").performScrollTo().performClick()
+        compose.onNodeWithText(lesson).performScrollTo().performClick()
+        awaitLesson(lesson)
+        val prior = runBlocking { lessons.load() }
+        val link = compose.onNodeWithTag("go_lesson_practice_${puzzle.id}")
+        link.performScrollTo().assertTextEquals("练习：两组借眼").performClick()
+        awaitTag("go_endgame_practice_locked")
+        compose.onNodeWithTag("go_endgame_practice_locked").performScrollTo()
+            .assertTextContains(puzzle.title, substring = true)
+        assertTrue(runBlocking { endgames.load().completedIds.isEmpty() })
+        capture("join-eyes-locked")
+        compose.onNodeWithTag("go_endgame_back").performScrollTo().performClick()
+        awaitLesson(lesson)
+
+        val preceding = GoEndgameLibrary.puzzles.takeWhile { it.id != puzzle.id }.map { it.id }.toSet()
+        runBlocking { preceding.forEach { endgames.complete(it) } }
+        link.performScrollTo().performClick()
+        awaitTitle(puzzle.title)
+        compose.onNodeWithTag("go_endgame_source_lesson").performScrollTo().assertTextContains(lesson, substring = true)
+        capture("join-eyes-ready")
+        compose.onNodeWithTag("go_intersection_2_0").performClick()
+        awaitTag("go_endgame_completed")
+        compose.onNodeWithTag("go_intersection_0_0").assertContentDescriptionEquals("第1行第1列，空点，高亮点")
+        compose.onNodeWithTag("go_intersection_4_0").assertContentDescriptionEquals("第1行第5列，空点，高亮点")
+        compose.onNodeWithTag("go_endgame_completed").performScrollTo().assertIsDisplayed()
+        capture("join-eyes-completed")
+        compose.onNodeWithTag("go_endgame_back").performScrollTo().performClick()
+        awaitLesson(lesson)
+        assertEquals(prior, runBlocking { lessons.load() })
+        assertEquals(preceding + puzzle.id, runBlocking { endgames.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
     }
 
     @Test fun twoMoveCaptureCompletesOnlyAfterBothTargetsAndPersistsProgress() {

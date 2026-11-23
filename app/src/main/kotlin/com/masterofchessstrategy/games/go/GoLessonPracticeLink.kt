@@ -7,7 +7,7 @@ data class GoLessonPracticeLink(val lessonId: String, val puzzleId: String) {
     companion object {
         private val pairs = mapOf(
             "liberties" to listOf("escape-atari"),
-            "connection" to listOf("bridge-groups", "join-three-groups"),
+            "connection" to listOf("bridge-groups", "join-three-groups", "link-one-eye-groups"),
             "capture" to listOf("corner-capture", "shared-liberty-double-capture"),
             "suicide" to listOf("corner-counter-capture"),
         )
