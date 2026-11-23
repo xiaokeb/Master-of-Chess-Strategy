@@ -1,0 +1,113 @@
+{
+  "tag": "v0.1.0-go-forbidden-point-practice.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 6,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "baseline": "f5d68c99fbb07b32324b0b549aa36a08e3bfd45d",
+    "candidate": "go-forbidden-lesson1",
+    "lint_warnings": 25,
+    "lint_errors": 0,
+    "overlays": [
+      {
+        "working_sha256": "8181e7a84dd14d1ceca5d0b653d8e67b6c4086510a62c308ee27260e5f0387ab",
+        "sha256": "8181e7a84dd14d1ceca5d0b653d8e67b6c4086510a62c308ee27260e5f0387ab",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoLessonPracticeLink.kt"
+      },
+      {
+        "working_sha256": "6917e1d5bf10309ce0a2ef57cd69ae0cc84ef6143cff367711cac22108d27714",
+        "sha256": "6917e1d5bf10309ce0a2ef57cd69ae0cc84ef6143cff367711cac22108d27714",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoLessonPracticeLinkTest.kt"
+      },
+      {
+        "working_sha256": "927ea8de322432e21ff9aabf1ed7d3f3119a35681c04d7f604f0974803d2946b",
+        "sha256": "927ea8de322432e21ff9aabf1ed7d3f3119a35681c04d7f604f0974803d2946b",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoLessonPracticeNavigationTest.kt"
+      }
+    ],
+    "release_manifest": "processed",
+    "unit_tests": [
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.go.GoLessonPracticeLinkTest"
+      },
+      {
+        "tests": 10,
+        "name": "com.masterofchessstrategy.games.go.GoLessonPracticeViewModelTest"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "b84a9227629a28fbe73601aac45dcc5652ac83cef3e28b4a32cc2704066cbe95",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "562fa382a94740d7d0976f728977abc1c24772f5e934f95b0f66e1636d386686"
+    }
+  },
+  "device": {
+    "runs": [
+      {
+        "font": "1.0",
+        "log_sha256": "adc3ab9cfd0c2d27a7112c955b4227c4d9e9df4bb257ea311005a30444a81159",
+        "images": [
+          {
+            "path": "font-1.0\\0eb67176-7d01-4678-a8c9-05e9dbc28643\\counter-capture-locked.png",
+            "sha256": "30b41775b50cb37810ff22d99a2262a3a8a9c1865be0bfeb8032e02fe4eb2d9f"
+          },
+          {
+            "path": "font-1.0\\0eb67176-7d01-4678-a8c9-05e9dbc28643\\counter-capture-solved.png",
+            "sha256": "92d367e7808209461456b8837f4879b5963fc6eb8145311587fbfeba3e42d6b9"
+          },
+          {
+            "path": "font-1.0\\0eb67176-7d01-4678-a8c9-05e9dbc28643\\forbidden-point-lesson-returned.png",
+            "sha256": "80854f1ab2e8512673864e76159e9283638ea77a2891f86cf22617a023010b55"
+          },
+          {
+            "path": "font-1.0\\aa7f35b3-ae16-442e-b33f-fd93b28b79c4\\locked-prerequisite.png",
+            "sha256": "b41a94eb1d6641be0b36faa16e36101566a0cd218445e7d711a3bfed2b8e585a"
+          },
+          {
+            "path": "font-1.0\\aa7f35b3-ae16-442e-b33f-fd93b28b79c4\\original-lesson-returned.png",
+            "sha256": "646ca678b3611f573e6c6b0bca7000d276bba2093aca44c4fc21fdf20c5341b5"
+          },
+          {
+            "path": "font-1.0\\aa7f35b3-ae16-442e-b33f-fd93b28b79c4\\prerequisite-completed.png",
+            "sha256": "82d41c9b015ea69a9e0464dd84b7071bfcc34ae78da55052620e873d3144bad1"
+          }
+        ],
+        "tests": 3
+      },
+      {
+        "font": "1.5",
+        "log_sha256": "b38c9115abb1a6eca8a1ff37e88c61405ade34be0b5533d91ea5159ca7b68a7c",
+        "images": [
+          {
+            "path": "font-1.5\\325a7b67-a345-4143-bd12-e838145a0d85\\counter-capture-locked.png",
+            "sha256": "6b654bb829ad505e75f17b94ddf9fe0bd5c9a8987713299f8ecc20fd7e4b2552"
+          },
+          {
+            "path": "font-1.5\\325a7b67-a345-4143-bd12-e838145a0d85\\counter-capture-solved.png",
+            "sha256": "56b89c6513c14e0dce55e927966b6fc9914902e02a450dad37a356a61a30b11d"
+          },
+          {
+            "path": "font-1.5\\325a7b67-a345-4143-bd12-e838145a0d85\\forbidden-point-lesson-returned.png",
+            "sha256": "7414695b74deb9eee1d4186bdf22f14d3c44fe2ffecfbd8f34795bab302040fa"
+          }
+        ],
+        "tests": 1
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "b84a9227629a28fbe73601aac45dcc5652ac83cef3e28b4a32cc2704066cbe95",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "562fa382a94740d7d0976f728977abc1c24772f5e934f95b0f66e1636d386686"
+    },
+    "candidate": "go-forbidden-lesson1",
+    "original_font": "1.0",
+    "restored_font": "1.0",
+    "avd": "Pixel_7_Pro",
+    "folder": "device-9cbde8a9618a4041a625ef11697b0be3",
+    "abi": "x86_64"
+  }
+}

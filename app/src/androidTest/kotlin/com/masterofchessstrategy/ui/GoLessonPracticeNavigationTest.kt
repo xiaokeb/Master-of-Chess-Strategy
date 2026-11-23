@@ -216,16 +216,55 @@ class GoLessonPracticeNavigationTest {
 
     @Test fun allLinkedExercisesUseTheActualProductionRulesAndReachTheirGoals() {
         val links = GoLearningLibrary.lessons.flatMap { GoLessonPracticeLink.forLesson(it.id) }
-        assertEquals(5, links.size)
+        assertEquals(6, links.size)
         links.forEach { link ->
             val puzzle = checkNotNull(GoEndgameLibrary.puzzle(link.puzzleId))
             val plan = GoEndgameLibrary.open(puzzle)
             val session = GoEndgameSession(plan)
-            assertFalse(session.state().completed)
-            assertTrue(session.answer(puzzle.answer).completed)
+            val before = session.state()
+            assertFalse(before.completed)
+            val after = session.answer(puzzle.answer)
+            assertTrue(after.completed)
+            if (link.lessonId == "suicide") {
+                assertEquals(2, before.stones[0])
+                assertEquals(0, after.stones[0])
+            }
         }
         assertTrue(runBlocking { database.goProgressDao().listAll().isEmpty() })
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+    }
+
+    @Test fun forbiddenPointLessonLinksToTheCaptureExceptionAndKeepsProgressSeparate() {
+        openLessons()
+        val lesson = "辨认禁着点"
+        val puzzle = checkNotNull(GoEndgameLibrary.puzzle("corner-counter-capture"))
+        val lessons = RoomGoLearningProgressRepository(database)
+        val endgames = RoomGoEndgameProgressRepository(database)
+        compose.onNodeWithText("知识点目录").performScrollTo().performClick()
+        compose.onNodeWithText(lesson).performScrollTo().performClick()
+        awaitLesson(lesson)
+        val prior = runBlocking { lessons.load() }
+        val link = compose.onNodeWithTag("go_lesson_practice")
+        link.performScrollTo().assertIsEnabled().performClick()
+        awaitTag("go_endgame_practice_locked")
+        compose.onNodeWithTag("go_endgame_practice_locked").performScrollTo()
+            .assertTextContains(puzzle.title, substring = true)
+        capture("counter-capture-locked")
+        compose.onNodeWithTag("go_endgame_back").performScrollTo().performClick()
+        awaitLesson(lesson)
+        val prerequisites = GoEndgameLibrary.puzzles.takeWhile { it.id != puzzle.id }.map { it.id }.toSet()
+        runBlocking { prerequisites.forEach { endgames.complete(it) } }
+        link.performScrollTo().performClick()
+        awaitTitle(puzzle.title)
+        compose.onNodeWithTag("go_endgame_source_lesson").performScrollTo().assertTextContains(lesson, substring = true)
+        compose.onNodeWithTag("go_intersection_0_1").performClick()
+        awaitTag("go_endgame_completed")
+        capture("counter-capture-solved")
+        compose.onNodeWithTag("go_endgame_back").performScrollTo().performClick()
+        awaitLesson(lesson)
+        assertEquals(prior, runBlocking { lessons.load() })
+        assertEquals(prerequisites + puzzle.id, runBlocking { endgames.load().completedIds })
+        capture("forbidden-point-lesson-returned")
     }
 
     @Test fun advancedPracticeKeepsUnlocksAndReturnsToItsOwnLesson() {

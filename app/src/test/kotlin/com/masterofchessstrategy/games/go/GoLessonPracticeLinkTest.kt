@@ -8,7 +8,7 @@ import com.masterofchessstrategy.engine.GoPlayer
 class GoLessonPracticeLinkTest {
     @Test fun reviewedBasicAndAdvancedLinksPreserveLessonOrder() {
         val links = GoLearningLibrary.lessons.flatMap { GoLessonPracticeLink.forLesson(it.id) }
-        assertEquals(5, links.size)
+        assertEquals(6, links.size)
         links.forEach { link ->
             assertNotNull(GoLearningLibrary.lesson(link.lessonId))
             assertNotNull(GoEndgameLibrary.puzzle(link.puzzleId))
@@ -17,6 +17,8 @@ class GoLessonPracticeLinkTest {
         assertEquals(listOf("escape-atari"), GoLessonPracticeLink.forLesson("liberties").map { it.puzzleId })
         assertEquals(listOf("bridge-groups", "join-three-groups"), GoLessonPracticeLink.forLesson("connection").map { it.puzzleId })
         assertEquals(listOf("corner-capture", "shared-liberty-double-capture"), GoLessonPracticeLink.forLesson("capture").map { it.puzzleId })
+        assertEquals(listOf("corner-counter-capture"), GoLessonPracticeLink.forLesson("suicide").map { it.puzzleId })
+        assertNull(GoLessonPracticeLink.resolve("suicide", "corner-capture"))
     }
 
     @Test fun unknownMissingAndMismatchedArgumentsAreRejected() {
@@ -29,7 +31,7 @@ class GoLessonPracticeLinkTest {
     }
 
     @Test fun unrelatedLessonsDoNotAcquireFakeCorrespondingPuzzles() {
-        listOf("suicide", "ko", "passes", "counting", "agreement", "dispute", "handicap").forEach {
+        listOf("ko", "passes", "counting", "agreement", "dispute", "handicap").forEach {
             assertTrue(GoLessonPracticeLink.forLesson(it).isEmpty())
         }
     }
