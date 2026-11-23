@@ -1,0 +1,99 @@
+{
+  "tag": "v0.1.0-competition-mahjong-kong-strength-audit.1",
+  "distribution": "source-only",
+  "expected_changed_paths": 8,
+  "assets": [],
+  "build": {
+    "base": "6686ee8cce289a6f8a18ee4705f085744435990c",
+    "profile": "held-out-wmo-kongs-v1",
+    "inputs": [
+      {
+        "path": "tools/android/competition-mahjong/competition-mahjong-strength-driver.cpp",
+        "working_sha256": "7997d6664dc45cbefb8f466d29592db9b117cfbcc15247402ceb1f667756c12e",
+        "sha256": "7997d6664dc45cbefb8f466d29592db9b117cfbcc15247402ceb1f667756c12e"
+      },
+      {
+        "path": "tools/android/competition-mahjong/summarize-strength.ps1",
+        "working_sha256": "1ebbcd518b53932305ba039853428cbebf6cf78989488164d8c186643f95401f",
+        "sha256": "1ebbcd518b53932305ba039853428cbebf6cf78989488164d8c186643f95401f"
+      },
+      {
+        "path": "docs/games/competition-mahjong/2026-11-22-kong-strength-protocol.md",
+        "working_sha256": "d1e4cab9af5a2cc958639d412230123bdaa0b66c9f126afac38e8a1a8cb6a1f8",
+        "sha256": "d1e4cab9af5a2cc958639d412230123bdaa0b66c9f126afac38e8a1a8cb6a1f8"
+      }
+    ],
+    "ndk": "30.0.16138531",
+    "products": [
+      {
+        "core_sha256": "f73e71cc3152960469c623a70bf0d61f71e91ae3931a9b566e96b0f54304e1a1",
+        "abi": "x86_64",
+        "bin": "driver-x86_64",
+        "sha256": "66cc75a3ded26497447b88cba66cfb88ecb777bac7554fe25f6056cc953b582e"
+      },
+      {
+        "core_sha256": "25e4f7999755823d77e2ec2d402e1c5b9db5ce7c92ee49cfaed96b65599e7839",
+        "abi": "arm64-v8a",
+        "bin": "driver-arm64-v8a",
+        "sha256": "2bd1fdf705ec31d53f87310b16fbf11949e3a31f25a971d88c533c23b8a802af"
+      }
+    ]
+  },
+  "original_build": {
+    "profile": "held-out-wmo-kongs-v1",
+    "base": "7c87630c8f91141a67841559e2cbb1675264fc63",
+    "ndk": "30.0.16138531",
+    "products": [
+      {
+        "core_sha256": "f73e71cc3152960469c623a70bf0d61f71e91ae3931a9b566e96b0f54304e1a1",
+        "bin": "driver-x86_64",
+        "sha256": "8023c5c8e60d5c7071d897fab54afa318edac7dce16f29f9b67eb0457aafbe7f",
+        "abi": "x86_64"
+      },
+      {
+        "core_sha256": "25e4f7999755823d77e2ec2d402e1c5b9db5ce7c92ee49cfaed96b65599e7839",
+        "bin": "driver-arm64-v8a",
+        "sha256": "742e4cf53a5390da90237e32e19da98ef8a09553bc3d3b7d54d8ba459339bc7e",
+        "abi": "arm64-v8a"
+      }
+    ],
+    "inputs": [
+      {
+        "path": "tools/android/competition-mahjong/competition-mahjong-strength-driver.cpp",
+        "working_sha256": "b20318f70549c3620a383b47571a41d6fa2fef2641157415786c4f90f099e554",
+        "sha256": "b20318f70549c3620a383b47571a41d6fa2fef2641157415786c4f90f099e554"
+      },
+      {
+        "path": "tools/android/competition-mahjong/summarize-strength.ps1",
+        "working_sha256": "1ebbcd518b53932305ba039853428cbebf6cf78989488164d8c186643f95401f",
+        "sha256": "1ebbcd518b53932305ba039853428cbebf6cf78989488164d8c186643f95401f"
+      },
+      {
+        "path": "docs/games/competition-mahjong/2026-11-22-kong-strength-protocol.md",
+        "working_sha256": "d1e4cab9af5a2cc958639d412230123bdaa0b66c9f126afac38e8a1a8cb6a1f8",
+        "sha256": "d1e4cab9af5a2cc958639d412230123bdaa0b66c9f126afac38e8a1a8cb6a1f8"
+      }
+    ]
+  },
+  "original": {
+    "exit_code": 255,
+    "series": 286,
+    "hands": 4576,
+    "raw_path": "docs/testing/results/2026-11-22-competition-mahjong-held-out-wmo-kongs-v1-interrupted.tsv",
+    "raw_sha256": "cc11821372096f6bad7c1f97f59b6609f028ff173e71fd00ef6db55add52824a",
+    "missing": [
+      "2/9261122024/2",
+      "2/9261122024/3"
+    ],
+    "capture_sha256": "b2e7c92ea2e9742cc701843a931de90d81e9f0f712b0095fb3da6fcab4f29bcc"
+  },
+  "diagnostic": {
+    "device": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "series": 2,
+    "hands": 32,
+    "out_of_range_exit_code": 2,
+    "path": "docs/testing/results/2026-11-23-competition-mahjong-kong-strength-diagnostic.tsv",
+    "sha256": "4e7d125bfbd8ba7fd73f6339c6caee82978a2393de087a45432a20ca3b880881"
+  }
+}

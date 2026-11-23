@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <chrono>
 #include <cstdint>
 #include <iostream>
@@ -32,7 +33,7 @@ std::uint64_t seed_at(std::uint64_t seed, int index) {
 void run_series(int lower, std::uint64_t seed, int rotation, CompetitionMahjongBotPolicy policy,
                 CompetitionMahjongFanRules scoring) {
     const auto start = std::chrono::steady_clock::now();
-    const bool wmo = scoring == CompetitionMahjongFanRules::wmo_2021;
+    const bool wmo = scoring != CompetitionMahjongFanRules::legacy_v1;
     const auto decision_seed = wmo ? seed : seed ^ 0x431c9dfe29753c01ULL;
     std::array<std::int64_t, 4> points{};
     int total_events = 0;
@@ -48,6 +49,12 @@ void run_series(int lower, std::uint64_t seed, int rotation, CompetitionMahjongB
         const auto viewer = static_cast<std::uint8_t>(std::find(seating.begin(), seating.end(), 0) - seating.begin());
         CompetitionMahjongAutoSession game(seed_at(seed, hand), hand % 4, hand / 4, viewer, levels,
             seed_at(decision_seed, hand), wmo, scoring);
+        if (wmo) {
+            const auto record = game.serialize();
+            const auto version = static_cast<std::uint8_t>(scoring);
+            if (record[4] != version + 1 || record[28] != version)
+                throw std::runtime_error("Automatic or round scoring version differs from the cohort");
+        }
         bool finished = false;
         for (int events = 0; events < 4096;) {
             const auto budget = static_cast<std::uint32_t>(std::min(32, 4096 - events));
@@ -77,10 +84,12 @@ void run_series(int lower, std::uint64_t seed, int rotation, CompetitionMahjongB
 } // namespace
 
 int main(int argc, char** argv) {
-    if (argc != 2) return 2;
+    if (argc != 2 && argc != 5) return 2;
     const std::string_view profile = argv[1];
-    const bool wmo = profile == "held-out-wmo-calibrated-v1";
-    const auto scoring = wmo ? CompetitionMahjongFanRules::wmo_2021 : CompetitionMahjongFanRules::legacy_v1;
+    const bool kong_revision = profile == "held-out-wmo-kongs-v1";
+    const bool wmo = profile == "held-out-wmo-calibrated-v1" || kong_revision;
+    const auto scoring = kong_revision ? CompetitionMahjongFanRules::wmo_2021_kongs :
+        wmo ? CompetitionMahjongFanRules::wmo_2021 : CompetitionMahjongFanRules::legacy_v1;
     auto policy = CompetitionMahjongBotPolicy::baseline;
     if (profile == "diagnostic-v2") policy = CompetitionMahjongBotPolicy::diagnostic_v2;
     else if (profile == "diagnostic-v3") policy = CompetitionMahjongBotPolicy::diagnostic_v3;
@@ -97,12 +106,25 @@ int main(int argc, char** argv) {
     if (profile == "held-out-v5") first = 4285151001ULL;
     if (medium_training) first = 71551001ULL;
     if (profile == "held-out-medium-bucket-8") first = 5920152401ULL;
-    if (wmo) first = 9226102001ULL;
+    if (wmo) first = kong_revision ? 9261122001ULL : 9226102001ULL;
     const int seed_count = held_out ? 24 : 8;
+    int selected_lower = -1;
+    int selected_rotation = -1;
+    std::uint64_t selected_seed = 0;
+    if (argc == 5) {
+        const auto parse = [](std::string_view input, auto& value) {
+            const auto [end, error] = std::from_chars(input.data(), input.data() + input.size(), value);
+            return error == std::errc{} && end == input.data() + input.size();
+        };
+        if (!parse(argv[2], selected_lower) || selected_lower < 0 || selected_lower > 2 ||
+            !parse(argv[3], selected_seed) || selected_seed < first || selected_seed >= first + seed_count ||
+            !parse(argv[4], selected_rotation) || selected_rotation < 0 || selected_rotation > 3) return 2;
+    }
     std::cout << "lower\tseed\trotation\tp0\tp1\tp2\tp3\tdraws\tevents\telapsed_ms" << std::endl;
     for (int lower = 0; lower < 3; ++lower) {
         for (std::uint64_t seed = first; seed < first + seed_count; ++seed) {
             for (int rotation = 0; rotation < 4; ++rotation) {
+                if (argc == 5 && (lower != selected_lower || seed != selected_seed || rotation != selected_rotation)) continue;
                 try {
                     run_series(lower, seed, rotation, policy, scoring);
                 } catch (const std::exception& failure) {

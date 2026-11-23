@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory)][string]$Path,
     [Parameter(Mandatory)]
     [ValidateSet('diagnostic-v4', 'held-out-v5', 'held-out-medium-bucket-8',
-        'held-out-wmo-calibrated-v1',
+        'held-out-wmo-calibrated-v1', 'held-out-wmo-kongs-v1',
         'training-medium-control', 'training-medium-bucket-8', 'training-medium-bucket-4')]
     [string]$Profile
 )
@@ -13,6 +13,7 @@ $first, $seeds = switch -Wildcard ($Profile) {
     'held-out-v5' { 4285151001L, 24 }
     'held-out-medium-bucket-8' { 5920152401L, 24 }
     'held-out-wmo-calibrated-v1' { 9226102001L, 24 }
+    'held-out-wmo-kongs-v1' { 9261122001L, 24 }
     'training-medium-*' { 71551001L, 8 }
     default { 71425001L, 8 }
 }
