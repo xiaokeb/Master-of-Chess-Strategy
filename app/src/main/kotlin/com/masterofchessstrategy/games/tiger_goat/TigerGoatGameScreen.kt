@@ -79,6 +79,7 @@ fun TigerGoatGameScreen(
     onBack: () -> Unit,
     onPassGoat: () -> Unit,
     modifier: Modifier = Modifier,
+    onTutorial: (() -> Unit)? = null,
 ) {
     require(state.pieces.size == spec.points.size)
     var confirmResign by remember { mutableStateOf(false) }
@@ -103,6 +104,10 @@ fun TigerGoatGameScreen(
                 ) {
                     Text(state.message(), style = MaterialTheme.typography.titleMedium)
                     Text("已吃 ${state.captured} 只羊 · 待摆 ${state.reserve} 只")
+                    if (onTutorial != null) {
+                        TextButton(onClick = onTutorial, enabled = !state.busy,
+                            modifier = Modifier.testTag("tiger_goat_open_tutorial")) { Text("规则教程") }
+                    }
                     state.feedback?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                     if (state.phase == TigerGoatPhase.CAPTURE_CHAIN) {
                         Button(onClick = onEndChain, enabled = !state.busy) { Text("结束连跳") }
@@ -155,7 +160,7 @@ fun TigerGoatGameScreen(
 }
 
 @Composable
-private fun TigerGoatBoard(
+internal fun TigerGoatBoard(
     spec: TigerGoatBoardSpec,
     state: TigerGoatDisplayState,
     onPointTap: (Int) -> Unit,

@@ -8,6 +8,7 @@ import com.masterofchessstrategy.games.tiger_goat.RoomTigerGoatSessionStore
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatLoadResult
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatSavedSession
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatSessionStore
+import com.masterofchessstrategy.games.tiger_goat.TigerGoatTutorialProgress
 import com.masterofchessstrategy.games.tiger_goat.ai.TigerGoatFormalCheckpoint
 import com.masterofchessstrategy.games.tiger_goat.ai.TigerGoatFormalConfig
 import com.masterofchessstrategy.games.tiger_goat.ai.TigerGoatFormalLoadResult
@@ -22,6 +23,24 @@ import org.junit.Test
 
 /** Production full-backup composition with real Native and UUID-owned disk Room only. */
 class TigerGoatStorageProductionInstrumentedTest {
+    @Test fun courseProgressRoundTripsAndRejectsSkippingOrWritingAfterRestore() = withOwnedLanzhouDatabase { f ->
+        val first = TigerGoatTutorialProgress(f.db)
+        assertEquals(0, first.load())
+        assertTrue(runCatching { first.complete(1) }.isFailure)
+        assertEquals(1, first.complete(0))
+        assertEquals(1, first.complete(0))
+        val partial = f.repository().export(20)
+        for (index in 1..3) assertEquals(index + 1, first.complete(index))
+        val completed = f.repository().export(21)
+        f.repository().restore(partial)
+        denied { first.complete(3) }
+        assertEquals(1, TigerGoatTutorialProgress(f.db).load())
+        f.repository().restore(completed)
+        f.reopen()
+        assertEquals(4, TigerGoatTutorialProgress(f.db).load())
+        assertNull(f.db.activeGameDao().find(GameType.TIGER_AND_GOAT.code))
+    }
+
     @Test fun formalCheckpointSurvivesProductionBackupAndRejectsAStaleOwner() = withOwnedLanzhouDatabase { f ->
         val first = roomTigerGoatFormalStore(f.db)
         val stale = roomTigerGoatFormalStore(f.db)

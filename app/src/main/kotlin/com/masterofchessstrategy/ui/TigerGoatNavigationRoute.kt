@@ -2,6 +2,10 @@ package com.masterofchessstrategy.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -12,6 +16,8 @@ import com.masterofchessstrategy.games.tiger_goat.NativeTigerGoatRulesSession
 import com.masterofchessstrategy.games.tiger_goat.RoomTigerGoatSessionStore
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatGameRoute
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatGameViewModel
+import com.masterofchessstrategy.games.tiger_goat.TigerGoatTutorialProgress
+import com.masterofchessstrategy.games.tiger_goat.TigerGoatTutorialScreen
 import com.masterofchessstrategy.games.tiger_goat.data.GatedTigerGoatSessionStore
 import com.masterofchessstrategy.games.tiger_goat.data.TigerGoatStorageEpochGate
 import com.masterofchessstrategy.settings.LocalDataWriterRegistry
@@ -39,5 +45,11 @@ internal fun TigerGoatNavigationRoute(
     }
     val game: TigerGoatGameViewModel = viewModel(viewModelStoreOwner = owner, factory = factory)
     writers.register(game) // Also registers a retained VM when the activity is recreated.
-    TigerGoatGameRoute(game, onBack)
+    var tutorial by rememberSaveable { mutableStateOf(false) }
+    if (tutorial) {
+        val progress = remember(database) { TigerGoatTutorialProgress(database) }
+        TigerGoatTutorialScreen(progress, onBack = { tutorial = false })
+    } else {
+        TigerGoatGameRoute(game, onBack, onTutorial = { tutorial = true })
+    }
 }

@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 
 /** The host owns the ViewModel; only consistent checkpoints may silently leave this page. */
 @Composable
-internal fun TigerGoatGameRoute(viewModel: TigerGoatGameViewModel, onBack: () -> Unit) {
+internal fun TigerGoatGameRoute(viewModel: TigerGoatGameViewModel, onBack: () -> Unit, onTutorial: (() -> Unit)? = null) {
     val page by viewModel.uiState.collectAsState()
     var confirmRestart by remember { mutableStateOf(false) }
     var confirmLeave by remember { mutableStateOf(false) }
@@ -38,7 +38,7 @@ internal fun TigerGoatGameRoute(viewModel: TigerGoatGameViewModel, onBack: () ->
     val game = page.game
     if (spec != null && game != null) {
         TigerGoatGameScreen(spec, game, viewModel::onPointTap, viewModel::endChain,
-            viewModel::undo, viewModel::restart, viewModel::resign, ::leave, viewModel::passGoat)
+            viewModel::undo, viewModel::restart, viewModel::resign, ::leave, viewModel::passGoat, onTutorial = onTutorial)
     }
     if (page.busy && game == null) {
         Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

@@ -11,6 +11,8 @@ import com.masterofchessstrategy.engine.games.tiger_goat.NativeTigerGoatSession
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatBoardSpec
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatEdge
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatPoint
+import com.masterofchessstrategy.games.tiger_goat.TigerGoatTutorialPractice
+import com.masterofchessstrategy.games.tiger_goat.TigerGoatTutorialStep
 import com.masterofchessstrategy.games.tiger_goat.tigerGoatViewport
 import com.masterofchessstrategy.settings.LocalDataWriterRegistry
 import com.masterofchessstrategy.settings.awaitLocalDataWriters
@@ -84,6 +86,42 @@ class TigerGoatNavigationIntegrationTest {
         assertEquals(checkpoint, runBlocking { database.activeGameDao().find(5)!! })
         saveImage("recreated")
         checkScrollableControls("controls-recreated")
+    }
+
+    @Test fun tutorialPracticeAndQuizPersistWithoutChangingTheActiveGame() {
+        enterFromHome()
+        awaitCheckpoint(0)
+        val active = runBlocking { database.activeGameDao().find(5) }
+        fun step(label: String) = compose.waitUntil(10_000) {
+            compose.onAllNodesWithText(label, substring = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("tiger_goat_open_tutorial").performScrollTo().performClick()
+        step("1 / 4 · 开局移羊")
+        saveImage("tutorial-opening")
+        tapPoint(6)
+        step("2 / 4 · 摆放待摆羊")
+        compose.activityRule.scenario.recreate()
+        step("2 / 4 · 摆放待摆羊")
+        tapPoint(0)
+        step("3 / 4 · 老虎沿线走棋")
+        val (from, to) = TigerGoatTutorialPractice(TigerGoatTutorialStep.MOVE).use { practice ->
+            val source = practice.state().legalDestinations.first()
+            assertFalse(practice.tap(source))
+            source to practice.state().legalDestinations.first()
+        }
+        tapPoint(from)
+        tapPoint(to)
+        step("4 / 4 · 复核连跳规则")
+        compose.onNodeWithText("必须继续跳吃").performScrollTo().performClick()
+        assertEquals(3, runBlocking { database.tutorialProgressDao().find(5)?.completedStepCount })
+        saveImage("tutorial-quiz")
+        compose.onNodeWithTag("tiger_goat_quiz_correct").performScrollTo().performClick()
+        step("教程已完成")
+        assertTrue(runBlocking { database.tutorialProgressDao().find(5)?.isCompleted == true })
+        saveImage("tutorial-completed")
+        compose.onNodeWithText("返回对局").performClick()
+        awaitCheckpoint(0)
+        assertEquals(active, runBlocking { database.activeGameDao().find(5) })
     }
 
     private fun enterFromHome() {
