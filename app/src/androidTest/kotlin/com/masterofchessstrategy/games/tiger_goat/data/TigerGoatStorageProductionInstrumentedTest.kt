@@ -8,6 +8,9 @@ import com.masterofchessstrategy.games.tiger_goat.RoomTigerGoatSessionStore
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatLoadResult
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatSavedSession
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatSessionStore
+import com.masterofchessstrategy.games.tiger_goat.ai.TigerGoatFormalCheckpoint
+import com.masterofchessstrategy.games.tiger_goat.ai.TigerGoatFormalConfig
+import com.masterofchessstrategy.games.tiger_goat.ai.TigerGoatFormalLoadResult
 import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
@@ -19,6 +22,47 @@ import org.junit.Test
 
 /** Production full-backup composition with real Native and UUID-owned disk Room only. */
 class TigerGoatStorageProductionInstrumentedTest {
+    @Test fun formalCheckpointSurvivesProductionBackupAndRejectsAStaleOwner() = withOwnedLanzhouDatabase { f ->
+        val first = roomTigerGoatFormalStore(f.db)
+        val stale = roomTigerGoatFormalStore(f.db)
+        assertEquals(TigerGoatFormalLoadResult.Missing, first.load())
+        assertEquals(TigerGoatFormalLoadResult.Missing, stale.load())
+        val checkpoint = formal(2, 9)
+        first.save(checkpoint)
+        assertTrue(runCatching { stale.save(formal(1, 1)) }.isFailure)
+        val originalRow = f.db.activeGameDao().find(GameType.TIGER_AND_GOAT.code)
+        val backup = f.repository().export(21)
+        first.save(formal(0, 10))
+        assertEquals(1, f.repository().restore(backup).activeSessionCount)
+        assertFalse(first.isCurrent)
+        denied { first.save(formal(0, 11)) }
+        f.reopen()
+        assertEquals(originalRow, f.db.activeGameDao().find(GameType.TIGER_AND_GOAT.code))
+        val restored = (roomTigerGoatFormalStore(f.db).load() as TigerGoatFormalLoadResult.Loaded).checkpoint
+        assertEquals(checkpoint.sessionId, restored.sessionId)
+        assertEquals(9L, restored.revision)
+        assertEquals(TigerGoatFormalConfig(humanSide = 2), restored.config)
+        assertEquals(2, restored.actionCount)
+        assertArrayEquals(checkpoint.copyBytes(), restored.copyBytes())
+    }
+
+    @Test fun eachModeRejectsTheOtherModesActiveRow() = withOwnedLanzhouDatabase { f ->
+        val dao = f.db.activeGameDao()
+        val local = GatedTigerGoatSessionStore(RoomTigerGoatSessionStore(dao), TigerGoatStorageEpochGate.forDatabase(f.db))
+        val formalStore = roomTigerGoatFormalStore(f.db)
+        val localCheckpoint = saved(1)
+        local.save(localCheckpoint)
+        assertEquals(TigerGoatFormalLoadResult.LocalGame, formalStore.load())
+        assertTrue(runCatching { formalStore.save(formal(2, 1)) }.isFailure)
+        assertSaved(localCheckpoint, local.load())
+
+        dao.upsert(TigerGoatFormalActiveRow.to(formal(2, 1)))
+        val before = dao.find(GameType.TIGER_AND_GOAT.code)
+        assertEquals(TigerGoatLoadResult.Incompatible, local.load())
+        assertTrue(runCatching { local.save(localCheckpoint) }.isFailure)
+        assertEquals(before, dao.find(GameType.TIGER_AND_GOAT.code))
+    }
+
     @Test fun exportKeepsTheFixedOwnerAndItsNativeSessionWritable() = withOwnedLanzhouDatabase { f ->
         val gate = TigerGoatStorageEpochGate.forDatabase(f.db)
         val store = GatedTigerGoatSessionStore(RoomTigerGoatSessionStore(f.db.activeGameDao()), gate)
@@ -144,6 +188,10 @@ class TigerGoatStorageProductionInstrumentedTest {
     private fun saved(actions: Int) = NativeTigerGoatSession().use { native ->
         repeat(actions) { assertEquals(0, native.apply(native.legalActions().first { it.kind != TigerGoatActionKind.RESIGN })) }
         TigerGoatSavedSession("owned-tiger", native.serialize(), native.snapshot().actionCount, 10L + actions)
+    }
+
+    private fun formal(actions: Int, revision: Long) = saved(actions).let {
+        TigerGoatFormalCheckpoint(it.id, revision, TigerGoatFormalConfig(humanSide = 2), it.actionCount, it.updatedAt, it.bytes)
     }
 
     private fun assertSaved(expected: TigerGoatSavedSession, result: TigerGoatLoadResult) {

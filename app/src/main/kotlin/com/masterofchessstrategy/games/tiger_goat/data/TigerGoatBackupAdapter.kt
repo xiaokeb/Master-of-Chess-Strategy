@@ -1,6 +1,7 @@
 package com.masterofchessstrategy.games.tiger_goat.data
 
 import com.masterofchessstrategy.data.ActiveGameDao
+import com.masterofchessstrategy.data.ActiveGameEntity
 import com.masterofchessstrategy.data.BackupStorageSlot
 import com.masterofchessstrategy.data.BackupStorageTable
 import com.masterofchessstrategy.data.GameBackupAdapter
@@ -8,9 +9,12 @@ import com.masterofchessstrategy.data.GameBackupDescriptor
 import com.masterofchessstrategy.data.GameBackupRecord
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.data.PreparedGameBackup
+import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.data.TigerGoatActiveArchive
 import com.masterofchessstrategy.data.validateTigerGoatActiveArchive
 import com.masterofchessstrategy.engine.GameType
+import com.masterofchessstrategy.games.tiger_goat.ai.TigerGoatFormalCheckpoint
+import com.masterofchessstrategy.games.tiger_goat.ai.TigerGoatFormalConfig
 
 /** Keeps the existing MOCT wire envelope independent of Xiangqi and other game adapters. */
 internal class TigerGoatBackupAdapter(
@@ -29,35 +33,57 @@ internal class TigerGoatBackupAdapter(
 
     /** The repository, not this adapter, supplies the complete snapshot transaction. */
     internal suspend fun read(dao: ActiveGameDao): List<GameBackupRecord> =
-        dao.find(GameType.TIGER_AND_GOAT.code)?.let { listOf(encodeArchive(TigerGoatActiveArchive.fromEntity(it))) }
-            ?: emptyList()
+        dao.find(GameType.TIGER_AND_GOAT.code)?.let { listOf(encodeRow(it)) } ?: emptyList()
 
     override fun validate(record: GameBackupRecord, containerVersion: Int) {
         require(containerVersion == 5) { "Tiger-goat backups require container v5" }
-        decodeRecord(record)
+        decodeRow(record)
     }
 
     override fun normalize(record: GameBackupRecord, containerVersion: Int): GameBackupRecord {
         require(containerVersion == 5) { "Tiger-goat backups require container v5" }
         // Legacy numeric spellings and uppercase hex are accepted before canonical byte limits.
-        return encodeArchive(decodeRecord(record))
+        return encodeRow(decodeRow(record))
     }
 
     override fun prepareRestore(record: GameBackupRecord): PreparedTigerGoatBackup {
-        val archive = decodeRecord(record)
+        val row = decodeRow(record)
+        val archive = if (row.modeCode == StoredGameMode.HUMAN_VS_AI.code)
+            TigerGoatFormalActiveRow.archive(TigerGoatFormalActiveRow.from(row)) else TigerGoatActiveArchive.fromEntity(row)
         // The default validator opens, replays in, and closes its own actual Native session.
         require(nativeAdmission(archive)) { "Native rejected the tiger-goat history" }
-        return PreparedTigerGoatBackup(archive)
+        return PreparedTigerGoatBackup(row)
     }
 
-    internal class PreparedTigerGoatBackup(private val archive: TigerGoatActiveArchive) : PreparedGameBackup {
+    internal class PreparedTigerGoatBackup(private val row: ActiveGameEntity) : PreparedGameBackup {
         override val storageSlot = SLOT
         override suspend fun write(database: MocsDatabase) = write(database.activeGameDao())
 
         /** No clear or nested transaction: the public restore owns atomic replacement. */
         internal suspend fun write(dao: ActiveGameDao) {
-            dao.upsert(archive.toEntity())
+            dao.upsert(row.copy(engineState = row.engineState.copyOf()))
         }
+    }
+
+    private fun decodeRow(record: GameBackupRecord): ActiveGameEntity {
+        val fields = record.fields
+        if (fields.getOrNull(1)?.toIntOrNull() != FORMAL_FORMAT) return decodeRecord(record).toEntity()
+        require(fields.size == 9)
+        val localFields = fields.take(7).toMutableList().also { it[1] = TigerGoatActiveArchive.FORMAT_VERSION.toString() }
+        val archive = decodeRecord(GameBackupRecord(record.kind, localFields))
+        val config = TigerGoatFormalConfig(fields[8].toInt())
+        return TigerGoatFormalActiveRow.to(TigerGoatFormalCheckpoint(archive.sessionId, fields[7].toLong(), config,
+            archive.actionCount, archive.updatedAtEpochMillis, archive.engineState))
+    }
+
+    private fun encodeRow(row: ActiveGameEntity): GameBackupRecord {
+        if (row.modeCode != StoredGameMode.HUMAN_VS_AI.code) return encodeArchive(TigerGoatActiveArchive.fromEntity(row))
+        val checkpoint = TigerGoatFormalActiveRow.from(row)
+        val fields = encodeArchive(TigerGoatFormalActiveRow.archive(checkpoint)).fields.toMutableList()
+        fields[1] = FORMAL_FORMAT.toString()
+        fields += checkpoint.revision.toString()
+        fields += checkpoint.config.humanSide.toString()
+        return GameBackupRecord(KIND, fields).also { require(it.encodedSizeBytes <= MAX_CANONICAL_RECORD_BYTES) }
     }
 
     /** Envelope conversion only; callers must separately finish actual Native admission. */
@@ -110,10 +136,11 @@ internal class TigerGoatBackupAdapter(
 
     private companion object {
         const val KIND = "TIGER_GOAT_ACTIVE"
+        const val FORMAL_FORMAT = 2
         const val MAX_ID_BYTES = 256 // Existing wire limit; Archive also requires <= 64 UTF-16 units.
         const val HEX = "0123456789abcdef"
-        // kind + seven separators + game/archive/native digits + ID hex + count + time + MOCT hex.
-        const val MAX_CANONICAL_RECORD_BYTES = 17 + 7 + 3 + MAX_ID_BYTES * 2 + 5 + 19 +
+        // Includes the two formal fields and their separators.
+        const val MAX_CANONICAL_RECORD_BYTES = 17 + 9 + 3 + MAX_ID_BYTES * 2 + 5 + 19 + 19 + 1 +
             TigerGoatActiveArchive.MAX_STATE_BYTES * 2
         val SLOT = BackupStorageSlot(BackupStorageTable.ACTIVE_GAME, GameType.TIGER_AND_GOAT)
     }

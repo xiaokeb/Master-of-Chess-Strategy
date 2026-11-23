@@ -2,6 +2,7 @@ package com.masterofchessstrategy.games.tiger_goat
 
 import com.masterofchessstrategy.data.ActiveGameDao
 import com.masterofchessstrategy.data.ActiveGameEntity
+import com.masterofchessstrategy.data.StoredGameMode
 import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.engine.games.tiger_goat.NativeTigerGoatSession
 
@@ -49,6 +50,8 @@ internal class RoomTigerGoatSessionStore(
 
     override suspend fun save(saved: TigerGoatSavedSession) {
         require(valid(saved)) { "Invalid tiger-goat session envelope" }
+        val current = dao.find(GameType.TIGER_AND_GOAT.code)
+        check(current == null || current.modeCode == StoredGameMode.LOCAL_TWO_PLAYER.code) { "已有其他模式的虎羊棋局" }
         dao.upsert(ActiveGameEntity(
             gameTypeCode = GameType.TIGER_AND_GOAT.code,
             modeCode = 0,
