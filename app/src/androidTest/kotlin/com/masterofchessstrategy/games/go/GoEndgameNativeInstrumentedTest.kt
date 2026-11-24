@@ -51,6 +51,7 @@ class GoEndgameNativeInstrumentedTest {
             "interior-three-eyes" to setOf(BoardPosition(6, 5)),
             "shared-liberty-double-capture" to setOf(BoardPosition(4, 4)),
             "join-three-groups" to setOf(BoardPosition(6, 6)),
+            "corner-ko-capture" to setOf(BoardPosition(1, 2)),
         )
         for ((id, solutions) in expected) {
             val puzzle = checkNotNull(GoEndgameLibrary.puzzle(id))
@@ -64,6 +65,23 @@ class GoEndgameNativeInstrumentedTest {
                 action.point.takeIf { exercise.answer(it).completed }?.also { exercise.reset() }
             }
             assertEquals(id, solutions, accepted.toSet())
+        }
+    }
+
+    @Test fun koCaptureRejectsImmediateRecaptureButAllowsItAfterExchange() {
+        val puzzle = checkNotNull(GoEndgameLibrary.puzzle("corner-ko-capture"))
+        val plan = GoEndgameLibrary.open(puzzle)
+        NativeGoEngine(puzzle.boardSize).use { engine ->
+            assertEquals(RestoreResult.Restored, engine.restore(plan.copyInitialBytes()))
+            assertEquals(ActionResult.Accepted, engine.apply(GoAction.Place(puzzle.answer)))
+            val recapture = GoAction.Place(BoardPosition(1, 1))
+            val checkpoint = engine.serialize()
+            assertNotEquals(ActionResult.Accepted, engine.apply(recapture))
+            assertArrayEquals(checkpoint, engine.serialize())
+            assertEquals(ActionResult.Accepted, engine.apply(GoAction.Place(BoardPosition(7, 8))))
+            assertEquals(ActionResult.Accepted, engine.apply(GoAction.Place(BoardPosition(7, 7))))
+            assertEquals(ActionResult.Accepted, engine.apply(recapture))
+            assertEquals(GoStone.EMPTY, engine.stoneAt(puzzle.answer))
         }
     }
 

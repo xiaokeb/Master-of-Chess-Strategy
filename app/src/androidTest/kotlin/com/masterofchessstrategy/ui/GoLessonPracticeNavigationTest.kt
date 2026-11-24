@@ -216,7 +216,7 @@ class GoLessonPracticeNavigationTest {
 
     @Test fun allLinkedExercisesUseTheActualProductionRulesAndReachTheirGoals() {
         val links = GoLearningLibrary.lessons.flatMap { GoLessonPracticeLink.forLesson(it.id) }
-        assertEquals(7, links.size)
+        assertEquals(8, links.size)
         links.forEach { link ->
             val puzzle = checkNotNull(GoEndgameLibrary.puzzle(link.puzzleId))
             val plan = GoEndgameLibrary.open(puzzle)
@@ -231,6 +231,32 @@ class GoLessonPracticeNavigationTest {
             }
         }
         assertTrue(runBlocking { database.goProgressDao().listAll().isEmpty() })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+    }
+
+    @Test fun koLessonOpensTheCapturePracticeAndReturnsAfterTheFirstClear() {
+        val puzzle = checkNotNull(GoEndgameLibrary.puzzle("corner-ko-capture"))
+        val prerequisites = GoEndgameLibrary.puzzles.takeWhile { it.id != puzzle.id }.map { it.id }.toSet()
+        val lessons = RoomGoLearningProgressRepository(database)
+        val endgames = RoomGoEndgameProgressRepository(database)
+        runBlocking { prerequisites.forEach { endgames.complete(it) } }
+        openLessons()
+        val lesson = "不能立即回提"
+        compose.onNodeWithText("知识点目录").performScrollTo().performClick()
+        compose.onNodeWithText(lesson).performScrollTo().performClick()
+        awaitLesson(lesson)
+        val prior = runBlocking { lessons.load() }
+        compose.onNodeWithTag("go_lesson_practice").performScrollTo().performClick()
+        awaitTitle(puzzle.title)
+        capture("ko-capture-ready")
+        compose.onNodeWithTag("go_intersection_1_2").performClick()
+        awaitTag("go_endgame_completed")
+        compose.waitUntil(15_000) { runBlocking { puzzle.id in endgames.load().completedIds } }
+        capture("ko-capture-completed")
+        compose.onNodeWithTag("go_endgame_back").performScrollTo().performClick()
+        awaitLesson(lesson)
+        assertEquals(prior, runBlocking { lessons.load() })
+        assertEquals(prerequisites + puzzle.id, runBlocking { endgames.load().completedIds })
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
     }
 

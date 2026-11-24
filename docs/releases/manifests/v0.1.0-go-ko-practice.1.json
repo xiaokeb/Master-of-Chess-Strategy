@@ -1,0 +1,124 @@
+{
+  "tag": "v0.1.0-go-ko-practice.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 10,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "33c4084a4130d1af47b64a7cc4f211958d1da7c1ba1e58186ea3cc996b4acbde",
+      "app/build/outputs/apk/debug/app-debug.apk": "01cdc73436c69505249aacb124f36f8ccd3683eba2447d4622ba2f2f86fdd30d"
+    },
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoLessonPracticeLink.kt",
+        "working_sha256": "085ea4dbbfc8b68313aa47db5a4e39ab7e88974cc589344fda2f84d584c22cca",
+        "sha256": "085ea4dbbfc8b68313aa47db5a4e39ab7e88974cc589344fda2f84d584c22cca"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibrary.kt",
+        "working_sha256": "8af40f46538349c812a198a90654b5a689a301bb110ac438eef2fbad1aa4afa6",
+        "sha256": "8af40f46538349c812a198a90654b5a689a301bb110ac438eef2fbad1aa4afa6"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibraryTest.kt",
+        "working_sha256": "40f9d88f38145140bd5359d13a6a772c973a8deee228a7dcdb8daa9b3ded7b0c",
+        "sha256": "40f9d88f38145140bd5359d13a6a772c973a8deee228a7dcdb8daa9b3ded7b0c"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameChallengesTest.kt",
+        "working_sha256": "972536a30c4b060c952d3a0700c654cf06a253b3c929e1e508c51240bbf12365",
+        "sha256": "972536a30c4b060c952d3a0700c654cf06a253b3c929e1e508c51240bbf12365"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoEndgameNativeInstrumentedTest.kt",
+        "working_sha256": "21a6cfdff3536df2ff47972bb88f0028ae34e743ec102c1ab7071dcfe8b46504",
+        "sha256": "21a6cfdff3536df2ff47972bb88f0028ae34e743ec102c1ab7071dcfe8b46504"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoLessonPracticeLinkTest.kt",
+        "working_sha256": "bf902f33b48d872e0717175ca61dd5e73a61638a485ffbfd34d289ccfeb8dc7c",
+        "sha256": "bf902f33b48d872e0717175ca61dd5e73a61638a485ffbfd34d289ccfeb8dc7c"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoLessonPracticeNavigationTest.kt",
+        "working_sha256": "13b61770377865011290d00fa36c0b8ae07183465a0aef21d3f7984a5211e0f5",
+        "sha256": "13b61770377865011290d00fa36c0b8ae07183465a0aef21d3f7984a5211e0f5"
+      }
+    ],
+    "baseline": "33f219773f5278bac8ae04a6f93e85b8b0d5f5fc",
+    "lint_errors": 0,
+    "candidate": "go-ko-practice1",
+    "release_manifest": "processed",
+    "lint_warnings": 25,
+    "unit_tests": [
+      {
+        "tests": 7,
+        "name": "com.masterofchessstrategy.games.go.GoEndgameChallengesTest"
+      },
+      {
+        "tests": 14,
+        "name": "com.masterofchessstrategy.games.go.GoEndgameLibraryTest"
+      },
+      {
+        "tests": 9,
+        "name": "com.masterofchessstrategy.games.go.GoEndgameProgressTest"
+      },
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.go.GoLessonPracticeLinkTest"
+      },
+      {
+        "tests": 10,
+        "name": "com.masterofchessstrategy.games.go.GoLessonPracticeViewModelTest"
+      }
+    ]
+  },
+  "device": {
+    "candidate": "go-ko-practice1",
+    "runs": [
+      {
+        "log_sha256": "f6336469cc38d066dcf832528ad55f12f88945892bbd7e3f80b969ce5de763ce",
+        "tests": 4,
+        "font": "1.0",
+        "selector": "com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#koLessonOpensTheCapturePracticeAndReturnsAfterTheFirstClear,com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#allLinkedExercisesUseTheActualProductionRulesAndReachTheirGoals,com.masterofchessstrategy.games.go.GoEndgameNativeInstrumentedTest#authoredTacticsAcceptExactlyTheVerifiedPlacements,com.masterofchessstrategy.games.go.GoEndgameNativeInstrumentedTest#koCaptureRejectsImmediateRecaptureButAllowsItAfterExchange",
+        "images": [
+          {
+            "sha256": "a66dac0084ed23182f3f2d83b1cbb0555e8622a612010bfb25264eecd9f403e9",
+            "path": "font-1.0\\5355151b-e763-4c1b-8093-93c76d349c1c\\ko-capture-completed.png"
+          },
+          {
+            "sha256": "e2081aaca5e9f21d21bd67533b7719d271df0396ad600ccacb24ac7df07d94cd",
+            "path": "font-1.0\\5355151b-e763-4c1b-8093-93c76d349c1c\\ko-capture-ready.png"
+          }
+        ]
+      },
+      {
+        "log_sha256": "6af4affb9ca69fc9ba6602ddbba283563056335be3dfde44749b7d8e477dc895",
+        "tests": 1,
+        "font": "1.5",
+        "selector": "com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#koLessonOpensTheCapturePracticeAndReturnsAfterTheFirstClear",
+        "images": [
+          {
+            "sha256": "6df3a25c65ee8f90a7f1e37d5b7692d736b2edbb87d94ca10ee148af4f341441",
+            "path": "font-1.5\\0d333577-d28a-4beb-89e5-e651e9648a33\\ko-capture-completed.png"
+          },
+          {
+            "sha256": "f16c2dcfa78272703ad450bfbf0c302fed522cedb37e3a90529cc4903f641f42",
+            "path": "font-1.5\\0d333577-d28a-4beb-89e5-e651e9648a33\\ko-capture-ready.png"
+          }
+        ]
+      }
+    ],
+    "original_font": "1.0",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "33c4084a4130d1af47b64a7cc4f211958d1da7c1ba1e58186ea3cc996b4acbde",
+      "app/build/outputs/apk/debug/app-debug.apk": "01cdc73436c69505249aacb124f36f8ccd3683eba2447d4622ba2f2f86fdd30d"
+    },
+    "restored_font": "1.0"
+  }
+}

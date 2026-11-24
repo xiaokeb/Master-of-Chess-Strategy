@@ -154,6 +154,11 @@ object GoEndgameLibrary {
             "三组棋共用同一连接点，现在可以合在一起计算气。", 13,
             listOf(p(5, 6), p(5, 5), p(7, 6), p(7, 5), p(6, 5), p(6, 7)),
             p(6, 6), targetStones = setOf(p(5, 6), p(7, 6), p(6, 5))),
+        puzzle("corner-ko-capture", "先提一手劫", GoEndgameTheme.CAPTURE, GoEndgameLevel.HARD,
+            "黑先。左上单颗白子只剩一口气，找出提劫的位置。",
+            "黑棋已经提劫。白方若立即回提，整个盘面会重现，规则禁止这手。",
+            0 to 1, 1 to 1, 1 to 0, 0 to 2, 2 to 1, 2 to 2, 8 to 8, 1 to 3,
+            answer = 1 to 2, captured = setOf(1 to 1)),
     )
 
     init { require(puzzles.map { it.id }.toSet().size == puzzles.size) }
