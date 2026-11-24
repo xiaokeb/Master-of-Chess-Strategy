@@ -52,6 +52,7 @@ class TigerGoatRetirementNavigationInstrumentedTest {
         runBlocking { assertTrue(repository().restore(backup).activeSessionCount >= 1) }
         returnFromRetired("success")
         compose.onNodeWithTag(TIGER_GOAT_LOCAL_TAG).performScrollTo().performClick()
+        chooseLocal()
         checkpoint(0)
         compose.onNodeWithText("老虎先从中央环移去一只羊").assertIsDisplayed()
         assertEquals(original, runBlocking { database.activeGameDao().find(5)!! })
@@ -66,6 +67,7 @@ class TigerGoatRetirementNavigationInstrumentedTest {
         assertTrue(runBlocking { runCatching { repository().restore(byteArrayOf(0)) }.isFailure })
         returnFromRetired("failure")
         compose.onNodeWithTag(TIGER_GOAT_LOCAL_TAG).performScrollTo().performClick()
+        chooseLocal()
         checkpoint(1)
         compose.onNodeWithText("羊放置一只，待摆 14 只").assertIsDisplayed()
         assertEquals(committed, runBlocking { database.activeGameDao().find(5)!! })
@@ -81,7 +83,12 @@ class TigerGoatRetirementNavigationInstrumentedTest {
     private fun enter() {
         compose.onNodeWithTag(HOME_LANZHOU_TRADITIONAL_TAG).performScrollTo().performClick()
         compose.onNodeWithTag(TIGER_GOAT_LOCAL_TAG).performScrollTo().performClick()
+        chooseLocal()
         compose.waitUntil(10_000) { compose.onAllNodesWithTag("tiger_goat_board").fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    private fun chooseLocal() {
+        compose.onNodeWithTag("tiger_goat_choose_local").performScrollTo().performClick()
     }
 
     private fun checkpoint(count: Int) {

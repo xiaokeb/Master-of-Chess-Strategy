@@ -80,6 +80,7 @@ fun TigerGoatGameScreen(
     onPassGoat: () -> Unit,
     modifier: Modifier = Modifier,
     onTutorial: (() -> Unit)? = null,
+    title: String = "老虎吃羊棋",
 ) {
     require(state.pieces.size == spec.points.size)
     var confirmResign by remember { mutableStateOf(false) }
@@ -88,7 +89,7 @@ fun TigerGoatGameScreen(
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(Modifier.padding(12.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("老虎吃羊棋", style = MaterialTheme.typography.titleLarge)
+                Text(title, style = MaterialTheme.typography.titleLarge)
                 TextButton(onClick = onBack) { Text("返回") }
             }
             Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(12.dp)) {

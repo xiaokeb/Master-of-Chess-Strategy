@@ -12,6 +12,7 @@ import com.masterofchessstrategy.games.tiger_goat.TigerGoatBoardSpec
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatEdge
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatPoint
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatTutorialPractice
+import com.masterofchessstrategy.games.tiger_goat.TigerGoatTutorialProgress
 import com.masterofchessstrategy.games.tiger_goat.TigerGoatTutorialStep
 import com.masterofchessstrategy.games.tiger_goat.tigerGoatViewport
 import com.masterofchessstrategy.settings.LocalDataWriterRegistry
@@ -55,6 +56,7 @@ class TigerGoatNavigationIntegrationTest {
         compose.onNodeWithText("返回").performClick()
         compose.waitUntil(10_000) { LocalDataWriterRegistry.forDatabase(database).snapshot().isEmpty() }
         compose.onNodeWithTag(TIGER_GOAT_LOCAL_TAG).performScrollTo().performClick()
+        chooseLocal()
         awaitCheckpoint(1)
         compose.waitUntil(10_000) {
             compose.onAllNodesWithText("羊放置一只，待摆 14 只").fetchSemanticsNodes().isNotEmpty()
@@ -65,6 +67,60 @@ class TigerGoatNavigationIntegrationTest {
         compose.onNodeWithText("悔棋").performScrollTo().performClick()
         awaitCheckpoint(0)
         compose.onNodeWithText("老虎先从中央环移去一只羊").assertIsDisplayed()
+    }
+
+    @Test fun formalModeRequiresTutorialConfirmsReplacementAndResumesTheRealAiTurn() {
+        enterFromHome()
+        awaitCheckpoint(0)
+        tapPoint(6)
+        awaitCheckpoint(1)
+        val local = runBlocking { database.activeGameDao().find(5)!! }
+        compose.onNodeWithText("返回").performClick()
+        compose.onNodeWithTag(TIGER_GOAT_LOCAL_TAG).performScrollTo().performClick()
+        val start = compose.onNodeWithTag("tiger_goat_start_formal_1")
+        start.performScrollTo().assertIsNotEnabled()
+        saveImage("formal-locked")
+        compose.onNodeWithTag("tiger_goat_modes_tutorial").performScrollTo().performClick()
+        compose.onNodeWithTag("tiger_goat_tutorial").assertExists()
+        runBlocking { for (step in 0..3) TigerGoatTutorialProgress(database).complete(step) }
+        compose.onNodeWithText("返回模式选择").performClick()
+        start.performScrollTo().assertIsEnabled().performClick()
+        compose.onNodeWithText("取消").performClick()
+        assertEquals(local, runBlocking { database.activeGameDao().find(5) })
+        start.performScrollTo().performClick()
+        saveImage("formal-confirm", system = true)
+        compose.onNodeWithText("确认替换").performClick()
+        awaitFormalBoard()
+        awaitCheckpoint(0)
+        tapPoint(6)
+        awaitCheckpoint(2)
+        val formal = runBlocking { database.activeGameDao().find(5)!! }
+        assertNotEquals(local.sessionId, formal.sessionId)
+        assertEquals(1, formal.modeCode)
+        saveImage("formal-ai-reply")
+        compose.onNodeWithText("返回").performClick()
+        compose.onNodeWithTag(TIGER_GOAT_LOCAL_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag("tiger_goat_resume_formal").performScrollTo().performClick()
+        awaitFormalBoard()
+        awaitCheckpoint(2)
+        assertEquals(formal, runBlocking { database.activeGameDao().find(5) })
+        compose.onNodeWithText("悔棋").performScrollTo().performClick()
+        awaitCheckpoint(0)
+        compose.onNodeWithText("老虎先从中央环移去一只羊").assertIsDisplayed()
+    }
+
+    @Test fun goatSideStartsWithAnAiOpeningRemoval() {
+        runBlocking { for (step in 0..3) TigerGoatTutorialProgress(database).complete(step) }
+        compose.onNodeWithTag(HOME_LANZHOU_TRADITIONAL_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag(TIGER_GOAT_LOCAL_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag("tiger_goat_start_formal_2").performScrollTo().performClick()
+        awaitFormalBoard()
+        awaitCheckpoint(1)
+        compose.onNodeWithText("正式人机 · 简单 · 执羊").assertIsDisplayed()
+        compose.onNodeWithText("羊放置一只，待摆 14 只").assertIsDisplayed()
+        val row = runBlocking { database.activeGameDao().find(5)!! }
+        assertEquals(1, row.playerIndex)
+        assertEquals(1, row.modeCode)
     }
 
     @Test fun activityRecreationPreservesTheSameNativeHistoryAndDiskRow() {
@@ -127,8 +183,20 @@ class TigerGoatNavigationIntegrationTest {
     private fun enterFromHome() {
         compose.onNodeWithTag(HOME_LANZHOU_TRADITIONAL_TAG).performScrollTo().performClick()
         compose.onNodeWithTag(TIGER_GOAT_LOCAL_TAG).performScrollTo().performClick()
+        chooseLocal()
         compose.waitUntil(10_000) {
             compose.onAllNodesWithTag("tiger_goat_board").fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    private fun chooseLocal() {
+        compose.onNodeWithTag("tiger_goat_choose_local").performScrollTo().performClick()
+    }
+
+    private fun awaitFormalBoard() {
+        compose.waitUntil(15_000) {
+            compose.onAllNodesWithTag("tiger_goat_formal_board").fetchSemanticsNodes().isNotEmpty() &&
+                compose.onAllNodes(hasText("认输") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
         }
     }
 
@@ -156,8 +224,9 @@ class TigerGoatNavigationIntegrationTest {
         saveImage(name)
     }
 
-    private fun saveImage(name: String) {
-        val image = compose.onRoot().captureToImage().asAndroidBitmap()
+    private fun saveImage(name: String, system: Boolean = false) {
+        val image = if (system) checkNotNull(instrumentation.uiAutomation.takeScreenshot())
+            else compose.onRoot().captureToImage().asAndroidBitmap()
         assertTrue("The production layout must be tested in landscape", image.width > image.height)
         val directory = File(context.cacheDir, "tiger-goat-navigation-visual")
         check(directory.isDirectory || directory.mkdirs()) { "Cannot create the visual test cache" }

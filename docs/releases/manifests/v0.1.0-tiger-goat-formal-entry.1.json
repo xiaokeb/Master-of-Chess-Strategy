@@ -1,0 +1,126 @@
+{
+  "tag": "v0.1.0-tiger-goat-formal-entry.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 11,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "release_manifest": "processed",
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.games.tiger_goat.data.TigerGoatStorageOwnershipTest",
+        "tests": 15
+      },
+      {
+        "name": "com.masterofchessstrategy.games.tiger_goat.TigerGoatGameControllerTest",
+        "tests": 5
+      }
+    ],
+    "baseline": "2caf0774f236603937819c397c0884165a7bb4b4",
+    "overlays": [
+      {
+        "sha256": "b54056251505d59e47472b54f10a9112f1e29d7d318360e1981fee103e84db40",
+        "working_sha256": "b54056251505d59e47472b54f10a9112f1e29d7d318360e1981fee103e84db40",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/data/TigerGoatModeChange.kt"
+      },
+      {
+        "sha256": "7845ccffb6e4e6d06925e22b059a7c18936695d216315c3c7346071499a4f280",
+        "working_sha256": "7845ccffb6e4e6d06925e22b059a7c18936695d216315c3c7346071499a4f280",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatGameScreen.kt"
+      },
+      {
+        "sha256": "df1a6cbca1adcd3e1371e1d7aa4208b64a940c7e9084d15bc447805273b023fb",
+        "working_sha256": "df1a6cbca1adcd3e1371e1d7aa4208b64a940c7e9084d15bc447805273b023fb",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatTutorialScreen.kt"
+      },
+      {
+        "sha256": "851054c51a85082682644739dee5df562bdd6b6877d7d885dba005607cfb759f",
+        "working_sha256": "851054c51a85082682644739dee5df562bdd6b6877d7d885dba005607cfb759f",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/ai/TigerGoatFormalRoute.kt"
+      },
+      {
+        "sha256": "063915e7ad949dd4b86fcac0919a98de23ee21810b668b13f0ac614abc96b71a",
+        "working_sha256": "063915e7ad949dd4b86fcac0919a98de23ee21810b668b13f0ac614abc96b71a",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/ai/TigerGoatFormalViewModel.kt"
+      },
+      {
+        "sha256": "4fb1d497427b1d2df6c2fa4c1f179b1c40eaa5460c2bab5c09c44a8783b1425c",
+        "working_sha256": "69338f5c8b64470dc82e8502917b9ae69425fcc10cd27fe5e89b8f30bff01cbf",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/TigerGoatNavigationRoute.kt"
+      },
+      {
+        "sha256": "98c69e0f3e6d29692720a936321bb29d43167cbe951eeb4d8e889e9daf5b2680",
+        "working_sha256": "98c69e0f3e6d29692720a936321bb29d43167cbe951eeb4d8e889e9daf5b2680",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/TigerGoatNavigationIntegrationTest.kt"
+      },
+      {
+        "sha256": "0f9e502fa66e2d3ebe0d61d9e4c44bd5ab03af1e02c80cce7986e93f6553fbb2",
+        "working_sha256": "0f9e502fa66e2d3ebe0d61d9e4c44bd5ab03af1e02c80cce7986e93f6553fbb2",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/TigerGoatRetirementNavigationInstrumentedTest.kt"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "7e677abf4d3eca4632c527b4e2435e785a46687d583212c1424d1a7c82ce7797",
+      "app/build/outputs/apk/debug/app-debug.apk": "84a3394bd62f94802eef9d4a708ca26ebddfe5c5a710876a18bc0a479e21e5c0"
+    },
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "candidate": "tiger-formal-entry1"
+  },
+  "device": {
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "7e677abf4d3eca4632c527b4e2435e785a46687d583212c1424d1a7c82ce7797",
+      "app/build/outputs/apk/debug/app-debug.apk": "84a3394bd62f94802eef9d4a708ca26ebddfe5c5a710876a18bc0a479e21e5c0"
+    },
+    "avd": "Pixel_7_Pro",
+    "runs": [
+      {
+        "tests": 4,
+        "images": [
+          {
+            "path": "font-1.0\\formal-locked.png",
+            "sha256": "3b86968b59a461e50d04937e3c9468f7215c21c02ae5d114853ecdfd21a49d1f"
+          },
+          {
+            "path": "font-1.0\\formal-confirm.png",
+            "sha256": "bb1d10caf8746956db90861a366b4a0ba0bc42456381d286e7b13df45ed634af"
+          },
+          {
+            "path": "font-1.0\\formal-ai-reply.png",
+            "sha256": "534a2d8c77fbcabb591034f9fdebafa3c5fe8ff2b8ef194605a8a8b582f52797"
+          }
+        ],
+        "selector": "com.masterofchessstrategy.ui.TigerGoatNavigationIntegrationTest#formalModeRequiresTutorialConfirmsReplacementAndResumesTheRealAiTurn,com.masterofchessstrategy.ui.TigerGoatNavigationIntegrationTest#goatSideStartsWithAnAiOpeningRemoval,com.masterofchessstrategy.ui.TigerGoatNavigationIntegrationTest#tutorialPracticeAndQuizPersistWithoutChangingTheActiveGame,com.masterofchessstrategy.ui.TigerGoatRetirementNavigationInstrumentedTest#fullProductionRestoreStopsTheOpenPageAndReentryLoadsRestoredHistory",
+        "log_sha256": "694a7394a43c8e07a6494b1c5fcc1ed42e67517d4f6fa9fba65b9c729ce2b0da",
+        "font": "1.0"
+      },
+      {
+        "tests": 1,
+        "images": [
+          {
+            "path": "font-1.5\\formal-locked.png",
+            "sha256": "e2791c1257ed65367cca59d6111a983167ec29c27da9b1f7e34a540933b0b498"
+          },
+          {
+            "path": "font-1.5\\formal-confirm.png",
+            "sha256": "28f700f6d63edfc88d3e69350875361c0b3519587a7ca9e3ad71c48ea6ace8d8"
+          },
+          {
+            "path": "font-1.5\\formal-ai-reply.png",
+            "sha256": "b0609e543167cc0011127efc03c9cd10b6b268ec26bcca8361823c04f3fae72b"
+          }
+        ],
+        "selector": "com.masterofchessstrategy.ui.TigerGoatNavigationIntegrationTest#formalModeRequiresTutorialConfirmsReplacementAndResumesTheRealAiTurn",
+        "log_sha256": "f0a7636b81475b1d1b865ef99943d3971e6a1799990d3c744dd09aaf4a62274a",
+        "font": "1.5"
+      }
+    ],
+    "abi": "x86_64",
+    "folder": "device-d76ef65f4c1f455a9d4735384c2c4168",
+    "restored_font": "1.0"
+  }
+}

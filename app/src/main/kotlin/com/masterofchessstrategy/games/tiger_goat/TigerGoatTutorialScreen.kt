@@ -29,7 +29,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 @Composable
-internal fun TigerGoatTutorialScreen(progress: TigerGoatTutorialProgress, onBack: () -> Unit) {
+internal fun TigerGoatTutorialScreen(
+    progress: TigerGoatTutorialProgress,
+    onBack: () -> Unit,
+    backLabel: String = "返回对局",
+) {
     var count by remember(progress) { mutableStateOf<Int?>(null) }
     var error by remember(progress) { mutableStateOf<String?>(null) }
     var saving by remember(progress) { mutableStateOf(false) }
@@ -66,7 +70,7 @@ internal fun TigerGoatTutorialScreen(progress: TigerGoatTutorialProgress, onBack
     Column(Modifier.fillMaxSize().padding(16.dp).testTag("tiger_goat_tutorial")) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text("老虎吃羊棋教程", style = MaterialTheme.typography.titleLarge)
-            TextButton(onClick = onBack, enabled = !saving) { Text("返回对局") }
+            TextButton(onClick = onBack, enabled = !saving) { Text(backLabel) }
         }
         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             val currentBoard = board

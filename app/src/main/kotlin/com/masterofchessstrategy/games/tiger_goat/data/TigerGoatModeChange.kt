@@ -22,6 +22,12 @@ internal class TigerGoatModeChange(private val database: MocsDatabase) {
     private val dao = database.activeGameDao()
     private val tutorials = RoomTutorialProgressRepository(database.tutorialProgressDao())
 
+    data class Selection(val savedMode: Int?, val qualified: Boolean)
+
+    suspend fun selection(): Selection = gate.access(owner) {
+        database.withTransaction { Selection(active()?.modeCode, isQualified()) }
+    }
+
     internal class Proposal internal constructor(
         internal val owner: TigerGoatStorageEpochGate.Owner,
         private val previous: ActiveGameEntity?,
@@ -67,10 +73,11 @@ internal class TigerGoatModeChange(private val database: MocsDatabase) {
         if (formal == null) StoredGameMode.HUMAN_VS_AI.code else StoredGameMode.LOCAL_TWO_PLAYER.code
 
     private suspend fun requireQualification(formal: TigerGoatFormalConfig?) {
-        if (formal == null) return
+        check(formal == null || isQualified()) { "请先完成老虎吃羊棋教程" }
+    }
+
+    private suspend fun isQualified(): Boolean {
         val result = tutorials.load(GameType.TIGER_AND_GOAT)
-        check(result is LoadTutorialProgressResult.Loaded && result.progress.isCompleted) {
-            "请先完成老虎吃羊棋教程"
-        }
+        return result is LoadTutorialProgressResult.Loaded && result.progress.isCompleted
     }
 }
