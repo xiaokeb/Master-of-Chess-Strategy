@@ -4,6 +4,8 @@ import com.masterofchessstrategy.engine.ChineseChessSide
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.GameResult
 import com.masterofchessstrategy.engine.GameType
+import java.nio.ByteBuffer
+import java.nio.charset.CharacterCodingException
 import java.security.MessageDigest
 
 internal data class LocalDataSnapshot(
@@ -154,25 +156,22 @@ internal object LocalDataBackupCodec {
 
     fun decode(bytes: ByteArray, registry: GameBackupRegistry): LocalDataSnapshot {
         require(bytes.size in 1..MAX_BACKUP_BYTES) { "Backup size is outside the limit" }
-        val content = bytes.toString(Charsets.UTF_8)
-        require(content.toByteArray(Charsets.UTF_8).contentEquals(bytes)) {
-            "Backup is not valid UTF-8"
-        }
-        require(content.endsWith('\n') && '\r' !in content) {
+        val checksumStart = bytes.size - CHECKSUM_LINE_BYTES
+        require(checksumStart > 0 && bytes[checksumStart - 1] == LF && bytes.last() == LF) {
             "Backup must use canonical LF line endings"
         }
-        val checksumMarker = content.lastIndexOf("\nSHA256|")
-        require(checksumMarker >= 0)
-        val body = content.substring(0, checksumMarker + 1)
-        val checksumLine = content.substring(checksumMarker + 1).removeSuffix("\n")
-        val expectedChecksum = checksumLine.substringAfter("SHA256|", missingDelimiterValue = "")
-        require(expectedChecksum.matches(Regex("[0-9a-f]{64}")))
-        require(sha256(body.toByteArray(Charsets.UTF_8)) == expectedChecksum) {
+        val checksumLine = String(bytes, checksumStart, CHECKSUM_LINE_BYTES - 1, Charsets.US_ASCII)
+        require(checksumLine.startsWith(CHECKSUM_PREFIX))
+        val expectedChecksum = checksumLine.removePrefix(CHECKSUM_PREFIX)
+        require(expectedChecksum.all { it in HEX })
+        val digest = MessageDigest.getInstance("SHA-256")
+        digest.update(bytes, 0, checksumStart)
+        require(digest.digest().toHex() == expectedChecksum) {
             "Backup checksum does not match"
         }
-        val lines = body.lineSequence().filter(String::isNotEmpty).toList()
-        require(lines.size in 2..MAX_LINE_COUNT)
-        val backupVersion = when (lines.first()) {
+        val lines = backupLines(bytes, checksumStart).iterator()
+        require(lines.hasNext())
+        val backupVersion = when (lines.next()) {
             HEADER -> 5
             HEADER_V4 -> 4
             "MOCS-BACKUP|3" -> 3
@@ -180,7 +179,8 @@ internal object LocalDataBackupCodec {
             LEGACY_HEADER -> 1
             else -> error("Unsupported backup format")
         }
-        val created = lines[1].split('|').also {
+        require(lines.hasNext())
+        val created = lines.next().split('|').also {
             require(it.size == 2 && it[0] == "CREATED")
         }[1].nonNegativeLong()
         val active = mutableListOf<GameSessionSnapshot>()
@@ -191,7 +191,7 @@ internal object LocalDataBackupCodec {
         val records = mutableListOf<GameRecord>()
         val endgames = mutableListOf<CompletedEndgameLevel>()
         val extensions = mutableListOf<GameBackupRecord>()
-        lines.drop(2).forEach { line ->
+        lines.forEach { line ->
             val fields = line.split('|')
             when (fields.firstOrNull()) {
                 "ACTIVE" -> active += fields.decodeActive(backupVersion)
@@ -515,9 +515,33 @@ internal object LocalDataBackupCodec {
         }
     }
 
-    private fun sha256(bytes: ByteArray): String =
-        MessageDigest.getInstance("SHA-256").digest(bytes).toHex()
+    // Decode one line at a time so the input array is the only full copy of the wire data.
+    private fun backupLines(bytes: ByteArray, end: Int): Sequence<String> = sequence {
+        val decoder = Charsets.UTF_8.newDecoder()
+        var start = 0
+        var count = 0
+        for (offset in 0 until end) {
+            val byte = bytes[offset]
+            require(byte != CR) { "Backup must use canonical LF line endings" }
+            if (byte == LF) {
+                if (offset > start) {
+                    require(++count <= MAX_LINE_COUNT) { "Backup has too many lines" }
+                    val line = try {
+                        decoder.decode(ByteBuffer.wrap(bytes, start, offset - start)).toString()
+                    } catch (error: CharacterCodingException) {
+                        throw IllegalArgumentException("Backup is not valid UTF-8", error)
+                    }
+                    yield(line)
+                }
+                start = offset + 1
+            }
+        }
+    }
 
+    private const val LF: Byte = 10
+    private const val CR: Byte = 13
+    private const val CHECKSUM_PREFIX = "SHA256|"
+    private const val CHECKSUM_LINE_BYTES = CHECKSUM_PREFIX.length + 64 + 1
     private const val HEADER = "MOCS-BACKUP|5"
     private const val HEADER_V4 = "MOCS-BACKUP|4"
     private const val LEGACY_HEADER = "MOCS-BACKUP|1"

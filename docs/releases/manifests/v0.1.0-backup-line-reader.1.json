@@ -1,0 +1,98 @@
+{
+  "tag": "v0.1.0-backup-line-reader.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 5,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "candidate": "backup-line-reader1",
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.data.LocalDataBackupCodecTest",
+        "tests": 17
+      },
+      {
+        "name": "com.masterofchessstrategy.data.RegisteredBackupCodecTest",
+        "tests": 8
+      },
+      {
+        "name": "com.masterofchessstrategy.data.RegisteredGameBackupMixedCodecTest",
+        "tests": 1
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalBackupWireTest",
+        "tests": 16
+      }
+    ],
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "release_manifest": "processed",
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/data/LocalDataBackupCodec.kt",
+        "working_sha256": "7f78820f7b34aad73435bb7e0c943cf0633f6d210f511a2d7b11cb5401776832",
+        "sha256": "7f78820f7b34aad73435bb7e0c943cf0633f6d210f511a2d7b11cb5401776832"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/data/LocalDataBackupCodecTest.kt",
+        "working_sha256": "dd8658ca45aec38bebe83291a5fe81f74050fd07fc7c5ea9e0b3490152f95402",
+        "sha256": "dd8658ca45aec38bebe83291a5fe81f74050fd07fc7c5ea9e0b3490152f95402"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "059c2a83e5579df11303d55c196079d99fb07123baaf1c0374dee1e4b98c9c8a",
+      "app/build/outputs/apk/debug/app-debug.apk": "dd1a12a536bce967ea26f17356b3fbedd7b2a786ea76560e95f8b62373e665d0"
+    },
+    "baseline": "7156c07939b4331bffdf2a23a932e8e21f3480bd"
+  },
+  "device": {
+    "runs": [
+      {
+        "images": [
+          {
+            "sha256": "31d5913e7193be66b7bd09b5eadb740cd830d658d1e2111b0407dd996a34c826",
+            "path": "screens\\1a4b02bc-1bef-4eee-bc23-77e6f0719631\\failed-restore-go-reopened-and-saved.png"
+          },
+          {
+            "sha256": "54f470920f4d6c4dbfa3c1debbd26e3852a509cbfd84c1660d219266994aa155",
+            "path": "screens\\1a4b02bc-1bef-4eee-bc23-77e6f0719631\\settings-invalid-restore-rejected.png"
+          },
+          {
+            "sha256": "a23f69db52c7a90fac50b2890e88fd85996e7aa531ed60db1405b4f6450d73a8",
+            "path": "screens\\1a4b02bc-1bef-4eee-bc23-77e6f0719631\\settings-restore-confirm-cancelled.png"
+          },
+          {
+            "sha256": "31d5913e7193be66b7bd09b5eadb740cd830d658d1e2111b0407dd996a34c826",
+            "path": "screens\\6277b991-b159-4bf5-8b0d-37f890e6e7ec\\restored-go-reopened-and-saved.png"
+          },
+          {
+            "sha256": "a23f69db52c7a90fac50b2890e88fd85996e7aa531ed60db1405b4f6450d73a8",
+            "path": "screens\\6277b991-b159-4bf5-8b0d-37f890e6e7ec\\settings-exported.png"
+          },
+          {
+            "sha256": "d28ecc9c10be3d94ef16711d38c926eb9b8959eb23480149857e023f65472592",
+            "path": "screens\\6277b991-b159-4bf5-8b0d-37f890e6e7ec\\settings-restored.png"
+          }
+        ],
+        "font": "1.0"
+      }
+    ],
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "tests": 3,
+    "selectors": [
+      "com.masterofchessstrategy.ui.GoProductionBackupFlowInstrumentedTest#actualSettingsExportRestoreRetiresOldOwnersAndFreshGoPagePersistsTheRestoredGame",
+      "com.masterofchessstrategy.ui.GoProductionBackupFlowInstrumentedTest#actualSettingsCancelAndInvalidRestorePreserveDataAndReopenedGoCanStillSave",
+      "com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalProductionBackupInstrumentedTest#revisedKongScoringSeriesRoundTripsAllSixteenHandsThroughProductionBackup"
+    ],
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "059c2a83e5579df11303d55c196079d99fb07123baaf1c0374dee1e4b98c9c8a",
+      "app/build/outputs/apk/debug/app-debug.apk": "dd1a12a536bce967ea26f17356b3fbedd7b2a786ea76560e95f8b62373e665d0"
+    },
+    "log_sha256": "2e7479752f56f2aca126866e21de4d662637321a4ea16bacd56d34680f01af98"
+  }
+}

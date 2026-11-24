@@ -12,6 +12,7 @@ import com.masterofchessstrategy.engine.GameType
 import com.masterofchessstrategy.custom.CustomPositionStateCodec
 import com.masterofchessstrategy.custom.ChineseChessHandicapConfig
 import com.masterofchessstrategy.games.xiangqi.MocxRuleRevisionFixtures
+import java.security.MessageDigest
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -26,6 +27,33 @@ class LocalDataBackupCodecTest {
         fun encode(snapshot: LocalDataSnapshot) = LocalDataBackupCodec.encode(snapshot, registry)
         fun decode(bytes: ByteArray) = LocalDataBackupCodec.decode(bytes, registry)
     }
+
+    @Test
+    fun decoderAcceptsTheExactWireLimitWithLegacyBlankLines() {
+        val bytes = ByteArray(LocalDataBackupCodec.MAX_BACKUP_BYTES) { 10 }
+        "MOCS-BACKUP|4\nCREATED|42\n".toByteArray().copyInto(bytes)
+        sealBackup(bytes)
+        assertEquals(LocalDataSnapshot(42), CoreCodec.decode(bytes))
+    }
+
+    @Test
+    fun correctlyHashedWireStillRejectsMalformedUtf8AndCarriageReturn() {
+        val prefix = "MOCS-BACKUP|4\nCREATED|42\n".toByteArray()
+        for (invalid in listOf(byteArrayOf(0xC0.toByte(), 0xAF.toByte()), byteArrayOf(13))) {
+            val bytes = prefix + invalid + byteArrayOf(10) + ByteArray(72)
+            sealBackup(bytes)
+            assertThrows(IllegalArgumentException::class.java) { CoreCodec.decode(bytes) }
+        }
+    }
+
+    private fun sealBackup(bytes: ByteArray) {
+        val bodyLength = bytes.size - 72
+        val checksum = MessageDigest.getInstance("SHA-256").apply {
+            update(bytes, 0, bodyLength)
+        }.digest().joinToString("") { "%02x".format(it) }
+        "SHA256|$checksum\n".toByteArray().copyInto(bytes, bodyLength)
+    }
+
     @Test
     fun mocxRuleRevisionsAndLegacyVerdictsSurviveCanonicalBackupRoundTrip() {
         for (fixture in MocxRuleRevisionFixtures.all()) {
