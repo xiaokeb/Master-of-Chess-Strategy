@@ -1,0 +1,76 @@
+{
+  "tag": "v0.1.0-competition-mahjong-kong-process.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 4,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "lint_warnings": 25,
+    "overlays": {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/data/CompetitionMahjongFormalProcessInstrumentedTest.kt",
+      "sha256": "a6fd22a53e7cb911216cb1093fed0e72102966bc3675bde53299dd9addf1ae0c",
+      "working_sha256": "a6fd22a53e7cb911216cb1093fed0e72102966bc3675bde53299dd9addf1ae0c"
+    },
+    "release_manifest": "processed",
+    "unit_tests": [
+      {
+        "tests": 9,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.match.storage.CompetitionMahjongFormalSnapshotCodecTest"
+      }
+    ],
+    "lint_errors": 0,
+    "baseline": "8c2a3b31f87a676101f6d24deacc34d874f78f21",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "25d161cf6250ce18658162ebbfc4fcc6b5eb10edb8e35873e8b1d14bbe5fc038",
+      "app/build/outputs/apk/debug/app-debug.apk": "1d7ce4e60f3663e5cdf72ded951f4192281418eddf5c4647440f16ccfbe5b951"
+    },
+    "candidate": "cm-kong-formal-process1"
+  },
+  "device": {
+    "model": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "25d161cf6250ce18658162ebbfc4fcc6b5eb10edb8e35873e8b1d14bbe5fc038",
+      "app/build/outputs/apk/debug/app-debug.apk": "1d7ce4e60f3663e5cdf72ded951f4192281418eddf5c4647440f16ccfbe5b951"
+    },
+    "font_scale": "1.0",
+    "kills": 2,
+    "boundaries": [
+      {
+        "scenario": "between",
+        "pid_before": 4529,
+        "pid_after": 4653
+      },
+      {
+        "scenario": "complete",
+        "pid_before": 4902,
+        "pid_after": 5028
+      }
+    ],
+    "evidence": {
+      "between-before.json": "895c24fb128960391f627859af246319d831fb3105975133ae18911da7565a9c",
+      "between-before.png": "ab5030af4be725926d5ea7fc7ef7ddf715b79e8274813221c4c51874a233562a",
+      "between-next-0.xml": "6a96aa46f0b5bc29a28eedbedac4fb7104a17f67f7de41bca1d7adb0bc901abf",
+      "between-next-1.xml": "438ea6f644bb6362faaeedb250aa9501500fd1bbd71d822fa981778cba34e2d3",
+      "between-restored-summary-0.xml": "6af05fb7e50044414b679af8e32bcf21beec75cc44fa37984ba19fd17980129e",
+      "between-restored.json": "02fef2da3e73a35f73d5416bb7677dc28bee9844fb798c8e8b525c36c76d9593",
+      "between-restored.png": "ee54fdad1e1173629126a866130963fcee5122fbbc3edd9ab6b2d2955eacf2a4",
+      "between-seed.log": "d80f76c0bf53a98b90583c80b946fee6573c65670c9a3b564530f8c4e6e9063d",
+      "between-summary-0.xml": "6af05fb7e50044414b679af8e32bcf21beec75cc44fa37984ba19fd17980129e",
+      "complete-before.json": "4adb2a1e65240f64e726dc682dad151b4d33329288865a3126c37e11de6709bc",
+      "complete-before.png": "1385e02c71ddc534861c8795df055d7512f664ad982a4b1811af4e4f9a3eea2e",
+      "complete-restored-summary-0.xml": "6af05fb7e50044414b679af8e32bcf21beec75cc44fa37984ba19fd17980129e",
+      "complete-restored.json": "02645f524ae342416d717979d0c151f13a1844dd7afe60aa9ddec187d1c8ddb0",
+      "complete-restored.png": "1385e02c71ddc534861c8795df055d7512f664ad982a4b1811af4e4f9a3eea2e",
+      "complete-seed.log": "43d7df9f4d0ca329b8215f3e5cdc28aa6fc907b0ad803f0483b8f863bd3a9e81",
+      "complete-summary-0.xml": "6af05fb7e50044414b679af8e32bcf21beec75cc44fa37984ba19fd17980129e",
+      "next-hand.json": "92a3b53e566a129f31fc2836dde81f71d079aae7b79a7afb03326fea95da8798",
+      "next-hand.png": "dd36b85b388cbcec31d52a29b7de4d884078b5bb3298fb261f1ba962f8e958e5"
+    }
+  },
+  "release_parent": "cbbf4c93db29d386f3f4b82194519ae829fbddaf"
+}

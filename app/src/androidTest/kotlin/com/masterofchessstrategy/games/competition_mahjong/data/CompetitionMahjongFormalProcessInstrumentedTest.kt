@@ -41,6 +41,14 @@ class CompetitionMahjongFormalProcessInstrumentedTest {
         seedTable(CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO, wins = 0, level = 0, settled = 16)
     }
 
+    @Test fun seedWmoKongsBetweenHands() = runBlocking {
+        seedTable(CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO_KONGS, wins = 0, level = 0, settled = 15)
+    }
+
+    @Test fun seedWmoKongsFinishedSeries() = runBlocking {
+        seedTable(CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO_KONGS, wins = 0, level = 0, settled = 16)
+    }
+
     private suspend fun seedTable(strategy: CompetitionMahjongBotStrategy, wins: Int, level: Int, settled: Int = 0) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val external = InstrumentationRegistry.getArguments().getString("mahjong_process_token")
