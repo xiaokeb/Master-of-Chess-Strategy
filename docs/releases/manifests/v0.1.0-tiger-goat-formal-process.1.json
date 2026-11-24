@@ -1,0 +1,88 @@
+{
+  "tag": "v0.1.0-tiger-goat-formal-process.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 7,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "overlays": [
+      {
+        "working_sha256": "54e2fe57377b68936ce5688c2a5b1d13f33d46bd3622b925698d7253bb7130de",
+        "sha256": "d61a5c08f59e85e9e1ca36cfb0715a8b155514a604bb1346ddbb4c3725dec5cd",
+        "path": "app/src/debug/AndroidManifest.xml"
+      },
+      {
+        "working_sha256": "7bb6b4581a5be06ca7b77fc0e8d0f2c0eaa35b5b65c7a65709fd93eec0f696b2",
+        "sha256": "7bb6b4581a5be06ca7b77fc0e8d0f2c0eaa35b5b65c7a65709fd93eec0f696b2",
+        "path": "app/src/debug/kotlin/com/masterofchessstrategy/ui/TigerGoatFormalProcessCheckActivity.kt"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/TigerGoatGameScreen.kt",
+        "sha256": "6868fef4c79356cd06c5bdd7e4b61262d7085bba3af298ae06c2993f2926f52a",
+        "working_sha256": "6868fef4c79356cd06c5bdd7e4b61262d7085bba3af298ae06c2993f2926f52a"
+      }
+    ],
+    "candidate": "tiger-formal-process1",
+    "release_manifest": "processed",
+    "lint_warnings": 25,
+    "lint_errors": 0,
+    "unit_tests": [
+      {
+        "tests": 15,
+        "name": "com.masterofchessstrategy.games.tiger_goat.data.TigerGoatStorageOwnershipTest"
+      },
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.tiger_goat.TigerGoatGameControllerTest"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "e3ddd878d4509a3d89856d44be555ed0895424e902c3efd911cb2afb15e505be",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "33a896c4cc7d6f6f6b2eac5c4463c4441e242f5f23ae65ca5f1b48c940039329"
+    },
+    "baseline": "9eb96498f4b29fe5e92d6ee13d2099991360014b"
+  },
+  "device": {
+    "run": {
+      "avd": "Pixel_7_Pro",
+      "abi": "x86_64",
+      "font_scale": "1.0",
+      "active_pids": [
+        11702,
+        11815
+      ],
+      "finished_pids": [
+        11815,
+        11975
+      ],
+      "kills_verified": 2,
+      "evidence": {
+        "active-accessibility.xml": "d111ba6ad02279d9b0f5cf0f4b4ae414b8ce69deca56111b1e422ceb84ba1999",
+        "active-after.json": "db5bac00bade233acd07c874aa913e4497c6427b052644d07cfd4bbbab24f580",
+        "active-after.png": "bb77a5f91c44b0cf60d12e677d086a7948ad3d5896c9913b20c8ff321e2cd483",
+        "active-before.json": "08437bfbca5e88ea8bde2ce64cbafca224f7663c90677265f2dc3869aa4df7ff",
+        "active-before.png": "bb77a5f91c44b0cf60d12e677d086a7948ad3d5896c9913b20c8ff321e2cd483",
+        "finished-accessibility.xml": "64f0e663894d4bf50b96912d53e755a427953714bb57d2c86b8734ff5e5ecd1a",
+        "finished-after.json": "b7d246ebcace2e3fcb597b9f9cdd97ea9fa175c79712f6a6d3f1c8f19b6498db",
+        "finished-after.png": "cdc4c6694427b7d49218ad77ca94dbec4916584464d2116cdfc56486b31224a9",
+        "finished-before.json": "613b93940776c1675c6dd89895921d5efb54dc32e0b2edd30141f4cff462d63c",
+        "finished-before.png": "340578866fb7f8652c2186b9ee12bedeebeaf9e42df30117e442bdc595a2acbc"
+      }
+    },
+    "apk_sha256": "e3ddd878d4509a3d89856d44be555ed0895424e902c3efd911cb2afb15e505be",
+    "release_manifest_sha256": "7316fcb2a3b37c80f03f1ab601e9c89667a188f3cb0190d5e36b7269cf1f9837",
+    "runner_sha256": "9fbcdd6eae37fdcacd9ea55afbf765fbab744fb2f32e91c0b7717d5934a26fc9"
+  },
+  "touch": {
+    "selector": "com.masterofchessstrategy.ui.TigerGoatNavigationIntegrationTest#formalModeRequiresTutorialConfirmsReplacementAndResumesTheRealAiTurn,com.masterofchessstrategy.ui.TigerGoatNavigationIntegrationTest#tutorialPracticeAndQuizPersistWithoutChangingTheActiveGame",
+    "apk_sha256": "33a896c4cc7d6f6f6b2eac5c4463c4441e242f5f23ae65ca5f1b48c940039329",
+    "tests": 2,
+    "log_sha256": "5f9437e6312ddc9ed87640a0261b3f1f6ef122fd2a751443b8c99b1816a94a4d"
+  },
+  "initial_accessibility_crash_log_sha256": "3aec5e9f323e861890b89f74abd69c5152e4be8d209bb565ca76fd1fcb8adf19",
+  "initial_runner_point_count_check_sha256": "d111ba6ad02279d9b0f5cf0f4b4ae414b8ce69deca56111b1e422ceb84ba1999"
+}

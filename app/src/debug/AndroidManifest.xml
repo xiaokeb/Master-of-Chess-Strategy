@@ -3,6 +3,14 @@
     xmlns:tools="http://schemas.android.com/tools">
     <application>
         <activity
+            android:name=".ui.TigerGoatFormalProcessCheckActivity"
+            android:exported="true"
+            android:permission="android.permission.DUMP"
+            android:process=":tiger_goat_formal_qa"
+            android:taskAffinity="com.masterofchessstrategy.tiger.goat.formal.qa"
+            android:screenOrientation="landscape"
+            tools:ignore="DiscouragedApi" />
+        <activity
             android:name=".ui.FangqiProcessCheckActivity"
             android:exported="true"
             android:permission="android.permission.DUMP"

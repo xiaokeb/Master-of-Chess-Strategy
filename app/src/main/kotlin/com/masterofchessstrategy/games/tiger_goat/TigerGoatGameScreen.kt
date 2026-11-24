@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,12 +30,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 
 enum class TigerGoatPhase { OPENING_REMOVAL, PLAY, CAPTURE_CHAIN, FINISHED }
 
@@ -173,54 +177,68 @@ internal fun TigerGoatBoard(
     val goatColor = Color(0xfff0e2c4)
     val tigerColor = Color(0xffac552f)
     val borderColor = Color(0xff493322)
-    Canvas(
-        modifier = modifier
-            .testTag("tiger_goat_board")
-            .semantics {
-                contentDescription = "老虎吃羊棋棋盘"
-                customActions = spec.points.map { point ->
-                    val piece = when (state.pieces[point.id]) {
-                        1 -> "老虎"
-                        2 -> "羊"
-                        else -> "空点"
-                    }
-                    CustomAccessibilityAction("$piece，落点 ${point.id}") {
-                        if (state.busy || state.winner != TigerGoatWinner.NONE) false
-                        else { currentTap(point.id); true }
-                    }
-                }
-            }
-            .pointerInput(spec, state.busy, state.winner) {
+    val acceptsMoves = !state.busy && state.winner == TigerGoatWinner.NONE
+    Layout(modifier = modifier.testTag("tiger_goat_board").semantics { contentDescription = "老虎吃羊棋棋盘" },
+    content = {
+        Canvas(Modifier.fillMaxSize().pointerInput(spec, acceptsMoves) {
                 detectTapGestures { tap ->
-                    if (!state.busy && state.winner == TigerGoatWinner.NONE) {
+                    if (acceptsMoves) {
                         tigerGoatViewport(size.width.toFloat(), size.height.toFloat(), spec)
                             .hitTest(TigerGoatPixelPoint(tap.x, tap.y))
                             ?.let(currentTap)
                     }
                 }
-            },
-    ) {
-        val viewport = tigerGoatViewport(size.width, size.height, spec)
-        for (edge in spec.edges) {
-            val from = viewport.centers[edge.from]
-            val to = viewport.centers[edge.to]
-            drawLine(lineColor, Offset(from.x, from.y), Offset(to.x, to.y),
-                     strokeWidth = viewport.unit * 0.055f)
+            }) {
+            val viewport = tigerGoatViewport(size.width, size.height, spec)
+            for (edge in spec.edges) {
+                val from = viewport.centers[edge.from]
+                val to = viewport.centers[edge.to]
+                drawLine(lineColor, Offset(from.x, from.y), Offset(to.x, to.y),
+                         strokeWidth = viewport.unit * 0.055f)
+            }
+            for (point in spec.points) {
+                val center = viewport.centers[point.id]
+                val at = Offset(center.x, center.y)
+                val piece = state.pieces[point.id]
+                drawCircle(borderColor, viewport.unit * 0.08f, at)
+                if (point.id in state.legalDestinations) {
+                    drawCircle(selectedColor, viewport.unit * 0.17f, at, style = Stroke(viewport.unit * 0.045f))
+                }
+                if (piece == 1 || piece == 2) {
+                    drawCircle(borderColor, viewport.unit * 0.33f, at)
+                    drawCircle(if (piece == 1) tigerColor else goatColor, viewport.unit * 0.29f, at)
+                }
+                if (point.id == state.selectedPoint || point.id in state.chainVisited) {
+                    drawCircle(selectedColor, viewport.unit * 0.39f, at, style = Stroke(viewport.unit * 0.055f))
+                }
+            }
         }
-        for (point in spec.points) {
-            val center = viewport.centers[point.id]
-            val at = Offset(center.x, center.y)
-            val piece = state.pieces[point.id]
-            drawCircle(borderColor, viewport.unit * 0.08f, at)
-            if (point.id in state.legalDestinations) {
-                drawCircle(selectedColor, viewport.unit * 0.17f, at, style = Stroke(viewport.unit * 0.045f))
+        // Each point has its own focus target at the drawn position.
+        spec.points.forEach { point ->
+            val piece = when (state.pieces[point.id]) {
+                1 -> "老虎"
+                2 -> "羊"
+                else -> "空点"
             }
-            if (piece == 1 || piece == 2) {
-                drawCircle(borderColor, viewport.unit * 0.33f, at)
-                drawCircle(if (piece == 1) tigerColor else goatColor, viewport.unit * 0.29f, at)
-            }
-            if (point.id == state.selectedPoint || point.id in state.chainVisited) {
-                drawCircle(selectedColor, viewport.unit * 0.39f, at, style = Stroke(viewport.unit * 0.055f))
+            Spacer(Modifier.semantics {
+                contentDescription = "$piece，落点 ${point.id}"
+                if (acceptsMoves) onClick { currentTap(point.id); true } else disabled()
+            })
+        }
+    }) { children, constraints ->
+        val board = children.first().measure(constraints)
+        if (board.width == 0 || board.height == 0) {
+            layout(board.width, board.height) { board.place(0, 0) }
+        } else {
+            val viewport = tigerGoatViewport(board.width.toFloat(), board.height.toFloat(), spec)
+            val diameter = (viewport.unit * 0.8f).roundToInt()
+            val points = children.drop(1).map { it.measure(Constraints.fixed(diameter, diameter)) }
+            layout(board.width, board.height) {
+                board.place(0, 0)
+                points.forEachIndexed { index, target ->
+                    val center = viewport.centers[index]
+                    target.place((center.x - diameter / 2f).roundToInt(), (center.y - diameter / 2f).roundToInt())
+                }
             }
         }
     }
