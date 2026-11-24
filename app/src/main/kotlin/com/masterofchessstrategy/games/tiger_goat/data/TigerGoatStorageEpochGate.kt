@@ -6,6 +6,7 @@ import java.lang.ref.WeakReference
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,6 +33,16 @@ internal class TigerGoatStorageEpochGate {
             throw IOException("本地数据已替换，请重新打开虎羊棋页面")
         }
         block()
+    }
+
+    /** A confirmed in-game replacement retires writers only after the transaction succeeds. */
+    suspend fun <T> commitReplacement(owner: Owner, block: suspend () -> T): T = access(owner) {
+        check(mutableEpoch.value < Long.MAX_VALUE) { "虎羊棋数据代次已达上限" }
+        withContext(NonCancellable) {
+            val committed = block()
+            mutableEpoch.value += 1
+            committed
+        }
     }
 
     /** Must surround the complete delegate operation, outside its Room transaction. */

@@ -1,0 +1,66 @@
+{
+  "tag": "v0.1.0-tiger-goat-mode-storage.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 6,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "lint_warnings": 25,
+    "lint_errors": 0,
+    "baseline": "916edaf24a86b7a60423c10e58d9052b07032666",
+    "release_manifest": "processed",
+    "overlays": [
+      {
+        "sha256": "fbb95e0062c819566effd61c7dd39938952125d64e5155183ebb3a64cceb20f6",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/data/TigerGoatStorageEpochGate.kt",
+        "working_sha256": "fbb95e0062c819566effd61c7dd39938952125d64e5155183ebb3a64cceb20f6"
+      },
+      {
+        "sha256": "2093928eecd6bee3ea8144a52eda710b9c2584ca471c4ff423e6826effc359e5",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/tiger_goat/data/TigerGoatModeChange.kt",
+        "working_sha256": "2093928eecd6bee3ea8144a52eda710b9c2584ca471c4ff423e6826effc359e5"
+      },
+      {
+        "sha256": "60e093a45cdb9a3b415c4a711e7d91eb2520ed8fe605a4ada1e4eb370a7091a5",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/tiger_goat/data/TigerGoatStorageProductionInstrumentedTest.kt",
+        "working_sha256": "60e093a45cdb9a3b415c4a711e7d91eb2520ed8fe605a4ada1e4eb370a7091a5"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "35528f956add8dfeea199194917661dbe24e7a699753f713b2057dbeae30ce80",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "02c87e2ac395e13da12389d32abd44d58b40b2facdbefebcfadb46b10f978259"
+    },
+    "candidate": "tiger-mode-change1",
+    "unit_tests": [
+      {
+        "tests": 15,
+        "name": "com.masterofchessstrategy.games.tiger_goat.data.TigerGoatStorageOwnershipTest"
+      },
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.tiger_goat.TigerGoatGameControllerTest"
+      }
+    ]
+  },
+  "device": {
+    "avd": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "tests": 5,
+    "selectors": [
+      "com.masterofchessstrategy.games.tiger_goat.data.TigerGoatStorageProductionInstrumentedTest#modeChangeRequiresQualificationAndRetiresOnlyTheReplacedOwners",
+      "com.masterofchessstrategy.games.tiger_goat.data.TigerGoatStorageProductionInstrumentedTest#backupRestoreInvalidatesAnOtherwiseIdenticalModeProposal",
+      "com.masterofchessstrategy.games.tiger_goat.data.TigerGoatStorageProductionInstrumentedTest#eachModeRejectsTheOtherModesActiveRow",
+      "com.masterofchessstrategy.games.tiger_goat.data.TigerGoatStorageProductionInstrumentedTest#formalCheckpointSurvivesProductionBackupAndRejectsAStaleOwner",
+      "com.masterofchessstrategy.games.tiger_goat.data.TigerGoatStorageProductionInstrumentedTest#courseProgressRoundTripsAndRejectsSkippingOrWritingAfterRestore"
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "35528f956add8dfeea199194917661dbe24e7a699753f713b2057dbeae30ce80",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "02c87e2ac395e13da12389d32abd44d58b40b2facdbefebcfadb46b10f978259"
+    },
+    "log_sha256": "2a69627d11fb972f05587be30a5569974bf84f588274a6d2e50751381832ca5e"
+  }
+}

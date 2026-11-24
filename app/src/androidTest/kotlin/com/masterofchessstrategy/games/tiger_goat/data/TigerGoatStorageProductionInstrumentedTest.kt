@@ -23,6 +23,65 @@ import org.junit.Test
 
 /** Production full-backup composition with real Native and UUID-owned disk Room only. */
 class TigerGoatStorageProductionInstrumentedTest {
+    @Test fun modeChangeRequiresQualificationAndRetiresOnlyTheReplacedOwners() = withOwnedLanzhouDatabase { f ->
+        val gate = TigerGoatStorageEpochGate.forDatabase(f.db)
+        val dao = f.db.activeGameDao()
+        val oldLocal = GatedTigerGoatSessionStore(RoomTigerGoatSessionStore(dao), gate)
+        val firstLocal = saved(1)
+        oldLocal.save(firstLocal)
+        val config = TigerGoatFormalConfig(humanSide = 2)
+        val change = TigerGoatModeChange(f.db)
+        assertTrue(runCatching { change.prepare(config) }.isFailure)
+        for (index in 0..3) TigerGoatTutorialProgress(f.db).complete(index)
+        val stale = change.prepare(config)
+        assertTrue(stale.replacesSavedGame)
+        val latestLocal = saved(2)
+        oldLocal.save(latestLocal)
+        assertTrue(runCatching { change.start(stale) }.isFailure)
+        assertSaved(latestLocal, oldLocal.load())
+
+        val confirmed = change.prepare(config)
+        val epoch = gate.epoch.value
+        f.db.openHelper.writableDatabase.execSQL("""
+            CREATE TRIGGER reject_mode_change BEFORE INSERT ON active_games
+            WHEN NEW.gameTypeCode = 5 BEGIN SELECT RAISE(ABORT, 'owned mode failure'); END
+        """.trimIndent())
+        try {
+            assertTrue(runCatching { change.start(confirmed) }.isFailure)
+            assertEquals(epoch, gate.epoch.value)
+            assertSaved(latestLocal, oldLocal.load())
+        } finally { f.db.openHelper.writableDatabase.execSQL("DROP TRIGGER reject_mode_change") }
+        change.start(confirmed)
+        assertTrue(runCatching { oldLocal.load() }.isFailure)
+        val formal = roomTigerGoatFormalStore(f.db)
+        val checkpoint = (formal.load() as TigerGoatFormalLoadResult.Loaded).checkpoint
+        assertEquals(config, checkpoint.config)
+        assertEquals(0, checkpoint.actionCount)
+        val reverse = TigerGoatModeChange(f.db)
+        reverse.start(reverse.prepare(null))
+        assertFalse(formal.isCurrent)
+        assertTrue(runCatching { oldLocal.save(firstLocal) }.isFailure)
+        f.reopen()
+        val newLocal = RoomTigerGoatSessionStore(f.db.activeGameDao())
+        val restored = (newLocal.load() as TigerGoatLoadResult.Loaded).saved
+        assertEquals(0, restored.actionCount)
+        assertNotEquals(firstLocal.id, restored.id)
+    }
+
+    @Test fun backupRestoreInvalidatesAnOtherwiseIdenticalModeProposal() = withOwnedLanzhouDatabase { f ->
+        val dao = f.db.activeGameDao()
+        RoomTigerGoatSessionStore(dao).save(saved(1))
+        for (index in 0..3) TigerGoatTutorialProgress(f.db).complete(index)
+        val change = TigerGoatModeChange(f.db)
+        val proposal = change.prepare(TigerGoatFormalConfig(humanSide = 1))
+        val row = dao.find(GameType.TIGER_AND_GOAT.code)
+        f.repository().restore(f.repository().export(50))
+        assertEquals(row, dao.find(GameType.TIGER_AND_GOAT.code))
+        assertTrue(runCatching { change.start(proposal) }.isFailure)
+        assertTrue(runCatching { TigerGoatModeChange(f.db).start(proposal) }.isFailure)
+        assertEquals(row, dao.find(GameType.TIGER_AND_GOAT.code))
+    }
+
     @Test fun courseProgressRoundTripsAndRejectsSkippingOrWritingAfterRestore() = withOwnedLanzhouDatabase { f ->
         val first = TigerGoatTutorialProgress(f.db)
         assertEquals(0, first.load())
