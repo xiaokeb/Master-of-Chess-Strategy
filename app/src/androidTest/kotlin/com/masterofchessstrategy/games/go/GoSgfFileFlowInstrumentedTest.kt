@@ -17,6 +17,8 @@ import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -296,6 +298,32 @@ class GoSgfFileFlowInstrumentedTest {
         captureApp("archive-export-full-mainline")
     }
 
+    @Test fun documentPickerFinishesTheSameArchiveExportAfterTheRouteIsRecreated() {
+        val recordId = seedCompletedArchive()
+        val original = runBlocking { database.gameRecordDao().find(recordId) }
+        val visible = mutableStateOf(true)
+        val registry = RecordingRegistry(composeRule.activity.activityResultRegistry, holdCreateResult = true)
+        showStoredRecord(recordId, registry) { visible.value }
+        awaitStoredExport()
+        composeRule.onNodeWithTag("go_stored_record_export").performScrollTo().performClick()
+        saveCreatedDocument(filename)
+        composeRule.waitUntil(15_000) { returnedCreates == 1 && composeRule.activity.hasWindowFocus() }
+
+        composeRule.runOnIdle { visible.value = false }
+        composeRule.onNodeWithTag("go_stored_record_export").assertDoesNotExist()
+        composeRule.runOnIdle { visible.value = true }
+        composeRule.runOnIdle { registry.deliverHeldCreateResult() }
+        awaitMessage("SGF 棋谱已导出")
+
+        val text = context.contentResolver.openInputStream(createdDocuments.single())!!.use(GoSgfDocument::read)
+        NativeGoEngine(9).use { engine ->
+            assertEquals(RestoreResult.Restored, engine.restoreSgf(text))
+            assertEquals(listOf(GoAction.Place(BoardPosition(0, 0)), GoAction.Pass, GoAction.Pass), engine.eventHistory())
+        }
+        assertEquals(original, runBlocking { database.gameRecordDao().find(recordId) })
+        captureApp("archive-export-after-route-recreation")
+    }
+
     @Test fun documentPickerResultAfterActualRoomRestoreCannotExportTheRetiredArchive() {
         val recordId = seedCompletedArchive()
         showStoredRecord(recordId, RecordingRegistry(composeRule.activity.activityResultRegistry))
@@ -347,13 +375,19 @@ class GoSgfFileFlowInstrumentedTest {
         identity.recordId
     }
 
-    private fun showStoredRecord(recordId: String, registry: RecordingRegistry) {
+    private fun showStoredRecord(recordId: String, registry: RecordingRegistry, visible: () -> Boolean = { true }) {
         storedReplayKey = "go-replay-stored-${gate.epoch.value}-$recordId"
         val owner = object : ActivityResultRegistryOwner { override val activityResultRegistry = registry }
         composeRule.activityRule.scenario.onActivity { activity ->
             activity.setContent {
                 CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
-                    MaterialTheme { GoStoredRecordRoute(recordId, database, gate, onBack = {}) }
+                    MaterialTheme {
+                        // Restore the launcher's saved key while retaining the same ViewModel owner.
+                        val saved = rememberSaveableStateHolder()
+                        if (visible()) saved.SaveableStateProvider(recordId) {
+                            GoStoredRecordRoute(recordId, database, gate, onBack = {})
+                        }
+                    }
                 }
             }
         }
@@ -475,7 +509,18 @@ class GoSgfFileFlowInstrumentedTest {
         } finally { bitmap.recycle() }
     }
 
-    private inner class RecordingRegistry(private val base: ActivityResultRegistry) : ActivityResultRegistry() {
+    private inner class RecordingRegistry(
+        private val base: ActivityResultRegistry,
+        private val holdCreateResult: Boolean = false,
+    ) : ActivityResultRegistry() {
+        private var heldCreateResult: (() -> Unit)? = null
+
+        fun deliverHeldCreateResult() {
+            val deliver = checkNotNull(heldCreateResult)
+            heldCreateResult = null
+            deliver()
+        }
+
         override fun <I, O> onLaunch(
             requestCode: Int,
             contract: ActivityResultContract<I, O>,
@@ -485,9 +530,15 @@ class GoSgfFileFlowInstrumentedTest {
             val launcher = base.register("go-sgf-qa-$runId-$requestCode", contract) { result ->
                 if (contract is ActivityResultContracts.CreateDocument) {
                     if (result is Uri) createdDocuments.add(result) else cancelledCreates += 1
+                    if (holdCreateResult) {
+                        check(heldCreateResult == null)
+                        heldCreateResult = { dispatchResult(requestCode, result) }
+                    }
                     returnedCreates += 1
                 }
-                dispatchResult(requestCode, result)
+                if (!holdCreateResult || contract !is ActivityResultContracts.CreateDocument) {
+                    dispatchResult(requestCode, result)
+                }
             }
             launcher.launch(input, options)
         }

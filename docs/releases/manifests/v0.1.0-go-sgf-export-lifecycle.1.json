@@ -1,0 +1,107 @@
+{
+  "tag": "v0.1.0-go-sgf-export-lifecycle.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 5,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "lint_errors": 0,
+    "baseline": "8c2a3b31f87a676101f6d24deacc34d874f78f21",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "15fba8d4a6cb5aa243d34717edb664dd30ca63c9d84c503d44d74709ed2bd144",
+      "app/build/outputs/apk/debug/app-debug.apk": "8c4d9ea4fe68960b95c275c06164027ee31d3a57bb732cbeffdfa057142aa964"
+    },
+    "candidate": "go-sgf-export-lifecycle1",
+    "overlays": [
+      {
+        "working_sha256": "8f93bc4da808772f6d3fe2d4dcc46a2a36dd133cc7195876cc53959ad34b240b",
+        "sha256": "8f93bc4da808772f6d3fe2d4dcc46a2a36dd133cc7195876cc53959ad34b240b",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoStoredRecordRoute.kt"
+      },
+      {
+        "working_sha256": "aefe5f6624eed7b51110cd2cdc8f02deb61c15d962dc14ae5f1e48ec034bf0e9",
+        "sha256": "aefe5f6624eed7b51110cd2cdc8f02deb61c15d962dc14ae5f1e48ec034bf0e9",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoSgfFileFlowInstrumentedTest.kt"
+      }
+    ],
+    "lint_warnings": 25,
+    "release_manifest": "processed",
+    "unit_tests": [
+      {
+        "tests": 6,
+        "name": "com.masterofchessstrategy.games.go.GoReplaySessionTest"
+      },
+      {
+        "tests": 4,
+        "name": "com.masterofchessstrategy.games.go.GoSgfDocumentTest"
+      }
+    ]
+  },
+  "device": {
+    "restored_font": "1.0",
+    "original_font": "1.0",
+    "runs": [
+      {
+        "log_sha256": "713941d5381fb670d96deb72252fed8b0f5f09291fa5023e735726894dca1104",
+        "font": "1.0",
+        "selector": "com.masterofchessstrategy.games.go.GoSgfFileFlowInstrumentedTest#documentPickerFinishesTheSameArchiveExportAfterTheRouteIsRecreated,com.masterofchessstrategy.games.go.GoSgfFileFlowInstrumentedTest#archivedRecordExportsItsWholeMainlineFromCursorZeroAndPickerCancelIsReadOnly,com.masterofchessstrategy.games.go.GoSgfFileFlowInstrumentedTest#documentPickerResultAfterActualRoomRestoreCannotExportTheRetiredArchive",
+        "images": [
+          {
+            "sha256": "548b0efd04b986a3301784a6a2bf5102e18cf1788fc681ce9959ca054b0dd8a2",
+            "path": "font-1.0\\58b9a130-815c-4e95-be60-0cbefb34f94a\\archive-export-retired-result.png"
+          },
+          {
+            "sha256": "dcd85d7200b932e994f4e7d1fe5c8741314169c6d43949096205690167f330b7",
+            "path": "font-1.0\\58b9a130-815c-4e95-be60-0cbefb34f94a\\create-mocs-go-qa-58b9a130-815c-4e95-be60-0cbefb34f94a-stale.sgf.png"
+          },
+          {
+            "sha256": "334a71119332f385a50ed8d636f003d4c305069256671c8b829bd0ee77d67746",
+            "path": "font-1.0\\ec61caa4-4e86-4d9b-ad62-7346dbacef05\\archive-export-after-route-recreation.png"
+          },
+          {
+            "sha256": "a181837e2363d0cc14f03b6e5505180faa23f94d2a2d8c15d0a4003431e64d38",
+            "path": "font-1.0\\ec61caa4-4e86-4d9b-ad62-7346dbacef05\\create-mocs-go-qa-ec61caa4-4e86-4d9b-ad62-7346dbacef05.sgf.png"
+          },
+          {
+            "sha256": "334a71119332f385a50ed8d636f003d4c305069256671c8b829bd0ee77d67746",
+            "path": "font-1.0\\f055d27e-c2e4-4077-88ad-859e3f2c3826\\archive-export-cancelled.png"
+          },
+          {
+            "sha256": "334a71119332f385a50ed8d636f003d4c305069256671c8b829bd0ee77d67746",
+            "path": "font-1.0\\f055d27e-c2e4-4077-88ad-859e3f2c3826\\archive-export-full-mainline.png"
+          },
+          {
+            "sha256": "dc1c57b968eada4fca17149d8646827bb21f6f79df261b9083946f3c7af52b62",
+            "path": "font-1.0\\f055d27e-c2e4-4077-88ad-859e3f2c3826\\create-mocs-go-qa-f055d27e-c2e4-4077-88ad-859e3f2c3826.sgf.png"
+          }
+        ],
+        "tests": 3
+      },
+      {
+        "log_sha256": "860de2d8734ad4dddc9691a572d8e04d54778bc7cc981dcc7b3187b46f7a1255",
+        "font": "1.5",
+        "selector": "com.masterofchessstrategy.games.go.GoSgfFileFlowInstrumentedTest#documentPickerFinishesTheSameArchiveExportAfterTheRouteIsRecreated",
+        "images": [
+          {
+            "sha256": "b1cf8aa2cbd4a9335fcc143e5746cd8eb38870e19cb92fa21c3ccf3e87ddba9a",
+            "path": "font-1.5\\711c3837-2ab1-4100-b260-dd6694b2bf2f\\archive-export-after-route-recreation.png"
+          },
+          {
+            "sha256": "89d07b45c13db92ebffacdb93fafc0549248e09793b9b20b33b8cc00e01a7f8d",
+            "path": "font-1.5\\711c3837-2ab1-4100-b260-dd6694b2bf2f\\create-mocs-go-qa-711c3837-2ab1-4100-b260-dd6694b2bf2f.sgf.png"
+          }
+        ],
+        "tests": 1
+      }
+    ],
+    "candidate": "go-sgf-export-lifecycle1",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "15fba8d4a6cb5aa243d34717edb664dd30ca63c9d84c503d44d74709ed2bd144",
+      "app/build/outputs/apk/debug/app-debug.apk": "8c4d9ea4fe68960b95c275c06164027ee31d3a57bb732cbeffdfa057142aa964"
+    }
+  }
+}

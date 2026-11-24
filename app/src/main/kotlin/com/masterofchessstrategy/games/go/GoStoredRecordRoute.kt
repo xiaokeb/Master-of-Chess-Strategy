@@ -21,6 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.games.go.data.GoStorageEpochGate
 import com.masterofchessstrategy.games.go.data.GoStoredRecord
@@ -53,7 +57,11 @@ private fun GoStoredRecordContent(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current.applicationContext
-    val ownerEpoch = remember(recordId, database, gate) { gate.epoch.value }
+    val export: GoStoredRecordExport = viewModel(
+        key = "go-stored-export-$recordId",
+        factory = remember(gate) { viewModelFactory { initializer { GoStoredRecordExport(gate) } } },
+    )
+    val ownerEpoch = export.ownerEpoch
     val epoch by gate.epoch.collectAsState()
     val loader = remember(database) { GoStoredRecordLoader(database) }
     val scope = rememberCoroutineScope()
@@ -61,15 +69,15 @@ private fun GoStoredRecordContent(
     var loading by remember(recordId, database, gate) { mutableStateOf(true) }
     var error by remember(recordId, database, gate) { mutableStateOf<String?>(null) }
     var retry by remember(recordId, database, gate) { mutableIntStateOf(0) }
-    var exporting by remember(recordId, database, gate) { mutableStateOf(false) }
+    var exporting by remember(recordId, database, gate) { mutableStateOf(export.pendingSgf != null) }
     var exportMessage by remember(recordId, database, gate) { mutableStateOf<String?>(null) }
-    var pendingExport by remember(recordId, database, gate) { mutableStateOf<String?>(null) }
 
     LaunchedEffect(recordId, database, gate, ownerEpoch, retry) {
         loading = true
         error = null
         stored = null
         try {
+            check(export.gate === gate) { "本地数据已替换，请返回后重新打开棋谱" }
             val loaded = gate.access(ownerEpoch) { loader.load(recordId) }
             ensureActive()
             stored = loaded
@@ -84,13 +92,14 @@ private fun GoStoredRecordContent(
     val exportFile = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/x-go-sgf"),
     ) { uri ->
-        val text = pendingExport
-        pendingExport = null
+        val text = export.pendingSgf
+        export.pendingSgf = null
         if (uri == null) {
             exporting = false
             exportMessage = null
         } else scope.launch {
             try {
+                check(export.gate === gate) { "本地数据已替换，请返回后重新打开棋谱" }
                 checkNotNull(text) { "页面已重建，请重新导出棋谱" }
                 exportMessage = "正在写入 SGF 文件…"
                 gate.access(ownerEpoch) {
@@ -113,7 +122,7 @@ private fun GoStoredRecordContent(
         }
     }
 
-    val stale = epoch != ownerEpoch
+    val stale = export.gate !== gate || epoch != ownerEpoch
     val archive = stored
     if (stale || loading || archive == null) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -156,13 +165,13 @@ private fun GoStoredRecordContent(
                                 }
                             }
                             ensureActive()
-                            pendingExport = text
+                            export.pendingSgf = text
                             exportMessage = null
                             exportFile.launch("go-archive.sgf")
                             pickerLaunched = true
                         } catch (failure: Exception) {
                             if (failure is CancellationException) throw failure
-                            pendingExport = null
+                            export.pendingSgf = null
                             exportMessage = failure.message ?: "无法导出 SGF 棋谱"
                         } finally {
                             if (!pickerLaunched) exporting = false
@@ -173,4 +182,10 @@ private fun GoStoredRecordContent(
             }
         },
     )
+}
+
+/** The picker may outlive the composition. Keep its bounded SGF in memory for the nav entry. */
+private class GoStoredRecordExport(val gate: GoStorageEpochGate) : ViewModel() {
+    val ownerEpoch = gate.epoch.value
+    var pendingSgf: String? = null
 }
