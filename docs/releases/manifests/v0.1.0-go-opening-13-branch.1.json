@@ -1,0 +1,115 @@
+{
+  "tag": "v0.1.0-go-opening-13-branch.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 7,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "baseline": "513bfd19aa6f732672b4151dc49361663544627f",
+    "lint_warnings": 25,
+    "overlays": [
+      {
+        "working_sha256": "b916174b72008a735233cd1417d0a1b71b405f43276b97220b4fa55382251eb5",
+        "sha256": "b916174b72008a735233cd1417d0a1b71b405f43276b97220b4fa55382251eb5",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyLibrary.kt"
+      },
+      {
+        "working_sha256": "19704d709ec31c2bd4d5cc8fd2f0cf337f788aeb2abb8bc3c7e5b3f0dc367edc",
+        "sha256": "19704d709ec31c2bd4d5cc8fd2f0cf337f788aeb2abb8bc3c7e5b3f0dc367edc",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyLibraryTest.kt"
+      },
+      {
+        "working_sha256": "d0adfe9198f55cbbd452819a7ff1b3d807a5c931a35604f1f427276578ca6d92",
+        "sha256": "d0adfe9198f55cbbd452819a7ff1b3d807a5c931a35604f1f427276578ca6d92",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyNativeInstrumentedTest.kt"
+      },
+      {
+        "working_sha256": "72d9da0737fd8353fbd215699c553c7df996c0e747ef7a30b99601cb7db30aaa",
+        "sha256": "72d9da0737fd8353fbd215699c553c7df996c0e747ef7a30b99601cb7db30aaa",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoOpeningStudyNavigationTest.kt"
+      }
+    ],
+    "candidate": "go-opening-13-branch1",
+    "lint_errors": 0,
+    "release_manifest": "processed",
+    "unit_tests": [
+      {
+        "tests": 9,
+        "name": "com.masterofchessstrategy.games.go.GoOpeningStudyLibraryTest"
+      },
+      {
+        "tests": 9,
+        "name": "com.masterofchessstrategy.games.go.GoReplayControllerTest"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "f3a28357ad1621b30527341f83d0b79f43fd7a247bbd40e21a0625debc513528",
+      "app/build/outputs/apk/debug/app-debug.apk": "e768f4192e859830927e7df5d55c8c9dbaf5bdfae24faf5698b9adf92894f94d"
+    }
+  },
+  "device": {
+    "candidate": "go-opening-13-branch1",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "f3a28357ad1621b30527341f83d0b79f43fd7a247bbd40e21a0625debc513528",
+      "app/build/outputs/apk/debug/app-debug.apk": "e768f4192e859830927e7df5d55c8c9dbaf5bdfae24faf5698b9adf92894f94d"
+    },
+    "runs": [
+      {
+        "tests": 3,
+        "log_sha256": "6dd45aebd364b7d016c978cd57c0718446ae7aaa7e1fec18f83a0958ddcfa5af",
+        "images": [
+          {
+            "path": "font-1.0\\692e3741-48ff-4f30-9c73-5f3cc88b62ee\\13-branch-endpoint.png",
+            "sha256": "492b87434997c4ef2795bb77051ef9235a450fce118a4bc9150aca4554c90eaf"
+          },
+          {
+            "path": "font-1.0\\692e3741-48ff-4f30-9c73-5f3cc88b62ee\\13-branch-katago.png",
+            "sha256": "cb2f86cc5c5f806e029a864db651f3fe26552ee1139855b6270a30a54d598802"
+          },
+          {
+            "path": "font-1.0\\692e3741-48ff-4f30-9c73-5f3cc88b62ee\\13-shared-position.png",
+            "sha256": "c107f297d9db40cd6e2b71cd85ae459503ab4fe7d518768755a5439f804be422"
+          },
+          {
+            "path": "font-1.0\\918177b4-47be-4099-9669-84faf8b21c73\\opening-branch-choice.png",
+            "sha256": "d7ebab8dd92e40dece7a872959643304feb8e091c28ecfc0b247a8d13ec957f5"
+          },
+          {
+            "path": "font-1.0\\918177b4-47be-4099-9669-84faf8b21c73\\opening-branch-move.png",
+            "sha256": "a39e8ecec4661cf7179552545c2643e242e4c99b301e65edd4bbfae333071ada"
+          },
+          {
+            "path": "font-1.0\\918177b4-47be-4099-9669-84faf8b21c73\\opening-shared-position.png",
+            "sha256": "cd8d51044208cb3343059e8617e28a86de99a0f2ec7c4314d5a2ab535342477b"
+          }
+        ],
+        "font": "1.0"
+      },
+      {
+        "tests": 1,
+        "log_sha256": "2dbed239b9a7b1afb0bb2eb5278287db404867aee83ba48e6888e09790dce3c0",
+        "images": [
+          {
+            "path": "font-1.5\\18877324-0ccd-422b-8a33-09147e2a2d76\\13-branch-endpoint.png",
+            "sha256": "b404bd15ec395bf61fc4dad02461aa4ac0b2b71cc4faede7c18d92643d43051c"
+          },
+          {
+            "path": "font-1.5\\18877324-0ccd-422b-8a33-09147e2a2d76\\13-branch-katago.png",
+            "sha256": "a2a15a189284e821dcabd8308c3a637ef8d2f9656515a798c0e0559bacc38d47"
+          },
+          {
+            "path": "font-1.5\\18877324-0ccd-422b-8a33-09147e2a2d76\\13-shared-position.png",
+            "sha256": "2ac7d729d3fd350a77c2df6f4824f9594d544d57482e393c9c8d6878e9fe3e67"
+          }
+        ],
+        "font": "1.5"
+      }
+    ],
+    "restored_font": "1.0",
+    "original_font": "1.0"
+  }
+}

@@ -7,7 +7,7 @@ import org.junit.Test
 class GoOpeningStudyLibraryTest {
     @Test fun authoredCatalogHasUniqueStableMetadataAcrossAllSupportedSizes() {
         val lines = GoOpeningStudyLibrary.lines
-        assertEquals(7, lines.size); assertEquals(lines.size, lines.map { it.id }.toSet().size)
+        assertEquals(8, lines.size); assertEquals(lines.size, lines.map { it.id }.toSet().size)
         assertEquals(setOf(9, 13, 19), lines.map { it.boardSize }.toSet())
         assertTrue(lines.all { it.steps.size >= 4 && it.title.isNotBlank() && it.focus.isNotBlank() })
     }
@@ -22,6 +22,9 @@ class GoOpeningStudyLibraryTest {
             assertEquals(primary.steps.take(common).map { it.point }, branch.line.steps.take(common).map { it.point })
             assertNotEquals(primary.steps[common].point, branch.line.steps[common].point)
         }
+        val thirteen = checkNotNull(GoOpeningStudyLibrary.line("13-balanced-corners"))
+        assertEquals(listOf("13-left-side-choice" to 4, "13-side-development" to 2),
+            GoOpeningStudyLibrary.branches(thirteen).map { it.line.id to it.sharedMoves })
     }
 
     @Test fun everyLineIsAppliedThroughRulesAndCreatesExactTrainingEndpoint() {
