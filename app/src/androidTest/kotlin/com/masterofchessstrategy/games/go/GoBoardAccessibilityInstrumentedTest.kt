@@ -69,6 +69,7 @@ class GoBoardAccessibilityInstrumentedTest {
         val intersections = nodes.filter { it.contentDescription?.toString()?.startsWith("第") == true }
         assertEquals(81, intersections.size)
         assertTrue(intersections.all { !it.isClickable })
+        assertTrue(intersections.all { !it.isEnabled })
         assertFalse(intersections.any { it.actionList.any { action -> action.id == AccessibilityNodeInfo.ACTION_CLICK } })
         composeRule.onNodeWithTag("go_intersection_0_0").performTouchInput { click(center) }
         assertEquals(0, taps)

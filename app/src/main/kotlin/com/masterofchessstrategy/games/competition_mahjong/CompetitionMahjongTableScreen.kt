@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -234,16 +235,18 @@ private fun SeatPanel(
 
 @Composable
 internal fun MahjongTile(tile: Int?, faceUp: Boolean) {
-    val visible = faceUp && tile != null
+    val name = tile?.takeIf { faceUp }?.let(::competitionMahjongTileName)
+    val visible = name != null
     val shape = RoundedCornerShape(4.dp)
     Box(
         modifier = Modifier.size(width = 30.dp, height = 39.dp)
             .background(if (visible) Color(0xFFFFF9EA) else Color(0xFF265C50), shape)
             .border(1.dp, Color(0xFF795C3E), shape)
-            .semantics { contentDescription = if (visible) competitionMahjongTileName(requireNotNull(tile)) else "牌背" },
+            .semantics { contentDescription = name ?: "牌背" },
         contentAlignment = Alignment.Center,
     ) {
-        Text(if (visible) competitionMahjongTileName(requireNotNull(tile)) else "纹",
+        Text(name ?: "纹",
+            modifier = Modifier.semantics { hideFromAccessibility() },
             color = if (visible) Color(0xFF222222) else Color(0xFFE3C991),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,

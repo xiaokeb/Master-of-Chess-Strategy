@@ -1,0 +1,151 @@
+{
+  "tag": "v0.1.0-go-mahjong-accessibility.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 7,
+  "ndk": "30.0.16138531",
+  "apk_abis": [
+    "x86_64",
+    "arm64-v8a"
+  ],
+  "build": {
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "8a887674e332e8511e532997b05d8c339c0ebfd16faba1f9eb710f71ac2fffaf",
+      "app/build/outputs/apk/debug/app-debug.apk": "4a3f6b4695c1e9e715f8293e5f0965b89f3d8c560374045a5d70c85226661e7a"
+    },
+    "lint_warnings": 25,
+    "candidate": "go-mahjong-a11y1",
+    "baseline": "c562b63d6643fafce06a19eb3ad9c0f45fca635f",
+    "release_manifest": "processed",
+    "lint_errors": 0,
+    "overlays": [
+      {
+        "working_sha256": "744e2b050b38d9f8edc77da8003b9633159b48a392ca17470ae4abb4b3b22903",
+        "sha256": "744e2b050b38d9f8edc77da8003b9633159b48a392ca17470ae4abb4b3b22903",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoBoard.kt"
+      },
+      {
+        "working_sha256": "4392f6fd0dabc95d02f9d71a49f378dd29fa7e994be70d77b6e44a987fc06af4",
+        "sha256": "4392f6fd0dabc95d02f9d71a49f378dd29fa7e994be70d77b6e44a987fc06af4",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/CompetitionMahjongTableScreen.kt"
+      },
+      {
+        "working_sha256": "dee6c647e3704ccf5cbb85184c3c0a31007bdef797e32c173fd1781e7f2118fe",
+        "sha256": "dee6c647e3704ccf5cbb85184c3c0a31007bdef797e32c173fd1781e7f2118fe",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoBoardAccessibilityInstrumentedTest.kt"
+      },
+      {
+        "working_sha256": "20dfb20d9be9556815871c0c0e8b7c52456cf3d87b714d115e997d8deb05d424",
+        "sha256": "20dfb20d9be9556815871c0c0e8b7c52456cf3d87b714d115e997d8deb05d424",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/CompetitionMahjongTileAccessibilityInstrumentedTest.kt"
+      }
+    ],
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeLibraryTest",
+        "tests": 6
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoBoardGeometryTest",
+        "tests": 5
+      }
+    ]
+  },
+  "device": {
+    "original_font": "1.0",
+    "restored_font": "1.0",
+    "candidate": "go-mahjong-a11y1",
+    "runs": [
+      {
+        "images": [
+          {
+            "sha256": "6ba655e4c293722359f57d6410b548ddf2ad501c918788184714522c18153b44",
+            "path": "font-1.0\\06abfa25-b9cc-4def-967b-d36ed11efc4b\\blind-finished.png"
+          },
+          {
+            "sha256": "adf1ab7b4555261bff24e96e66c4e9a8ccfa49b34fbfb176b0e23b0633a12137",
+            "path": "font-1.0\\06abfa25-b9cc-4def-967b-d36ed11efc4b\\blind-live.png"
+          },
+          {
+            "sha256": "adf1ab7b4555261bff24e96e66c4e9a8ccfa49b34fbfb176b0e23b0633a12137",
+            "path": "font-1.0\\06abfa25-b9cc-4def-967b-d36ed11efc4b\\blind-restored.png"
+          },
+          {
+            "sha256": "b9c38b581760e742711fa6c16913dab58a05fa0743c5f7d3ad0470c770c32a45",
+            "path": "font-1.0\\370577ff-e4ab-44b2-ac52-098c3ac89f42\\formal-actions.png"
+          },
+          {
+            "sha256": "f5b9404023f14918b2e979cf4b2be04d10a5311085d9603614e3d9a4c96f462d",
+            "path": "font-1.0\\370577ff-e4ab-44b2-ac52-098c3ac89f42\\formal-history.png"
+          },
+          {
+            "sha256": "bc644703c81bd3f8043de2ecc58975a6f4bccdad192cb489d462894c618a8a46",
+            "path": "font-1.0\\370577ff-e4ab-44b2-ac52-098c3ac89f42\\formal-resumed.png"
+          },
+          {
+            "sha256": "d875525713250fa3e3dfcb64e1077875e0386a1fd14cbfdcebe1c9f65b8679e6",
+            "path": "font-1.0\\370577ff-e4ab-44b2-ac52-098c3ac89f42\\formal-statistics.png"
+          },
+          {
+            "sha256": "c3cfc76353ed67fcc7c7ec97c845f23a5768bd793977f7a8bef5d0074237a418",
+            "path": "font-1.0\\370577ff-e4ab-44b2-ac52-098c3ac89f42\\formal-table.png"
+          },
+          {
+            "sha256": "7b92075859dfe753d570ff2ef1ddb65706c9a39d1f60b73599fd53820d51182e",
+            "path": "font-1.0\\370577ff-e4ab-44b2-ac52-098c3ac89f42\\formal-unlocked.png"
+          }
+        ],
+        "font": "1.0",
+        "log_sha256": "1cfbf7c2972abca2614607d92eb974de710d7525eb0423256917b1510a352c0b",
+        "tests": 5
+      },
+      {
+        "images": [
+          {
+            "sha256": "4e02097666be5b28dc47325b595c0ee6b9eaf8e7aaafc0bf03c8f36b9de89b0f",
+            "path": "font-1.5\\89943ee1-f782-4a86-98df-47685a3f8ac3\\blind-finished.png"
+          },
+          {
+            "sha256": "1f1c1cc6cbe0eb299aa905628f3333381a0d32cc61d278fece90c2978c546f5d",
+            "path": "font-1.5\\89943ee1-f782-4a86-98df-47685a3f8ac3\\blind-live.png"
+          },
+          {
+            "sha256": "1f1c1cc6cbe0eb299aa905628f3333381a0d32cc61d278fece90c2978c546f5d",
+            "path": "font-1.5\\89943ee1-f782-4a86-98df-47685a3f8ac3\\blind-restored.png"
+          },
+          {
+            "sha256": "7e518e95a13777778abade3538c8c99e3f9b9ffc68be072de1503d3642266ad6",
+            "path": "font-1.5\\c8728396-fdb1-4a42-9522-0371c095b9ea\\formal-actions.png"
+          },
+          {
+            "sha256": "58e549057cc0fa4f79410943f2fabb4c8122b45df31ee46688a7f9ad787c68c8",
+            "path": "font-1.5\\c8728396-fdb1-4a42-9522-0371c095b9ea\\formal-history.png"
+          },
+          {
+            "sha256": "14b5f11d840f9c0fbc6fda34ad24f627bdd4793843ed73b378c6122ac5443917",
+            "path": "font-1.5\\c8728396-fdb1-4a42-9522-0371c095b9ea\\formal-resumed.png"
+          },
+          {
+            "sha256": "f7a8eebec542842f0785e4fe0589cd57155d282ce8abb764cfc3b5cde758c958",
+            "path": "font-1.5\\c8728396-fdb1-4a42-9522-0371c095b9ea\\formal-statistics.png"
+          },
+          {
+            "sha256": "b2fb65b09f16b203fc5e3a89073a39e27217728bcc9b71e282d21b25cfcb44ad",
+            "path": "font-1.5\\c8728396-fdb1-4a42-9522-0371c095b9ea\\formal-table.png"
+          },
+          {
+            "sha256": "36f1c24e3bb7aad268493e00b55100929ccb46e83e95c42ff2cc8d56c9d113e3",
+            "path": "font-1.5\\c8728396-fdb1-4a42-9522-0371c095b9ea\\formal-unlocked.png"
+          }
+        ],
+        "font": "1.5",
+        "log_sha256": "a34e62e3f25952fd3215bb69a3dbd83ffd1d188c80126d92502f03e5bff26ab8",
+        "tests": 2
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "8a887674e332e8511e532997b05d8c339c0ebfd16faba1f9eb710f71ac2fffaf",
+      "app/build/outputs/apk/debug/app-debug.apk": "4a3f6b4695c1e9e715f8293e5f0965b89f3d8c560374045a5d70c85226661e7a"
+    }
+  }
+}
