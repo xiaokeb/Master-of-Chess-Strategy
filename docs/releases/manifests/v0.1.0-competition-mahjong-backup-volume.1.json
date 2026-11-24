@@ -1,0 +1,77 @@
+{
+  "tag": "v0.1.0-competition-mahjong-backup-volume.1",
+  "distribution": "source-only",
+  "assets": [],
+  "tested_commit": "33f219773f5278bac8ae04a6f93e85b8b0d5f5fc",
+  "build": {
+    "candidate": "backup-line-reader1",
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.data.LocalDataBackupCodecTest",
+        "tests": 17
+      },
+      {
+        "name": "com.masterofchessstrategy.data.RegisteredBackupCodecTest",
+        "tests": 8
+      },
+      {
+        "name": "com.masterofchessstrategy.data.RegisteredGameBackupMixedCodecTest",
+        "tests": 1
+      },
+      {
+        "name": "com.masterofchessstrategy.games.competition_mahjong.data.CompetitionMahjongFormalBackupWireTest",
+        "tests": 16
+      }
+    ],
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "release_manifest": "processed",
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/data/LocalDataBackupCodec.kt",
+        "working_sha256": "7f78820f7b34aad73435bb7e0c943cf0633f6d210f511a2d7b11cb5401776832",
+        "sha256": "7f78820f7b34aad73435bb7e0c943cf0633f6d210f511a2d7b11cb5401776832"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/data/LocalDataBackupCodecTest.kt",
+        "working_sha256": "dd8658ca45aec38bebe83291a5fe81f74050fd07fc7c5ea9e0b3490152f95402",
+        "sha256": "dd8658ca45aec38bebe83291a5fe81f74050fd07fc7c5ea9e0b3490152f95402"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "059c2a83e5579df11303d55c196079d99fb07123baaf1c0374dee1e4b98c9c8a",
+      "app/build/outputs/apk/debug/app-debug.apk": "dd1a12a536bce967ea26f17356b3fbedd7b2a786ea76560e95f8b62373e665d0"
+    },
+    "baseline": "7156c07939b4331bffdf2a23a932e8e21f3480bd"
+  },
+  "device": {
+    "model": "Pixel_7_Pro",
+    "tests": 1,
+    "metrics": {
+      "volume_auto_series": 500,
+      "volume_auto_restore_ms": 321373,
+      "volume_auto_read_history_ms": 587,
+      "volume_auto_export_ms": 332269,
+      "volume_auto_write_favorite_ms": 4,
+      "volume_auto_generate_ms": 3225,
+      "volume_auto_export_bytes": 19189522,
+      "volume_auto_populate_ms": 2052
+    },
+    "folder": "device-647b077be2864d2c8d9fbf2d9650fa76",
+    "selector": "com.masterofchessstrategy.games.competition_mahjong.auto.storage.CompetitionMahjongAutoVolumeInstrumentedTest",
+    "products": {
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "059c2a83e5579df11303d55c196079d99fb07123baaf1c0374dee1e4b98c9c8a",
+      "app/build/outputs/apk/debug/app-debug.apk": "dd1a12a536bce967ea26f17356b3fbedd7b2a786ea76560e95f8b62373e665d0"
+    },
+    "candidate": "backup-line-reader1",
+    "abi": "x86_64",
+    "sample_log_sha256": "a81c1290395e2bb6a1f6d2b96daf4cc553d1219422ab927b69fbd24be6e29011",
+    "log_sha256": "62ed16d620b95f4338d3ac39cfe6b5fa7ab7c54a7c75cbdd9d4fe53dff69f66c"
+  },
+  "memory": {
+    "sample_period_seconds": 15,
+    "samples": 43,
+    "max_pss_kib": 227662.0,
+    "max_rss_kib": 332908.0
+  }
+}
