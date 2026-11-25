@@ -61,10 +61,7 @@ def write_table(path, fields, rows):
         writer.writerows(rows)
 
 
-def render_board(directory, slot, rows, output):
-    groups = [row for row in rows if int(row["slot"]) == slot]
-    if not groups:
-        raise ValueError(f"No inspected board for slot {slot}")
+def verified_board(directory, slot, groups):
     source = directory / f"match-{slot:03}-board.txt"
     lines = read_verified(source, groups[0]["board_sha256"]).decode("utf-8-sig").splitlines()
     size = len(lines) - 1
@@ -78,10 +75,19 @@ def render_board(directory, slot, rows, output):
     ):
         raise ValueError(f"Invalid board: {source}")
     anchors = {(int(group["x"]), int(group["y"])): group for group in groups}
-    labels = {"pass_alive": "A", "unresolved": "?", "inside_opponent_pass_alive": "R"}
     if any(y >= size or x >= size or board[y][x] != row["color"]
            for (x, y), row in anchors.items()):
         raise ValueError(f"Group anchor does not match board: {source}")
+    return board, anchors
+
+
+def render_board(directory, slot, rows, output):
+    groups = [row for row in rows if int(row["slot"]) == slot]
+    if not groups:
+        raise ValueError(f"No inspected board for slot {slot}")
+    board, anchors = verified_board(directory, slot, groups)
+    size = len(board)
+    labels = {"pass_alive": "A", "unresolved": "?", "inside_opponent_pass_alive": "R"}
     extent = 36 * (size - 1)
     margin = 40
     edge = margin + extent
@@ -119,40 +125,165 @@ def render_board(directory, slot, rows, output):
         stream.write("\n".join(svg) + "\n")
 
 
-def decisions(rows, worksheet):
-    pending = set()
-    results = {}
+GROUP_KEY = ("slot", "x", "y")
+
+
+def read_worksheet(worksheet):
     reviewed = {}
-    keys = ("slot", "x", "y")
     with worksheet.open(encoding="utf-8-sig", newline="") as stream:
         edited = csv.DictReader(stream, delimiter="\t")
         if tuple(edited.fieldnames or ()) != FIELDS:
             raise ValueError("Invalid worksheet header")
         for actual in edited:
-            key = tuple(actual[field] for field in keys)
+            key = tuple(actual[field] for field in GROUP_KEY)
             if None in actual or key in reviewed:
                 raise ValueError(f"Invalid or duplicate group: {key}")
             reviewed[key] = actual
+    return reviewed
+
+
+def verify_worksheet_rows(rows, reviewed):
+    checked = []
     for expected in rows:
-        key = tuple(expected[field] for field in keys)
+        key = tuple(expected[field] for field in GROUP_KEY)
         actual = reviewed.pop(key, None)
         if actual is None or any(expected[field] != actual[field] for field in FIELDS[:-1]):
             raise ValueError(f"Evidence changed for group {key}")
-        slot = expected["slot"]
         selected = actual["decision"]
         if selected not in ("", "disputed", "alive", "dead"):
-            raise ValueError(f"Invalid decision for slot {slot}")
+            raise ValueError(f"Invalid decision for slot {expected['slot']}")
         if selected == "dead" and expected["status"] == "pass_alive":
-            raise ValueError(f"Dead decision conflicts with pass-alive evidence in slot {slot}")
-        groups = results.setdefault(slot, [])
-        if selected == "dead":
-            groups.append(f"{expected['x']},{expected['y']}")
-        if selected in ("", "disputed"):
-            pending.add(slot)
+            raise ValueError(f"Dead decision conflicts with pass-alive evidence in slot {expected['slot']}")
+        checked.append(actual)
     if reviewed:
         raise ValueError("Worksheet contains unknown groups")
+    return checked
+
+
+def checked_rows(rows, worksheet):
+    return verify_worksheet_rows(rows, read_worksheet(worksheet))
+
+
+def select_slots(rows, worksheet, slots):
+    selected_slots = set(map(str, slots))
+    checked = checked_rows(rows, worksheet)
+    selected = [row for row in checked if row["slot"] in selected_slots]
+    if {row["slot"] for row in selected} != selected_slots:
+        raise ValueError("Selection contains an uninspected slot")
+    return selected
+
+
+def merge_reviews(rows, worksheet, subset):
+    original = checked_rows(rows, worksheet)
+    reviewed = read_worksheet(subset)
+    if not reviewed:
+        raise ValueError("Review subset has no groups")
+    slots = {key[0] for key in reviewed}
+    verified = verify_worksheet_rows([row for row in rows if row["slot"] in slots], reviewed)
+    updates = {tuple(row[field] for field in GROUP_KEY): row["decision"] for row in verified}
+    for row in original:
+        selected = updates.get(tuple(row[field] for field in GROUP_KEY))
+        if not selected:
+            continue
+        if row["decision"] in ("alive", "dead") and selected != row["decision"]:
+            raise ValueError(f"Review conflicts with an existing decision in slot {row['slot']}")
+        row["decision"] = selected
+    return original
+
+
+def decisions(rows, worksheet):
+    pending = set()
+    results = {}
+    for row in checked_rows(rows, worksheet):
+        slot = row["slot"]
+        selected = row["decision"]
+        groups = results.setdefault(slot, [])
+        if selected == "dead":
+            groups.append(f"{row['x']},{row['y']}")
+        if selected in ("", "disputed"):
+            pending.add(slot)
     return [{"slot": slot, "dead_groups": ";".join(groups) or "-"}
             for slot, groups in results.items() if slot not in pending]
+
+
+def review_queue(rows, worksheet):
+    slots = {}
+    for row in checked_rows(rows, worksheet):
+        slot = row["slot"]
+        work = slots.setdefault(slot, {
+            "slot": slot, "unreviewed": 0, "disputed": 0, "priority_points": [],
+        })
+        if row["decision"] == "disputed":
+            work["disputed"] += 1
+        elif row["decision"] == "":
+            work["unreviewed"] += 1
+            if row["status"] == "inside_opponent_pass_alive":
+                work["priority_points"].append(f"{row['x']},{row['y']}")
+    pending = [work for work in slots.values() if work["unreviewed"] or work["disputed"]]
+    return [
+        {**work, "priority_points": ";".join(work["priority_points"])}
+        for work in sorted(pending, key=lambda work: (
+            work["disputed"] > 0, work["unreviewed"], int(work["slot"]),
+        ))
+    ]
+
+
+def describe_groups(directory, rows, worksheet, slots):
+    descriptions = []
+    selected = select_slots(rows, worksheet, slots)
+
+    def coordinates(points):
+        return ";".join(f"{x},{y}" for x, y in sorted(points, key=lambda point: (point[1], point[0])))
+
+    for slot in sorted(set(slots)):
+        groups = [row for row in selected if int(row["slot"]) == slot]
+        board, anchors = verified_board(directory, slot, groups)
+        size = len(board)
+        seen = set()
+        liberties_by_group = {}
+        stones_by_group = {}
+
+        def neighbours(x, y):
+            return ((nx, ny) for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1))
+                    if 0 <= nx < size and 0 <= ny < size)
+
+        for anchor, row in anchors.items():
+            group = {anchor}
+            liberties = set()
+            pending = [anchor]
+            while pending:
+                for x, y in neighbours(*pending.pop()):
+                    cell = board[y][x]
+                    point = (x, y)
+                    if cell == ".":
+                        liberties.add(point)
+                    elif cell == row["color"] and point not in group:
+                        group.add(point)
+                        pending.append(point)
+            if seen & group or len(group) != int(row["stones"]) or len(liberties) != int(row["liberties"]):
+                raise ValueError(f"Group geometry disagrees with the native inventory in slot {slot}: {anchor}")
+            seen.update(group)
+            stones_by_group[anchor] = group
+            liberties_by_group[anchor] = liberties
+        if len(seen) != sum(cell != "." for line in board for cell in line):
+            raise ValueError(f"Incomplete group inventory for slot {slot}")
+
+        for anchor, row in anchors.items():
+            if row["decision"] in ("alive", "dead"):
+                continue
+            liberties = liberties_by_group[anchor]
+            nearby = [
+                f"{ally[0]},{ally[1]}:{coordinates(liberties & liberties_by_group[ally])}"
+                for ally, other in anchors.items()
+                if ally != anchor and other["color"] == row["color"] and other["status"] == "pass_alive"
+                and liberties & liberties_by_group[ally]
+            ]
+            descriptions.append({
+                "slot": slot, "anchor": coordinates([anchor]), "color": row["color"],
+                "decision": row["decision"], "stones": coordinates(stones_by_group[anchor]),
+                "liberties": coordinates(liberties), "shared_liberties_with_pass_alive": " | ".join(nearby),
+            })
+    return descriptions
 
 
 def main():
@@ -165,6 +296,21 @@ def main():
     export = actions.add_parser("export")
     export.add_argument("worksheet", type=Path)
     export.add_argument("output", type=Path)
+    queue = actions.add_parser("queue", help="list pending slots and priority anchor points from a verified worksheet")
+    queue.add_argument("worksheet", type=Path)
+    queue.add_argument("output", type=Path)
+    select = actions.add_parser("select", help="extract full groups of selected slots from a verified worksheet")
+    select.add_argument("worksheet", type=Path)
+    select.add_argument("output", type=Path)
+    select.add_argument("slots", type=int, nargs="+")
+    merge = actions.add_parser("merge", help="merge a complete, verified slot subset into a new worksheet")
+    merge.add_argument("worksheet", type=Path)
+    merge.add_argument("subset", type=Path)
+    merge.add_argument("output", type=Path)
+    describe = actions.add_parser("describe", help="recompute board geometry for pending groups in selected slots")
+    describe.add_argument("worksheet", type=Path)
+    describe.add_argument("output", type=Path)
+    describe.add_argument("slots", type=int, nargs="+")
     render = actions.add_parser("render", help="draw a verified terminal board and group anchors")
     render.add_argument("slot", type=int)
     render.add_argument("output", type=Path)
@@ -179,6 +325,23 @@ def main():
             raise ValueError("No fully reviewed slots")
         write_table(args.output, ("slot", "dead_groups"), accepted)
         print(f"Exported {len(accepted)} fully reviewed slots")
+    elif args.action == "queue":
+        pending = review_queue(rows, args.worksheet)
+        write_table(args.output, ("slot", "unreviewed", "disputed", "priority_points"), pending)
+        print(f"Listed {len(pending)} pending slots")
+    elif args.action == "select":
+        selected = select_slots(rows, args.worksheet, args.slots)
+        write_table(args.output, FIELDS, selected)
+        print(f"Selected {len(selected)} groups for {len(set(args.slots))} slots")
+    elif args.action == "merge":
+        merged = merge_reviews(rows, args.worksheet, args.subset)
+        write_table(args.output, FIELDS, merged)
+        print(f"Wrote {len(merged)} groups to the merged worksheet")
+    elif args.action == "describe":
+        descriptions = describe_groups(args.inspection, rows, args.worksheet, args.slots)
+        write_table(args.output, ("slot", "anchor", "color", "decision", "stones", "liberties",
+                                  "shared_liberties_with_pass_alive"), descriptions)
+        print(f"Described {len(descriptions)} pending groups")
     else:
         render_board(args.inspection, args.slot, rows, args.output)
         print(f"Rendered terminal board for slot {args.slot}")

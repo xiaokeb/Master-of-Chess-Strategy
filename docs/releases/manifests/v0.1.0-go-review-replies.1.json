@@ -1,0 +1,50 @@
+{
+  "tag": "v0.1.0-go-review-replies.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 5,
+  "build": {
+    "evidence_base": "386c90437646ced5db8cdd70460cdc1ddc4cc00e",
+    "ndk": "30.0.16138531",
+    "abis": [
+      "x86_64",
+      "arm64-v8a"
+    ],
+    "python": "MasterofChessStrategy Conda",
+    "inputs": [
+      {
+        "path": "tools/android/go/go-strength-score-review.cpp",
+        "sha256": "a5a28b6c1ce3c3a6d5ce4c9bc1050071fb6dc9f62b3e3984e9e2a22676d4ca23"
+      },
+      {
+        "path": "tools/android/go/review-strength-groups.py",
+        "sha256": "785f025233cbc0d9dc71fdc2ec0b61729a64c70cfa6cc9d0585ab6eefd687a8a"
+      },
+      {
+        "path": "docs/games/go/2026-11-24-score-review-queue.md",
+        "sha256": "9878e49183635e7c66a241b77888d7df3524dc9c085fba73f6474080977dbc09"
+      }
+    ]
+  },
+  "evidence": {
+    "avd": "Pixel_7_Pro",
+    "reviewed_abi": "x86_64",
+    "source_slots": 140,
+    "initial_pending_groups": 1858,
+    "newly_verified_groups": 842,
+    "verified_slots": [
+      8,
+      19,
+      26,
+      51,
+      106
+    ],
+    "remaining_slots": 135,
+    "remaining_groups": 1016,
+    "initial_work_sheet_sha256": "7fe774270b398ac56771fca0e1fefb2babe4a6058b88b37ad5ea9d1d69bbb048",
+    "final_work_sheet_sha256": "8439ab635fab4ee6b744ef755399b44c6c3c040f540314bbd99f81e1696a6890",
+    "adjudication_sha256": "f7bfe3b0f1832344a4e0eba112c2594fa72af1d2eeb536f7717c50e41f33aca4",
+    "review_x86_64_sha256": "81cc1f4f7f4a50cef256cf5f03c292b510ef969904dd41e52f8d90410fbcaabd",
+    "review_arm64_sha256": "c61339fbd60fcab64a667c1bb6d66cf5354c6f5e2c44f8a44bc293c5f3c5e1f1"
+  }
+}

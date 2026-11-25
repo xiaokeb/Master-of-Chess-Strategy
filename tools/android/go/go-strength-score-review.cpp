@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <system_error>
 #include <vector>
@@ -64,11 +65,10 @@ void print_score(std::string_view label, const GoScore& score, std::size_t dead)
               << score.white_area_quarters << ',' << score.black_komi_quarters << ',' << dead << '\n';
 }
 
-void print_group_review(const GoEngine& engine) {
+Board analysis_board(const GoEngine& engine, std::vector<Move>& setup) {
     const auto size = engine.board_size();
     Board::initHash();
     Board board(size, size);
-    std::vector<Move> setup;
     for (int y = 0; y < size; ++y) {
         for (int x = 0; x < size; ++x) {
             const auto stone = engine.stone_at(x, y).value();
@@ -78,6 +78,13 @@ void print_group_review(const GoEngine& engine) {
         }
     }
     if (!board.setStonesFailIfNoLibs(setup)) throw std::logic_error("invalid terminal board");
+    return board;
+}
+
+void print_group_review(const GoEngine& engine) {
+    const auto size = engine.board_size();
+    std::vector<Move> setup;
+    const auto board = analysis_board(engine, setup);
     Color area[Board::MAX_ARR_SIZE];
     // Freeze pass-alive evidence and leave other groups for review.
     board.calculateArea(area, false, false, false, false);
@@ -104,13 +111,113 @@ void print_group_review(const GoEngine& engine) {
                   << board.getNumLiberties(stone.loc) << ',' << status << '\n';
     }
 }
+
+bool anchors_present(const GoEngine& engine, const std::vector<GoPoint>& anchors, GoStone defender) {
+    return std::all_of(anchors.begin(), anchors.end(), [&](GoPoint anchor) {
+        return engine.stone_at(anchor.x, anchor.y) == defender;
+    });
+}
+
+bool pass_alive(const GoEngine& engine, const std::vector<GoPoint>& anchors, GoStone defender) {
+    if (!anchors_present(engine, anchors, defender)) return false;
+    std::vector<Move> setup;
+    const auto board = analysis_board(engine, setup);
+    Color area[Board::MAX_ARR_SIZE];
+    board.calculateArea(area, false, false, false, false);
+    const auto color = defender == GoStone::black ? C_BLACK : C_WHITE;
+    for (const auto anchor : anchors) {
+        const auto start = Location::getLoc(anchor.x, anchor.y, engine.board_size());
+        auto loc = start;
+        do {
+            if (area[loc] != color) return false;
+            loc = board.next_in_chain[loc];
+        } while (loc != start);
+    }
+    return true;
+}
+
+std::string move_label(const EngineAction& action) {
+    if (action.kind == go_pass_action_kind) return "pass";
+    return std::to_string(action.arguments[0]) + ":" + std::to_string(action.arguments[1]);
+}
+
+void probe_first_replies(GoEngine& engine, const std::vector<GoPoint>& anchors) {
+    const auto defender = engine.stone_at(anchors.front().x, anchors.front().y);
+    if (!defender || *defender == GoStone::empty || !anchors_present(engine, anchors, *defender)) {
+        throw std::invalid_argument("expected same-color group anchors");
+    }
+    const auto claimant = *defender == GoStone::black ? 1 : 0;
+    if (!engine.apply(make_go_resume_play(claimant)).accepted) {
+        throw std::runtime_error("cannot resume play from the original agreement");
+    }
+    const auto attacks = engine.legal_actions();
+    std::size_t covered = 0;
+    std::cout << "attack,reply\n";
+    for (const auto& attack : attacks) {
+        // A double pass advances the proposal revision, including after undo.
+        auto branch = engine;
+        if (!branch.apply(attack).accepted) throw std::logic_error("listed first move was rejected");
+        std::string witness = "-";
+        // Once the attacker captures an original group, a new stone on its anchor is unrelated.
+        if (anchors_present(branch, anchors, *defender)) {
+            for (const auto& reply : branch.legal_actions()) {
+                if (!branch.apply(reply).accepted) throw std::logic_error("listed reply was rejected");
+                if (pass_alive(branch, anchors, *defender)) {
+                    const auto record = branch.serialize();
+                    GoEngine replay(branch.board_size());
+                    if (!replay.restore(record).restored || replay.serialize() != record ||
+                        !pass_alive(replay, anchors, *defender)) {
+                        throw std::runtime_error("cannot replay the pass-alive reply");
+                    }
+                    witness = move_label(reply);
+                }
+                if (!branch.undo()) throw std::logic_error("cannot undo the reply");
+                if (witness != "-") break;
+            }
+        }
+        if (witness != "-") ++covered;
+        std::cout << move_label(attack) << ',' << witness << '\n';
+    }
+    const bool proven = !attacks.empty() && covered == attacks.size();
+    std::cout << "coverage," << covered << ',' << attacks.size() << ',' << (proven ? "alive" : "unknown") << '\n';
+}
+
+void probe_resumption(GoEngine& engine, int argc, char** argv) {
+    if (argc < 6) throw std::invalid_argument("--resume-probe requires a side and at least one move");
+    const std::string_view side = argv[4];
+    if (side != "B" && side != "W") throw std::invalid_argument("expected B or W to resume");
+    if (!engine.apply(make_go_resume_play(side == "B" ? 0 : 1)).accepted) {
+        throw std::runtime_error("cannot resume play from the original agreement");
+    }
+    for (int i = 5; i < argc; ++i) {
+        const std::string_view move = argv[i];
+        const auto player = engine.current_player();
+        const auto action = [&] {
+            if (move == "pass") return make_go_pass();
+            const auto p = point(move);
+            return make_go_place(p.x, p.y);
+        }();
+        if (!engine.apply(action).accepted) {
+            throw std::invalid_argument("illegal continuation at step " + std::to_string(i - 4));
+        }
+        std::cout << "probe," << i - 4 << ',' << (player == 0 ? 'B' : 'W') << ',' << move << '\n';
+    }
+    const auto record = engine.serialize();
+    GoEngine replay(engine.board_size());
+    if (!replay.restore(record).restored || replay.serialize() != record) {
+        throw std::runtime_error("cannot replay the continuation");
+    }
+    print_board(replay);
+    print_group_review(replay);
+}
 } // namespace
 
 int main(int argc, char** argv) {
     try {
         if (argc < 3) {
             throw std::invalid_argument(
-                "use: go-strength-score-review size input.mocg [--groups | output.mocg [x,y ...]]");
+                "use: go-strength-score-review size input.mocg "
+                "[--groups | --resume-probe B|W x,y|pass [...] | --first-replies x,y [...] | output.mocg [x,y ...]]");
         }
         const auto size = number(argv[1]);
         if (size != 9 && size != 13 && size != 19) throw std::invalid_argument("unsupported board size");
@@ -138,9 +245,23 @@ int main(int argc, char** argv) {
             print_group_review(engine);
             return 0;
         }
-        if (std::filesystem::exists(argv[3])) throw std::invalid_argument("review output already exists");
+        const std::string_view mode = argv[3];
+        if (mode != "--resume-probe" && mode != "--first-replies" && std::filesystem::exists(argv[3])) {
+            throw std::invalid_argument("review output already exists");
+        }
         if (!engine.undo() || !engine.undo() || engine.phase() != GoPhase::scoring) {
             throw std::runtime_error("cannot reopen the raw agreement");
+        }
+        if (mode == "--resume-probe") {
+            probe_resumption(engine, argc, argv);
+            return 0;
+        }
+        if (mode == "--first-replies") {
+            if (argc < 5) throw std::invalid_argument("--first-replies requires one or more group anchors");
+            std::vector<GoPoint> anchors;
+            for (int i = 4; i < argc; ++i) anchors.push_back(point(argv[i]));
+            probe_first_replies(engine, anchors);
+            return 0;
         }
         for (int i = 4; i < argc; ++i) {
             const auto p = point(argv[i]);
