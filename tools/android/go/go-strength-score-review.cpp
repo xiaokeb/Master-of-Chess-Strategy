@@ -262,39 +262,51 @@ void probe_gap(GoEngine& engine, const std::vector<GoPoint>& anchors, std::strin
     std::cout << "unknown," << move_label(attack) << ",-," << leaves << '\n';
 }
 
-void probe_atari(GoEngine& engine, GoPoint anchor) {
-    const auto defender = engine.stone_at(anchor.x, anchor.y);
+void probe_atari(GoEngine& engine, const std::vector<GoPoint>& anchors) {
+    const auto defender = engine.stone_at(anchors.front().x, anchors.front().y);
     if (!defender || *defender == GoStone::empty) throw std::invalid_argument("expected a group anchor");
     const auto attacker = *defender == GoStone::black ? GoStone::white : GoStone::black;
     const auto color = attacker == GoStone::black ? C_BLACK : C_WHITE;
     const auto size = engine.board_size();
     std::vector<Move> setup;
     const auto original = analysis_board(engine, setup);
-    const auto loc = Location::getLoc(anchor.x, anchor.y, size);
-    if (original.getNumLiberties(loc) != 1) {
-        std::cout << "result,unknown,liberty-count\n";
-        return;
-    }
     Color area[Board::MAX_ARR_SIZE];
     original.calculateArea(area, false, false, false, false);
     std::vector<GoPoint> group;
-    auto stone = loc;
-    do {
-        if (area[stone] != color) {
-            std::cout << "result,unknown,original-territory\n";
+    std::vector<Loc> heads;
+    auto liberty = Board::NULL_LOC;
+    for (const auto anchor : anchors) {
+        if (engine.stone_at(anchor.x, anchor.y) != defender) {
+            throw std::invalid_argument("expected group anchors of the same color");
+        }
+        const auto loc = Location::getLoc(anchor.x, anchor.y, size);
+        const auto head = original.chain_head[loc];
+        if (std::find(heads.begin(), heads.end(), head) != heads.end()) {
+            throw std::invalid_argument("repeated group anchor");
+        }
+        heads.push_back(head);
+        if (original.getNumLiberties(loc) != 1) {
+            std::cout << "result,unknown,liberty-count\n";
             return;
         }
-        group.push_back({Location::getX(stone, size), Location::getY(stone, size)});
-        stone = original.next_in_chain[stone];
-    } while (stone != loc);
-
-    auto liberty = Board::NULL_LOC;
-    for (const auto member : group) {
-        const auto point = Location::getLoc(member.x, member.y, size);
-        for (int offset = 0; offset < 4; ++offset) {
-            const auto neighbor = point + original.adj_offsets[offset];
-            if (original.colors[neighbor] == C_EMPTY) liberty = neighbor;
-        }
+        auto stone = loc;
+        do {
+            if (area[stone] != color) {
+                std::cout << "result,unknown,original-territory\n";
+                return;
+            }
+            group.push_back({Location::getX(stone, size), Location::getY(stone, size)});
+            for (int offset = 0; offset < 4; ++offset) {
+                const auto neighbor = stone + original.adj_offsets[offset];
+                if (original.colors[neighbor] != C_EMPTY) continue;
+                if (liberty != Board::NULL_LOC && liberty != neighbor) {
+                    std::cout << "result,unknown,separate-liberties\n";
+                    return;
+                }
+                liberty = neighbor;
+            }
+            stone = original.next_in_chain[stone];
+        } while (stone != loc);
     }
     if (liberty == Board::NULL_LOC) throw std::logic_error("missing original liberty");
     const GoPoint capture{Location::getX(liberty, size), Location::getY(liberty, size)};
@@ -379,7 +391,7 @@ int main(int argc, char** argv) {
             throw std::invalid_argument(
                 "use: go-strength-score-review size input.mocg "
                 "[--groups | --resume-probe B|W x,y|pass [...] | --first-replies x,y [...] "
-                "| --joint-gap attack x,y [...] | --atari-proof x,y | output.mocg [x,y ...]]");
+                "| --joint-gap attack x,y [...] | --atari-proof x,y [x,y ...] | output.mocg [x,y ...]]");
         }
         const auto size = number(argv[1]);
         if (size != 9 && size != 13 && size != 19) throw std::invalid_argument("unsupported board size");
@@ -440,8 +452,10 @@ int main(int argc, char** argv) {
             return 0;
         }
         if (mode == "--atari-proof") {
-            if (argc != 5) throw std::invalid_argument("--atari-proof requires one group anchor");
-            probe_atari(engine, point(argv[4]));
+            if (argc < 5) throw std::invalid_argument("--atari-proof requires a group anchor");
+            std::vector<GoPoint> anchors;
+            for (int index = 4; index < argc; ++index) anchors.push_back(point(argv[index]));
+            probe_atari(engine, anchors);
             return 0;
         }
         for (int i = 4; i < argc; ++i) {

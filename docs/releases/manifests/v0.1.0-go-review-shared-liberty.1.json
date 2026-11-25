@@ -1,0 +1,13 @@
+{
+  "tag": "v0.1.0-go-review-shared-liberty.1",
+  "baseline": "f517b6d",
+  "source_sha256": "3dfad0761f02793cf803e696c396925d5c1d9b52a6db260413987aac1a3a5c45",
+  "probe_sha256": {
+    "arm64-v8a": "8470c3c11758f792c5b53a2bf5d9c57d3eaf339fc9a8b5d625117467cfff575c",
+    "x86_64": "34ea8d373cac12f7e43816d14f25057ff28d29e11fa16c7f943acc54da624779"
+  },
+  "official_receipt_sha256": "2aa8c46087b5e673c75079f8672c3d6779648cf3f86b2280467f55769a25ad2c",
+  "official_slots_added": [98],
+  "official_slots_total": 14,
+  "distribution": "source-only"
+}
