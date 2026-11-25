@@ -1,0 +1,87 @@
+{
+  "tag": "v0.1.0-lanzhou-mahjong-difficulty.1",
+  "baseline": "73b68b31f6e43662ea4fabf0ab194e08cd8bf697",
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongEntryScreen.kt",
+      "sha256": "6d4272ee77b1d9a63a0a4219227d3d34481d37b2af3ef992e29e17c301f7f0d6"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongEntryRepository.kt",
+      "sha256": "d87267dc14d21b4fc4d6259ba3ba45a8a97187589498f948daf76bd5bc24c72c"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/RoomLanzhouMahjongEntryRepository.kt",
+      "sha256": "c292f06d3a093b0b3162359a8166d8bd3bd25c292a7a7a969d7513fdaba663d6"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongProductionHostStorage.kt",
+      "sha256": "be1e22b97fbdaff22c76cb025b6ea191fcb3d1dbb9de6048f647c57437dcc020"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongSettlementDao.kt",
+      "sha256": "eaf7f44ea47987c1a321b4452648509596289d5e635552feb927bfbe0e329807"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/LanzhouMahjongNavigationRoutes.kt",
+      "sha256": "d27680f76d23910b0656cf7f384acadf1848164d29a3d5f769be287484071e1c"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongEntryScreenTest.kt",
+      "sha256": "538dbb0ecd70b47a3a2e0e13679e1b46fe6b483c7be39b4328a1a0ab3180bc75"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongEntryRoomInstrumentedTest.kt",
+      "sha256": "4555739c78f0c6dd3838987e54e8b3d8aca25bfaf71ca358c960d7c3eb1a9c76"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/MasterOfChessStrategyApp.kt",
+      "sha256": "3948af0058407d165ec493503ff63d06af875c9cdc1f778a10d46d0fc6b5395b",
+      "shared_hunk": "onNew = { navController.navigate(\"lanzhou-mahjong/game/new-${it.code}\") },"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongHostEntryAdmissionTest.kt",
+      "sha256": "35a84e0cc3e983bcbaefbebd56e814cae4ebfcd28a2440a9b1624a4d340e5a77"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameHost.kt",
+      "sha256": "370ad7f7457c45e2971a99745753d55cbb86dfd704db526244c2b5e80d3ed58e"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/RoomLanzhouMahjongAdmittedSessionStore.kt",
+      "sha256": "93542d5504922ae4a0bf51065472aed5c18f75a65b86bb09f1766cfe5a45ba23"
+    }
+  ],
+  "verification": {
+    "emulator": "Pixel_7_Pro",
+    "jvm_tests": 54,
+    "emulator_room_tests": 8,
+    "emulator_compose_tests": 8,
+    "verified_winning_receipts": 45,
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "ndk_abis": [
+      "x86_64",
+      "arm64-v8a"
+    ],
+    "debug_apk_sha256": "4c45e006c0e9ccf6609690740a3f76f0a02216cc69d2c57fc80bebd91854b3bc",
+    "test_apk_sha256": "6c42beb92550e5a45e2c496984dfa184888b2655ae35ec6c9ecfb5fbcd0cb5e7",
+    "room_log_sha256": "01bc648f1518baca4fb7d6666d32446bb180f88e7912a766244922423d0d0f65",
+    "compose_log_sha256": "d45a5a4c435eccf36d232392e5dc7f143b8577ca524bbf4ee4cea747b312eebc",
+    "screen_hashes": [
+      {
+        "name": "large-text.png",
+        "sha256": "031e5f13677c889ccc90d997709aa6333362eff8dd0532031ddbbd036ad93b97"
+      },
+      {
+        "name": "locked.png",
+        "sha256": "e4c94b40958f6f21a7ebfc438345ce62090c5a4399ae1bbf1de59c2e7a6183e3"
+      },
+      {
+        "name": "unlocked.png",
+        "sha256": "e4760630d4311f0b92879209c83b4d0e226ee3678cf4759e13203e2c2dedfa92"
+      }
+    ]
+  },
+  "distribution": "source-only"
+}

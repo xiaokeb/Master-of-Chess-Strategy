@@ -36,6 +36,12 @@ internal data class LanzhouMahjongTerminalReceiptRow(
     val seat3Score: Long,
 )
 
+internal data class LanzhouMahjongWinSource(
+    val sessionId: String,
+    val initialRecord: ByteArray,
+    val winnerSeat: Int,
+)
+
 @Dao
 internal interface LanzhouMahjongSettlementDao {
     @Query("SELECT * FROM lanzhou_mahjong_formal_creations WHERE sessionId = :sessionId")
@@ -49,6 +55,13 @@ internal interface LanzhouMahjongSettlementDao {
 
     @Query("SELECT * FROM lanzhou_mahjong_terminal_receipts ORDER BY sessionId")
     suspend fun readReceipts(): List<LanzhouMahjongTerminalReceiptRow>
+
+    @Query(
+        "SELECT c.sessionId, c.initialRecord, r.winnerSeat FROM lanzhou_mahjong_formal_creations c " +
+            "JOIN lanzhou_mahjong_terminal_receipts r ON r.sessionId = c.sessionId " +
+            "WHERE r.outcome = 'WIN' AND r.winnerSeat BETWEEN 0 AND 3",
+    )
+    suspend fun qualifiedWinSources(): List<LanzhouMahjongWinSource>
 
     @Query("DELETE FROM lanzhou_mahjong_terminal_receipts")
     suspend fun deleteReceipts()

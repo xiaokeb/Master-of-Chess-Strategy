@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -17,13 +18,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.masterofchessstrategy.engine.Difficulty
+import com.masterofchessstrategy.games.lanzhou_mahjong.data.lanzhouMahjongWinRequirements
 
 @Composable
 internal fun LanzhouMahjongEntryScreen(
     state: LanzhouMahjongEntryState,
     onLearning: () -> Unit,
     onResume: () -> Unit,
-    onNewEasy: () -> Unit,
+    onNew: (Difficulty) -> Unit,
     onBack: () -> Unit,
     onRefresh: () -> Unit,
 ) {
@@ -49,17 +51,31 @@ internal fun LanzhouMahjongEntryScreen(
                         Button(onResume, modifier = Modifier.fillMaxWidth().testTag("lanzhou_mahjong_entry_resume")) {
                             Text("继续${difficultyName(active.record.difficulty)}对局")
                         }
-                    } else if (facts.tutorialCompleted) {
-                        Button(onNewEasy, modifier = Modifier.fillMaxWidth().testTag("lanzhou_mahjong_entry_new_easy")) {
-                            Text("创建简单新局")
+                    }
+                    if (facts.tutorialCompleted && (active == null || facts.activeCompleted)) {
+                        for (difficulty in Difficulty.entries.filter { it != active?.record?.difficulty }) {
+                            val eligible = facts.canStart(difficulty)
+                            val requirement = lanzhouMahjongWinRequirements[difficulty]
+                            Button(
+                                onClick = { onNew(difficulty) },
+                                enabled = eligible,
+                                modifier = Modifier.fillMaxWidth()
+                                    .testTag("lanzhou_mahjong_entry_new_${difficulty.name.lowercase()}"),
+                                colors = ButtonDefaults.buttonColors(
+                                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
+                            ) {
+                                if (eligible || requirement == null) {
+                                    Text("创建${difficultyName(difficulty)}新局")
+                                } else {
+                                    val wins = facts.trustedWins[requirement.previous] ?: 0
+                                    Text("${difficultyName(difficulty)} · ${difficultyName(requirement.previous)}可信胜场 $wins/${requirement.minimum}")
+                                }
+                            }
                         }
-                    } else {
+                    } else if (active == null) {
                         Text("完成十课教程后解锁简单新局")
                     }
-                    Text("后续难度", style = MaterialTheme.typography.titleMedium)
-                    Text("中等：简单累计胜10场\n困难：中等累计胜15场\n大师：困难累计胜20场")
-                    Text("可信胜场来源尚未接入，中等、困难与大师暂未开放",
-                        modifier = Modifier.testTag("lanzhou_mahjong_entry_trusted_wins_pending"))
                 }
             }
             if (!state.retired) {

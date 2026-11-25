@@ -103,31 +103,35 @@ internal class LanzhouMahjongGameHost(
             val saved = storage.store.load()
             when (openMode) {
                 LanzhouMahjongOpenMode.NEW -> {
-                    if (saved != null) throw LanzhouMahjongEntryDeniedException(LanzhouMahjongEntryDenial.ACTIVE_GAME_CHANGED)
-                    storage.store.authorizeNew(launchConfig.difficulty, null)
+                    if (saved != null && (saved.record.difficulty == launchConfig.difficulty ||
+                            !storage.store.canReplaceCompleted(saved))) {
+                        throw LanzhouMahjongEntryDeniedException(LanzhouMahjongEntryDenial.ACTIVE_GAME_CHANGED)
+                    }
+                    storage.store.authorizeNew(launchConfig.difficulty, saved)
                 }
                 LanzhouMahjongOpenMode.RESUME -> if (saved == null) {
                     throw LanzhouMahjongEntryDeniedException(LanzhouMahjongEntryDenial.ACTIVE_GAME_CHANGED)
                 }
             }
             acknowledged = saved
+            val resumed = saved.takeIf { openMode == LanzhouMahjongOpenMode.RESUME }
             if (retiring || leaving) return@operate
             checkCurrentOwner()
-            config = saved?.record?.let {
+            config = resumed?.record?.let {
                 LanzhouMahjongLaunchConfig(it.difficulty, it.seed, it.viewerSeat, it.dealerSeat, it.baseScore)
             } ?: launchConfig
-            nextChoiceSeed = saved?.record?.nextChoiceSeed ?: config.seed
+            nextChoiceSeed = resumed?.record?.nextChoiceSeed ?: config.seed
             assistance = LanzhouMahjongAssistanceManager(config.difficulty,
-                saved?.record?.assistance ?: LanzhouMahjongAssistanceUsage(config.difficulty),
-                saved?.record?.decisions ?: emptyList(), { nextChoiceSeed }, { nextChoiceSeed = it })
+                resumed?.record?.assistance ?: LanzhouMahjongAssistanceUsage(config.difficulty),
+                resumed?.record?.decisions ?: emptyList(), { nextChoiceSeed }, { nextChoiceSeed = it })
             val engine = sessionFactory(config)
             session = engine
-            if (saved != null && (engine.restore(saved.record.nativeState) != RestoreResult.Restored ||
-                    !engine.serialize().contentEquals(saved.record.nativeState))) {
+            if (resumed != null && (engine.restore(resumed.record.nativeState) != RestoreResult.Restored ||
+                    !engine.serialize().contentEquals(resumed.record.nativeState))) {
                 throw IOException("兰州麻将存档无法完整恢复，原数据已保留")
             }
             opened = true
-            if (saved == null) saveNewGameThenAdvance() else advanceAndSave()
+            if (resumed == null) saveNewGameThenAdvance() else advanceAndSave()
         } catch (denied: LanzhouMahjongEntryDeniedException) {
             failOpen(denied, checkNotNull(denied.message))
         } catch (cancelled: CancellationException) {

@@ -2,8 +2,14 @@ package com.masterofchessstrategy.games.lanzhou_mahjong.data
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.masterofchessstrategy.data.TutorialProgressEntity
+import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.Difficulty
+import com.masterofchessstrategy.engine.LanzhouMahjongAction
+import com.masterofchessstrategy.engine.LanzhouMahjongActionKind
+import com.masterofchessstrategy.engine.LanzhouMahjongBotStop
+import com.masterofchessstrategy.engine.NativeLanzhouMahjongSession
 import com.masterofchessstrategy.games.lanzhou_mahjong.*
+import com.masterofchessstrategy.games.lanzhou_mahjong.settlement.RoomLanzhouMahjongSettlement
 import java.io.IOException
 import kotlinx.coroutines.withTimeout
 import org.junit.Assert.*
@@ -13,6 +19,101 @@ import org.junit.runner.RunWith
 /** Actual SQLite, strict Native replay and production Host binding; UUID-owned databases only. */
 @RunWith(AndroidJUnit4::class)
 class LanzhouMahjongEntryRoomInstrumentedTest {
+    @Test fun eachTrustedThresholdReachesTheProductionCreationGate() = withOwnedLanzhouDatabase { f ->
+        val db = f.db
+        db.lanzhouMahjongLearningProgressDao().upsert(LanzhouMahjongLearningProgressEntity(0, 2, 10, 1))
+        val gate = LanzhouMahjongStorageEpochGate.forDatabase(db)
+        val room = RoomLanzhouMahjongSettlement(db, gate.captureOwner())
+        val entry = RoomLanzhouMahjongEntryRepository(db)
+        val store = db.createLanzhouMahjongHostStorage().store
+        for ((target, requirement) in lanzhouMahjongWinRequirements) {
+            repeat(requirement.minimum) { index ->
+                val facts = entry.loadFacts()
+                assertEquals(index, facts.trustedWins[requirement.previous] ?: 0)
+                assertFalse(facts.canStart(target))
+                if (index == requirement.minimum - 1) {
+                    val denial = runCatching { entry.authorizeNew(target, facts.active) }.exceptionOrNull()
+                    assertEquals(LanzhouMahjongEntryDenial.TRUSTED_WINS_UNAVAILABLE,
+                        (denial as? LanzhouMahjongEntryDeniedException)?.reason)
+                }
+                trustedTerminal(room, f, requirement.previous, index + 1L)
+            }
+            val facts = entry.loadFacts()
+            assertEquals(requirement.minimum, facts.trustedWins[requirement.previous])
+            assertTrue(facts.canStart(target))
+            entry.authorizeNew(target, facts.active)
+            assertTrue(facts.activeCompleted)
+            val host = LanzhouMahjongGameHost(
+                db.createLanzhouMahjongHostStorage(), LanzhouMahjongLaunchConfig(target, 99), now = { 300 },
+            )
+            try {
+                withTimeout(15_000) { host.open() }
+                assertFalse(host.state.value.restoreFailed)
+                assertEquals(target, store.load()?.record?.difficulty)
+                assertTrue(host.leave())
+            } finally {
+                withTimeout(15_000) { host.closeAndJoin() }
+            }
+        }
+    }
+
+    @Test fun completedLegacyRoundCanSwitchToEasyWithoutCreditingWins() = withOwnedLanzhouDatabase { f ->
+        f.db.lanzhouMahjongLearningProgressDao().upsert(LanzhouMahjongLearningProgressEntity(0, 2, 10, 1))
+        NativeLanzhouMahjongSession(5, 0, 1, 0).use { session ->
+            assertEquals(ActionResult.Accepted, session.apply(LanzhouMahjongAction(LanzhouMahjongActionKind.WIN)))
+            val record = LanzhouMahjongSessionRecord(Difficulty.HARD, 0, 5, 0, 1, 5, session.serialize())
+            f.store().save(LanzhouMahjongStoredSession(record, 100))
+        }
+        val facts = RoomLanzhouMahjongEntryRepository(f.db).loadFacts()
+        assertTrue(facts.activeCompleted)
+        assertTrue(facts.trustedWins.isEmpty())
+        val host = LanzhouMahjongGameHost(
+            f.db.createLanzhouMahjongHostStorage(), LanzhouMahjongLaunchConfig(Difficulty.EASY, 99),
+        )
+        try {
+            withTimeout(15_000) { host.open() }
+            assertFalse(host.state.value.restoreFailed)
+            assertEquals(Difficulty.EASY, f.store().load()?.record?.difficulty)
+            assertTrue(f.db.lanzhouMahjongSettlementDao().readReceipts().isEmpty())
+        } finally {
+            withTimeout(15_000) { host.closeAndJoin() }
+        }
+    }
+
+    private suspend fun trustedTerminal(
+        room: RoomLanzhouMahjongSettlement,
+        fixture: LanzhouMahjongOwnedDatabaseFixture,
+        difficulty: Difficulty,
+        base: Long,
+    ) = NativeLanzhouMahjongSession(1, 0, base, 0).use { session ->
+        fun snapshot(time: Long) = LanzhouMahjongStoredSession(
+            LanzhouMahjongSessionRecord(
+                difficulty, 0, 1, 0, base, 1, session.serialize(),
+            ), time,
+        )
+        val initial = room.create(fixture.row(), snapshot(100)) {}
+        // Use a fixed, legal move sequence for all evidence fixtures. This tests eligibility rather than AI strength.
+        repeat(240) { turn ->
+            when (session.advanceOtherSeats(Difficulty.EASY, 1L + turn).stop) {
+                LanzhouMahjongBotStop.TERMINAL -> {
+                    val receipt = room.complete(initial, snapshot(200))
+                    assertTrue(receipt.isQualifiedWin)
+                    return@use
+                }
+                LanzhouMahjongBotStop.VIEWER_ACTION -> {
+                    val actions = session.legalActions()
+                    val choice = actions.firstOrNull { it.kind == LanzhouMahjongActionKind.WIN } ?: actions.first {
+                        it.kind in setOf(LanzhouMahjongActionKind.DRAW, LanzhouMahjongActionKind.DISCARD,
+                            LanzhouMahjongActionKind.PASS)
+                    }
+                    assertEquals(ActionResult.Accepted, session.apply(choice))
+                }
+                else -> error("Native bot did not yield a legal turn")
+            }
+        }
+        error("Seeded round did not finish")
+    }
+
     @Test fun legacyFourStepCompletionCannotAuthorizeButAllTenIndependentLessonsCan() = withOwnedLanzhouDatabase { f ->
         f.db.tutorialProgressDao().upsert(TutorialProgressEntity(3, 1, 4, true, 17))
         val entry = RoomLanzhouMahjongEntryRepository(f.db)
@@ -85,7 +186,7 @@ class LanzhouMahjongEntryRoomInstrumentedTest {
             f.db.lanzhouMahjongLearningProgressDao().upsert(progress(10))
             resume.restart()
             assertEquals(current, f.row())
-            assertEquals("此难度的可信胜场资格尚未接入", resume.state.value.table!!.feedback)
+            assertEquals("前一难度的可信胜场尚未达到解锁要求", resume.state.value.table!!.feedback)
             assertFalse(resume.state.value.table!!.blocked)
             assertEquals(Difficulty.MEDIUM, requireNotNull(f.store().load()).record.difficulty)
         } finally { resume.closeAndJoin() }

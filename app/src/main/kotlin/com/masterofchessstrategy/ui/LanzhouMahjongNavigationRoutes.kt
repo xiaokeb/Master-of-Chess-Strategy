@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun LanzhouMahjongEntryNavigationRoute(
     database: MocsDatabase, owner: ViewModelStoreOwner, writers: LocalDataWriterRegistry,
-    onLearning: () -> Unit, onResume: () -> Unit, onNewEasy: () -> Unit, onBack: () -> Unit,
+    onLearning: () -> Unit, onResume: () -> Unit, onNew: (Difficulty) -> Unit, onBack: () -> Unit,
 ) {
     val gate = remember(database) { LanzhouMahjongStorageEpochGate.forDatabase(database) }
     val epoch by gate.epoch.collectAsState()
@@ -46,7 +46,7 @@ internal fun LanzhouMahjongEntryNavigationRoute(
         }
     }
     BackHandler(onBack = back)
-    LanzhouMahjongEntryScreen(state, onLearning, onResume, onNewEasy, back, model::reload)
+    LanzhouMahjongEntryScreen(state, onLearning, onResume, onNew, back, model::reload)
 }
 
 @Composable
@@ -68,12 +68,11 @@ internal fun LanzhouMahjongPlayNavigationRoute(
     database: MocsDatabase, owner: ViewModelStoreOwner, writers: LocalDataWriterRegistry,
     mode: String?, onBack: () -> Unit,
 ) {
-    val openMode = when (mode) {
-        "new" -> LanzhouMahjongOpenMode.NEW
-        "resume" -> LanzhouMahjongOpenMode.RESUME
-        else -> null
+    val difficulty = when (mode) {
+        "new", "resume" -> Difficulty.EASY
+        else -> Difficulty.entries.firstOrNull { mode == "new-${it.code}" }
     }
-    if (openMode == null) {
+    if (difficulty == null) {
         BackHandler(onBack = onBack)
         Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("对局入口无效，原存档已保留")
@@ -81,12 +80,13 @@ internal fun LanzhouMahjongPlayNavigationRoute(
         }
         return
     }
+    val openMode = if (mode == "resume") LanzhouMahjongOpenMode.RESUME else LanzhouMahjongOpenMode.NEW
     val gate = remember(database) { LanzhouMahjongStorageEpochGate.forDatabase(database) }
     val epoch by gate.epoch.collectAsState()
     val seed = rememberSaveable { System.nanoTime() and Long.MAX_VALUE }
-    val factory = remember(database, epoch, seed, openMode, writers) { viewModelFactory {
+    val factory = remember(database, epoch, seed, openMode, difficulty, writers) { viewModelFactory {
         initializer { LanzhouMahjongGameViewModel(database.createLanzhouMahjongHostStorage(),
-            LanzhouMahjongLaunchConfig(Difficulty.EASY, seed), openMode = openMode).also(writers::register) }
+            LanzhouMahjongLaunchConfig(difficulty, seed), openMode = openMode).also(writers::register) }
     } }
     val model: LanzhouMahjongGameViewModel = viewModel(owner, key = "lanzhou-mahjong-play:$epoch:$mode", factory = factory)
     SideEffect { writers.register(model) }

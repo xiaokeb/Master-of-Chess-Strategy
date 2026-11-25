@@ -27,6 +27,7 @@ internal interface LanzhouMahjongAdmittedSessionStore {
     /** Only a missing game3 row returns null; malformed data and storage errors remain errors. */
     suspend fun load(): LanzhouMahjongStoredSession?
     suspend fun save(snapshot: LanzhouMahjongStoredSession)
+    suspend fun canReplaceCompleted(snapshot: LanzhouMahjongStoredSession): Boolean = false
     suspend fun createFormal(initial: LanzhouMahjongStoredSession, expected: LanzhouMahjongStoredSession?) {
         throw LanzhouMahjongEntryDeniedException(LanzhouMahjongEntryDenial.ADMISSION_UNAVAILABLE)
     }

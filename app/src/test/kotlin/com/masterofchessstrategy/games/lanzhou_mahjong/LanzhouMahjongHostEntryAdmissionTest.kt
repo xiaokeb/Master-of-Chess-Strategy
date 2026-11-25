@@ -62,7 +62,7 @@ class LanzhouMahjongHostEntryAdmissionTest {
             assertSame(saved, f.store.saved)
             assertEquals(1, f.sessions.size)
             assertFalse(host.state.value.table!!.blocked)
-            assertEquals("此难度的可信胜场资格尚未接入", host.state.value.table!!.feedback)
+            assertEquals("前一难度的可信胜场尚未达到解锁要求", host.state.value.table!!.feedback)
             host.apply(HostFakeSession.action)
             assertEquals(1, old.applied)
         } finally { host.closeAndJoin() }

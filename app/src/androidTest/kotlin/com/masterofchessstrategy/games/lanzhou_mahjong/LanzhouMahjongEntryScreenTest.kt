@@ -5,17 +5,20 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.NativeLanzhouMahjongSession
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongEntryFacts
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongLearningSnapshot
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongStoredSession
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -38,16 +41,30 @@ class LanzhouMahjongEntryScreenTest {
         compose.runOnIdle { assertEquals(1, lessons) }
     }
 
-    @Test fun completedLearningOffersOnlyEasyAndDoesNotInventWinCounts() {
-        var creations = 0
-        show(state(10), onNewEasy = { creations++ })
+    @Test fun completedLearningShowsRealProgressAndOpensOnlyEligibleDifficulty() {
+        val creations = mutableListOf<Difficulty>()
+        show(state(10), onNew = { creations += it })
         compose.onNodeWithTag("lanzhou_mahjong_entry_new_easy").performScrollTo().assertIsEnabled().performClick()
-        compose.runOnIdle { assertEquals(1, creations) }
-        compose.onNodeWithText("中等：简单累计胜10场", substring = true).performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("困难：中等累计胜15场", substring = true).assertExists()
-        compose.onNodeWithText("大师：困难累计胜20场", substring = true).assertExists()
-        compose.onNodeWithTag("lanzhou_mahjong_entry_trusted_wins_pending").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("0胜", substring = true).assertDoesNotExist()
+        compose.runOnIdle { assertEquals(listOf(Difficulty.EASY), creations) }
+        compose.onNodeWithTag("lanzhou_mahjong_entry_new_medium").performScrollTo().assertIsDisplayed().assertIsNotEnabled()
+        compose.onNodeWithText("中等 · 简单可信胜场 0/10").assertExists()
+        compose.onNodeWithText("困难 · 中等可信胜场 0/15").assertExists()
+        compose.onNodeWithText("大师 · 困难可信胜场 0/20").assertExists()
+        capture("locked")
+    }
+
+    @Test fun unlockedButtonsSendTheirOwnDifficulty() {
+        val creations = mutableListOf<Difficulty>()
+        val progress = state(10)
+        show(progress.copy(facts = requireNotNull(progress.facts).copy(trustedWins = mapOf(
+            Difficulty.EASY to 10, Difficulty.MEDIUM to 15, Difficulty.HARD to 20,
+        ))), onNew = { creations += it })
+        for (difficulty in listOf(Difficulty.MEDIUM, Difficulty.HARD, Difficulty.MASTER)) {
+            compose.onNodeWithTag("lanzhou_mahjong_entry_new_${difficulty.name.lowercase()}")
+                .performScrollTo().assertIsEnabled().performClick()
+        }
+        compose.runOnIdle { assertEquals(listOf(Difficulty.MEDIUM, Difficulty.HARD, Difficulty.MASTER), creations) }
+        capture("unlocked")
     }
 
     @Test fun existingHardSessionOffersExplicitResumeWithoutReplacingIt() {
@@ -106,14 +123,31 @@ class LanzhouMahjongEntryScreenTest {
             }
         }
         compose.onNodeWithTag("lanzhou_mahjong_entry_new_easy").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("lanzhou_mahjong_entry_trusted_wins_pending").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("lanzhou_mahjong_entry_new_master").performScrollTo().assertIsDisplayed().assertIsNotEnabled()
         compose.onNodeWithTag("lanzhou_mahjong_entry_refresh").performScrollTo().assertIsDisplayed().assertIsEnabled()
+        capture("large-text")
+    }
+
+    private fun capture(label: String) {
+        val token = InstrumentationRegistry.getArguments().getString("mocsVisualToken") ?: return
+        require(token.matches(Regex("qa-[a-f0-9]{32}")))
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val directory = File(requireNotNull(context.getExternalFilesDir(null)), "mocs-visual/$token")
+        check(directory.isDirectory || directory.mkdirs())
+        val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
+        try {
+            File(directory, "$label.png").outputStream().use {
+                check(bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it))
+            }
+        } finally {
+            bitmap.recycle()
+        }
     }
 
     private fun show(state: LanzhouMahjongEntryState, onLearning: () -> Unit = {}, onResume: () -> Unit = {},
-        onNewEasy: () -> Unit = {}, onBack: () -> Unit = {}, onRefresh: () -> Unit = {},
+        onNew: (Difficulty) -> Unit = {}, onBack: () -> Unit = {}, onRefresh: () -> Unit = {},
     ) = compose.setContent {
-        MaterialTheme { LanzhouMahjongEntryScreen(state, onLearning, onResume, onNewEasy, onBack, onRefresh) }
+        MaterialTheme { LanzhouMahjongEntryScreen(state, onLearning, onResume, onNew, onBack, onRefresh) }
     }
 
     private fun state(count: Int) = LanzhouMahjongEntryState(loading = false,

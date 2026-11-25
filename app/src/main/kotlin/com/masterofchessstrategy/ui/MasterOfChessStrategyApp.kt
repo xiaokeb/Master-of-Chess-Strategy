@@ -467,7 +467,7 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                 LanzhouMahjongEntryNavigationRoute(database, entry, gameWriters,
                     onLearning = { navController.navigate(AppDestination.LANZHOU_MAHJONG_LEARNING) },
                     onResume = { navController.navigate("lanzhou-mahjong/game/resume") },
-                    onNewEasy = { navController.navigate("lanzhou-mahjong/game/new") },
+                    onNew = { navController.navigate("lanzhou-mahjong/game/new-${it.code}") },
                     onBack = navController::popBackStack)
             }
             composable(AppDestination.LANZHOU_MAHJONG_LEARNING) { entry ->

@@ -15,13 +15,22 @@ internal fun MocsDatabase.createLanzhouMahjongHostStorage(): LanzhouMahjongHostS
         object : LanzhouMahjongAdmittedSessionStore by store {
             override val persistsFormalCreation = true
 
+            override suspend fun canReplaceCompleted(snapshot: LanzhouMahjongStoredSession): Boolean {
+                val facts = entry.loadFacts()
+                val current = facts.active ?: return false
+                return facts.activeCompleted && current.updatedAtEpochMillis == snapshot.updatedAtEpochMillis &&
+                    LanzhouMahjongSessionAdmission.sessionId(current.record) ==
+                    LanzhouMahjongSessionAdmission.sessionId(snapshot.record)
+            }
+
             override suspend fun authorizeNew(difficulty: com.masterofchessstrategy.engine.Difficulty,
                 expectedCurrent: LanzhouMahjongStoredSession?) = entry.authorizeNew(difficulty, expectedCurrent)
 
             override suspend fun createFormal(initial: LanzhouMahjongStoredSession, expected: LanzhouMahjongStoredSession?) {
                 settlement.createFromHost(expected, initial) { difficulty ->
                     val learning = decodeLanzhouLearningRows(database.lanzhouMahjongLearningProgressDao().readBoundedRows())
-                    requireLanzhouMahjongCreationEligibility(learning?.isCompleted == true, difficulty)
+                    val facts = LanzhouMahjongEntryFacts(learning, null, database.readLanzhouMahjongTrustedWins())
+                    requireLanzhouMahjongCreationEligibility(facts, difficulty)
                 }
             }
 
