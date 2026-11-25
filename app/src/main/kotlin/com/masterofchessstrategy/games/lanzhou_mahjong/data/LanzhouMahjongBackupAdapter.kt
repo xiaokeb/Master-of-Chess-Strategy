@@ -47,12 +47,13 @@ internal class LanzhouMahjongBackupAdapter(
     internal class PreparedLanzhouMahjongBackup internal constructor(row: ActiveGameEntity) : PreparedGameBackup {
         private val owned = row.copy(engineState = row.engineState.copyOf())
         override val storageSlot = SLOT
+        internal fun activeRow(): ActiveGameEntity = owned.copy(engineState = owned.engineState.copyOf())
 
         override suspend fun write(database: MocsDatabase) = write(database.activeGameDao())
 
         /** Only an upsert: the complete restore already owns every gate and its single transaction. */
         internal suspend fun write(dao: ActiveGameDao) {
-            dao.upsert(owned.copy(engineState = owned.engineState.copyOf()))
+            dao.upsert(activeRow())
         }
     }
 

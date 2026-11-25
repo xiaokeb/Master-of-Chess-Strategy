@@ -79,10 +79,9 @@ internal class RoomLanzhouMahjongSettlement(
                 row.sessionId, terminal.record, existing?.capturedAt ?: terminal.updatedAtEpochMillis,
             )
             val result = (policy.firstTerminal(creation, candidate) as LanzhouMahjongFirstSettlement.Insert).receipt
-            val stored = result.toRow()
+            val stored = result.toLanzhouMahjongReceiptRow()
             if (existing != null) {
-                valid(current == row && existing.terminalRecord.contentEquals(stored.terminalRecord) &&
-                    existing.copy(terminalRecord = stored.terminalRecord) == stored,
+                valid(current == row && existing.sameEvidence(stored),
                     "该兰州麻将对局已有不同首结")
                 return@withTransaction result
             }
@@ -104,15 +103,18 @@ internal class RoomLanzhouMahjongSettlement(
         valid(active.find(gameCode) == row, "兰州麻将活动局写入校验失败")
     }
 
-    private fun LanzhouMahjongTerminalReceipt.toRow(): LanzhouMahjongTerminalReceiptRow {
-        val scores = netScores
-        return LanzhouMahjongTerminalReceiptRow(
-            terminal.sessionId, terminal.capturedAt, terminal.copyRecordBytes(),
-            outcome.name, winnerSeat, payerSeat, scores[0], scores[1], scores[2], scores[3],
-        )
-    }
-
     private fun valid(condition: Boolean, message: String) {
         if (!condition) throw IOException(message)
     }
 }
+
+internal fun LanzhouMahjongTerminalReceipt.toLanzhouMahjongReceiptRow(): LanzhouMahjongTerminalReceiptRow {
+    val scores = netScores
+    return LanzhouMahjongTerminalReceiptRow(
+        terminal.sessionId, terminal.capturedAt, terminal.copyRecordBytes(),
+        outcome.name, winnerSeat, payerSeat, scores[0], scores[1], scores[2], scores[3],
+    )
+}
+
+internal fun LanzhouMahjongTerminalReceiptRow.sameEvidence(other: LanzhouMahjongTerminalReceiptRow): Boolean =
+    terminalRecord.contentEquals(other.terminalRecord) && copy(terminalRecord = other.terminalRecord) == other

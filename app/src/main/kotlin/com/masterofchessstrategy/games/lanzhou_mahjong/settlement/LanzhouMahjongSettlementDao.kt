@@ -44,6 +44,18 @@ internal interface LanzhouMahjongSettlementDao {
     @Query("SELECT * FROM lanzhou_mahjong_terminal_receipts WHERE sessionId = :sessionId")
     suspend fun receipt(sessionId: String): LanzhouMahjongTerminalReceiptRow?
 
+    @Query("SELECT * FROM lanzhou_mahjong_formal_creations ORDER BY sessionId")
+    suspend fun readCreations(): List<LanzhouMahjongFormalCreationRow>
+
+    @Query("SELECT * FROM lanzhou_mahjong_terminal_receipts ORDER BY sessionId")
+    suspend fun readReceipts(): List<LanzhouMahjongTerminalReceiptRow>
+
+    @Query("DELETE FROM lanzhou_mahjong_terminal_receipts")
+    suspend fun deleteReceipts()
+
+    @Query("DELETE FROM lanzhou_mahjong_formal_creations")
+    suspend fun deleteCreations()
+
     @Insert
     suspend fun insertCreation(row: LanzhouMahjongFormalCreationRow)
 

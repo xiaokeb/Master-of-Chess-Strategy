@@ -66,4 +66,8 @@ internal interface BackupStorageInventoryDao {
 
     @Query("SELECT 3 FROM lanzhou_mahjong_learning_progress ORDER BY singletonId")
     suspend fun lanzhouMahjongLearningGameTypeCodes(): List<Int>
+
+    @Query("SELECT 3 WHERE EXISTS(SELECT 1 FROM lanzhou_mahjong_formal_creations) " +
+        "OR EXISTS(SELECT 1 FROM lanzhou_mahjong_terminal_receipts)")
+    suspend fun lanzhouMahjongSettlementGameTypeCodes(): List<Int>
 }

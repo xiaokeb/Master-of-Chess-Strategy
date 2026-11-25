@@ -1,0 +1,60 @@
+{
+  "tag": "v0.1.0-lanzhou-mahjong-settlement-backup.1",
+  "baseline": "c269580d1968489803c21450ee3b1b2322d63d6a",
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/BackupStorageInventory.kt",
+      "sha256": "7cac23118de7642bf1775d7d9725147a3f0557f42e4ccf69260cf271743f6d2f"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/BackupStorageInventoryDao.kt",
+      "sha256": "ee2375be17b749912ec783f2690dc1361fc8e4772ed456f20f8aa1566aa6ec96"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/GameBackupAdapter.kt",
+      "sha256": "d48c0c3584711b5dc0f6b4eb4c1777473ff1798f177405c5952ac0fbd2adc086"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/LocalDataBackupRepository.kt",
+      "sha256": "ff58d557ce67d9e033c47464efc6a576bef5926e451b99b14533514e15faf78f"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/ProductionGameBackupFactory.kt",
+      "sha256": "761f739904b1add5e2d60907037f4e1f6617e6ad34e945bb1cb14d48e87c984c"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongBackupAdapter.kt",
+      "sha256": "3362086e8a388b3b41b60fa22232ec112ecc8e72f23e9ed8d5d21c534e6dd4c8"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongSettlementDao.kt",
+      "sha256": "874a1a7db7aba23d84883353ccb699c3eecc5d8fea5c5f517123be3527452ecc"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/RoomLanzhouMahjongSettlement.kt",
+      "sha256": "d25f9a2fa6b2a0326445314ba3ee197f1f16e6badf333e90ec8961bbaae52179"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongSettlementBackupAdapter.kt",
+      "sha256": "101f8c1680788b7b0ce5aaa2479d8da8cd63b8aee6ad1b66011259dcf4329636"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongSettlementBackupInstrumentedTest.kt",
+      "sha256": "b1040e4bad86ede24d545cf080caca4166c6b960f6d44dbbdae5135dc3756dcf"
+    }
+  ],
+  "verification": {
+    "emulator": "Pixel_7_Pro",
+    "emulator_tests": 10,
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "ndk_abis": [
+      "x86_64",
+      "arm64-v8a"
+    ],
+    "debug_apk_sha256": "021bfc2c7965392ec3ef7af3ef2d0e0cfd7da66701c1a14af8eb2104e0c93290",
+    "test_apk_sha256": "6e3a765521fca017510f103e8d8c53773c72feac28f813cae5078af7cd5e3c0e",
+    "device_log_sha256": "b41981587699b38bec884fe1cadb9fb5defc66a02353fa3da0eec25b6ae335be"
+  },
+  "distribution": "source-only"
+}
