@@ -52,6 +52,13 @@ internal data class LanzhouMahjongSettlementSummaryRow(
     val seat3Score: Long,
 )
 
+internal data class LanzhouMahjongArchiveRow(
+    val sessionId: String,
+    val capturedAt: Long,
+    val outcome: String,
+    val initialRecord: ByteArray,
+)
+
 @Dao
 internal interface LanzhouMahjongSettlementDao {
     @Query("SELECT * FROM lanzhou_mahjong_formal_creations WHERE sessionId = :sessionId")
@@ -78,6 +85,13 @@ internal interface LanzhouMahjongSettlementDao {
             "FROM lanzhou_mahjong_terminal_receipts r JOIN lanzhou_mahjong_formal_creations c ON c.sessionId = r.sessionId",
     )
     suspend fun settlementSummaries(): List<LanzhouMahjongSettlementSummaryRow>
+
+    @Query(
+        "SELECT r.sessionId, r.capturedAt, r.outcome, c.initialRecord " +
+            "FROM lanzhou_mahjong_terminal_receipts r JOIN lanzhou_mahjong_formal_creations c ON c.sessionId = r.sessionId " +
+            "ORDER BY r.capturedAt DESC, r.sessionId ASC LIMIT :limit OFFSET :offset",
+    )
+    suspend fun archivePage(limit: Int, offset: Long): List<LanzhouMahjongArchiveRow>
 
     @Query("DELETE FROM lanzhou_mahjong_terminal_receipts")
     suspend fun deleteReceipts()

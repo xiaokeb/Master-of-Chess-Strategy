@@ -33,6 +33,7 @@ internal fun LanzhouMahjongEntryScreen(
     onNew: (Difficulty) -> Unit,
     onBack: () -> Unit,
     onRefresh: () -> Unit,
+    onRecords: (() -> Unit)? = null,
 ) {
     var showStatistics by rememberSaveable { mutableStateOf(false) }
     Surface(Modifier.fillMaxSize().testTag("lanzhou_mahjong_entry")) {
@@ -89,6 +90,10 @@ internal fun LanzhouMahjongEntryScreen(
                         Text(if (showStatistics) "收起四席统计" else "查看四席统计")
                     }
                     if (showStatistics) LanzhouMahjongStatisticsContent(facts.statistics)
+                    if (onRecords != null) {
+                        OutlinedButton(onRecords, modifier = Modifier.fillMaxWidth()
+                            .testTag("lanzhou_mahjong_entry_records")) { Text("查看正式棋谱") }
+                    }
                 }
             }
             if (!state.retired) {
@@ -101,7 +106,7 @@ internal fun LanzhouMahjongEntryScreen(
     }
 }
 
-private fun difficultyName(difficulty: Difficulty): String = when (difficulty) {
+internal fun difficultyName(difficulty: Difficulty): String = when (difficulty) {
     Difficulty.EASY -> "简单"
     Difficulty.MEDIUM -> "中等"
     Difficulty.HARD -> "困难"

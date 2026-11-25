@@ -17,6 +17,8 @@ import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.games.lanzhou_mahjong.*
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.*
+import com.masterofchessstrategy.games.lanzhou_mahjong.settlement.LanzhouMahjongArchive
+import com.masterofchessstrategy.games.lanzhou_mahjong.settlement.LanzhouMahjongArchiveScreen
 import com.masterofchessstrategy.settings.LocalDataWriterRegistry
 import kotlinx.coroutines.launch
 
@@ -38,6 +40,7 @@ internal fun LanzhouMahjongEntryNavigationRoute(
     val scope = rememberCoroutineScope()
     val latestBack by rememberUpdatedState(onBack)
     var leaving by remember(model) { mutableStateOf(false) }
+    var showRecords by rememberSaveable { mutableStateOf(false) }
     val back: () -> Unit = {
         if (!leaving) {
             leaving = true
@@ -45,8 +48,14 @@ internal fun LanzhouMahjongEntryNavigationRoute(
             scope.launch { completion.await(); latestBack() }
         }
     }
-    BackHandler(onBack = back)
-    LanzhouMahjongEntryScreen(state, onLearning, onResume, onNew, back, model::reload)
+    if (showRecords) {
+        val archive = remember(database) { LanzhouMahjongArchive(database) }
+        LanzhouMahjongArchiveScreen(archive) { showRecords = false; model.reload() }
+    } else {
+        BackHandler(onBack = back)
+        LanzhouMahjongEntryScreen(state, onLearning, onResume, onNew, back, model::reload,
+            onRecords = { showRecords = true })
+    }
 }
 
 @Composable

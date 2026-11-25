@@ -1,0 +1,48 @@
+{
+  "tag": "v0.1.0-lanzhou-mahjong-archive.1",
+  "baseline": "5a5016f1b26cfa86638efee41d17c6c3a5fb6663",
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongEntryScreen.kt",
+      "sha256": "e04947247fb5866b4fd2b1ec66795a7310903cc785d285c190e4a3a7a2c7c29f"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongSettlementDao.kt",
+      "sha256": "988e75a24bef3f7dcd1bf5a167d8923831af72755785701fe8e443c1f4b35b34"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongArchive.kt",
+      "sha256": "c21358ed19b2964e8d8ff17fa56a7e1819eff41dfdcf869ce8b28ffeb144e43f"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongArchiveScreen.kt",
+      "sha256": "f86dc51738c1c013c33ec942c7cc6521938cfc725f531034c63551df77730f2f"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/LanzhouMahjongNavigationRoutes.kt",
+      "sha256": "80f97230deae2a9b9ff794f3fae275e627377694682af3740c1cf76119aee6a6"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongArchiveInstrumentedTest.kt",
+      "sha256": "a478d69ba76004f8eb9c09324ce1c8bbcb17964580fc547197e0b0d156e1e477"
+    }
+  ],
+  "verification": {
+    "emulator": "Pixel_7_Pro",
+    "distinct_emulator_tests": 3,
+    "additional_landscape_runs": 1,
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "ndk_abis": [
+      "x86_64",
+      "arm64-v8a"
+    ],
+    "debug_apk_sha256": "8b2dbaf007db78f7c9ea3fa0512472769fef98e18c6784b56089a002fdd97580",
+    "test_apk_sha256": "591dfa75d079096cd3d90f9cf98d8b46d554ec6587d9e7087686f6b8abaf5d69",
+    "device_log_sha256": "3e3c0a964bb8e1cf90dfc63eeb84d199b2b411af1f6d6c68c7a3e249566cb066",
+    "landscape_log_sha256": "5f53feecadbea39b8561172788c51df11cf97b2de1b987be0b9de663b56c5425",
+    "standard_png_sha256": "95b4bccf5aeab2dca8d3e92bc31888dbacd1be6b93593ae757a4bed7c23c2538",
+    "landscape_png_sha256": "5ba5e2566c06c86fe711bc3abc67570261c1845daa022d4be2b58ca26482aac0"
+  },
+  "distribution": "source-only"
+}
