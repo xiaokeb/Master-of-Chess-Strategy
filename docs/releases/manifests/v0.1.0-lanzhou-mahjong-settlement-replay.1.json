@@ -1,0 +1,40 @@
+{
+  "tag": "v0.1.0-lanzhou-mahjong-settlement-replay.1",
+  "baseline": "6e1453f6b8365fa7a9b86d9ec68ab7f498125d72",
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongNativeSettlementReplay.kt",
+      "sha256": "bf84c325da7aca71af83455890cc093f99886f50872e590784b6762fac04b531"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongSettlementEvidence.kt",
+      "sha256": "7d3f203e0f30c1ec9bb882801991522bb6c9e6e1244001c06efc0019a04aadd0"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongSettlementPolicy.kt",
+      "sha256": "fc9b04158730b5448d45065a294580102ddbe6e82cee2f3cd2b52b93e44c063d"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongSettlementPolicyTest.kt",
+      "sha256": "252e807d307204e6cee7dcd76161a69a8887a5b7346ffef14dec25e1d1f73c0c"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongNativeSettlementInstrumentedTest.kt",
+      "sha256": "63add58219f09e63a19aa774b5020ca9ee5502a64c6002285554fced1c588db4"
+    }
+  ],
+  "verification": {
+    "unit_tests": 20,
+    "emulator_tests": 3,
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "ndk_abis": [
+      "x86_64",
+      "arm64-v8a"
+    ],
+    "debug_apk_sha256": "b406318e3eeb9c485f6abb68a7bc6e28894bf535e8580f579a1c1e75e8c99054",
+    "test_apk_sha256": "584a252658414f534efe993823b626762c7df9cbef760decbb0b81228b244472",
+    "device_log_sha256": "b55827bdee8ed88779ad95abaa75afe433c117797807928345100ef5dfb711ad"
+  },
+  "distribution": "source-only"
+}
