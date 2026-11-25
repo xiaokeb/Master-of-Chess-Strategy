@@ -182,6 +182,86 @@ void probe_first_replies(GoEngine& engine, const std::vector<GoPoint>& anchors) 
     std::cout << "coverage," << covered << ',' << attacks.size() << ',' << (proven ? "alive" : "unknown") << '\n';
 }
 
+void probe_gap(GoEngine& engine, const std::vector<GoPoint>& anchors, std::string_view opening_attack) {
+    const auto defender = engine.stone_at(anchors.front().x, anchors.front().y);
+    if (!defender || *defender == GoStone::empty || !anchors_present(engine, anchors, *defender)) {
+        throw std::invalid_argument("expected same-color group anchors");
+    }
+    if (!engine.apply(make_go_resume_play(*defender == GoStone::black ? 1 : 0)).accepted) {
+        throw std::runtime_error("cannot resume play from the original agreement");
+    }
+    auto attack = make_go_pass();
+    if (opening_attack != "pass") {
+        const auto move = point(opening_attack);
+        attack = make_go_place(move.x, move.y);
+    }
+    if (!engine.apply(attack).accepted) throw std::invalid_argument("specified attack is illegal");
+
+    struct Reply {
+        EngineAction attack;
+        EngineAction defense;
+    };
+    constexpr std::size_t leaf_limit = 30'000;
+    std::size_t leaves = 0;
+    const auto validate_leaf = [&](const GoEngine& candidate) {
+        if (leaves >= leaf_limit) return false;
+        ++leaves;
+        if (!pass_alive(candidate, anchors, *defender)) return false;
+        const auto record = candidate.serialize();
+        GoEngine replay(candidate.board_size());
+        if (!replay.restore(record).restored || replay.serialize() != record ||
+            !pass_alive(replay, anchors, *defender)) {
+            throw std::runtime_error("cannot replay the pass-alive leaf");
+        }
+        return true;
+    };
+
+    if (anchors_present(engine, anchors, *defender)) {
+        for (const auto& first : engine.legal_actions()) {
+            auto after_first = engine;
+            if (!after_first.apply(first).accepted) throw std::logic_error("listed defense was rejected");
+            if (validate_leaf(after_first)) {
+                std::cout << "proven," << move_label(attack) << ',' << move_label(first) << ',' << leaves << '\n';
+                return;
+            }
+            // A second pair of virtual moves must not invent play beyond the resumed branch.
+            if (leaves >= leaf_limit) break;
+            if (after_first.phase() != GoPhase::playing) continue;
+            std::vector<Reply> witnesses;
+            const auto counterattacks = after_first.legal_actions();
+            for (const auto& counter : counterattacks) {
+                auto after_counter = after_first;
+                if (!after_counter.apply(counter).accepted) throw std::logic_error("listed counterattack was rejected");
+                if (after_counter.phase() != GoPhase::playing ||
+                    !anchors_present(after_counter, anchors, *defender)) break;
+                bool found = false;
+                for (const auto& second : after_counter.legal_actions()) {
+                    if (!after_counter.apply(second).accepted) throw std::logic_error("listed last defense was rejected");
+                    const bool proven = validate_leaf(after_counter);
+                    if (!after_counter.undo()) throw std::logic_error("cannot undo the last defense");
+                    if (proven) {
+                        witnesses.push_back({counter, second});
+                        found = true;
+                        break;
+                    }
+                    if (leaves >= leaf_limit) break;
+                }
+                if (!found || leaves >= leaf_limit) break;
+            }
+            if (!counterattacks.empty() && witnesses.size() == counterattacks.size()) {
+                std::cout << "proven," << move_label(attack) << ',' << move_label(first) << ',' << leaves << '\n';
+                std::cout << "counterattack,response\n";
+                for (const auto& reply : witnesses) {
+                    std::cout << move_label(reply.attack) << ',' << move_label(reply.defense) << '\n';
+                }
+                return;
+            }
+            if (leaves >= leaf_limit) break;
+        }
+    }
+    std::cout << "unknown," << move_label(attack) << ",-," << leaves << '\n';
+}
+
 void probe_resumption(GoEngine& engine, int argc, char** argv) {
     if (argc < 6) throw std::invalid_argument("--resume-probe requires a side and at least one move");
     const std::string_view side = argv[4];
@@ -217,7 +297,8 @@ int main(int argc, char** argv) {
         if (argc < 3) {
             throw std::invalid_argument(
                 "use: go-strength-score-review size input.mocg "
-                "[--groups | --resume-probe B|W x,y|pass [...] | --first-replies x,y [...] | output.mocg [x,y ...]]");
+                "[--groups | --resume-probe B|W x,y|pass [...] | --first-replies x,y [...] "
+                "| --joint-gap attack x,y [...] | output.mocg [x,y ...]]");
         }
         const auto size = number(argv[1]);
         if (size != 9 && size != 13 && size != 19) throw std::invalid_argument("unsupported board size");
@@ -246,7 +327,8 @@ int main(int argc, char** argv) {
             return 0;
         }
         const std::string_view mode = argv[3];
-        if (mode != "--resume-probe" && mode != "--first-replies" && std::filesystem::exists(argv[3])) {
+        if (mode != "--resume-probe" && mode != "--first-replies" && mode != "--single-gap" && mode != "--joint-gap" &&
+            std::filesystem::exists(argv[3])) {
             throw std::invalid_argument("review output already exists");
         }
         if (!engine.undo() || !engine.undo() || engine.phase() != GoPhase::scoring) {
@@ -261,6 +343,18 @@ int main(int argc, char** argv) {
             std::vector<GoPoint> anchors;
             for (int i = 4; i < argc; ++i) anchors.push_back(point(argv[i]));
             probe_first_replies(engine, anchors);
+            return 0;
+        }
+        if (mode == "--single-gap") {
+            if (argc != 6) throw std::invalid_argument("--single-gap requires one group anchor and one attack");
+            probe_gap(engine, {point(argv[4])}, argv[5]);
+            return 0;
+        }
+        if (mode == "--joint-gap") {
+            if (argc < 6) throw std::invalid_argument("--joint-gap requires one attack and one or more group anchors");
+            std::vector<GoPoint> anchors;
+            for (int i = 5; i < argc; ++i) anchors.push_back(point(argv[i]));
+            probe_gap(engine, anchors, argv[4]);
             return 0;
         }
         for (int i = 4; i < argc; ++i) {
