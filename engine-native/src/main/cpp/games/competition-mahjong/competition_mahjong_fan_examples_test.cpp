@@ -5,6 +5,7 @@
 #include <array>
 #include <cstdio>
 #include <initializer_list>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -450,6 +451,85 @@ bool check_round_profiles() {
         old.view().score_delta == old_view.score_delta && updated.view().score_delta == updated_view.score_delta;
 }
 
+bool check_last_wall_scoring(bool self_draw) {
+    using Action = CompetitionMahjongRoundActionKind;
+    using Phase = CompetitionMahjongRoundPhase;
+    constexpr CompetitionMahjongTile east = 27;
+    constexpr std::array<CompetitionMahjongTile, 13> waiting{0, 1, 2, 3, 4, 5, 6, 7, 8, 18, 19, 20, east};
+    constexpr std::uint8_t final_drawer = 3;
+    const std::uint8_t winner = self_draw ? final_drawer : 0;
+    auto remainder = competition_mahjong_canonical_wall();
+    std::vector<CompetitionMahjongTile> wall(144, 255);
+    const auto place = [&](std::size_t index, CompetitionMahjongTile tile) {
+        const auto copy = std::find(remainder.begin(), remainder.end(), tile);
+        if (copy == remainder.end() || wall[index] != 255) throw std::logic_error("invalid last-wall fixture");
+        wall[index] = tile;
+        remainder.erase(copy);
+    };
+    const auto final_deal_slot = winner == 0 ? 48 : 49 + winner;
+    for (std::size_t i = 0; i < waiting.size(); ++i) {
+        const auto index = i < 12 ? (i / 4) * 16 + 4 * winner + i % 4 : final_deal_slot;
+        place(index, waiting[i]);
+    }
+    // Eight consecutive flowers are replaced from the tail. East is the final physical draw.
+    for (std::uint8_t i = 0; i < 8; ++i) place(53 + i, 34 + i);
+    place(135, east);
+    auto next = remainder.begin();
+    for (auto& tile : wall) if (tile == 255) tile = *next++;
+
+    constexpr auto rules = CompetitionMahjongFanRules::wmo_2021_kongs;
+    CompetitionMahjongRound round(wall, 0, 0, rules);
+    const auto apply = [](CompetitionMahjongRound& game, Action kind, std::uint8_t player,
+                          CompetitionMahjongTile tile = 0) {
+        const auto result = game.apply({kind, player, tile, 0});
+        return result.accepted && !result.false_hu;
+    };
+    for (int turn = 0; turn <= 83; ++turn) {
+        if (turn != 0 && !apply(round, Action::draw, static_cast<std::uint8_t>(turn % 4))) return false;
+        const auto view = round.view();
+        if (view.phase != Phase::discard || !view.drawn_tile || (view.wall_remaining == 0) != (turn == 83)) {
+            return false;
+        }
+        if (turn == 83) break;
+        if (!apply(round, Action::discard, view.current_player, *view.drawn_tile)) return false;
+        for (std::uint8_t seat = 0; seat < 4; ++seat) {
+            if (seat != view.current_player && !apply(round, Action::pass, seat, *view.drawn_tile)) return false;
+        }
+    }
+    const auto last = round.view();
+    if (last.current_player != final_drawer || last.drawn_tile != east || last.flowers[winner].size() != 2) return false;
+    const auto pass_last = [&](CompetitionMahjongRound& game, bool claim) {
+        if (!apply(game, Action::discard, final_drawer, east)) return false;
+        for (std::uint8_t seat = 0; seat < final_drawer; ++seat) {
+            if (!apply(game, claim && seat == winner ? Action::hu : Action::pass, seat, east)) return false;
+        }
+        return true;
+    };
+    auto no_claim = round;
+    if (!pass_last(no_claim, false) || no_claim.view().phase != Phase::exhaustive_draw ||
+        no_claim.view().score_delta != std::array<std::int32_t, 4>{}) return false;
+    if (self_draw ? !apply(round, Action::hu, winner, east) : !pass_last(round, true)) return false;
+
+    const auto result = round.view();
+    const auto& fan = result.winning_fan;
+    const auto find_fan = [&](int id) {
+        return std::find_if(fan.entries.begin(), fan.entries.end(), [id](const auto& entry) { return entry.id == id; });
+    };
+    const auto last_wall = find_fan(self_draw ? 44 : 45);
+    if (result.phase != Phase::won || result.winner != winner || result.winning_tile != east ||
+        (self_draw ? result.discarder.has_value() : result.discarder != final_drawer) ||
+        !fan.qualifies || fan.total_fan != fan.fan_without_flowers + 2 ||
+        last_wall == fan.entries.end() || last_wall->points != 8 || last_wall->count != 1 ||
+        find_fan(self_draw ? 45 : 44) != fan.entries.end() || find_fan(80) != fan.entries.end()) return false;
+    const auto payment = 8 + fan.total_fan;
+    const auto expected = self_draw ? std::array<std::int32_t, 4>{-payment, -payment, -payment, 3 * payment}
+        : std::array<std::int32_t, 4>{payment + 16, -8, -8, -payment};
+    const auto record = round.serialize();
+    CompetitionMahjongRound restored(wall, 0, 0, rules);
+    return result.score_delta == expected && restored.restore(record) && restored.serialize() == record &&
+        restored.view().score_delta == expected;
+}
+
 } // namespace
 
 int main() {
@@ -481,8 +561,14 @@ int main() {
         std::fprintf(stderr, "versioned round scoring or restoration failed\n");
         ++failures;
     }
+    for (const bool self_draw : {true, false}) {
+        if (!check_last_wall_scoring(self_draw)) {
+            std::fprintf(stderr, "last-wall %s scoring or restoration failed\n", self_draw ? "draw" : "claim");
+            ++failures;
+        }
+    }
     std::printf("WMO fan examples: %zu positive, %zu negative, 18 threshold cases, "
-                "6 rule profile cases, 2 highest-scoring shape cases, 9 multi-kong cases, %d failures\n",
+                "6 rule profile cases, 2 highest-scoring shape cases, 9 multi-kong cases, 2 last-wall cases, %d failures\n",
                 cases.size(), negative.size(), failures);
     return failures == 0 ? 0 : 1;
 }

@@ -29,6 +29,9 @@ internal object CompetitionMahjongPracticePosition {
     const val ROB_KONG_TILE = 31
     const val ROB_KONG_PAYER = 1
     private const val ROB_KONG_VIEWER = 2
+    const val LAST_WALL_CLAIM_ID = "claim-final-wall-discard"
+    const val LAST_WALL_TILE = 27
+    const val LAST_WALL_PAYER = 3
     const val NINE_GATES_PUZZLE_ID = "live-nine-gates-exclusion"
     const val ALL_GREEN_PUZZLE_ID = "live-all-green-half-flush"
     const val TERMINALS_PUZZLE_ID = "live-terminals-double-pungs"
@@ -76,6 +79,7 @@ internal object CompetitionMahjongPracticePosition {
     )
 
     fun isDiscardTraining(id: String): Boolean = id in discards
+    fun isClaimTraining(id: String): Boolean = id == ROB_KONG_ID || id == LAST_WALL_CLAIM_ID
 
     private data class FalseWinExercise(val opening: List<Int>, val discard: Int, val payment: Int)
 
@@ -142,6 +146,60 @@ internal object CompetitionMahjongPracticePosition {
                     result.winningFan.entries.any { it.id == 47 && it.points == 8 } &&
                     result.winningFan.entries.none { it.id == 58 })
                 option.copy(totalFan = result.winningFan.totalFan, netScores = result.netScores)
+            }
+        }
+    }
+
+    /** Restores the last discard of a full physical wall with the local response still pending. */
+    fun lastWallClaim(decision: CompetitionMahjongRoundActionKind? = null): WinningTurn {
+        val hand = (0..8).toList() + listOf(18, 19, 20, LAST_WALL_TILE)
+        val dealerSlots = listOf(0, 1, 2, 3, 16, 17, 18, 19, 32, 33, 34, 35, 48)
+        val wall = fixedWall(dealerSlots.zip(hand) + (53..60).zip(34..41) + (135 to LAST_WALL_TILE))
+        val draws = (143 downTo 136).map { wall[it] } + (61..135).map { wall[it] }
+        val journal = TrainingJournal().apply {
+            event(CompetitionMahjongRoundActionKind.DISCARD, 0, wall[49])
+            passAfter(0, wall[49])
+            draws.forEachIndexed { index, tile ->
+                val seat = (index + 1) % 4
+                event(CompetitionMahjongRoundActionKind.DRAW, seat)
+                event(CompetitionMahjongRoundActionKind.DISCARD, seat, tile)
+                if (index == draws.lastIndex) {
+                    check(seat == LAST_WALL_PAYER && tile == LAST_WALL_TILE)
+                    for (other in 1..2) event(CompetitionMahjongRoundActionKind.PASS, other, tile)
+                } else passAfter(seat, tile)
+            }
+        }
+        val scoring = CompetitionMahjongScoring.WMO_2021_KONGS
+        return NativeCompetitionMahjongSession(0, scoring = scoring).use { session ->
+            check(session.restore(withJournal(roundOpening(wall, scoring), journal.bytes())) == RestoreResult.Restored)
+            val frame = session.snapshot()
+            val local = frame.seats.single { it.seat == frame.viewerSeat }
+            check(frame.phase == CompetitionMahjongRoundPhase.CLAIM && frame.wallRemaining == 0 &&
+                frame.pendingSeat == LAST_WALL_PAYER && frame.pendingTile == LAST_WALL_TILE &&
+                local.concealedTiles.sorted() == hand && local.flowers.size == 2 &&
+                frame.seats.filter { it.seat != frame.viewerSeat }.all { it.concealedTiles.isEmpty() })
+            val option = WinningTurn(hand, LAST_WALL_TILE, LAST_WALL_PAYER, flowers = local.flowers)
+            if (decision == null) return@use option
+            require(decision == CompetitionMahjongRoundActionKind.WIN || decision == CompetitionMahjongRoundActionKind.PASS)
+            val action = CompetitionMahjongAction(decision, LAST_WALL_TILE)
+            check(action in session.legalActions())
+            val applied = session.apply(action)
+            check(applied.accepted && !applied.falseWin)
+            val result = session.snapshot()
+            if (decision == CompetitionMahjongRoundActionKind.PASS) {
+                check(result.phase == CompetitionMahjongRoundPhase.EXHAUSTIVE_DRAW &&
+                    result.winnerSeat == null && result.netScores.all { it == 0 })
+                option
+            } else {
+                val fan = result.winningFan
+                val payment = 8 + fan.totalFan
+                check(result.phase == CompetitionMahjongRoundPhase.WON && result.winnerSeat == frame.viewerSeat &&
+                    result.payerSeat == LAST_WALL_PAYER && result.winningTile == LAST_WALL_TILE && fan.qualifies &&
+                    fan.entries.any { it.id == 45 && it.points == 8 && it.count == 1 } &&
+                    fan.entries.none { it.id == 44 || it.id == 80 } &&
+                    fan.totalFan == fan.fanWithoutFlowers + local.flowers.size &&
+                    result.netScores == listOf(payment + 16, -8, -8, -payment))
+                option.copy(totalFan = fan.totalFan, netScores = result.netScores, qualifyingFan = fan.fanWithoutFlowers)
             }
         }
     }
@@ -340,7 +398,10 @@ internal object CompetitionMahjongPracticePosition {
         return withJournal(roundOpening(fixed, scoring), byteArrayOf())
     }
 
-    private fun roundOpening(fixed: List<Pair<Int, Int>>, scoring: CompetitionMahjongScoring): ByteArray {
+    private fun roundOpening(fixed: List<Pair<Int, Int>>, scoring: CompetitionMahjongScoring): ByteArray =
+        roundOpening(fixedWall(fixed), scoring)
+
+    private fun fixedWall(fixed: List<Pair<Int, Int>>): IntArray {
         val wall = IntArray(144) { -1 }
         val remaining = (0..41).flatMap { tile -> List(if (tile < 34) 4 else 1) { tile } }.toMutableList()
         fixed.forEach { (slot, tile) ->
@@ -351,6 +412,10 @@ internal object CompetitionMahjongPracticePosition {
         val rest = remaining.iterator()
         for (slot in wall.indices) if (wall[slot] < 0) wall[slot] = rest.next()
         check(!rest.hasNext())
+        return wall
+    }
+
+    private fun roundOpening(wall: IntArray, scoring: CompetitionMahjongScoring): ByteArray {
         val round = ByteBuffer.allocate(151).order(ByteOrder.LITTLE_ENDIAN)
         round.put("MOCM".toByteArray(Charsets.US_ASCII)).put(byteArrayOf(scoring.recordVersion.toByte(), 0, 0))
         wall.forEach { round.put(it.toByte()) }

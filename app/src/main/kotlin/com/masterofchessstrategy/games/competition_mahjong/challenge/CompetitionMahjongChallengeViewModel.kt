@@ -97,7 +97,7 @@ class CompetitionMahjongChallengeViewModel(
     internal fun discard(tile: Int): Job = answerWith { it.discard(tile) }
 
     internal fun confirmWin(): Job = answerWith { it.confirmWin() }
-    internal fun passKong(): Job = answerWith { it.passKong() }
+    internal fun passClaim(): Job = answerWith { it.passClaim() }
 
     private fun answerWith(answer: (CompetitionMahjongChallengeSession) -> CompetitionMahjongChallengeState): Job =
         operation("牌型题操作失败，题面已保留") {
@@ -135,6 +135,10 @@ class CompetitionMahjongChallengeViewModel(
 
     private fun createSession(id: String): CompetitionMahjongChallengeSession {
         val challenge = checkNotNull(CompetitionMahjongChallengeLibrary.challenge(id)) { "牌型题不存在" }
+        if (id == CompetitionMahjongPracticePosition.LAST_WALL_CLAIM_ID) {
+            val opening = CompetitionMahjongPracticePosition.lastWallClaim()
+            return CompetitionMahjongChallengeSession(challenge, opening.hand, opening.flowers)
+        }
         val hand = when {
             CompetitionMahjongPracticePosition.isDiscardTraining(id) -> CompetitionMahjongPracticePosition.discardOpeningHand(id)
             CompetitionMahjongPracticePosition.isFalseWinReview(id) -> CompetitionMahjongPracticePosition.verifyFalseWin(id)

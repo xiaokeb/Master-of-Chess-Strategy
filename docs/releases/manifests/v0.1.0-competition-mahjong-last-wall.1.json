@@ -1,0 +1,140 @@
+{
+  "tag": "v0.1.0-competition-mahjong-last-wall.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 11,
+  "requires_tag": "v0.1.0-competition-mahjong-flower-training.1",
+  "build": {
+    "lint_errors": 0,
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "2306d940a342b933ce6986f2b9a035852317def82992622cc01a8e70d965d478",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "a26e020a4860553fb8d67608f3e9a2fdda3dbd856f03822b7e4eed7430ec54f0"
+    },
+    "unit_tests": [
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeViewModelTest"
+      },
+      {
+        "tests": 6,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeLibraryTest"
+      }
+    ],
+    "release_manifest": "processed",
+    "lint_warnings": 25,
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeLibrary.kt",
+        "working_sha256": "5b51492b84c3deff9ff271e6cd3b4a6a1d867b45826a1a20340e063266958e31",
+        "sha256": "5b51492b84c3deff9ff271e6cd3b4a6a1d867b45826a1a20340e063266958e31"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeViewModel.kt",
+        "working_sha256": "82ac0686f88985c4a22f2ab19f71c811303a8fc63a7c6fce41ef0d54a8ffa342",
+        "sha256": "82ac0686f88985c4a22f2ab19f71c811303a8fc63a7c6fce41ef0d54a8ffa342"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeRoute.kt",
+        "working_sha256": "b6afb12f1ec8b22c457de3cdd75f9097798ed5879c2cee33fedc8e01e241217b",
+        "sha256": "b6afb12f1ec8b22c457de3cdd75f9097798ed5879c2cee33fedc8e01e241217b"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongPracticePosition.kt",
+        "working_sha256": "3a33777134c8b17ae29d9aea523a6e375119a5765ff4ae91361cdbbd09f0104c",
+        "sha256": "3a33777134c8b17ae29d9aea523a6e375119a5765ff4ae91361cdbbd09f0104c"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeLibraryTest.kt",
+        "working_sha256": "a1ac7ff9edeaa13d73917d761c7258efdd2387c4a0767e884a5bdff67506ce95",
+        "sha256": "a1ac7ff9edeaa13d73917d761c7258efdd2387c4a0767e884a5bdff67506ce95"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongChallengeNavigationTest.kt",
+        "working_sha256": "1f7867f34011b907f1e424a0484b8f8eb5852a29f666dc974aee4c699efcda38",
+        "sha256": "1f7867f34011b907f1e424a0484b8f8eb5852a29f666dc974aee4c699efcda38"
+      }
+    ],
+    "baseline": "386c90437646ced5db8cdd70460cdc1ddc4cc00e",
+    "candidate": "cm-last-wall-training1"
+  },
+  "native": {
+    "source": "engine-native/src/main/cpp/games/competition-mahjong/competition_mahjong_fan_examples_test.cpp",
+    "source_sha256": "35937751e1cdd164ba6b2a294aeb3cf2a86c7eb270f09187afb04a52787037bf",
+    "ndk": "30.0.16138531",
+    "x86_64_sha256": "a2cff57781e53748ff791a2d43756afd2a70cbc4d7cd8b264206422e829d8d45",
+    "arm64_sha256": "e95475e2dd9a50635ecddb2584494d52663304e717e51e4fb736a56be3faeabe",
+    "log_sha256": "16720e5dfe0113d630fdc3f745ce162ddc146ee72696e8783643c7530c9df886"
+  },
+  "device": {
+    "original_font": "1.0",
+    "runs": [
+      {
+        "tests": 2,
+        "images": [
+          {
+            "sha256": "43cd3f6bd5a3cca0f05ce8f7e01f40d81076b098bbd498d851f3a3feb2490e20",
+            "path": "font-1.0\\a0b6f0cf-0142-412b-9484-53a1f1beea38\\robbing-pass.png"
+          },
+          {
+            "sha256": "d4b1aa62815ba1de01e9473a55f426a5e8c0e27aa2f85fb2e50bd85e87427a97",
+            "path": "font-1.0\\a0b6f0cf-0142-412b-9484-53a1f1beea38\\robbing-settled.png"
+          },
+          {
+            "sha256": "49afc65d55348503ce1d8cffd1f7f0318b0ef3880bb7375f72df8b6b7310e32b",
+            "path": "font-1.0\\a0b6f0cf-0142-412b-9484-53a1f1beea38\\robbing-window.png"
+          },
+          {
+            "sha256": "4caca1d3740bf4dba58ead0c19d9f6345cca52284c93b4614d1f2cdbfc01b451",
+            "path": "font-1.0\\b5b0da3e-0fd0-4832-8191-37bfb544d034\\last-wall-pass.png"
+          },
+          {
+            "sha256": "5713727ca0c8fc2d5f572afd20893d311d9ca00e2cf2547d5f79d6b7dc10b2c2",
+            "path": "font-1.0\\b5b0da3e-0fd0-4832-8191-37bfb544d034\\last-wall-pending.png"
+          },
+          {
+            "sha256": "dfe1713164b05b6ad8f2f236c7d70b992715664cbed7e7f1e4fdd22f3a2aecea",
+            "path": "font-1.0\\b5b0da3e-0fd0-4832-8191-37bfb544d034\\last-wall-settlement.png"
+          }
+        ],
+        "log_sha256": "56f54154acd240d04202ae86d9bfb8398ca101f22dd2a35d968a1a9f2d210836",
+        "font": "1.0"
+      },
+      {
+        "tests": 1,
+        "images": [
+          {
+            "sha256": "1ff165f12a565b4d9517da2e6c8a9250ebfb8820305881a35eaa8778be407914",
+            "path": "font-1.5\\8d132327-0ad1-4d3d-8c3e-20159dd1bef1\\last-wall-pass.png"
+          },
+          {
+            "sha256": "7ea94be0600a5303d44d5c3c2ebc7f45db57b46b0e87ecd18de0b764d8f082b5",
+            "path": "font-1.5\\8d132327-0ad1-4d3d-8c3e-20159dd1bef1\\last-wall-pending.png"
+          },
+          {
+            "sha256": "c9cafa60fce22936927eed3ef84a6058f2ec84001db72c4a0a9709b5145524e4",
+            "path": "font-1.5\\8d132327-0ad1-4d3d-8c3e-20159dd1bef1\\last-wall-settlement.png"
+          }
+        ],
+        "log_sha256": "2606649fe667b59d998f34fd3f2b8bff94f251c8252e043037f7611d00b3aa1a",
+        "font": "1.5"
+      }
+    ],
+    "candidate": "cm-last-wall-training1",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "2306d940a342b933ce6986f2b9a035852317def82992622cc01a8e70d965d478",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "a26e020a4860553fb8d67608f3e9a2fdda3dbd856f03822b7e4eed7430ec54f0"
+    },
+    "restored_font": "1.0"
+  },
+  "settlement": {
+    "qualifying_fan": 29,
+    "flower_points": 2,
+    "total_fan": 31,
+    "deltas": [
+      55,
+      -8,
+      -8,
+      -39
+    ]
+  }
+}

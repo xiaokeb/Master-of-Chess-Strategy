@@ -48,7 +48,7 @@ fun CompetitionMahjongChallengeRoute(
         modifier = modifier,
         onDiscard = { game.discard(it) },
         onConfirmWin = { game.confirmWin() },
-        onPassKong = { game.passKong() },
+        onPassClaim = { game.passClaim() },
     )
 }
 
@@ -66,7 +66,7 @@ internal fun CompetitionMahjongChallengeScreen(
     modifier: Modifier = Modifier,
     onDiscard: (Int) -> Unit = {},
     onConfirmWin: () -> Unit = {},
-    onPassKong: () -> Unit = {},
+    onPassClaim: () -> Unit = {},
 ) {
     var catalogOpen by remember { mutableStateOf(false) }
     var theme by remember { mutableStateOf<CompetitionMahjongChallengeTheme?>(null) }
@@ -147,12 +147,16 @@ internal fun CompetitionMahjongChallengeScreen(
                                 Text(if (exercise.discardFromSeat == null) "自摸" else "点和")
                             }
                         }
-                        if (exercise.robbingKong && !exercise.completed) {
+                        if (exercise.claimTraining && !exercise.completed) {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedButton(onPassKong, enabled = state.canOperate,
-                                    modifier = Modifier.testTag("competition_mahjong_challenge_pass_kong")) { Text("过") }
+                                OutlinedButton(onPassClaim, enabled = state.canOperate, modifier = Modifier.testTag(
+                                    if (exercise.robbingKong) "competition_mahjong_challenge_pass_kong"
+                                    else "competition_mahjong_challenge_pass_discard",
+                                )) { Text("过") }
                                 Button(onConfirmWin, enabled = state.canOperate,
-                                    modifier = Modifier.testTag("competition_mahjong_challenge_confirm_win")) { Text("抢杠和") }
+                                    modifier = Modifier.testTag("competition_mahjong_challenge_confirm_win")) {
+                                    Text(if (exercise.robbingKong) "抢杠和" else "点和")
+                                }
                             }
                         }
                         exercise.challenge.choices.forEach { choice ->

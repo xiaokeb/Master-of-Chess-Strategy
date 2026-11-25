@@ -33,7 +33,7 @@ class CompetitionMahjongChallenge(
     init {
         require(id.matches(Regex("[a-z0-9-]{1,48}")) && title.isNotBlank())
         require(prompt.isNotBlank() && explanation.isNotBlank())
-        if (CompetitionMahjongPracticePosition.isDiscardTraining(id) || id == CompetitionMahjongPracticePosition.ROB_KONG_ID) {
+        if (CompetitionMahjongPracticePosition.isDiscardTraining(id) || CompetitionMahjongPracticePosition.isClaimTraining(id)) {
             require(choices.isEmpty() && correctChoiceId.isEmpty())
         } else {
             require(choices.size in 2..4 && choices.map { it.id }.toSet().size == choices.size)
@@ -60,17 +60,34 @@ data class CompetitionMahjongChallengeState(
     val qualifyingFan: Int? = null,
 ) {
     val robbingKong: Boolean get() = challenge.id == CompetitionMahjongPracticePosition.ROB_KONG_ID
+    val claimTraining: Boolean get() = CompetitionMahjongPracticePosition.isClaimTraining(challenge.id)
 }
 
-class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjongChallenge, hand: List<Int> = emptyList()) {
+class CompetitionMahjongChallengeSession(
+    private val challenge: CompetitionMahjongChallenge,
+    hand: List<Int> = emptyList(),
+    flowers: List<Int> = emptyList(),
+) {
     private val discardTraining = CompetitionMahjongPracticePosition.isDiscardTraining(challenge.id)
     private val robbingKong = challenge.id == CompetitionMahjongPracticePosition.ROB_KONG_ID
+    private val lastWall = challenge.id == CompetitionMahjongPracticePosition.LAST_WALL_CLAIM_ID
+    private val claimTraining = CompetitionMahjongPracticePosition.isClaimTraining(challenge.id)
     private val initial = CompetitionMahjongChallengeState(challenge, visibleHand = Collections.unmodifiableList(hand.toList()),
         discardTraining = discardTraining,
-        winningTile = CompetitionMahjongPracticePosition.ROB_KONG_TILE.takeIf { robbingKong },
-        discardFromSeat = CompetitionMahjongPracticePosition.ROB_KONG_PAYER.takeIf { robbingKong },
+        winningTile = when {
+            robbingKong -> CompetitionMahjongPracticePosition.ROB_KONG_TILE
+            lastWall -> CompetitionMahjongPracticePosition.LAST_WALL_TILE
+            else -> null
+        },
+        discardFromSeat = when {
+            robbingKong -> CompetitionMahjongPracticePosition.ROB_KONG_PAYER
+            lastWall -> CompetitionMahjongPracticePosition.LAST_WALL_PAYER
+            else -> null
+        },
+        flowers = Collections.unmodifiableList(flowers.toList()),
         feedback = when {
             robbingKong -> "请决定是否抢杠和。"
+            lastWall -> "牌墙已空，请回应北家的弃牌。"
             discardTraining -> "请选择要打出的手牌。"
             else -> "请选择答案。"
         })
@@ -82,7 +99,7 @@ class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjo
     }
     fun answer(choiceId: String): CompetitionMahjongChallengeState {
         if (current.completed) return current
-        require(!discardTraining && !robbingKong)
+        require(!discardTraining && !claimTraining)
         require(challenge.choices.any { it.id == choiceId }) { "答案不属于当前牌型题" }
         val correct = choiceId == challenge.correctChoiceId
         current = current.copy(
@@ -111,28 +128,32 @@ class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjo
     }
 
     internal fun confirmWin(): CompetitionMahjongChallengeState {
-        require((discardTraining || robbingKong) && !current.completed)
-        val turn = if (robbingKong) CompetitionMahjongPracticePosition.robKong(CompetitionMahjongRoundActionKind.WIN)
+        require((discardTraining || claimTraining) && !current.completed)
+        val turn = if (claimTraining) applyClaim(CompetitionMahjongRoundActionKind.WIN)
         else checkNotNull(CompetitionMahjongPracticePosition.playDiscard(
             checkNotNull(current.chosenDiscard), challenge.id, settle = true))
         check(turn.hand == current.visibleHand && turn.tile == current.winningTile &&
             turn.payerSeat == current.discardFromSeat && turn.flowers == current.flowers)
         val showSettlement = turn.payerSeat != null || turn.flowers.isNotEmpty()
         current = current.copy(completed = true, feedback = challenge.explanation,
-            attempts = current.attempts + if (robbingKong) 1 else 0,
+            attempts = current.attempts + if (claimTraining) 1 else 0,
             roundFan = turn.totalFan.takeIf { showSettlement },
             qualifyingFan = turn.qualifyingFan.takeIf { turn.flowers.isNotEmpty() },
             roundDeltas = if (showSettlement) Collections.unmodifiableList(turn.netScores.toList()) else emptyList())
         return current
     }
 
-    internal fun passKong(): CompetitionMahjongChallengeState {
-        require(robbingKong && !current.completed)
-        CompetitionMahjongPracticePosition.robKong(CompetitionMahjongRoundActionKind.PASS)
+    internal fun passClaim(): CompetitionMahjongChallengeState {
+        require(claimTraining && !current.completed)
+        applyClaim(CompetitionMahjongRoundActionKind.PASS)
         current = current.copy(attempts = current.attempts + 1,
-            feedback = "过牌后，南家完成加杠并补牌。重新选择可练习抢杠和。")
+            feedback = if (robbingKong) "过牌后，南家完成加杠并补牌。重新选择可练习抢杠和。"
+            else "过牌后本盘流局，四家均为 0 分。重新选择可练习末张点和。")
         return current
     }
+
+    private fun applyClaim(kind: CompetitionMahjongRoundActionKind) = if (robbingKong)
+        CompetitionMahjongPracticePosition.robKong(kind) else CompetitionMahjongPracticePosition.lastWallClaim(kind)
 }
 
 /** Project-authored questions tied to the already verified WMO fan example IDs. */
@@ -275,6 +296,10 @@ object CompetitionMahjongChallengeLibrary {
             "你坐东家。保留万、筒、条各一副一二三顺子和一张东风。打出多余的牌并观察补花后的摸牌。", "",
             "从牌墙尾连续补花后摸到东风，自摸成和。两张花牌在和牌后各加 1 分，不计入起和，也不算杠上开花。",
             setOf(41, 46, 81)),
+        challenge(CompetitionMahjongPracticePosition.LAST_WALL_CLAIM_ID, "牌墙末张点和",
+            CompetitionMahjongChallengeTheme.CONTEXT, CompetitionMahjongChallengeLevel.MASTER,
+            "你坐东家。北家摸完牌墙后打出东风，你手中只缺一张东风作将。请选择点和或过牌。", "",
+            "东风成将，海底捞月计 8 番。三家各付底分 8，北家另付本盘总番。", setOf(44, 45)),
     ))
 
     init {

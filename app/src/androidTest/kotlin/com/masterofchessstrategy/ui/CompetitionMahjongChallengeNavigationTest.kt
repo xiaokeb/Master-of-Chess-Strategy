@@ -306,6 +306,52 @@ class CompetitionMahjongChallengeNavigationTest {
         resultText = "不计入起和", rewardText = "26 星 · 1570 分", expectedFlowers = listOf(34, 35),
     )
 
+    @Test fun lastWallClaimShowsExhaustiveDrawOrNativeSettlementAndAwardsOnce() {
+        val id = CompetitionMahjongPracticePosition.LAST_WALL_CLAIM_ID
+        val before = CompetitionMahjongChallengeLibrary.challenges.takeWhile { it.id != id }.map { it.id }.toSet()
+        val store = RoomCompetitionMahjongChallengeProgress(database)
+        runBlocking {
+            before.forEach { store.complete(it) }
+            store.select(id)
+        }
+        compose.onNodeWithTag(HOME_COMPETITION_MAHJONG_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag("competition_challenge_entry").performScrollTo().performClick()
+        waitFor("competition_mahjong_challenge_hand")
+        compose.onNodeWithTag("competition_mahjong_challenge_flowers").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("competition_mahjong_challenge_pass_discard").performScrollTo().assertIsDisplayed()
+        capture("last-wall-pending")
+
+        compose.onNodeWithTag("competition_mahjong_challenge_pass_discard").performClick()
+        compose.waitUntil(15_000) {
+            compose.onAllNodes(hasTestTag("competition_mahjong_challenge_feedback") and
+                hasText("本盘流局，四家均为 0 分", substring = true)).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("competition_mahjong_challenge_feedback").performScrollTo()
+            .assertTextContains("本盘流局，四家均为 0 分", substring = true)
+        assertEquals(before, runBlocking { store.load().completedIds })
+        capture("last-wall-pass")
+
+        compose.onNodeWithTag("competition_mahjong_challenge_confirm_win").performScrollTo().performClick()
+        waitFor("competition_mahjong_challenge_completed")
+        val result = CompetitionMahjongPracticePosition.lastWallClaim(CompetitionMahjongRoundActionKind.WIN)
+        val fan = checkNotNull(result.totalFan)
+        assertEquals(checkNotNull(result.qualifyingFan) + 2, fan)
+        assertEquals(listOf(24 + fan, -8, -8, -8 - fan), result.netScores)
+        InstrumentationRegistry.getInstrumentation().sendStatus(2, android.os.Bundle().apply {
+            putInt("last_wall_total_fan", fan)
+            putInt("last_wall_qualifying_fan", checkNotNull(result.qualifyingFan))
+        })
+        compose.onNodeWithTag("competition_mahjong_challenge_settlement").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("本盘总番 $fan").assertIsDisplayed()
+        compose.onNodeWithTag("competition_mahjong_challenge_feedback").performScrollTo()
+            .assertTextContains("海底捞月计 8 番", substring = true)
+        assertEquals(before + id, runBlocking { store.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        compose.onNodeWithTag("competition_mahjong_challenge_rewards").performScrollTo()
+            .assertTextEquals("训练奖励 27 星 · 1650 分")
+        capture("last-wall-settlement")
+    }
+
     @Test fun nativeNineGatesTeachesWmoExclusionAndSavesOneReward() {
         val hand = CompetitionMahjongPracticePosition.verifyNineGates()
         assertEquals(listOf(0, 0, 0, 1, 2, 3, 4, 4, 5, 6, 7, 8, 8, 8), hand)
