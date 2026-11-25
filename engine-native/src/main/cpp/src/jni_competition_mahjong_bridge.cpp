@@ -1,6 +1,9 @@
 #include "mocs/engine/native_engine_registry.hpp"
+#include "mocs/engine/competition_mahjong_shape.hpp"
 #include "jni_competition_mahjong_public_frame.hpp"
 
+#include <algorithm>
+#include <array>
 #include <jni.h>
 #include <stdexcept>
 
@@ -55,7 +58,86 @@ template <typename Value> void tiles(std::vector<jint>& fields, const std::vecto
     fields.push_back(static_cast<jint>(values.size()));
     for (const auto value : values) fields.push_back(value);
 }
+
+std::vector<jint> bounded_ints(JNIEnv* env, jintArray data, jsize maximum) {
+    if (!data || env->GetArrayLength(data) > maximum) throw std::invalid_argument("Invalid Mahjong array");
+    std::vector<jint> values(env->GetArrayLength(data));
+    if (!values.empty()) env->GetIntArrayRegion(data, 0, static_cast<jsize>(values.size()), values.data());
+    return values;
+}
 } // namespace
+
+extern "C" JNIEXPORT jintArray JNICALL
+Java_com_masterofchessstrategy_engine_NativeCompetitionMahjongDiscardWaits_analyze(
+    JNIEnv* env, jobject, jintArray hand, jintArray melds, jintArray visible_copies,
+    jintArray discards, jint seat_wind, jint round_wind, jint scoring) {
+    return guarded(env, static_cast<jintArray>(nullptr), [&]() -> jintArray {
+        const auto tiles = bounded_ints(env, hand, 14);
+        const auto packs = bounded_ints(env, melds, 16);
+        const auto known = bounded_ints(env, visible_copies, 34);
+        const auto candidates = bounded_ints(env, discards, 14);
+        if (packs.size() % 4 != 0 || known.size() != 34 || tiles.size() != 14 - 3 * (packs.size() / 4) ||
+            seat_wind < 0 || seat_wind > 3 || round_wind < 0 || round_wind > 3 ||
+            scoring < 1 || scoring > 3) throw std::invalid_argument("Invalid public wait position");
+
+        CompetitionMahjongFanInput input;
+        input.seat_wind = seat_wind;
+        input.round_wind = round_wind;
+        const auto rules = static_cast<CompetitionMahjongFanRules>(scoring);
+        std::array<std::uint8_t, 34> hand_counts{};
+        auto owned_counts = hand_counts;
+        for (const int tile : tiles) {
+            if (tile < 0 || tile >= 34) throw std::invalid_argument("Invalid public hand tile");
+            ++hand_counts[tile];
+            ++owned_counts[tile];
+        }
+        for (std::size_t index = 0; index < packs.size(); index += 4) {
+            const int kind = packs[index], tile = packs[index + 1], offer = packs[index + 2], added = packs[index + 3];
+            if (kind < 1 || kind > 3 || tile < 0 || tile >= 34 || offer < 0 || offer > 3 ||
+                (kind == 1 && (tile >= 27 || tile % 9 > 6 || offer == 0)) || (kind == 2 && offer == 0) ||
+                (added != 0 && (added != 1 || kind != 3 || offer == 0))) {
+                throw std::invalid_argument("Invalid local Mahjong meld");
+            }
+            if (kind == 1) {
+                for (int offset = 0; offset < 3; ++offset) ++owned_counts[tile + offset];
+            } else owned_counts[tile] += kind == 2 ? 3 : 4;
+            input.packs.push_back({static_cast<CompetitionMahjongFanPackKind>(kind), tile, offer, added != 0});
+        }
+        for (int tile = 0; tile < 34; ++tile) {
+            if (known[tile] < owned_counts[tile] || known[tile] > 4)
+                throw std::invalid_argument("Invalid public tile multiplicity");
+        }
+
+        std::vector<jint> result;
+        for (const int discard : candidates) {
+            if (discard < 0 || discard >= 34 || hand_counts[discard] == 0)
+                throw std::invalid_argument("Invalid hypothetical discard");
+            input.concealed_tiles = tiles;
+            input.concealed_tiles.erase(std::find(input.concealed_tiles.begin(), input.concealed_tiles.end(), discard));
+            auto remaining_hand = hand_counts;
+            --remaining_hand[discard];
+            std::array<std::uint8_t, 34> other_known{};
+            for (int tile = 0; tile < 34; ++tile) other_known[tile] = known[tile] - remaining_hand[tile];
+            const auto waits = competition_mahjong_waits(
+                remaining_hand, static_cast<std::uint8_t>(input.packs.size()), other_known);
+            int total = 0;
+            int from_discard = 0;
+            for (int tile = 0; tile < 34; ++tile) {
+                if (!waits.tiles[tile]) continue;
+                input.win_tile = tile;
+                input.self_drawn = false;
+                const bool claim = evaluateCompetitionMahjongFan(input, rules).qualifies;
+                input.self_drawn = true;
+                const bool draw = evaluateCompetitionMahjongFan(input, rules).qualifies;
+                const int copies = 4 - known[tile];
+                if (claim || draw) total += copies;
+                if (claim) from_discard += copies;
+            }
+            result.insert(result.end(), {discard, total, from_discard});
+        }
+        return ints(env, result);
+    });
+}
 
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_masterofchessstrategy_engine_internal_NativeBindings_createCompetitionMahjong(

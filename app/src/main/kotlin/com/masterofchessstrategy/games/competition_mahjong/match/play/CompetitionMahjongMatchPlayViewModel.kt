@@ -193,7 +193,7 @@ internal class CompetitionMahjongMatchPlayViewModel(
             val identity = advisor.identity
             val recommendation = try {
                 require(identity.matches(Regex("[A-Za-z0-9_.-]{1,64}")))
-                withTimeout(5_000) { advisor.recommend(CompetitionMahjongHintInput(frame, actions),
+                withTimeout(5_000) { advisor.recommend(CompetitionMahjongHintInput(frame, actions, effectiveConfig.botStrategy.scoring),
                     position.take(16).toULong(16).toLong() and Long.MAX_VALUE) }
             } catch (_: Exception) {
                 operationError = "提示暂不可用，未扣除提示次数。"

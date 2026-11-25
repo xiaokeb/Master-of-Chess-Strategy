@@ -50,7 +50,7 @@ import com.masterofchessstrategy.games.competition_mahjong.CompetitionMahjongTab
 import com.masterofchessstrategy.games.competition_mahjong.competitionMahjongTileName
 import com.masterofchessstrategy.games.competition_mahjong.competitionMahjongActionId
 import com.masterofchessstrategy.games.competition_mahjong.match.hint.CompetitionMahjongHintAdvisor
-import com.masterofchessstrategy.games.competition_mahjong.match.hint.CompetitionMahjongPublicShapeHintAdvisor
+import com.masterofchessstrategy.games.competition_mahjong.match.hint.CompetitionMahjongReadyHintAdvisor
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongCompetitionConfig
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchStore
 import com.masterofchessstrategy.games.competition_mahjong.match.CompetitionMahjongMatchSummary
@@ -69,7 +69,7 @@ internal fun CompetitionMahjongMatchRoute(
     modifier: Modifier = Modifier,
     initialConfig: CompetitionMahjongCompetitionConfig? = null,
     playPolicy: CompetitionMahjongPlayPolicy? = null,
-    hintAdvisor: CompetitionMahjongHintAdvisor? = CompetitionMahjongPublicShapeHintAdvisor,
+    hintAdvisor: CompetitionMahjongHintAdvisor? = CompetitionMahjongReadyHintAdvisor,
     ownerKey: String? = null,
     ownerIsCurrent: (() -> Boolean)? = null,
     writers: LocalDataWriterRegistry? = null,

@@ -21,18 +21,7 @@ object CompetitionMahjongPublicShapeHintAdvisor : CompetitionMahjongHintAdvisor 
         // Native legal_actions emits WIN only after evaluate_hu(...).qualifies; active declarations use a separate UI path.
         actions.firstOrNull { it.kind == CompetitionMahjongRoundActionKind.WIN && !own.winDisabled }?.let { return it }
         actions.firstOrNull { it.kind == CompetitionMahjongRoundActionKind.DRAW }?.let { return it }
-        val known = counts.copyOf()
-        for (seat in view.seats) {
-            for (tile in seat.discards) if (tile in 0..33) known[tile]++
-            for (meld in seat.melds) {
-                val tile = meld.tile ?: continue
-                if (tile !in 0..33) continue
-                if (meld.kind == CompetitionMahjongMeldKind.CHOW && tile < 27 && tile % 9 <= 6)
-                    repeat(3) { known[tile + it]++ }
-                else if (meld.kind != CompetitionMahjongMeldKind.CHOW)
-                    known[tile] += if (meld.kind == CompetitionMahjongMeldKind.KONG) 4 else 3
-            }
-        }
+        val known = competitionMahjongKnownCopies(view, counts)
         val memo = HashMap<String, Int>()
         fun potential(hand: IntArray): Int {
             val key = hand.joinToString("")
@@ -101,4 +90,21 @@ object CompetitionMahjongPublicShapeHintAdvisor : CompetitionMahjongHintAdvisor 
         }
         return best
     }
+}
+
+/** Native removes claimed discards before publishing the corresponding meld. */
+internal fun competitionMahjongKnownCopies(view: CompetitionMahjongPublicView, ownCounts: IntArray): IntArray {
+    val known = ownCounts.copyOf()
+    for (seat in view.seats) {
+        for (tile in seat.discards) if (tile in 0..33) known[tile]++
+        for (meld in seat.melds) {
+            val tile = meld.tile ?: continue
+            if (tile !in 0..33) continue
+            if (meld.kind == CompetitionMahjongMeldKind.CHOW && tile < 27 && tile % 9 <= 6)
+                repeat(3) { known[tile + it]++ }
+            else if (meld.kind != CompetitionMahjongMeldKind.CHOW)
+                known[tile] += if (meld.kind == CompetitionMahjongMeldKind.KONG) 4 else 3
+        }
+    }
+    return known
 }

@@ -1,13 +1,19 @@
 package com.masterofchessstrategy.games.competition_mahjong.match.play
 
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
+import android.graphics.Bitmap
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.lifecycle.ViewModelStore
@@ -34,6 +40,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
@@ -199,12 +206,26 @@ class CompetitionMahjongMatchPlayContentTest {
     }
 
     @Test fun productionPublicAdviceIsVisibleWithoutApplyingIt() = runBlocking {
-        withGame(hintAdvisor = CompetitionMahjongPublicShapeHintAdvisor) { game, store, natives, _ ->
+        compose.activityRule.scenario.onActivity {
+            it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        }
+        compose.waitUntil(15_000) {
+            compose.activity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        }
+        withGame(hintAdvisor = CompetitionMahjongReadyHintAdvisor) { game, store, natives, _ ->
+            val images = File(compose.activity.getExternalFilesDir(null), "competition-ready-hint-qa/${UUID.randomUUID()}")
+            check(images.mkdirs())
+            fun capture(name: String) {
+                val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
+                File(images, "$name.png").outputStream().use { check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+            }
             val before = natives.last().serialize()
+            capture("before")
             compose.onNodeWithTag("competition_mahjong_match_hint").performClick()
             waitReady(game)
             compose.onNodeWithTag("competition_mahjong_match_hint_advice").assertTextContains("建议：", substring = true)
-            assertEquals(CompetitionMahjongPublicShapeHintAdvisor.identity, game.state.value.hint!!.advisorIdentity)
+            capture("saved-hint")
+            assertEquals(CompetitionMahjongReadyHintAdvisor.identity, game.state.value.hint!!.advisorIdentity)
             assertEquals(1, store.load(0)!!.assistance!!.hintUsed)
             assertArrayEquals(before, natives.last().serialize())
         }

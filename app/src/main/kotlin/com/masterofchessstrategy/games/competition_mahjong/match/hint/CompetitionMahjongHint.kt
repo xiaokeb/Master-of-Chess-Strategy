@@ -7,8 +7,11 @@ import java.security.MessageDigest
 import java.util.Collections
 
 /** Only copied viewer/public information crosses the recommendation boundary. */
-class CompetitionMahjongHintInput internal constructor(view: CompetitionMahjongPublicView,
-                                                      actions: List<CompetitionMahjongAction>) {
+class CompetitionMahjongHintInput internal constructor(
+    view: CompetitionMahjongPublicView,
+    actions: List<CompetitionMahjongAction>,
+    internal val scoring: CompetitionMahjongScoring = CompetitionMahjongScoring.LEGACY,
+) {
     val view: CompetitionMahjongPublicView = view.copy(
         netScores = frozen(view.netScores), winningTiles = frozen(view.winningTiles),
         winningFan = view.winningFan.copy(entries = frozen(view.winningFan.entries)),
