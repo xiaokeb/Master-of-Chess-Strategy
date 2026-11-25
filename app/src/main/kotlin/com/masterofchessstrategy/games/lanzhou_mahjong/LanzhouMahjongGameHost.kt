@@ -76,6 +76,7 @@ internal class LanzhouMahjongGameHost(
     private var nextChoiceSeed = launchConfig.seed
     private var assistance: LanzhouMahjongAssistanceManager? = null
     private var pending: LanzhouMahjongStoredSession? = null
+    private var pendingCreation = false
     private var acknowledged: LanzhouMahjongStoredSession? = null
     private var needsAdvance = false
     private var blocked = false
@@ -126,7 +127,7 @@ internal class LanzhouMahjongGameHost(
                 throw IOException("兰州麻将存档无法完整恢复，原数据已保留")
             }
             opened = true
-            advanceAndSave()
+            if (saved == null) saveNewGameThenAdvance() else advanceAndSave()
         } catch (denied: LanzhouMahjongEntryDeniedException) {
             failOpen(denied, checkNotNull(denied.message))
         } catch (cancelled: CancellationException) {
@@ -171,7 +172,13 @@ internal class LanzhouMahjongGameHost(
         }
     }
 
-    suspend fun retrySave() = operate { if (!blocked && pending != null) savePending() }
+    suspend fun retrySave() = operate {
+        if (!blocked && pending != null) {
+            val creating = pendingCreation
+            savePending()
+            if (creating && pending == null) advanceAndSave()
+        }
+    }
     suspend fun retryAdvance() = operate {
         if (opened && pending == null && needsAdvance && !blocked) advanceAndSave()
     }
@@ -231,6 +238,16 @@ internal class LanzhouMahjongGameHost(
         hint = null
         pendingHint = null
         session = sessionFactory(config)
+        saveNewGameThenAdvance()
+    }
+
+    private suspend fun saveNewGameThenAdvance() {
+        if (storage.store.persistsFormalCreation) {
+            pendingCreation = true
+            needsAdvance = true
+            checkpoint()
+            if (pending != null) return
+        }
         advanceAndSave()
     }
 
@@ -242,7 +259,7 @@ internal class LanzhouMahjongGameHost(
             config.viewerSeat, config.seed, config.dealerSeat, config.baseScore, nextChoiceSeed,
             checkNotNull(session).serialize(), manager.usage, manager.decisions)
         val previous = acknowledged
-        if (previous != null && LanzhouMahjongSessionRecordCodec.encode(previous.record)
+        if (!pendingCreation && previous != null && LanzhouMahjongSessionRecordCodec.encode(previous.record)
                 .contentEquals(LanzhouMahjongSessionRecordCodec.encode(record))) {
             feedback = if (needsAdvance) "对手操作暂停，已保存进度，可继续对局" else null
             return
@@ -255,9 +272,16 @@ internal class LanzhouMahjongGameHost(
         val request = pending ?: return
         try {
             checkCurrentOwner()
-            storage.store.save(request)
+            if (pendingCreation) {
+                storage.store.createFormal(request, acknowledged)
+            } else {
+                val phase = checkNotNull(session).snapshot().phase
+                storage.store.saveCheckpoint(request, acknowledged,
+                    terminal = phase == LanzhouMahjongPhase.WON || phase == LanzhouMahjongPhase.EXHAUSTIVE_DRAW)
+            }
             acknowledged = request
             pending = null
+            pendingCreation = false
             pendingHint?.let { hint = it; pendingHint = null }
             feedback = if (needsAdvance) "对手操作暂停，已保存进度，可继续对局" else null
         } catch (cancelled: CancellationException) {

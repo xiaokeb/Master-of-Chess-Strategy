@@ -3,6 +3,7 @@ package com.masterofchessstrategy.games.lanzhou_mahjong.data
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.LanzhouMahjongActionKind
+import com.masterofchessstrategy.engine.LanzhouMahjongPhase
 import com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongGameHost
 import com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongLaunchConfig
 import com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongOpenMode
@@ -17,6 +18,55 @@ import org.junit.runner.RunWith
 /** Exact production binding, real Native and a unique disk Room database; no default app data. */
 @RunWith(AndroidJUnit4::class)
 class LanzhouMahjongProductionHostInstrumentedTest {
+    @Test fun firstSaveRetriesAtomicallyAndRealTableCommitsOneTerminalReceipt() = withOwnedLanzhouDatabase { fixture ->
+        val db = fixture.db
+        db.lanzhouMahjongLearningProgressDao().upsert(LanzhouMahjongLearningProgressEntity(0, 2, 10, 1))
+        db.openHelper.writableDatabase.execSQL(
+            "CREATE TRIGGER block_lanzhou_initial BEFORE INSERT ON active_games " +
+                "WHEN NEW.gameTypeCode = 3 BEGIN SELECT RAISE(ABORT, 'injected initial save failure'); END",
+        )
+        val host = LanzhouMahjongGameHost(
+            db.createLanzhouMahjongHostStorage(), LanzhouMahjongLaunchConfig(Difficulty.EASY, 1), now = { 42 },
+        )
+        try {
+            host.open()
+            assertTrue(requireNotNull(host.state.value.table).needsSave)
+            assertNull(fixture.row())
+            assertTrue(db.lanzhouMahjongSettlementDao().readCreations().isEmpty())
+            db.openHelper.writableDatabase.execSQL("DROP TRIGGER block_lanzhou_initial")
+            host.retrySave()
+            val initial = requireNotNull(fixture.row())
+            assertEquals(0, initial.acceptedMoveCount)
+            assertEquals(42L, db.lanzhouMahjongSettlementDao().creation(initial.sessionId)?.createdAt)
+
+            val terminal = withTimeout(15_000) {
+                repeat(240) {
+                    val table = requireNotNull(host.state.value.table)
+                    assertFalse(table.needsSave)
+                    if (table.view.phase in setOf(LanzhouMahjongPhase.WON, LanzhouMahjongPhase.EXHAUSTIVE_DRAW)) {
+                        return@withTimeout table.view
+                    }
+                    val action = table.actions.firstOrNull { it.kind == LanzhouMahjongActionKind.WIN }
+                        ?: table.actions.first {
+                            it.kind in setOf(LanzhouMahjongActionKind.DRAW, LanzhouMahjongActionKind.DISCARD,
+                                LanzhouMahjongActionKind.PASS)
+                        }
+                    host.apply(action)
+                }
+                error("Seeded round did not finish")
+            }
+            val receipt = db.lanzhouMahjongSettlementDao().readReceipts().single()
+            assertEquals(initial.sessionId, receipt.sessionId)
+            assertEquals(terminal.outcome.winnerSeat, receipt.winnerSeat)
+            assertEquals(terminal.netScores,
+                listOf(receipt.seat0Score, receipt.seat1Score, receipt.seat2Score, receipt.seat3Score))
+            assertArrayEquals(fixture.row()?.engineState, receipt.terminalRecord)
+            assertTrue(host.leave())
+        } finally {
+            withTimeout(15_000) { host.closeAndJoin() }
+        }
+    }
+
     @Test fun replacingDataRetiresRealHostAndNewOwnerCanContinueSavedHistory() = withOwnedLanzhouDatabase { fixture ->
         fixture.db.lanzhouMahjongLearningProgressDao().upsert(LanzhouMahjongLearningProgressEntity(0, 2, 10, 1))
         val storage = fixture.db.createLanzhouMahjongHostStorage()

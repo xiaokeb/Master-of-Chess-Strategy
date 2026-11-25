@@ -44,8 +44,7 @@ internal class RoomLanzhouMahjongEntryRepository internal constructor(
                 transaction {
                     val facts = readFacts()
                     if (!sameCheckpoint(facts.active, expectedCurrent)) deny(LanzhouMahjongEntryDenial.ACTIVE_GAME_CHANGED)
-                    if (!facts.tutorialCompleted) deny(LanzhouMahjongEntryDenial.TUTORIAL_REQUIRED)
-                    if (difficulty != Difficulty.EASY) deny(LanzhouMahjongEntryDenial.TRUSTED_WINS_UNAVAILABLE)
+                    requireLanzhouMahjongCreationEligibility(facts.tutorialCompleted, difficulty)
                     currentCoroutineContext().ensureActive()
                     facts
                 }
@@ -68,4 +67,12 @@ internal class RoomLanzhouMahjongEntryRepository internal constructor(
             LanzhouMahjongSessionRecordCodec.encode(a.record).contentEquals(LanzhouMahjongSessionRecordCodec.encode(b.record))
 
     private fun deny(reason: LanzhouMahjongEntryDenial): Nothing = throw LanzhouMahjongEntryDeniedException(reason)
+}
+
+/** Called directly by the production writer inside its existing Room transaction. */
+internal fun requireLanzhouMahjongCreationEligibility(tutorialCompleted: Boolean, difficulty: Difficulty) {
+    if (!tutorialCompleted) throw LanzhouMahjongEntryDeniedException(LanzhouMahjongEntryDenial.TUTORIAL_REQUIRED)
+    if (difficulty != Difficulty.EASY) {
+        throw LanzhouMahjongEntryDeniedException(LanzhouMahjongEntryDenial.TRUSTED_WINS_UNAVAILABLE)
+    }
 }

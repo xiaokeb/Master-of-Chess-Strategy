@@ -23,9 +23,16 @@ internal data class LanzhouMahjongStoredSession(
 }
 
 internal interface LanzhouMahjongAdmittedSessionStore {
+    val persistsFormalCreation: Boolean get() = false
     /** Only a missing game3 row returns null; malformed data and storage errors remain errors. */
     suspend fun load(): LanzhouMahjongStoredSession?
     suspend fun save(snapshot: LanzhouMahjongStoredSession)
+    suspend fun createFormal(initial: LanzhouMahjongStoredSession, expected: LanzhouMahjongStoredSession?) {
+        throw LanzhouMahjongEntryDeniedException(LanzhouMahjongEntryDenial.ADMISSION_UNAVAILABLE)
+    }
+    suspend fun saveCheckpoint(
+        snapshot: LanzhouMahjongStoredSession, expected: LanzhouMahjongStoredSession?, terminal: Boolean,
+    ) = save(snapshot)
     /** Older/unconfigured stores cannot silently authorize a new production game. */
     suspend fun authorizeNew(difficulty: Difficulty, expectedCurrent: LanzhouMahjongStoredSession?) {
         throw LanzhouMahjongEntryDeniedException(LanzhouMahjongEntryDenial.ADMISSION_UNAVAILABLE)

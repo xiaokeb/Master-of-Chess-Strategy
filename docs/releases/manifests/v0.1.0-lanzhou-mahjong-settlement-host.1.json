@@ -1,0 +1,50 @@
+{
+  "tag": "v0.1.0-lanzhou-mahjong-settlement-host.1",
+  "baseline": "c9f0762f4e42231a98c900f11e87c47dc5c0c8db",
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/LanzhouMahjongGameHost.kt",
+      "sha256": "f798b3e2315263dc4eea1f3ecab49fd6befba6cbb006531d1721672f3898d475"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/RoomLanzhouMahjongAdmittedSessionStore.kt",
+      "sha256": "4b8451e3646a1fc40df8e2f6c7e27aec761816e76f1fa245873c30b0574aaa77"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/RoomLanzhouMahjongEntryRepository.kt",
+      "sha256": "dadb640eeace4ed6c34f27767e4750db24f07e68b3bb9761c02099737481e745"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongProductionHostStorage.kt",
+      "sha256": "2d6f6ab0a712e8a5b1d1d33c8fd3de7d909d4851106004d53b42fef8d6237dc6"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/RoomLanzhouMahjongSettlement.kt",
+      "sha256": "f7f5f1a0c6020ab4b63ae4c8bbefedb9c67eadee3c2462b795bd05fb6ced6bda"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/data/LanzhouMahjongProductionHostInstrumentedTest.kt",
+      "sha256": "0fd832cf593aec7fc54792cd5f54351153e72eb0df93f94ba370c28af000da3d"
+    }
+  ],
+  "verification": {
+    "emulator": "Pixel_7_Pro",
+    "jvm_tests": 36,
+    "emulator_host_entry_tests": 9,
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "ndk_abis": [
+      "x86_64",
+      "arm64-v8a"
+    ],
+    "debug_apk_sha256": "0d3d524d2315689208c31117b5d07921615d60ab1852166c61e612b6701a73db",
+    "test_apk_sha256": "b4ace6d6120b72915d98e2ed0e8c40d85e8fe026d80bce0f51ef81cb167390d3",
+    "host_log_sha256": "51669ad7123dee9eadc8b5bc2d092d1fb5331ac3e6c29f2053aed58ae0eddb42",
+    "landscape_standard_log_sha256": "103bd080800684ba0dffa4d34a3805524ab5f161276845937dd809e557b4312d",
+    "portrait_standard_log_sha256": "9a15e8cbfa922d14a82fc32ea8706b158b93d1e75b3b090e9ccf10f3952a9754",
+    "portrait_large_log_sha256": "5bbd37e7e0ca4185b11c8e17d8717a73c044c63c5f681aea278d2ad20ac6398c",
+    "incomplete": "150% font landscape table"
+  },
+  "distribution": "source-only",
+  "normalized_git_blob": "09e18eea0732095985c654b9a8c107a4c18cff82"
+}
