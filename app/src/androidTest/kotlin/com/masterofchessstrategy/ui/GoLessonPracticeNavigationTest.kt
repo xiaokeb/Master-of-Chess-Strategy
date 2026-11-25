@@ -423,6 +423,41 @@ class GoLessonPracticeNavigationTest {
         capture("tactical-reopened")
     }
 
+    @Test fun snapbackShowsTheOpponentCaptureBeforeTheFirstClear() {
+        val puzzle = checkNotNull(GoEndgameLibrary.puzzle("corner-snapback"))
+        val preceding = GoEndgameLibrary.puzzles.takeWhile { it.id != puzzle.id }.map { it.id }.toSet()
+        val repository = RoomGoEndgameProgressRepository(database)
+        runBlocking { preceding.forEach { repository.complete(it) } }
+        compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag(GO_ENDGAMES_ENTRY_TAG).performScrollTo().performClick()
+        awaitTag("go_endgame_catalog")
+        compose.onNodeWithTag("go_endgame_catalog").performScrollTo().performClick()
+        compose.onNodeWithTag("go_endgame_puzzle_${puzzle.id}").performScrollTo().performClick()
+        awaitTitle(puzzle.title)
+        compose.onNodeWithTag("go_endgame_feedback").assertIsDisplayed()
+        capture("snapback-ready")
+
+        val first = compose.onNodeWithTag("go_intersection_0_0")
+        first.performClick()
+        compose.waitUntil(15_000) {
+            compose.onAllNodes(hasTestTag("go_endgame_feedback") and hasText("剩余 1 手", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("go_intersection_1_0").assertContentDescriptionContains("第1行第2列，白子", substring = true)
+        compose.onNodeWithTag("go_endgame_feedback").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("go_endgame_completed").assertDoesNotExist()
+        assertEquals(preceding, runBlocking { repository.load().completedIds })
+        capture("snapback-defended")
+
+        first.performClick()
+        awaitTag("go_endgame_completed")
+        compose.onNodeWithTag("go_endgame_rewards").performScrollTo().assertTextEquals("残局奖励 18 星 · 620 分")
+        assertEquals(preceding + puzzle.id, runBlocking { repository.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        compose.onNodeWithTag("go_endgame_feedback").performScrollTo().assertIsDisplayed()
+        capture("snapback-completed")
+    }
+
     @Test fun counterCaptureUnlocksDoubleConnectionAndAlternateAnswerPersists() {
         val puzzles = GoEndgameLibrary.puzzles
         val escape = checkNotNull(GoEndgameLibrary.puzzle("corner-counter-capture"))

@@ -1,0 +1,147 @@
+{
+  "tag": "v0.1.0-go-corner-snapback.1",
+  "distribution": "source-only",
+  "assets": [],
+  "expected_changed_paths": 10,
+  "build": {
+    "overlays": [
+      {
+        "working_sha256": "2c945346a274793c830c30e3c3ff6e14282d8cd8d0f743a7834f30268c85935c",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoTacticalCapture.kt",
+        "sha256": "2c945346a274793c830c30e3c3ff6e14282d8cd8d0f743a7834f30268c85935c"
+      },
+      {
+        "working_sha256": "6be18366f48d237f4b2fa79b2af6654f5f28bb93d41e2a8c96cc43748c2bc3cb",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibrary.kt",
+        "sha256": "6be18366f48d237f4b2fa79b2af6654f5f28bb93d41e2a8c96cc43748c2bc3cb"
+      },
+      {
+        "working_sha256": "73039b8c0a88e8ead98c9f54a0b3dd1b3f370ab3f161405c4eb9aa913e16a548",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibraryTest.kt",
+        "sha256": "73039b8c0a88e8ead98c9f54a0b3dd1b3f370ab3f161405c4eb9aa913e16a548"
+      },
+      {
+        "working_sha256": "b9d94db21f51933f94849f1421eb7d1265f6da96daf44a63282d62ee1b85a3fa",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameChallengesTest.kt",
+        "sha256": "b9d94db21f51933f94849f1421eb7d1265f6da96daf44a63282d62ee1b85a3fa"
+      },
+      {
+        "working_sha256": "4640faf8aca802b6413c9536edd5c894cbd01fa7ab6172cc8516c8232d5efa78",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoEndgameNativeInstrumentedTest.kt",
+        "sha256": "4640faf8aca802b6413c9536edd5c894cbd01fa7ab6172cc8516c8232d5efa78"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameRoute.kt",
+        "sha256": "47cf8ec292cd24b8d30c686039e8c7a3456ded827c22b71aabcedad101f2a7bc",
+        "working_sha256": "47cf8ec292cd24b8d30c686039e8c7a3456ded827c22b71aabcedad101f2a7bc"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoLessonPracticeNavigationTest.kt",
+        "sha256": "68aa0ed948bda48b8044dc0aff1a78b3aebaf06e3fd5b5c370a4f5af657ba204",
+        "working_sha256": "68aa0ed948bda48b8044dc0aff1a78b3aebaf06e3fd5b5c370a4f5af657ba204"
+      }
+    ],
+    "candidate": "go-snapback1",
+    "release_manifest": "processed",
+    "baseline": "386c90437646ced5db8cdd70460cdc1ddc4cc00e",
+    "unit_tests": [
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameChallengesTest",
+        "tests": 7
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameLibraryTest",
+        "tests": 14
+      },
+      {
+        "name": "com.masterofchessstrategy.games.go.GoEndgameProgressTest",
+        "tests": 9
+      }
+    ],
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "63bb0cb4cf2c48a3e660a67030b4bc26ae52a92fe79a98457842d51336808ccd",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "30202306587a2d0a5d9da6b6ae25dc1e6c844e1c14d58686d578191a64e9c117"
+    }
+  },
+  "device": {
+    "candidate": "go-snapback1",
+    "restored_font": "1.0",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "63bb0cb4cf2c48a3e660a67030b4bc26ae52a92fe79a98457842d51336808ccd",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "30202306587a2d0a5d9da6b6ae25dc1e6c844e1c14d58686d578191a64e9c117"
+    },
+    "original_font": "1.0",
+    "runs": [
+      {
+        "log_sha256": "b24d27df049bf4feeb15453b03b93553162e424574e37a3ba5f31f9295490bae",
+        "selector": "com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#snapbackShowsTheOpponentCaptureBeforeTheFirstClear,com.masterofchessstrategy.games.go.GoEndgameNativeInstrumentedTest#allAuthoredSetupsAndAnswersRunThroughRealNativeRules,com.masterofchessstrategy.games.go.GoEndgameNativeInstrumentedTest#snapbackProvesBothThrowInsAndCapturesTheFiveStoneGroup,com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#twoMoveCaptureCompletesOnlyAfterBothTargetsAndPersistsProgress",
+        "tests": 4,
+        "images": [
+          {
+            "sha256": "0e32e4b95ef62dab6e2fc4786d4981da463a4874fe53bca65cd180d69a9aa4be",
+            "path": "font-1.0\\3297cc61-393d-491b-8103-f5fb014ab302\\snapback-completed.png"
+          },
+          {
+            "sha256": "4fb03315c48890d5b2a8634dd7b2147deb3507565faa412bebaf5e4c03566f02",
+            "path": "font-1.0\\3297cc61-393d-491b-8103-f5fb014ab302\\snapback-defended.png"
+          },
+          {
+            "sha256": "5eeeec5aaabe7ff68e561de26e064b6ff7ea0ee98d319560c0ccfb3f1df83702",
+            "path": "font-1.0\\3297cc61-393d-491b-8103-f5fb014ab302\\snapback-ready.png"
+          },
+          {
+            "sha256": "b4d0689a0bdb00ce5726c0fbce1a7ec3c16ab95e7d79a3026e9161178ced36e1",
+            "path": "font-1.0\\e7e105b7-804c-493a-a527-d92c230af75e\\tactical-completed.png"
+          },
+          {
+            "sha256": "491b43afa10ffc54758061766989a27b8c8c3b291333cace05ab05acc86dc0a1",
+            "path": "font-1.0\\e7e105b7-804c-493a-a527-d92c230af75e\\tactical-first-capture.png"
+          },
+          {
+            "sha256": "38ba4629d0d4033f6ea9e49e42ad930d56b2be05570c3a80875040d0edfe5cae",
+            "path": "font-1.0\\e7e105b7-804c-493a-a527-d92c230af75e\\tactical-reopened.png"
+          }
+        ],
+        "font": "1.0"
+      },
+      {
+        "log_sha256": "f3c75bb137d55d79def234b518aefecb1eedd33ed0ce7601f980e70a3dcef066",
+        "selector": "com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#snapbackShowsTheOpponentCaptureBeforeTheFirstClear",
+        "tests": 1,
+        "images": [
+          {
+            "sha256": "35e6f8cc63ce2652a99d0b208ce815f77d61099bdcc8f07c34ee11c4b3c27f78",
+            "path": "font-1.5\\bcaf3dbc-d689-4178-b2e4-e35b72eb090d\\snapback-completed.png"
+          },
+          {
+            "sha256": "70c339e6504b1733657b653d20464b7d142ded41bce41703a26051cc825bebae",
+            "path": "font-1.5\\bcaf3dbc-d689-4178-b2e4-e35b72eb090d\\snapback-defended.png"
+          },
+          {
+            "sha256": "86488b641bdc2235d8b34c2e694e07fe0c850a48ddbebaa682a5f057995c6ee3",
+            "path": "font-1.5\\bcaf3dbc-d689-4178-b2e4-e35b72eb090d\\snapback-ready.png"
+          }
+        ],
+        "font": "1.5"
+      }
+    ]
+  },
+  "rule": {
+    "board_size": 9,
+    "valid_first_moves": [
+      "0,0",
+      "1,0"
+    ],
+    "captured_after_recapture": 5
+  },
+  "native": {
+    "ndk": "30.0.16138531",
+    "abis": [
+      "x86_64",
+      "arm64-v8a"
+    ],
+    "fresh_compilation_before_layout_only_revision": true
+  }
+}

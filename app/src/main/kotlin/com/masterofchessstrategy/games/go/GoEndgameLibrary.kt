@@ -159,6 +159,12 @@ object GoEndgameLibrary {
             "黑棋已经提劫。白方若立即回提，整个盘面会重现，规则禁止这手。",
             0 to 1, 1 to 1, 1 to 0, 0 to 2, 2 to 1, 2 to 2, 8 to 8, 1 to 3,
             answer = 1 to 2, captured = setOf(1 to 1)),
+        GoTacticalCaptureLibrary.cornerSnapback.let { puzzle ->
+            GoEndgamePuzzle(puzzle.id, puzzle.title, GoEndgameTheme.CAPTURE, GoEndgameLevel.HARD,
+                "黑先。角上的白棋只剩两口气。用两手提掉标记的棋组，留意白方先提一子的反击。",
+                "黑棋先送一子，再回提整个白棋棋组。回提后的棋盘没有重现先前局面。", puzzle.boardSize,
+                puzzle.setup, puzzle.firstMove, captured = puzzle.targets, maxBlackMoves = puzzle.maxBlackMoves)
+        },
     )
 
     init { require(puzzles.map { it.id }.toSet().size == puzzles.size) }

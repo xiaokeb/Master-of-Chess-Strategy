@@ -11,7 +11,7 @@ class GoEndgameChallengesTest {
 
     @Test fun themeAndLevelFiltersPreserveMainlineOrderWithoutChangingUnlocks() {
         assertEquals(listOf(ids[0], ids[1], ids[4], ids[6], "corner-liberty-race", "shared-liberty-double-capture",
-            "corner-ko-capture"),
+            "corner-ko-capture", "corner-snapback"),
             GoEndgameChallenges.catalog(GoEndgameTheme.CAPTURE).map { it.id })
         assertEquals(listOf(ids[4]), GoEndgameChallenges.catalog(GoEndgameTheme.CAPTURE, GoEndgameLevel.MEDIUM).map { it.id })
         assertTrue(GoEndgameChallenges.available(GoEndgameProgress(), level = GoEndgameLevel.MEDIUM).isEmpty())

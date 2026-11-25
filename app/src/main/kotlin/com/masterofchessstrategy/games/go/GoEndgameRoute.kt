@@ -106,7 +106,8 @@ fun GoEndgameScreen(
                 }
             }
             val controls: @Composable (Modifier) -> Unit = { controlsModifier ->
-                Column(controlsModifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                val scroll = key(exercise?.puzzle?.id) { rememberScrollState() }
+                Column(controlsModifier.verticalScroll(scroll), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("围棋死活练习", style = MaterialTheme.typography.titleLarge)
                         TextButton(onClick = onBack, modifier = Modifier.testTag("go_endgame_back")) {
@@ -124,32 +125,18 @@ fun GoEndgameScreen(
                             enabled = !state.loading && !state.needsSave && state.error == null && prerequisite != null,
                             modifier = Modifier.testTag("go_endgame_required_mainline")) { Text("先做前置主线") }
                     }
-                    Text("项目自编种子题 · 已完成 ${state.completedIds.size}/${GoEndgameLibrary.puzzles.size}")
-                    val rewards = GoEndgameLibrary.rewards(state.completedIds)
-                    Text("残局奖励 ${rewards.stars} 星 · ${rewards.score} 分",
-                        modifier = Modifier.testTag("go_endgame_rewards"))
-                    Text(state.mode.label + if (state.mode == GoEndgameChallengeMode.DAILY) " · ${state.dailyDate}" else "",
-                        modifier = Modifier.testTag("go_endgame_mode"))
-                    OutlinedButton(onClick = { catalog = true }, enabled = state.canOperate,
-                        modifier = Modifier.testTag("go_endgame_catalog")) { Text("关卡目录") }
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = onDaily, enabled = state.canOperate,
-                            modifier = Modifier.testTag("go_endgame_daily")) { Text("每日残局") }
-                        OutlinedButton(onClick = { onRandom(null, null) }, enabled = state.canOperate,
-                            modifier = Modifier.testTag("go_endgame_random")) { Text("随机挑战") }
-                    }
                     if (exercise != null) {
                         Text(exercise.puzzle.title, style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.testTag("go_endgame_title"))
                         Text("${exercise.puzzle.level.label} · ${exercise.puzzle.theme.label}")
-                        Text(if (exercise.puzzle.id in state.completedIds) "首通奖励已计入"
-                            else "首通奖励 1 星 · ${exercise.puzzle.level.firstClearScore} 分")
-                        if (exercise.feedback != exercise.puzzle.instruction) Text(exercise.puzzle.instruction)
                         Text(exercise.feedback, modifier = Modifier.testTag("go_endgame_feedback"))
-                        Text("尝试 ${exercise.attempts} 次")
                         if (exercise.completed && !state.needsSave) Text("本关完成", color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.testTag("go_endgame_completed"))
                         if (state.needsSave) Text("本题已解，通关进度尚未保存。", modifier = Modifier.testTag("go_endgame_pending_save"))
+                        if (!exercise.completed && exercise.feedback != exercise.puzzle.instruction) Text(exercise.puzzle.instruction)
+                        Text("尝试 ${exercise.attempts} 次")
+                        Text(if (exercise.puzzle.id in state.completedIds) "首通奖励已计入"
+                            else "首通奖励 1 星 · ${exercise.puzzle.level.firstClearScore} 分")
                         OutlinedButton(onClick = onReset, enabled = state.canOperate) { Text("重置本关") }
                         val index = GoEndgameLibrary.puzzles.indexOfFirst { it.id == exercise.puzzle.id }
                         if (exercise.completed && state.mode == GoEndgameChallengeMode.MAINLINE && index < GoEndgameLibrary.puzzles.lastIndex) Button(
@@ -161,6 +148,20 @@ fun GoEndgameScreen(
                             val next = GoEndgameLibrary.puzzles.takeWhile { it.id in state.completedIds }.size
                             onSelect(GoEndgameLibrary.puzzles[minOf(next, GoEndgameLibrary.puzzles.lastIndex)].id)
                         }, enabled = state.canOperate) { Text("返回主线") }
+                    }
+                    Text("项目自编种子题 · 已完成 ${state.completedIds.size}/${GoEndgameLibrary.puzzles.size}")
+                    val rewards = GoEndgameLibrary.rewards(state.completedIds)
+                    Text("残局奖励 ${rewards.stars} 星 · ${rewards.score} 分",
+                        modifier = Modifier.testTag("go_endgame_rewards"))
+                    Text(state.mode.label + if (state.mode == GoEndgameChallengeMode.DAILY) " · ${state.dailyDate}" else "",
+                        modifier = Modifier.testTag("go_endgame_mode"))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = { catalog = true }, enabled = state.canOperate,
+                            modifier = Modifier.testTag("go_endgame_catalog")) { Text("关卡目录") }
+                        OutlinedButton(onClick = onDaily, enabled = state.canOperate,
+                            modifier = Modifier.testTag("go_endgame_daily")) { Text("每日残局") }
+                        OutlinedButton(onClick = { onRandom(null, null) }, enabled = state.canOperate,
+                            modifier = Modifier.testTag("go_endgame_random")) { Text("随机挑战") }
                     }
                     if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
                     state.error?.let { Text(it, color = MaterialTheme.colorScheme.error);

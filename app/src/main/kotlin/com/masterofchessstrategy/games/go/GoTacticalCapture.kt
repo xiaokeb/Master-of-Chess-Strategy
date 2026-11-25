@@ -151,6 +151,12 @@ object GoTacticalCaptureLibrary {
             7 to 7, 6 to 1, 6 to 8, 5 to 2, 8 to 6, 6 to 2).map { BoardPosition(it.first, it.second) },
         setOf(BoardPosition(0, 0), BoardPosition(8, 8)), BoardPosition(0, 1), 3)
 
+    val cornerSnapback = GoTacticalCapturePuzzle("corner-snapback", "角上倒扑", 9,
+        listOf(0 to 2, 0 to 1, 1 to 2, 1 to 1, 2 to 2, 2 to 1, 3 to 1, 2 to 0,
+            3 to 0, 8 to 8).map { BoardPosition(it.first, it.second) },
+        setOf(BoardPosition(0, 1), BoardPosition(1, 1), BoardPosition(2, 1), BoardPosition(2, 0)),
+        BoardPosition(0, 0), 2)
+
     fun open(puzzle: GoTacticalCapturePuzzle = twoCorners,
         engineFactory: (Int, Int, Int) -> GoRecordEngine = { size, komi, handicap -> NativeGoEngine(size, komi, handicap) },
         nodeLimit: Int = captureProofLimit(puzzle.maxBlackMoves),

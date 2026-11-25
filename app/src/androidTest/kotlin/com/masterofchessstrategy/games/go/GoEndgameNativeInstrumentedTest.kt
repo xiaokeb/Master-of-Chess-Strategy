@@ -24,7 +24,11 @@ class GoEndgameNativeInstrumentedTest {
                 2 -> {
                     assertFalse(first.completed)
                     assertTrue(first.feedback.contains("剩余 1 手"))
-                    session.answer(if (puzzle.theme == GoEndgameTheme.LIFE) BoardPosition(2, 0) else BoardPosition(8, 7))
+                    session.answer(when (puzzle.id) {
+                        "corner-life-counter-capture" -> BoardPosition(2, 0)
+                        "corner-snapback" -> puzzle.answer
+                        else -> BoardPosition(8, 7)
+                    })
                 }
                 else -> {
                     assertFalse(first.completed)
@@ -83,6 +87,38 @@ class GoEndgameNativeInstrumentedTest {
             assertEquals(ActionResult.Accepted, engine.apply(recapture))
             assertEquals(GoStone.EMPTY, engine.stoneAt(puzzle.answer))
         }
+    }
+
+    @Test fun snapbackProvesBothThrowInsAndCapturesTheFiveStoneGroup() {
+        val puzzle = GoTacticalCaptureLibrary.cornerSnapback
+        val plan = GoTacticalCaptureLibrary.open(puzzle)
+        val options = NativeGoEngine(puzzle.boardSize).use { engine ->
+            assertEquals(RestoreResult.Restored, engine.restore(plan.copyInitialBytes()))
+            engine.legalActions().filterIsInstance<GoAction.Place>().map { it.point }
+        }
+        val exercise = GoTacticalCaptureSession(plan)
+        val initial = exercise.state().stones
+        val valid = mutableSetOf<BoardPosition>()
+        for (point in options) {
+            val first = exercise.answer(point)
+            if (first.blackMoves == 0) {
+                assertEquals(initial, first.stones)
+            } else {
+                valid += point
+                assertFalse(first.completed)
+                val defense = (first.defense as GoAction.Place).point
+                assertEquals(GoStone.EMPTY.code, first.stones[point.y * puzzle.boardSize + point.x])
+                assertEquals(GoStone.WHITE.code, first.stones[defense.y * puzzle.boardSize + defense.x])
+                val finished = exercise.answer(point)
+                assertTrue(finished.completed)
+                assertEquals(2, finished.blackMoves)
+                (puzzle.targets + defense).forEach { removed ->
+                    assertEquals(GoStone.EMPTY.code, finished.stones[removed.y * puzzle.boardSize + removed.x])
+                }
+            }
+            exercise.reset()
+        }
+        assertEquals(setOf(BoardPosition(0, 0), BoardPosition(1, 0)), valid)
     }
 
     @Test fun eachCompletedLifeGroupRejectsImmediateWhitePlayInEveryEye() {
