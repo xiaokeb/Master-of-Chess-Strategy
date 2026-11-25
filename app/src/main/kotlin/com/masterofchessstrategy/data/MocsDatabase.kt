@@ -35,6 +35,9 @@ import com.masterofchessstrategy.games.competition_mahjong.auto.storage.Competit
 import com.masterofchessstrategy.games.competition_mahjong.auto.storage.CompetitionMahjongAutoRow
 import com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeProgressDao
 import com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeProgressRow
+import com.masterofchessstrategy.games.lanzhou_mahjong.settlement.LanzhouMahjongFormalCreationRow
+import com.masterofchessstrategy.games.lanzhou_mahjong.settlement.LanzhouMahjongSettlementDao
+import com.masterofchessstrategy.games.lanzhou_mahjong.settlement.LanzhouMahjongTerminalReceiptRow
 
 @Database(
     entities = [
@@ -63,8 +66,10 @@ import com.masterofchessstrategy.games.competition_mahjong.challenge.Competition
         CompetitionMahjongLearningProofRow::class,
         CompetitionMahjongAutoRow::class,
         CompetitionMahjongChallengeProgressRow::class,
+        LanzhouMahjongFormalCreationRow::class,
+        LanzhouMahjongTerminalReceiptRow::class,
     ],
-    version = 25,
+    version = 26,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -107,6 +112,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
     abstract fun goRankedDao(): GoRankedDao
     abstract fun fangqiLearningProgressDao(): FangqiLearningProgressDao
     abstract fun lanzhouMahjongLearningProgressDao(): LanzhouMahjongLearningProgressDao
+    abstract fun lanzhouMahjongSettlementDao(): LanzhouMahjongSettlementDao
     abstract fun fangqiRankedDao(): FangqiRankedDao
 
     companion object {
@@ -567,6 +573,25 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_25_26 = object : Migration(25, 26) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS lanzhou_mahjong_formal_creations (" +
+                        "sessionId TEXT NOT NULL, createdAt INTEGER NOT NULL, initialRecord BLOB NOT NULL, " +
+                        "creationSha256 TEXT NOT NULL, PRIMARY KEY(sessionId))",
+                )
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS lanzhou_mahjong_terminal_receipts (" +
+                        "sessionId TEXT NOT NULL, capturedAt INTEGER NOT NULL, terminalRecord BLOB NOT NULL, " +
+                        "outcome TEXT NOT NULL, winnerSeat INTEGER, payerSeat INTEGER, " +
+                        "seat0Score INTEGER NOT NULL, seat1Score INTEGER NOT NULL, " +
+                        "seat2Score INTEGER NOT NULL, seat3Score INTEGER NOT NULL, PRIMARY KEY(sessionId), " +
+                        "FOREIGN KEY(sessionId) REFERENCES lanzhou_mahjong_formal_creations(sessionId) " +
+                        "ON UPDATE NO ACTION ON DELETE NO ACTION)",
+                )
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -602,6 +627,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_22_23,
                         MIGRATION_23_24,
                         MIGRATION_24_25,
+                        MIGRATION_25_26,
                     )
                     .build()
                     .also { instance = it }

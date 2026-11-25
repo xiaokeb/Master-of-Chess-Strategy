@@ -1,0 +1,48 @@
+{
+  "tag": "v0.1.0-lanzhou-mahjong-settlement-room.1",
+  "baseline": "ca1a4768ff7d98f7127cfbb212fefee775b9cd1e",
+  "schema": {
+    "from": 25,
+    "to": 26
+  },
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/MocsDatabase.kt",
+      "sha256": "0a909d642d4da2a36d5550d30ab0645176f4221c2dea7d615bbd03cbb0173afa"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongSettlementDao.kt",
+      "sha256": "6aba5c6b74cd183c76e4c3d67f2ecffb5c20b093348127063e54cbb472d20430"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/RoomLanzhouMahjongSettlement.kt",
+      "sha256": "b0ceddcb6d63c5a4c8a2074dbac84e546fab138004121819ae0bea5ed7fd0dc3"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/RoomLanzhouMahjongSettlementInstrumentedTest.kt",
+      "sha256": "10a798c544f6176900d337377f5b6f07469ac6228989e4c964b9915087b44825"
+    },
+    {
+      "path": "app/schemas/com.masterofchessstrategy.data.MocsDatabase/26.json",
+      "sha256": "47d7ab8c4d14fcc80de6510a27eb0249c0d5e50d07698196e1113998d7d55f82"
+    }
+  ],
+  "verification": {
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "emulator_tests": {
+      "settlement": 4,
+      "legacy_backup": 4
+    },
+    "emulator": "Pixel_7_Pro",
+    "ndk_abis": [
+      "arm64-v8a",
+      "x86_64"
+    ],
+    "apk_sha256": "7380259bb6ccdd9ab89698e17a49f5ef5d81c64368929a5e0216e9a115689a04",
+    "test_apk_sha256": "47cca1c171c6fcfc502e7df0d1f885c8054d61e6f9ff4ddafb4daa45150c9acf",
+    "settlement_log_sha256": "043fe1430cb4994bad6aab342e31f13b0b5aebbadd56b44762123c72d05763a4",
+    "legacy_backup_log_sha256": "dbc2602083e314791d2249d601e053bd19a2a3081a4c3376986aadd2a07cfffa"
+  },
+  "distribution": "source-only"
+}
