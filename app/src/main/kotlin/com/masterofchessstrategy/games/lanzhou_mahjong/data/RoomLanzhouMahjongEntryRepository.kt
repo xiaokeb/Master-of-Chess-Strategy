@@ -10,6 +10,8 @@ import com.masterofchessstrategy.engine.LanzhouMahjongPhase
 import com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongSessionRecord
 import com.masterofchessstrategy.games.lanzhou_mahjong.LanzhouMahjongSessionRecordCodec
 import com.masterofchessstrategy.games.lanzhou_mahjong.settlement.LanzhouMahjongNativeSettlementReplay
+import com.masterofchessstrategy.games.lanzhou_mahjong.settlement.LanzhouMahjongStatistics
+import com.masterofchessstrategy.games.lanzhou_mahjong.settlement.summarizeLanzhouMahjongSettlements
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -27,6 +29,7 @@ internal class RoomLanzhouMahjongEntryRepository internal constructor(
     private val transaction: suspend (suspend () -> LanzhouMahjongEntryFacts) -> LanzhouMahjongEntryFacts,
     private val readTrustedWins: suspend () -> Map<Difficulty, Int> = { emptyMap() },
     private val isCompleted: suspend (ActiveGameEntity, LanzhouMahjongSessionRecord) -> Boolean = { _, _ -> false },
+    private val readStatistics: suspend () -> LanzhouMahjongStatistics = { LanzhouMahjongStatistics() },
 ) : LanzhouMahjongEntryRepository {
     constructor(
         database: MocsDatabase,
@@ -35,7 +38,8 @@ internal class RoomLanzhouMahjongEntryRepository internal constructor(
     ) : this(database.lanzhouMahjongLearningProgressDao(), database.activeGameDao(), gate, owner,
         LanzhouMahjongSessionAdmission(), Dispatchers.IO, { read -> database.withTransaction { read() } },
         { database.readLanzhouMahjongTrustedWins() },
-        { row, record -> database.isLanzhouMahjongCompleted(row, record) }) {
+        { row, record -> database.isLanzhouMahjongCompleted(row, record) },
+        { summarizeLanzhouMahjongSettlements(database.lanzhouMahjongSettlementDao().settlementSummaries()) }) {
         require(gate === LanzhouMahjongStorageEpochGate.forDatabase(database))
     }
 
@@ -43,7 +47,7 @@ internal class RoomLanzhouMahjongEntryRepository internal constructor(
     override val epoch get() = gate.epoch
 
     override suspend fun loadFacts(): LanzhouMahjongEntryFacts = gate.access(owner) {
-        withContext(dispatcher) { transaction { readFacts() } }
+        withContext(dispatcher) { transaction { readFacts().copy(statistics = readStatistics()) } }
     }
 
     override suspend fun authorizeNew(difficulty: Difficulty, expectedCurrent: LanzhouMahjongStoredSession?) {

@@ -1,6 +1,7 @@
 package com.masterofchessstrategy.games.lanzhou_mahjong.data
 
 import com.masterofchessstrategy.engine.Difficulty
+import com.masterofchessstrategy.games.lanzhou_mahjong.settlement.LanzhouMahjongStatistics
 import kotlinx.coroutines.flow.StateFlow
 import java.io.IOException
 
@@ -9,6 +10,7 @@ internal data class LanzhouMahjongEntryFacts(
     val active: LanzhouMahjongStoredSession?,
     val trustedWins: Map<Difficulty, Int> = emptyMap(),
     val activeCompleted: Boolean = false,
+    val statistics: LanzhouMahjongStatistics = LanzhouMahjongStatistics(),
 ) {
     val tutorialCompleted: Boolean get() = learning?.isCompleted == true
 

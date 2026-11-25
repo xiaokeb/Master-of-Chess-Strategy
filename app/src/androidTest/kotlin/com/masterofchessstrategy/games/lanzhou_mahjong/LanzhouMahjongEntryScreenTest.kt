@@ -18,7 +18,10 @@ import com.masterofchessstrategy.engine.NativeLanzhouMahjongSession
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongEntryFacts
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongLearningSnapshot
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongStoredSession
+import com.masterofchessstrategy.games.lanzhou_mahjong.settlement.LanzhouMahjongSeatStatistics
+import com.masterofchessstrategy.games.lanzhou_mahjong.settlement.LanzhouMahjongStatistics
 import java.io.File
+import java.math.BigInteger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -65,6 +68,26 @@ class LanzhouMahjongEntryScreenTest {
         }
         compose.runOnIdle { assertEquals(listOf(Difficulty.MEDIUM, Difficulty.HARD, Difficulty.MASTER), creations) }
         capture("unlocked")
+    }
+
+    @Test fun completedRoundsShowFourSeatsOnDemand() {
+        val source = state(10)
+        show(source.copy(facts = requireNotNull(source.facts).copy(statistics = LanzhouMahjongStatistics(
+            completedRounds = 2,
+            exhaustiveDraws = 1,
+            seats = listOf(-72L, 24L, 24L, 24L).mapIndexed { index, score ->
+                LanzhouMahjongSeatStatistics(falseDeclarations = if (index == 0) 1 else 0,
+                    netScore = BigInteger.valueOf(score))
+            },
+        ))))
+        compose.onNodeWithTag("lanzhou_mahjong_statistics_seat_0").assertDoesNotExist()
+        compose.onNodeWithTag("lanzhou_mahjong_entry_statistics").performScrollTo().performClick()
+        compose.onNodeWithText("已结算 2 局 · 黄庄 1 局").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("1 号席 · 胡牌 0 次 · 炸胡 1 次 · 净分 -72").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("4 号席 · 胡牌 0 次 · 炸胡 0 次 · 净分 +24").performScrollTo().assertIsDisplayed()
+        capture("statistics")
+        compose.onNodeWithTag("lanzhou_mahjong_entry_statistics").performScrollTo().performClick()
+        compose.onNodeWithTag("lanzhou_mahjong_statistics_seat_0").assertDoesNotExist()
     }
 
     @Test fun existingHardSessionOffersExplicitResumeWithoutReplacingIt() {

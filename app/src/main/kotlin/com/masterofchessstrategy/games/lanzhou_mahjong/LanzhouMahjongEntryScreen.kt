@@ -14,11 +14,16 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.lanzhouMahjongWinRequirements
+import com.masterofchessstrategy.games.lanzhou_mahjong.settlement.LanzhouMahjongStatisticsContent
 
 @Composable
 internal fun LanzhouMahjongEntryScreen(
@@ -29,6 +34,7 @@ internal fun LanzhouMahjongEntryScreen(
     onBack: () -> Unit,
     onRefresh: () -> Unit,
 ) {
+    var showStatistics by rememberSaveable { mutableStateOf(false) }
     Surface(Modifier.fillMaxSize().testTag("lanzhou_mahjong_entry")) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -76,6 +82,13 @@ internal fun LanzhouMahjongEntryScreen(
                     } else if (active == null) {
                         Text("完成十课教程后解锁简单新局")
                     }
+                    OutlinedButton(
+                        onClick = { showStatistics = !showStatistics },
+                        modifier = Modifier.fillMaxWidth().testTag("lanzhou_mahjong_entry_statistics"),
+                    ) {
+                        Text(if (showStatistics) "收起四席统计" else "查看四席统计")
+                    }
+                    if (showStatistics) LanzhouMahjongStatisticsContent(facts.statistics)
                 }
             }
             if (!state.retired) {

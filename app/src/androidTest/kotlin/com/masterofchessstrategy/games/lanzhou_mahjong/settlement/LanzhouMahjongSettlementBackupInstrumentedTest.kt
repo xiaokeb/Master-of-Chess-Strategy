@@ -15,6 +15,8 @@ import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongOwnedD
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongStorageEpochGate
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongStoredSession
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.withOwnedLanzhouDatabase
+import com.masterofchessstrategy.games.lanzhou_mahjong.data.RoomLanzhouMahjongEntryRepository
+import java.math.BigInteger
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -34,6 +36,10 @@ class LanzhouMahjongSettlementBackupInstrumentedTest {
         val saved = repository.export(400)
         val ledgerBefore = ledgerAdapter.read(fixture.db).map { it.fields }
         val activeBefore = fixture.row()
+        val statistics = RoomLanzhouMahjongEntryRepository(fixture.db).loadFacts().statistics
+        assertEquals(1, statistics.completedRounds)
+        assertEquals(listOf(1, 0, 0, 0), statistics.seats.map { it.falseDeclarations })
+        assertEquals(listOf(-72L, 24L, 24L, 24L).map(BigInteger::valueOf), statistics.seats.map { it.netScore })
         val before = requireNotNull(fixture.db.lanzhouMahjongSettlementDao().receipt(session))
         repository.restore(empty)
         assertNull(fixture.db.lanzhouMahjongSettlementDao().creation(session))
@@ -48,6 +54,7 @@ class LanzhouMahjongSettlementBackupInstrumentedTest {
         assertEquals(true, before.sameEvidence(restored))
         assertEquals(activeBefore, fixture.row())
         assertEquals(ledgerBefore, ledgerAdapter.read(fixture.db).map { it.fields })
+        assertEquals(statistics, RoomLanzhouMahjongEntryRepository(fixture.db).loadFacts().statistics)
     }
 
     @Test fun rejectsIncorrectPaymentsAndMissingActiveReceiptBeforeReplacingRows() =
