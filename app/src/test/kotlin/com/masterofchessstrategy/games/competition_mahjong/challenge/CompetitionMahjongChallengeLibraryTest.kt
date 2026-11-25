@@ -10,10 +10,10 @@ import kotlin.random.Random
 class CompetitionMahjongChallengeLibraryTest {
     @Test fun catalogHasFourLevelsThemesAndTraceableOfficialFanIds() {
         val values = CompetitionMahjongChallengeLibrary.challenges
-        assertEquals(25, values.size)
+        assertEquals(26, values.size)
         assertEquals(values.size, values.map { it.id }.toSet().size)
         CompetitionMahjongChallengeLevel.entries.forEach { level ->
-            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 16 else 3, values.count { it.level == level })
+            assertEquals(if (level == CompetitionMahjongChallengeLevel.MASTER) 17 else 3, values.count { it.level == level })
         }
         CompetitionMahjongChallengeTheme.entries.forEach { theme ->
             assertTrue(values.any { it.theme == theme })
@@ -72,7 +72,8 @@ class CompetitionMahjongChallengeLibraryTest {
             CompetitionMahjongPracticePosition.WRONG_TILE_ID to 1250,
             CompetitionMahjongPracticePosition.NOT_READY_ID to 1330,
             CompetitionMahjongPracticePosition.ROB_KONG_ID to 1410,
-            CompetitionMahjongPracticePosition.TRIPLE_PUNG_DISCARD_ID to 1490)) {
+            CompetitionMahjongPracticePosition.TRIPLE_PUNG_DISCARD_ID to 1490,
+            CompetitionMahjongPracticePosition.FLOWER_REPLACEMENT_ID to 1570)) {
             assertTrue(progress.isUnlocked(id))
             progress = progress.complete(id)
             assertEquals(EndgameRewardTotals(progress.completedIds.size, progress.completedIds.size, points),

@@ -56,6 +56,8 @@ data class CompetitionMahjongChallengeState(
     val discardFromSeat: Int? = null,
     val roundFan: Int? = null,
     val roundDeltas: List<Int> = emptyList(),
+    val flowers: List<Int> = emptyList(),
+    val qualifyingFan: Int? = null,
 ) {
     val robbingKong: Boolean get() = challenge.id == CompetitionMahjongPracticePosition.ROB_KONG_ID
 }
@@ -103,6 +105,7 @@ class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjo
             feedback = "按题目给定的摸打继续后无法和牌。请重新选择弃牌。")
         else current.copy(attempts = current.attempts + 1, visibleHand = Collections.unmodifiableList(next.hand),
             chosenDiscard = tile, winningTile = next.tile, discardFromSeat = next.payerSeat,
+            flowers = Collections.unmodifiableList(next.flowers.toList()),
             feedback = if (next.payerSeat == null) "三家按题目走完一轮，请确认自摸。" else "请确认点和。")
         return current
     }
@@ -112,11 +115,14 @@ class CompetitionMahjongChallengeSession(private val challenge: CompetitionMahjo
         val turn = if (robbingKong) CompetitionMahjongPracticePosition.robKong(CompetitionMahjongRoundActionKind.WIN)
         else checkNotNull(CompetitionMahjongPracticePosition.playDiscard(
             checkNotNull(current.chosenDiscard), challenge.id, settle = true))
-        check(turn.hand == current.visibleHand && turn.tile == current.winningTile && turn.payerSeat == current.discardFromSeat)
+        check(turn.hand == current.visibleHand && turn.tile == current.winningTile &&
+            turn.payerSeat == current.discardFromSeat && turn.flowers == current.flowers)
+        val showSettlement = turn.payerSeat != null || turn.flowers.isNotEmpty()
         current = current.copy(completed = true, feedback = challenge.explanation,
             attempts = current.attempts + if (robbingKong) 1 else 0,
-            roundFan = turn.totalFan.takeIf { turn.payerSeat != null },
-            roundDeltas = if (turn.payerSeat == null) emptyList() else Collections.unmodifiableList(turn.netScores.toList()))
+            roundFan = turn.totalFan.takeIf { showSettlement },
+            qualifyingFan = turn.qualifyingFan.takeIf { turn.flowers.isNotEmpty() },
+            roundDeltas = if (showSettlement) Collections.unmodifiableList(turn.netScores.toList()) else emptyList())
         return current
     }
 
@@ -264,6 +270,11 @@ object CompetitionMahjongChallengeLibrary {
             CompetitionMahjongChallengeTheme.EXCLUSION, CompetitionMahjongChallengeLevel.MASTER,
             "你坐东家。请保留三种花色的五刻和一张南风，打出多余的一张。其他三家依次摸切后轮到你摸牌。", "",
             "南风作将，三同刻计 16 番。同组三副刻子已用于三同刻，双同刻不重复计。", setOf(32, 65)),
+        challenge(CompetitionMahjongPracticePosition.FLOWER_REPLACEMENT_ID, "连补两花后自摸",
+            CompetitionMahjongChallengeTheme.CONTEXT, CompetitionMahjongChallengeLevel.MASTER,
+            "你坐东家。保留万、筒、条各一副一二三顺子和一张东风。打出多余的牌并观察补花后的摸牌。", "",
+            "从牌墙尾连续补花后摸到东风，自摸成和。两张花牌在和牌后各加 1 分，不计入起和，也不算杠上开花。",
+            setOf(41, 46, 81)),
     ))
 
     init {

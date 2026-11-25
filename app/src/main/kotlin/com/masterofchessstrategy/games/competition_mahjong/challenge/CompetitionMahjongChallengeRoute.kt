@@ -109,6 +109,10 @@ internal fun CompetitionMahjongChallengeScreen(
                                 exercise.visibleHand.forEach { MahjongTile(it, faceUp = true) }
                             }
                         }
+                        if (exercise.flowers.isNotEmpty()) {
+                            Text("补花 " + exercise.flowers.joinToString("、", transform = ::competitionMahjongTileName),
+                                modifier = Modifier.testTag("competition_mahjong_challenge_flowers"))
+                        }
                         exercise.winningTile?.let { tile ->
                             val name = competitionMahjongTileName(tile)
                             val source = exercise.discardFromSeat
@@ -169,6 +173,9 @@ internal fun CompetitionMahjongChallengeScreen(
                             Column(Modifier.testTag("competition_mahjong_challenge_settlement"),
                                 verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text("本盘总番 $fan")
+                                exercise.qualifyingFan?.let { qualifying ->
+                                    Text("计入起和 $qualifying 番 · 花牌 ${fan - qualifying} 分")
+                                }
                                 FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                     exercise.roundDeltas.forEachIndexed { seat, delta ->
                                         val wind = competitionMahjongTileName(27 + seat)

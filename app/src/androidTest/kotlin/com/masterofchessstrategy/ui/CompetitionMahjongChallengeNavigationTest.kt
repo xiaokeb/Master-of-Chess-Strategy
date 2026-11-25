@@ -204,6 +204,7 @@ class CompetitionMahjongChallengeNavigationTest {
 
     private fun verifyDiscardExercise(
         puzzleId: String, wrong: Int, correct: Int, draw: String, resultText: String, rewardText: String, claim: Boolean = false,
+        expectedFlowers: List<Int> = emptyList(),
     ) {
         val hand = CompetitionMahjongPracticePosition.discardOpeningHand(puzzleId)
         assertEquals(14, hand.size)
@@ -227,6 +228,10 @@ class CompetitionMahjongChallengeNavigationTest {
         compose.onNodeWithTag("competition_mahjong_challenge_discard_$correct").performScrollTo().performClick()
         waitFor("competition_mahjong_challenge_confirm_win")
         compose.onNodeWithText(if (claim) "南家弃牌 $draw" else "本次摸牌 $draw").performScrollTo().assertIsDisplayed()
+        if (expectedFlowers.isNotEmpty()) {
+            compose.onNodeWithTag("competition_mahjong_challenge_flowers").performScrollTo()
+                .assertTextEquals("补花 春、夏")
+        }
         compose.onNodeWithTag("competition_mahjong_challenge_confirm_win").assertTextEquals(if (claim) "点和" else "自摸")
         compose.onNodeWithTag("competition_mahjong_challenge_settlement").assertDoesNotExist()
         assertEquals(prerequisites, runBlocking { store.load().completedIds })
@@ -253,6 +258,27 @@ class CompetitionMahjongChallengeNavigationTest {
                     .assertIsDisplayed()
             }
         }
+        if (expectedFlowers.isNotEmpty()) {
+            val result = checkNotNull(CompetitionMahjongPracticePosition.playDiscard(correct, puzzleId, settle = true))
+            assertEquals(expectedFlowers, result.flowers)
+            assertNull(result.payerSeat)
+            val qualifying = checkNotNull(result.qualifyingFan)
+            val fan = checkNotNull(result.totalFan)
+            assertEquals(qualifying + 2, fan)
+            val each = 8 + fan
+            assertEquals(listOf(3 * each, -each, -each, -each), result.netScores)
+            val settlement = compose.onNodeWithTag("competition_mahjong_challenge_settlement")
+            settlement.performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText("计入起和 $qualifying 番 · 花牌 2 分").assertExists()
+            for (label in listOf("本盘总番 $fan", "东 +${3 * each}", "南 -$each", "西 -$each", "北 -$each")) {
+                compose.onNode(hasText(label) and hasAnyAncestor(hasTestTag("competition_mahjong_challenge_settlement"))).assertExists()
+            }
+            InstrumentationRegistry.getInstrumentation().sendStatus(2, android.os.Bundle().apply {
+                putInt("flower_training_qualifying", qualifying)
+                putInt("flower_training_total", fan)
+                putInt("flower_training_each_pays", each)
+            })
+        }
         capture("discard-win")
     }
 
@@ -274,6 +300,11 @@ class CompetitionMahjongChallengeNavigationTest {
         verifyDiscardExercise(id, wrong = 4, correct = 31, draw = "南",
             resultText = "三同刻计 16 番", rewardText = "25 星 · 1490 分")
     }
+
+    @Test fun flowerReplacementTrainingShowsTheTwoFlowersAndSettlement() = verifyDiscardExercise(
+        CompetitionMahjongPracticePosition.FLOWER_REPLACEMENT_ID, wrong = 0, correct = 31, draw = "东",
+        resultText = "不计入起和", rewardText = "26 星 · 1570 分", expectedFlowers = listOf(34, 35),
+    )
 
     @Test fun nativeNineGatesTeachesWmoExclusionAndSavesOneReward() {
         val hand = CompetitionMahjongPracticePosition.verifyNineGates()
