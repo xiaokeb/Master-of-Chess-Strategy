@@ -1,0 +1,15 @@
+{
+  "tag": "v0.1.0-go-review-atari.1",
+  "baseline": "8fe1f36",
+  "source_sha256": "31d7d3e72fa471a84fe71898cefeab5dd5dd5a427854ff1a56c1c2bc55b47e8b",
+  "probe_sha256": {
+    "arm64-v8a": "5531245be6014a35c4d631b26af287b500b0fe6c5cee23cc9c671cc194f723c0",
+    "x86_64": "728405d6bfaa8e164cdabdf2492c4320a0fe8959b0cedb0b608538bb6b1ba0dd"
+  },
+  "device": "Pixel_7_Pro (x86_64)",
+  "proof_summary_sha256": "8b3021eb281d9b79297f6d6fc23980e2a430decd46edac78dda1fc208be1751c",
+  "official_receipt_sha256": "af6952dfc3e46eb7c3715e126d9abf8afeff5b1009de01c1c16e362a3b99971c",
+  "official_slots_added": [121, 124],
+  "official_slots_total": 13,
+  "distribution": "source-only"
+}
