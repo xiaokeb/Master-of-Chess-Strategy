@@ -104,18 +104,26 @@ internal class LanzhouMahjongSettlementBackupAdapter : GameBackupAdapter, GameBa
                     receipt.seat0Score.toString(), receipt.seat1Score.toString(),
                     receipt.seat2Score.toString(), receipt.seat3Score.toString(),
                 ))
+                if (receipt != null && receipt.archiveMark != LanzhouMahjongArchiveMark.NORMAL.code) {
+                    add(receipt.archiveMark.toString())
+                }
             })
 
         private fun decode(record: GameBackupRecord): Pair<LanzhouMahjongFormalCreationRow, LanzhouMahjongTerminalReceiptRow?> {
             val f = record.fields
-            require(record.kind == KIND && f.size in setOf(6, 15) && record.encodedSizeBytes <= MAX_WIRE_BYTES)
+            require(record.kind == KIND && f.size in setOf(6, 15, 16) && record.encodedSizeBytes <= MAX_WIRE_BYTES)
             require(f[0] == "3" && f[1] == "1" && identity.matches(f[2]) && digest.matches(f[4]))
             val start = LanzhouMahjongFormalCreationRow(f[2], timestamp(f[3]), recordBytes(f[5]), f[4])
             if (f.size == 6) return start to null
             require(LanzhouMahjongQualifiedOutcome.entries.any { it.name == f[8] })
+            val archiveMark = f.getOrNull(15)?.let { encoded ->
+                requireNotNull(LanzhouMahjongArchiveMark.entries.firstOrNull {
+                    it != LanzhouMahjongArchiveMark.NORMAL && it.code.toString() == encoded
+                }).code
+            } ?: LanzhouMahjongArchiveMark.NORMAL.code
             val receipt = LanzhouMahjongTerminalReceiptRow(
                 f[2], timestamp(f[6]), recordBytes(f[7]), f[8], seat(f[9]), seat(f[10]),
-                number(f[11]), number(f[12]), number(f[13]), number(f[14]),
+                number(f[11]), number(f[12]), number(f[13]), number(f[14]), archiveMark,
             )
             return start to receipt
         }

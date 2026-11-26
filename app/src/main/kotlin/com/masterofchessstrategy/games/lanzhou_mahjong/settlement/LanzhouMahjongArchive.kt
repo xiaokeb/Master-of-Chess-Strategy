@@ -20,7 +20,11 @@ internal data class LanzhouMahjongArchiveItem(
     val capturedAt: Long,
     val difficulty: Difficulty,
     val outcome: LanzhouMahjongQualifiedOutcome,
+    val isFavorite: Boolean,
 )
+
+// Persisted in Room, the backup wire, and the archive SQL predicates.
+internal enum class LanzhouMahjongArchiveMark(val code: Int) { NORMAL(0), FAVORITE(1), HIDDEN(2) }
 
 internal data class LanzhouMahjongArchivePage(val items: List<LanzhouMahjongArchiveItem>, val hasNext: Boolean)
 internal data class LanzhouMahjongReplayMove(val seat: Int, val kind: LanzhouMahjongActionKind, val tile: Int?)
@@ -28,6 +32,7 @@ internal data class LanzhouMahjongReplayFrame(
     val index: Int,
     val actionCount: Int,
     val viewerSeat: Int,
+    val isFavorite: Boolean,
     val move: LanzhouMahjongReplayMove?,
     val view: LanzhouMahjongPublicView,
 )
@@ -42,9 +47,9 @@ internal class LanzhouMahjongArchive(private val database: MocsDatabase) {
     private val native = LanzhouMahjongNativeSettlementReplay()
     private val policy = LanzhouMahjongSettlementPolicy(native)
 
-    suspend fun page(index: Int): LanzhouMahjongArchivePage = read {
+    suspend fun page(index: Int, favoritesOnly: Boolean = false): LanzhouMahjongArchivePage = access {
         require(index >= 0)
-        val rows = dao.archivePage(PAGE_SIZE + 1, index.toLong() * PAGE_SIZE)
+        val rows = dao.archivePage(PAGE_SIZE + 1, index.toLong() * PAGE_SIZE, favoritesOnly)
         LanzhouMahjongArchivePage(rows.take(PAGE_SIZE).map { row ->
             val initial = decode(row.initialRecord)
             if (native.sessionId(initial) != row.sessionId || row.capturedAt < 0) {
@@ -52,13 +57,16 @@ internal class LanzhouMahjongArchive(private val database: MocsDatabase) {
             }
             val outcome = LanzhouMahjongQualifiedOutcome.entries.firstOrNull { it.name == row.outcome }
                 ?: throw IOException("兰州麻将棋谱结算类型无效")
-            LanzhouMahjongArchiveItem(row.sessionId, row.capturedAt, initial.difficulty, outcome)
+            LanzhouMahjongArchiveItem(row.sessionId, row.capturedAt, initial.difficulty, outcome,
+                archiveMark(row.archiveMark) == LanzhouMahjongArchiveMark.FAVORITE)
         }, rows.size > PAGE_SIZE)
     }
 
-    suspend fun frame(id: String, index: Int): LanzhouMahjongReplayFrame = read {
+    suspend fun frame(id: String, index: Int): LanzhouMahjongReplayFrame = access {
         val start = dao.creation(id) ?: throw IOException("找不到兰州麻将棋谱")
         val receipt = dao.receipt(id) ?: throw IOException("找不到兰州麻将首结")
+        val mark = archiveMark(receipt.archiveMark)
+        if (mark == LanzhouMahjongArchiveMark.HIDDEN) throw IOException("兰州麻将棋谱已删除")
         val creation = LanzhouMahjongFormalCreation(
             id, LanzhouMahjongCreationOrigin.AUTHORIZED_STANDARD_HUMAN, decode(start.initialRecord), start.createdAt,
         )
@@ -76,13 +84,26 @@ internal class LanzhouMahjongArchive(private val database: MocsDatabase) {
             if (session.restore(prefix) != RestoreResult.Restored || !session.serialize().contentEquals(prefix)) {
                 throw IOException("兰州麻将棋谱步骤无法恢复")
             }
-            LanzhouMahjongReplayFrame(index, count, record.viewerSeat, move(bytes, index, record.viewerSeat), session.snapshot())
+            LanzhouMahjongReplayFrame(index, count, record.viewerSeat, mark == LanzhouMahjongArchiveMark.FAVORITE,
+                move(bytes, index, record.viewerSeat), session.snapshot())
         }
     }
 
-    private suspend fun <T> read(block: suspend () -> T): T = gate.access(owner) {
+    suspend fun setFavorite(id: String, favorite: Boolean) =
+        setMark(id, if (favorite) LanzhouMahjongArchiveMark.FAVORITE else LanzhouMahjongArchiveMark.NORMAL)
+
+    suspend fun hide(id: String) = setMark(id, LanzhouMahjongArchiveMark.HIDDEN)
+
+    private suspend fun setMark(id: String, mark: LanzhouMahjongArchiveMark) = access {
+        if (dao.setArchiveMark(id, mark.code) != 1) throw IOException("兰州麻将棋谱已变更")
+    }
+
+    private suspend fun <T> access(block: suspend () -> T): T = gate.access(owner) {
         withContext(Dispatchers.IO) { database.withTransaction { block() } }
     }
+
+    private fun archiveMark(code: Int): LanzhouMahjongArchiveMark =
+        LanzhouMahjongArchiveMark.entries.firstOrNull { it.code == code } ?: throw IOException("兰州麻将棋谱标记无效")
 
     private fun decode(bytes: ByteArray): LanzhouMahjongSessionRecord =
         LanzhouMahjongSessionRecordCodec.decode(bytes) ?: throw IOException("兰州麻将棋谱记录损坏")

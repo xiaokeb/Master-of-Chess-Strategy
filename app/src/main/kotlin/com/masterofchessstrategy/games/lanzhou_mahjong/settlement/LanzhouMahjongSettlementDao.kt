@@ -1,6 +1,7 @@
 package com.masterofchessstrategy.games.lanzhou_mahjong.settlement
 
 import androidx.room.Dao
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Insert
@@ -34,6 +35,7 @@ internal data class LanzhouMahjongTerminalReceiptRow(
     val seat1Score: Long,
     val seat2Score: Long,
     val seat3Score: Long,
+    @ColumnInfo(defaultValue = "0") val archiveMark: Int = 0,
 )
 
 internal data class LanzhouMahjongWinSource(
@@ -57,6 +59,7 @@ internal data class LanzhouMahjongArchiveRow(
     val capturedAt: Long,
     val outcome: String,
     val initialRecord: ByteArray,
+    val archiveMark: Int,
 )
 
 @Dao
@@ -87,11 +90,15 @@ internal interface LanzhouMahjongSettlementDao {
     suspend fun settlementSummaries(): List<LanzhouMahjongSettlementSummaryRow>
 
     @Query(
-        "SELECT r.sessionId, r.capturedAt, r.outcome, c.initialRecord " +
+        "SELECT r.sessionId, r.capturedAt, r.outcome, c.initialRecord, r.archiveMark " +
             "FROM lanzhou_mahjong_terminal_receipts r JOIN lanzhou_mahjong_formal_creations c ON c.sessionId = r.sessionId " +
+            "WHERE r.archiveMark != 2 AND (:favoritesOnly = 0 OR r.archiveMark = 1) " +
             "ORDER BY r.capturedAt DESC, r.sessionId ASC LIMIT :limit OFFSET :offset",
     )
-    suspend fun archivePage(limit: Int, offset: Long): List<LanzhouMahjongArchiveRow>
+    suspend fun archivePage(limit: Int, offset: Long, favoritesOnly: Boolean): List<LanzhouMahjongArchiveRow>
+
+    @Query("UPDATE lanzhou_mahjong_terminal_receipts SET archiveMark = :mark WHERE sessionId = :id AND archiveMark != 2")
+    suspend fun setArchiveMark(id: String, mark: Int): Int
 
     @Query("DELETE FROM lanzhou_mahjong_terminal_receipts")
     suspend fun deleteReceipts()

@@ -4,7 +4,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.room.testing.MigrationTestHelper
 import androidx.test.platform.app.InstrumentationRegistry
+import com.masterofchessstrategy.data.MocsDatabase
 import com.masterofchessstrategy.engine.ActionResult
 import com.masterofchessstrategy.engine.Difficulty
 import com.masterofchessstrategy.engine.LanzhouMahjongAction
@@ -17,14 +19,88 @@ import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongOwnedD
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongStorageEpochGate
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.LanzhouMahjongStoredSession
 import com.masterofchessstrategy.games.lanzhou_mahjong.data.withOwnedLanzhouDatabase
+import com.masterofchessstrategy.games.lanzhou_mahjong.data.readLanzhouMahjongTrustedWins
 import java.io.File
 import java.io.IOException
+import java.util.UUID
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestRule
 
 class LanzhouMahjongArchiveInstrumentedTest {
-    @get:Rule val compose = createComposeRule()
+    private val compose = createComposeRule()
+    @get:Rule val composeOnlyForScreenTests = TestRule { statement, test ->
+        if (test.methodName in setOf(
+                "deletionRequiresConfirmationAndRemovesTheRecordFromTheList",
+                "realArchiveScreenStepsForwardBackAndReturns",
+            )) compose.apply(statement, test) else statement
+    }
+    @get:Rule val migrations = MigrationTestHelper(InstrumentationRegistry.getInstrumentation(), MocsDatabase::class.java)
+
+    @Test fun migrationKeepsExistingReceiptVisibleAndUnmarked() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val name = "lz-archive-mark-${UUID.randomUUID()}.db"
+        try {
+            migrations.createDatabase(name, 26).use { db ->
+                db.execSQL("INSERT INTO lanzhou_mahjong_formal_creations VALUES ('fixture',1,X'01','digest')")
+                db.execSQL("INSERT INTO lanzhou_mahjong_terminal_receipts VALUES " +
+                    "('fixture',2,X'02','WIN',0,NULL,6,-2,-2,-2)")
+            }
+            migrations.runMigrationsAndValidate(name, 27, true, MocsDatabase.MIGRATION_26_27).use { db ->
+                db.query("SELECT archiveMark, seat0Score FROM lanzhou_mahjong_terminal_receipts").use { rows ->
+                    assertTrue(rows.moveToFirst())
+                    assertEquals(0, rows.getInt(0))
+                    assertEquals(6, rows.getInt(1))
+                }
+            }
+        } finally { context.deleteDatabase(name) }
+    }
+
+    @Test fun favoriteFilterAndDeletionRoundTripThroughFullBackup() = withOwnedLanzhouDatabase { fixture ->
+        val id = createReceipt(fixture)
+        val archive = LanzhouMahjongArchive(fixture.db)
+        assertTrue(archive.page(0, favoritesOnly = true).items.isEmpty())
+        archive.setFavorite(id, true)
+        assertEquals(listOf(id), archive.page(0, favoritesOnly = true).items.map { it.id })
+        assertTrue(archive.frame(id, 1).isFavorite)
+        val backup = fixture.repository()
+        val favorited = backup.export(500)
+        archive.setFavorite(id, false)
+        assertTrue(archive.page(0, favoritesOnly = true).items.isEmpty())
+        archive.hide(id)
+        assertTrue(archive.page(0).items.isEmpty())
+        assertTrue(runCatching { archive.frame(id, 0) }.exceptionOrNull() is IOException)
+        assertTrue(runCatching { archive.setFavorite(id, true) }.exceptionOrNull() is IOException)
+        assertEquals(-72L, fixture.db.lanzhouMahjongSettlementDao().receipt(id)?.seat0Score)
+        val hidden = backup.export(600)
+        backup.restore(favorited)
+        assertTrue(LanzhouMahjongArchive(fixture.db).frame(id, 1).isFavorite)
+        backup.restore(hidden)
+        assertTrue(LanzhouMahjongArchive(fixture.db).page(0).items.isEmpty())
+        assertEquals(-72L, fixture.db.lanzhouMahjongSettlementDao().receipt(id)?.seat0Score)
+    }
+
+    @Test fun deletionRequiresConfirmationAndRemovesTheRecordFromTheList() = withOwnedLanzhouDatabase { fixture ->
+        val id = createReceipt(fixture)
+        val archive = LanzhouMahjongArchive(fixture.db)
+        compose.setContent { MaterialTheme { LanzhouMahjongArchiveScreen(archive) {} } }
+        val row = "lanzhou_record_$id"
+        compose.waitUntil(10_000) { compose.onAllNodesWithTag(row).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag(row).performScrollTo().performClick()
+        waitForStep("0 / 1 步")
+        compose.onNodeWithTag("lanzhou_record_favorite").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("取消收藏").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("lanzhou_record_delete").performScrollTo().performClick()
+        compose.onNodeWithText("取消").performClick()
+        compose.onNodeWithText("0 / 1 步").assertExists()
+        compose.onNodeWithTag("lanzhou_record_delete").performScrollTo().performClick()
+        capture("archive-delete")
+        compose.onNodeWithTag("lanzhou_record_confirm_delete").performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("暂无正式棋谱。").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag(row).assertDoesNotExist()
+        assertEquals(-72L, fixture.db.lanzhouMahjongSettlementDao().receipt(id)?.seat0Score)
+    }
 
     @Test fun archiveRestoresRealFramesAndRejectsRetiredReaders() = withOwnedLanzhouDatabase { fixture ->
         val id = createReceipt(fixture)
@@ -98,6 +174,8 @@ class LanzhouMahjongArchiveInstrumentedTest {
                         assertEquals(intermediate, firstFrame.view)
                         assertEquals(first.tile, firstFrame.move?.tile)
                         assertEquals(engine.snapshot(), archive.frame(receipt.terminal.sessionId, total).view)
+                        archive.hide(receipt.terminal.sessionId)
+                        assertEquals(mapOf(Difficulty.EASY to 1), db.readLanzhouMahjongTrustedWins())
                         return@use
                     }
                     LanzhouMahjongBotStop.VIEWER_ACTION -> {
@@ -120,15 +198,16 @@ class LanzhouMahjongArchiveInstrumentedTest {
         compose.onNodeWithText(text).performScrollTo().assertIsDisplayed()
     }
 
-    private fun capture() {
+    private fun capture(name: String = "archive") {
         val token = InstrumentationRegistry.getArguments().getString("mocsVisualToken") ?: return
         require(token.matches(Regex("qa-[a-f0-9]{32}")))
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val directory = File(requireNotNull(context.getExternalFilesDir(null)), "mocs-visual/$token")
         check(directory.isDirectory || directory.mkdirs())
-        val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
+        val node = if (name == "archive-delete") compose.onNode(isDialog()) else compose.onRoot()
+        val bitmap = node.captureToImage().asAndroidBitmap()
         try {
-            File(directory, "archive.png").outputStream().use {
+            File(directory, "$name.png").outputStream().use {
                 check(bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it))
             }
         } finally {

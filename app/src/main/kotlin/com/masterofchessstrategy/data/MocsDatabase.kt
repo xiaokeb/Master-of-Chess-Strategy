@@ -69,7 +69,7 @@ import com.masterofchessstrategy.games.lanzhou_mahjong.settlement.LanzhouMahjong
         LanzhouMahjongFormalCreationRow::class,
         LanzhouMahjongTerminalReceiptRow::class,
     ],
-    version = 26,
+    version = 27,
     exportSchema = true,
 )
 internal abstract class MocsDatabase : RoomDatabase() {
@@ -592,6 +592,12 @@ internal abstract class MocsDatabase : RoomDatabase() {
             }
         }
 
+        internal val MIGRATION_26_27 = object : Migration(26, 27) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE lanzhou_mahjong_terminal_receipts ADD COLUMN archiveMark INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         @Volatile
         private var instance: MocsDatabase? = null
 
@@ -628,6 +634,7 @@ internal abstract class MocsDatabase : RoomDatabase() {
                         MIGRATION_23_24,
                         MIGRATION_24_25,
                         MIGRATION_25_26,
+                        MIGRATION_26_27,
                     )
                     .build()
                     .also { instance = it }

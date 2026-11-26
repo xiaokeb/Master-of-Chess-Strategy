@@ -1,0 +1,64 @@
+{
+  "tag": "v0.1.0-lanzhou-mahjong-archive-management.1",
+  "baseline": "c0aa965b3983dbf54de61d391a61967e2c68af32",
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/data/MocsDatabase.kt",
+      "sha256": "7a7ba41291687cecc7e70c43445e1f0f108c3205cb91a3e3781f748219a6d40f"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongSettlementDao.kt",
+      "sha256": "1a9b570310385817caa6f9af8abd18521af74a27d7acc0eb1f64734c8e47c0d0"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/RoomLanzhouMahjongSettlement.kt",
+      "sha256": "8fad0d323e7f98da82c6f96aa36292360f3724de356f9cccd153e45ff8176bdb"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongSettlementBackupAdapter.kt",
+      "sha256": "da75b6ac8864e8177a712d03367a49e410b42c3b2182b56ec58b8484e38b89f9"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongArchive.kt",
+      "sha256": "9a1719c10a8fbd22bfc7b9cbc2671aef9fddbf20f1beeb891113dc00a9048d57"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongArchiveScreen.kt",
+      "sha256": "80bcc180e04277dbea79cd26000e0f6836b1f1de2aa4dc2798f643c65ad54b8d"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_mahjong/settlement/LanzhouMahjongArchiveInstrumentedTest.kt",
+      "sha256": "28d76a906f6b0857619a94cf926e7f430a4be8c403f07d421d275426b03d9302"
+    },
+    {
+      "path": "app/schemas/com.masterofchessstrategy.data.MocsDatabase/27.json",
+      "sha256": "4f43cff0eafc7eb5d8fe5f9455a90d7ebc85f132456b202a89144ac72643c7e3"
+    }
+  ],
+  "schema": {
+    "from": 26,
+    "to": 27
+  },
+  "verification": {
+    "emulator": "Pixel_7_Pro",
+    "emulator_tests": 8,
+    "physical_device": "Xiaomi M2007J3SC",
+    "physical_tests": 9,
+    "physical_status": "archive data and native backup passed; physical UI did not launch",
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "ndk_abis": [
+      "arm64-v8a",
+      "x86_64"
+    ],
+    "debug_apk_sha256": "41ce7351d78e831840366d2a4828e3b13f2e7364acd2f9d22c90d1f1ebeb04b7",
+    "test_apk_sha256": "a6a01125592ba97fb42b8da8ec0d52ff127e5c2e6f591ef943dbe0fb83c993ef",
+    "emulator_archive_sha256": "2f23531cf2d8b539067927bd5a67f2f89b51b51cf96224ceb429889c4f090fd9",
+    "emulator_backup_sha256": "30dab95fdb2c563700fd7a9634d7407a99e73a68480291059db4bd5f4664ebda",
+    "landscape_table_sha256": "c5206cf1ec3b0d692538be8d7f47ebe2ecf56019c5dba779b8f0f2b7cca555e7",
+    "physical_archive_sha256": "07306e3e8a6b7d35822d91f0bb84693b1791e7971a1520187a7fc36d51687fd8",
+    "physical_native_backup_sha256": "b95da19c5f83c3b240a14393bbe245af7db34b3bb65051ab39d60190bd7b9ebc",
+    "physical_native_backup_test_apk_sha256": "c774bdce1da5a9c0e67a4b9182c10c42f40b27fa03092b114b0ae3be45443416"
+  },
+  "distribution": "source-only"
+}

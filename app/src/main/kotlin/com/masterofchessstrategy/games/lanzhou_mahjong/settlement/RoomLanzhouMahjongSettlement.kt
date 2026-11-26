@@ -163,4 +163,5 @@ internal fun LanzhouMahjongTerminalReceipt.toLanzhouMahjongReceiptRow(): Lanzhou
 }
 
 internal fun LanzhouMahjongTerminalReceiptRow.sameEvidence(other: LanzhouMahjongTerminalReceiptRow): Boolean =
-    terminalRecord.contentEquals(other.terminalRecord) && copy(terminalRecord = other.terminalRecord) == other
+    terminalRecord.contentEquals(other.terminalRecord) &&
+        copy(terminalRecord = other.terminalRecord, archiveMark = other.archiveMark) == other

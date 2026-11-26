@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -20,6 +21,8 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -32,6 +35,7 @@ import com.masterofchessstrategy.games.lanzhou_mahjong.tileName
 import java.text.DateFormat
 import java.util.Date
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun LanzhouMahjongArchiveScreen(archive: LanzhouMahjongArchive, onBack: () -> Unit) {
@@ -40,8 +44,33 @@ internal fun LanzhouMahjongArchiveScreen(archive: LanzhouMahjongArchive, onBack:
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var step by rememberSaveable { mutableIntStateOf(0) }
     var retry by rememberSaveable { mutableIntStateOf(0) }
+    var favoritesOnly by rememberSaveable { mutableStateOf(false) }
+    var showDelete by rememberSaveable { mutableStateOf(false) }
+    var working by remember { mutableStateOf(false) }
+    var actionError by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    fun updateArchive(block: suspend () -> Unit) {
+        if (working) return
+        working = true
+        actionError = false
+        scope.launch {
+            try {
+                block()
+                retry++
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                actionError = true
+            } finally {
+                working = false
+            }
+        }
+    }
     val back = {
-        if (selected == null || archive.ownerEpoch != epoch) onBack() else selected = null
+        if (!working) {
+            actionError = false
+            if (selected == null || archive.ownerEpoch != epoch) onBack() else selected = null
+        }
     }
     BackHandler(onBack = back)
     val scroll = key(selected, page) { rememberScrollState() }
@@ -50,19 +79,25 @@ internal fun LanzhouMahjongArchiveScreen(archive: LanzhouMahjongArchive, onBack:
             Modifier.fillMaxSize().verticalScroll(scroll).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            OutlinedButton(back, modifier = Modifier.testTag("lanzhou_record_back")) { Text("返回") }
+            OutlinedButton(back, enabled = !working, modifier = Modifier.testTag("lanzhou_record_back")) { Text("返回") }
             val id = selected
             if (archive.ownerEpoch != epoch) {
                 Text("本地数据已更换，请返回后重新打开棋谱")
             } else if (id == null) {
                 Text("兰州麻将正式棋谱", style = MaterialTheme.typography.titleLarge)
-                val result = archiveRequest(Triple(null, page, retry)) { archive.page(page) }
+                OutlinedButton(
+                    { favoritesOnly = !favoritesOnly; page = 0 },
+                    modifier = Modifier.testTag("lanzhou_record_filter"),
+                ) { Text(if (favoritesOnly) "查看全部" else "仅看收藏") }
+                val result = archiveRequest(Triple(favoritesOnly, page, retry)) { archive.page(page, favoritesOnly) }
                 when {
                     result == null -> Text("正在读取棋谱…")
                     result.isFailure -> ArchiveReadError { retry++ }
                     else -> {
                         val loaded = result.getOrThrow()
-                        if (loaded.items.isEmpty()) Text("完成正式对局后，棋谱会显示在这里。")
+                        if (loaded.items.isEmpty()) {
+                            Text(if (favoritesOnly) "暂无收藏棋谱。" else "暂无正式棋谱。")
+                        }
                         loaded.items.forEach { item ->
                             OutlinedButton(
                                 { step = 0; selected = item.id },
@@ -70,7 +105,8 @@ internal fun LanzhouMahjongArchiveScreen(archive: LanzhouMahjongArchive, onBack:
                             ) {
                                 val time = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
                                     .format(Date(item.capturedAt))
-                                Text("${difficultyName(item.difficulty)} · ${outcomeName(item.outcome)} · $time")
+                                val label = if (item.isFavorite) "已收藏 · " else ""
+                                Text("$label${difficultyName(item.difficulty)} · ${outcomeName(item.outcome)} · $time")
                             }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -85,7 +121,37 @@ internal fun LanzhouMahjongArchiveScreen(archive: LanzhouMahjongArchive, onBack:
                 when {
                     result == null -> Text("正在恢复棋谱步骤…")
                     result.isFailure -> ArchiveReadError { retry++ }
-                    else -> ReplayFrame(result.getOrThrow()) { step = it }
+                    else -> {
+                        val frame = result.getOrThrow()
+                        if (actionError) Text("棋谱操作失败，请重试")
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                { updateArchive { archive.setFavorite(id, !frame.isFavorite) } },
+                                enabled = !working,
+                                modifier = Modifier.testTag("lanzhou_record_favorite"),
+                            ) { Text(if (frame.isFavorite) "取消收藏" else "收藏棋谱") }
+                            OutlinedButton(
+                                { showDelete = true },
+                                enabled = !working,
+                                modifier = Modifier.testTag("lanzhou_record_delete"),
+                            ) { Text("删除棋谱") }
+                        }
+                        ReplayFrame(frame) { if (!working) step = it }
+                        if (showDelete) {
+                            AlertDialog(
+                                onDismissRequest = { showDelete = false },
+                                title = { Text("删除这份棋谱？") },
+                                text = { Text("棋谱将从列表移除。正式结算、统计和难度资格仍会保留。") },
+                                confirmButton = {
+                                    OutlinedButton({
+                                        showDelete = false
+                                        updateArchive { archive.hide(id); selected = null; page = 0 }
+                                    }, modifier = Modifier.testTag("lanzhou_record_confirm_delete")) { Text("删除") }
+                                },
+                                dismissButton = { OutlinedButton({ showDelete = false }) { Text("取消") } },
+                            )
+                        }
+                    }
                 }
             }
         }
