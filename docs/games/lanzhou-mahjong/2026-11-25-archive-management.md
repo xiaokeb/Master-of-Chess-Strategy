@@ -13,3 +13,12 @@ Pixel_7_Pro 的六项棋谱测试和两项备份回归通过。验证了 schema 
 最终模拟器回执与截图位于 `.build/lz-archive-management1/device-cb5fbf7d5b01479ea82fe9817a690dad/`。Xiaomi M2007J3SC（arm64-v8a，Android API 31）通过四项棋谱数据用例，覆盖迁移、标记与整库备份往返、原生回放与首结保留。另通过五项原生结算和旧备份回归。真机界面测试未进入前台，等待超过五分钟后结束该次仪器进程。界面筛选和删除确认由模拟器验证。真机日志位于 `.build/lz-archive-management1/device-c1db401babee41a7afdcbfeb17d38e5f/`。
 
 另补验 150% 字号横屏正式牌桌。Pixel_7_Pro 实际点击弃牌后，原生活动局从 0 步保存至 8 步，并可安全返回。三个截图均为 3120×1440，字号回执为 1.5。证据位于 `.build/lz-archive-management1/large-table/`。本次仅覆盖行棋、存盘和返回。
+
+## 发布后真机复验
+
+重新安装 `7244c2c` 验收使用的两份 APK。每项用例启动后，通过 ADB 将同一测试 Activity 启动到前台，未调整设备权限。Xiaomi M2007J3SC 的删除确认与回放前进、后退和返回各通过一项。连同此前九项数据、结算和备份测试，真机累计通过十一项。
+
+| 用例回执（`.build/lz-archive-management1/`） | SHA-256 |
+| --- | --- |
+| `xiaomi-deletionRequiresConfirmationAndRemovesTheRecordFromTheList.log` | `edaaf1934d961faa7a2af855b91a11edfadba177da82ff70e54dd7d92982af96` |
+| `xiaomi-realArchiveScreenStepsForwardBackAndReturns.log` | `ee4fc7dacadab169ddc11e52c0ee4c4e4961f58f1aa94f0b91803bfb0e6e17e9` |
