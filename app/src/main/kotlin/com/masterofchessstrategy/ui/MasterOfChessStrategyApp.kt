@@ -81,6 +81,7 @@ import com.masterofchessstrategy.data.RoomEndgameProgressRepository
 import com.masterofchessstrategy.data.RoomLastSelectionRepository
 import com.masterofchessstrategy.data.createProductionGameBackupRepository
 import com.masterofchessstrategy.games.lanzhou_fangqi.data.FangqiLocalStorage
+import com.masterofchessstrategy.games.lanzhou_fangqi.FangqiStoredRecordRoute
 import com.masterofchessstrategy.data.RoomMatchStatisticsRepository
 import com.masterofchessstrategy.data.RoomTutorialProgressRepository
 import com.masterofchessstrategy.data.StoredGameMode
@@ -1735,11 +1736,18 @@ internal fun MasterOfChessStrategyApp(database: MocsDatabase, goStorageOverride:
                     onOpenRecord = { recordId ->
                         when (gameRecordsViewModel.uiState.records.firstOrNull { it.recordId == recordId }?.gameType) {
                             GameType.GO -> navController.navigate(AppDestination.goRecord(recordId))
+                            GameType.LANZHOU_SQUARE_CHESS -> navController.navigate(AppDestination.fangqiRecord(recordId))
                             GameType.CHINESE_CHESS -> navController.navigate(AppDestination.chineseChessRecord(recordId))
                             else -> Unit
                         }
                     },
                 )
+            }
+            composable(AppDestination.FANGQI_RECORD, arguments = listOf(navArgument(AppDestination.GAME_RECORD_ID_ARGUMENT) {
+                type = NavType.StringType
+            })) { entry ->
+                val recordId = checkNotNull(entry.arguments?.getString(AppDestination.GAME_RECORD_ID_ARGUMENT))
+                FangqiStoredRecordRoute(recordId, database, navController::popBackStack)
             }
             composable(AppDestination.GO_RECORD, arguments = listOf(navArgument(AppDestination.GAME_RECORD_ID_ARGUMENT) {
                 type = NavType.StringType

@@ -86,7 +86,8 @@ internal fun GameRecordsScreen(
                 }
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                for ((game, label) in listOf(null to "全部棋种", GameType.CHINESE_CHESS to "中国象棋", GameType.GO to "围棋")) {
+                for ((game, label) in listOf(null to "全部棋种", GameType.CHINESE_CHESS to "中国象棋",
+                    GameType.GO to "围棋", GameType.LANZHOU_SQUARE_CHESS to "兰州方棋")) {
                     FilterChip(selected = state.gameType == game, onClick = { onGameTypeSelected(game) },
                         label = { Text(label) }, modifier = Modifier.testTag("record_game_${game?.code ?: "all"}"))
                 }
@@ -145,7 +146,8 @@ private fun GameRecordCard(
                     ),
                 )
             }
-            Button(onClick = { onOpenRecord(record.recordId) }, enabled = record.gameType in setOf(GameType.CHINESE_CHESS, GameType.GO)) {
+            Button(onClick = { onOpenRecord(record.recordId) },
+                enabled = record.gameType in setOf(GameType.CHINESE_CHESS, GameType.GO, GameType.LANZHOU_SQUARE_CHESS)) {
                 Text(stringResource(R.string.record_replay))
             }
         }

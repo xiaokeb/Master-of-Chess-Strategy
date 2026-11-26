@@ -1,0 +1,79 @@
+{
+  "tag": "v0.1.0-lanzhou-fangqi-shared-records.1",
+  "baseline": "7244c2ccbfbb809a909f02d024e65684b8c36b5c",
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiRecordedRound.kt",
+      "sha256": "55f57719181787787da6e1ef61cc7666025100f34397d7d46d573f5883578520"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiStoredRecordRoute.kt",
+      "sha256": "64b8b6f6600129e1434ded65c2adfbb9a105c3a264719851fcb49a34be0a1d17"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/LanzhouFangqiScreen.kt",
+      "sha256": "44c60b1255848ba1579a0788fd9c5a1d46b89dfb553507d24810d81dba8b03d4"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/GameRecordsScreen.kt",
+      "sha256": "4d42ca8139c9bbe37d494ba7c403ffba0f448cde2dc686cb9801622d239e7c58"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/lanzhou_fangqi/FangqiRecordedRoundInstrumentedTest.kt",
+      "sha256": "35738a8ac4a791fa83af2c26b25e9be56693c6c3b32a9a70a7713d2e99dcfa5b"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/navigation/AppNavigationModel.kt",
+      "sha256": "820b99a5f4bde94f92b83618f30a9e4f09de758ae55eabf1a008f1689aa0367e",
+      "shared_hunks": true
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/ui/MasterOfChessStrategyApp.kt",
+      "sha256": "9ee78e265d49c97ac4f7a1938c3684c3e11427c99dc825384211dde4b782d1af",
+      "shared_hunks": true
+    }
+  ],
+  "verification": {
+    "physical_device": "Xiaomi M2007J3SC",
+    "physical_tests": 3,
+    "emulator": "Pixel_7_Pro",
+    "emulator_tests": 3,
+    "android_lint_errors": 0,
+    "android_lint_warnings": 25,
+    "room_schema": 27
+  },
+  "artifacts": [
+    {
+      "path": "schema27-build.log",
+      "sha256": "f53f88fbebcdf95e0235931cb88a0673f04f3963b066c593420a3fb7a8ae8cfe"
+    },
+    {
+      "path": "schema27-emulator.log",
+      "sha256": "ce6d3e8d7d4585b53da5e12fef65de526268916788a2b7675325eb40acba4a00"
+    },
+    {
+      "path": "schema27-emulator.png",
+      "sha256": "e353db5924680a8f824688bdc4b53a40f9516ed50ff2baae0998eebb9c7ed18b"
+    },
+    {
+      "path": "schema27-xiaomi-native.log",
+      "sha256": "33518b973409e71544bcdc1f5379ff3ecc98c8a04870ea6137ae2b3b365c33a3"
+    },
+    {
+      "path": "schema27-xiaomi-ui-retry.log",
+      "sha256": "7322c50848715ea8d804105aede5cea8f5c48e3e7847922584515d78a15d8819"
+    },
+    {
+      "path": "schema27-xiaomi.png",
+      "sha256": "f57f181a202147a8f0164854601dd24343797107549636c9b67cb1cd0dce72b3"
+    },
+    {
+      "path": "source/app/build/outputs/apk/debug/app-debug.apk",
+      "sha256": "060f71252cc9f280915804f77bbd2ab51516894d4b482480cfd3f8c28725e151"
+    },
+    {
+      "path": "source/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+      "sha256": "f62a2c1246a8922b0733e8db04621b10a28f09a75841baa840e3653cdbcc8c04"
+    }
+  ]
+}

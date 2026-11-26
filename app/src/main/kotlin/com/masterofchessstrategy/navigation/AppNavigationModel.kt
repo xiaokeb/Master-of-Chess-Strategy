@@ -104,6 +104,7 @@ internal object AppDestination {
     const val GAME_RECORD_ID_ARGUMENT = "recordId"
     const val CHINESE_CHESS_RECORD = "records/{$GAME_RECORD_ID_ARGUMENT}"
     const val GO_RECORD = "go/records/{$GAME_RECORD_ID_ARGUMENT}"
+    const val FANGQI_RECORD = "fangqi/records/{$GAME_RECORD_ID_ARGUMENT}"
 
     fun chineseChessAiGame(difficulty: Difficulty): String =
         "chinese-chess/ai-game/" + difficulty.code
@@ -132,6 +133,11 @@ internal object AppDestination {
     fun chineseChessRecord(recordId: String): String {
         require(recordId.isNotBlank() && '/' !in recordId)
         return "records/$recordId"
+    }
+
+    fun fangqiRecord(recordId: String): String {
+        require(recordId.isNotBlank() && recordId.length <= 64)
+        return "fangqi/records/" + java.net.URLEncoder.encode(recordId, "UTF-8").replace("+", "%20")
     }
 
     fun goRecord(recordId: String): String {

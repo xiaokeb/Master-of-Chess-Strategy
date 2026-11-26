@@ -139,9 +139,9 @@ internal fun LanzhouFangqiScreen(
 }
 
 @Composable
-private fun FangqiBoard(
+internal fun FangqiBoard(
     ui: FangqiUiState,
-    onPoint: (FangqiPoint) -> Unit,
+    onPoint: ((FangqiPoint) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(modifier.background(Color(0xFFE9C990)).testTag("lanzhou_fangqi_board")) {
@@ -200,9 +200,9 @@ private fun FangqiBoard(
                         selected = point == ui.selected
                         stateDescription = pointState
                     }
-                    .clickable(enabled = !ui.aiThinking, role = Role.Button, onClickLabel = actionLabel) {
-                        onPoint(point)
-                    },
+                    .then(if (onPoint == null) Modifier else Modifier.clickable(
+                        enabled = !ui.aiThinking, role = Role.Button, onClickLabel = actionLabel,
+                    ) { onPoint(point) }),
             )
         }
     }
