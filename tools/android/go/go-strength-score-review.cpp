@@ -355,6 +355,106 @@ void probe_atari(GoEngine& engine, const std::vector<GoPoint>& anchors) {
     std::cout << "result,dead,held-territory\n";
 }
 
+void probe_two_captures(GoEngine& engine, GoPoint opening, const std::vector<GoPoint>& anchors) {
+    const auto defender = engine.stone_at(anchors.front().x, anchors.front().y);
+    if (!defender || *defender == GoStone::empty) throw std::invalid_argument("expected a group anchor");
+    const auto attacker = *defender == GoStone::black ? GoStone::white : GoStone::black;
+    const auto color = attacker == GoStone::black ? C_BLACK : C_WHITE;
+    const auto size = engine.board_size();
+    std::vector<Move> setup;
+    const auto original = analysis_board(engine, setup);
+    Color original_area[Board::MAX_ARR_SIZE];
+    original.calculateArea(original_area, false, false, false, false);
+    std::vector<GoPoint> targets;
+    std::vector<Loc> heads;
+    for (const auto anchor : anchors) {
+        if (engine.stone_at(anchor.x, anchor.y) != defender) {
+            throw std::invalid_argument("expected group anchors of the same color");
+        }
+        const auto loc = Location::getLoc(anchor.x, anchor.y, size);
+        const auto head = original.chain_head[loc];
+        if (std::find(heads.begin(), heads.end(), head) != heads.end()) {
+            throw std::invalid_argument("repeated group anchor");
+        }
+        heads.push_back(head);
+        if (original.getNumLiberties(loc) > 2) {
+            std::cout << "result,unknown,liberty-count\n";
+            return;
+        }
+        auto stone = loc;
+        do {
+            if (original_area[stone] != color) {
+                std::cout << "result,unknown,original-territory\n";
+                return;
+            }
+            targets.push_back({Location::getX(stone, size), Location::getY(stone, size)});
+            stone = original.next_in_chain[stone];
+        } while (stone != loc);
+    }
+    const auto controlled = [&](const GoEngine& candidate) {
+        if (!anchors_present(candidate, targets, GoStone::empty) ||
+            candidate.stone_at(opening.x, opening.y) != attacker) return false;
+        std::vector<Move> stones;
+        const auto board = analysis_board(candidate, stones);
+        Color area[Board::MAX_ARR_SIZE];
+        board.calculateArea(area, false, false, false, false);
+        return area[Location::getLoc(opening.x, opening.y, size)] == color &&
+            std::all_of(targets.begin(), targets.end(), [&](GoPoint target) {
+                return area[Location::getLoc(target.x, target.y, size)] == color;
+            });
+    };
+    const auto attack = make_go_place(opening.x, opening.y);
+    if (!engine.apply(make_go_resume_play(attacker == GoStone::black ? 0 : 1)).accepted ||
+        !engine.apply(attack).accepted) {
+        throw std::invalid_argument("specified first capture is illegal");
+    }
+    // Require both a real first capture and a surviving target for this two-move proof.
+    const auto captured = std::count_if(targets.begin(), targets.end(), [&](GoPoint target) {
+        return engine.stone_at(target.x, target.y) == GoStone::empty;
+    });
+    if (captured == 0 || static_cast<std::size_t>(captured) == targets.size()) {
+        std::cout << "result,unknown,first-capture\n";
+        return;
+    }
+
+    const auto defenses = engine.legal_actions();
+    if (defenses.empty()) throw std::logic_error("first capture has no legal reply");
+    std::cout << "first-capture," << move_label(attack) << ',' << captured << ',' << defenses.size() << '\n';
+    std::cout << "defense,capture,verified-replies\n";
+    for (const auto& defense : defenses) {
+        auto after_defense = engine;
+        if (!after_defense.apply(defense).accepted) throw std::logic_error("listed defense was rejected");
+        bool proven = false;
+        for (const auto& finishing_move : after_defense.legal_actions()) {
+            if (finishing_move.kind != go_place_action_kind) continue;
+            auto finished = after_defense;
+            if (!finished.apply(finishing_move).accepted) throw std::logic_error("listed capture was rejected");
+            if (!controlled(finished)) continue;
+            const auto replies = finished.legal_actions();
+            if (replies.empty()) continue;
+            proven = std::all_of(replies.begin(), replies.end(), [&](const auto& reply) {
+                auto leaf = finished;
+                if (!leaf.apply(reply).accepted) throw std::logic_error("listed final defense was rejected");
+                if (!controlled(leaf)) return false;
+                const auto record = leaf.serialize();
+                GoEngine replay(size);
+                if (!replay.restore(record).restored || replay.serialize() != record || !controlled(replay)) {
+                    throw std::runtime_error("cannot replay the two captures");
+                }
+                return true;
+            });
+            if (!proven) continue;
+            std::cout << move_label(defense) << ',' << move_label(finishing_move) << ',' << replies.size() << '\n';
+            break;
+        }
+        if (!proven) {
+            std::cout << "result,unknown,defense," << move_label(defense) << '\n';
+            return;
+        }
+    }
+    std::cout << "result,dead,held-territory\n";
+}
+
 void probe_resumption(GoEngine& engine, int argc, char** argv) {
     if (argc < 6) throw std::invalid_argument("--resume-probe requires a side and at least one move");
     const std::string_view side = argv[4];
@@ -391,7 +491,8 @@ int main(int argc, char** argv) {
             throw std::invalid_argument(
                 "use: go-strength-score-review size input.mocg "
                 "[--groups | --resume-probe B|W x,y|pass [...] | --first-replies x,y [...] "
-                "| --joint-gap attack x,y [...] | --atari-proof x,y [x,y ...] | output.mocg [x,y ...]]");
+                "| --joint-gap attack x,y [...] | --atari-proof x,y [x,y ...] "
+                "| --two-capture-proof attack x,y [x,y ...] | output.mocg [x,y ...]]");
         }
         const auto size = number(argv[1]);
         if (size != 9 && size != 13 && size != 19) throw std::invalid_argument("unsupported board size");
@@ -421,7 +522,7 @@ int main(int argc, char** argv) {
         }
         const std::string_view mode = argv[3];
         if (mode != "--resume-probe" && mode != "--first-replies" && mode != "--single-gap" && mode != "--joint-gap" &&
-            mode != "--atari-proof" &&
+            mode != "--atari-proof" && mode != "--two-capture-proof" &&
             std::filesystem::exists(argv[3])) {
             throw std::invalid_argument("review output already exists");
         }
@@ -456,6 +557,13 @@ int main(int argc, char** argv) {
             std::vector<GoPoint> anchors;
             for (int index = 4; index < argc; ++index) anchors.push_back(point(argv[index]));
             probe_atari(engine, anchors);
+            return 0;
+        }
+        if (mode == "--two-capture-proof") {
+            if (argc < 6) throw std::invalid_argument("--two-capture-proof requires the first move and group anchors");
+            std::vector<GoPoint> anchors;
+            for (int index = 5; index < argc; ++index) anchors.push_back(point(argv[index]));
+            probe_two_captures(engine, point(argv[4]), anchors);
             return 0;
         }
         for (int i = 4; i < argc; ++i) {

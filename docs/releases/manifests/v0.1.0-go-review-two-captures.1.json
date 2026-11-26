@@ -1,0 +1,68 @@
+{
+  "tag": "v0.1.0-go-review-two-captures.1",
+  "baseline": "c474b6081b25b9c5ea0d7a969749b721f2dd72a6",
+  "source": "tools/android/go/go-strength-score-review.cpp",
+  "source_sha256": "f870748392b1c1dda859012153de69f213486101168994766c13bd2b2ffa1e21",
+  "slot": 55,
+  "raw_sha256": "90bcf0164ba9ebfa21e5c708087f29536c5f2d2f305e1eda4d885ea408f8de3c",
+  "verification": {
+    "emulator": "Pixel_7_Pro",
+    "physical_device": "Xiaomi M2007J3SC",
+    "first_replies": 21,
+    "final_replies": 419,
+    "reviewed_slots": 16,
+    "pending_slots": 124,
+    "pending_groups": 992
+  },
+  "evidence": [
+    {
+      "path": "probe-x86_64",
+      "sha256": "08eccdca1de9869cf8e7fdaa143357a60ae8473e2cd5e8c7ecc391b95ff4363f"
+    },
+    {
+      "path": "probe-arm64-v8a",
+      "sha256": "756a3d3d926cb80086047bef0edba9d792ad6d130b72abfd3d85e88059631a5c"
+    },
+    {
+      "path": "slot055.log",
+      "sha256": "948e1deef02e3307db754709d9498283a335f50d1746d85851e4cdcc180c3540"
+    },
+    {
+      "path": "slot055-reversed.log",
+      "sha256": "948e1deef02e3307db754709d9498283a335f50d1746d85851e4cdcc180c3540"
+    },
+    {
+      "path": "slot055-no-first-capture.log",
+      "sha256": "0c81f9752b1cafd81cf469c62972f4ada65567c7834f9f71e0dbdf4df502e66c"
+    },
+    {
+      "path": "slot011-unresolved.log",
+      "sha256": "a2aeb5f07597ca0385042fca604b8dccc28bc06960bcb016aa0f838a83455018"
+    },
+    {
+      "path": "slot098-atari-regression.log",
+      "sha256": "abc1c415047b4d55de4a3ad272c3ced424d546085f15f8f96781d5c36249a581"
+    },
+    {
+      "path": "slot055-xiaomi.log",
+      "sha256": "948e1deef02e3307db754709d9498283a335f50d1746d85851e4cdcc180c3540"
+    },
+    {
+      "path": "formal/adjudication.tsv",
+      "sha256": "0c2f6eacfa2cc42fa226af645f35516f16c7a1619356c163d9848fd9e8d92b40"
+    },
+    {
+      "path": "formal/match-055.mocg",
+      "sha256": "49bd72d0521f21e179476434ff12566d25efde2aa6fccdf1edfe8bfb9893b1ad"
+    },
+    {
+      "path": "score-xiaomi.log",
+      "sha256": "a242af890222d90f6b36a5de2301e6253be426606ee9d2374ed289c667cdc99e"
+    },
+    {
+      "path": "adjudication-sixteen.tsv",
+      "sha256": "0dfb3a1d98e89a4b619845ed542bda9b9ed048ef1143dbe08a4bf4dd55c0e4c9"
+    }
+  ],
+  "distribution": "source-only"
+}
