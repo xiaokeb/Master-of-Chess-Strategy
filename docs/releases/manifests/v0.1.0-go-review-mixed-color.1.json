@@ -1,0 +1,59 @@
+{
+  "tag": "v0.1.0-go-review-mixed-color.1",
+  "baseline": "a20c2758a025cb9ceeb6007e19fa35eff532abfe",
+  "reviewer_source": "6e1453f6b8365fa7a9b86d9ec68ab7f498125d72",
+  "slot": 84,
+  "raw_sha256": "a1ceeedfb7afc2b629a87eca0d2191f49f8294c8a6e90c668863557cc23d7e44",
+  "verification": {
+    "emulator": "Pixel_7_Pro",
+    "physical_device": "Xiaomi M2007J3SC",
+    "first_replies": [
+      141,
+      132
+    ],
+    "equivalent_capture_orders": 2,
+    "reviewed_slots": 15,
+    "pending_slots": 125,
+    "pending_groups": 994,
+    "strength_cohort_slots": 144
+  },
+  "evidence": [
+    {
+      "path": "17-0.log",
+      "sha256": "15a612cd31fea0c40889f13f9317c30b15880101bb49f34f35559ca0a439072d"
+    },
+    {
+      "path": "2-9.log",
+      "sha256": "8264a9076da2f7585686bff401a68fd87d5a84ab1f96b330442955e3bb3f732c"
+    },
+    {
+      "path": "B-first.log",
+      "sha256": "b68c5a400f576161c1dced231a9bd84ccbca2102a1ede1aaa03c6ec788317311"
+    },
+    {
+      "path": "W-first.log",
+      "sha256": "6dcb8d78bd32123c76502ebd25ce98d20d1fe39788671ff101fce3ef185c1a7e"
+    },
+    {
+      "path": "formal/adjudication.tsv",
+      "sha256": "83e7117e0edefa7892c54bef10d74ab196a92cb16f4ae169f84b75694da6ba87"
+    },
+    {
+      "path": "formal/match-084.mocg",
+      "sha256": "c6fda4d630f18e9655d4c6ed999f6cf300d776ac0930b60d9f6bb28e4eaca867"
+    },
+    {
+      "path": "formal/match-084.log",
+      "sha256": "b4dd3269a6c65f46316bd91a0f2ebc2159216b0f754a63afebdae63693a2ce5a"
+    },
+    {
+      "path": "xiaomi.log",
+      "sha256": "b4dd3269a6c65f46316bd91a0f2ebc2159216b0f754a63afebdae63693a2ce5a"
+    },
+    {
+      "path": "adjudication-fifteen.tsv",
+      "sha256": "c88f908f6c72855eff7ca81b93dba6ff0a317e0c49d28c22269969f85df3a9ef"
+    }
+  ],
+  "distribution": "source-only"
+}
