@@ -1,0 +1,109 @@
+{
+  "tag": "v0.1.0-go-slot006-joint-review.1",
+  "baseline": "d83365ec2fb56715dfc9f2baa616741fa97da368",
+  "reviewer_sha256": "5f1377606d2274e21306b81ee43a1c0bc09162ea14ccfd7e2b1b2558c5d21182",
+  "slot": 6,
+  "raw_sha256": "bc76040bf492d0b4a6e7b9a5b5541836c6b78588efbdd8bde1c84e77539c17b1",
+  "verification": {
+    "device": "Pixel_7_Pro",
+    "black_anchors": 6,
+    "black_first": 16,
+    "black_final": 226,
+    "white_first": 16,
+    "reviewed_slots": 20,
+    "pending_slots": 120,
+    "pending_groups": 985,
+    "physical": "unavailable"
+  },
+  "evidence": [
+    {
+      "path": "slot006-joint-first.log",
+      "sha256": "1082be33cef6a59d8d5ace1504d1c7447779029fef6183a46a4f656152e225cb"
+    },
+    {
+      "path": "slot006-white-first.log",
+      "sha256": "dd7d677451756aacf86ae60513285335f4005696e7d4e7d6ae38fd9329d504ac"
+    },
+    {
+      "path": "formal-006/adjudication.tsv",
+      "sha256": "ed1687871ead73cfb580f5f18e1f7050fcf5f271861a22e6a2a90e30ed5d2500"
+    },
+    {
+      "path": "formal-006/match-006.log",
+      "sha256": "f7ad2295be841279fda39a9186efaf896b41d32ffd152eff04122b57aae5c8c3"
+    },
+    {
+      "path": "formal-006/match-006.mocg",
+      "sha256": "bc76040bf492d0b4a6e7b9a5b5541836c6b78588efbdd8bde1c84e77539c17b1"
+    },
+    {
+      "path": "adjudication-twenty.tsv",
+      "sha256": "65398b50d724515c079c6e6041c61012861357d1405cdbadc0b0331c47edcd0b"
+    },
+    {
+      "path": "slot006-joint-gap-0-0.log",
+      "sha256": "66380b5a08b52e580412e6d5c6f31a8e55e06b68ed07a22344fe8735e4aec6fa"
+    },
+    {
+      "path": "slot006-joint-gap-0-1.log",
+      "sha256": "98301e7769d68b8511031c637b0905878f38a081bd9f32495bc7b6143b17edb0"
+    },
+    {
+      "path": "slot006-joint-gap-0-6.log",
+      "sha256": "3561a54c617a0f67efb35d487fe9680370a114e8b1f1483d3adf9c065bdd80b5"
+    },
+    {
+      "path": "slot006-joint-gap-0-7.log",
+      "sha256": "cf01174f639b827fdb14df3a295e9b87f557b5a078de556ca1997188c04d619b"
+    },
+    {
+      "path": "slot006-joint-gap-1-0.log",
+      "sha256": "9e2fab726ed6afac6a151b965fc8e50c0a740342b5a7ac5147e204841cf16d6d"
+    },
+    {
+      "path": "slot006-joint-gap-1-1.log",
+      "sha256": "c79541e30c49ed9674415f25f0570a308298f710eb8e77a37ba1f0b3120af9b0"
+    },
+    {
+      "path": "slot006-joint-gap-1-7.log",
+      "sha256": "8cb883f33ddc7501d796689455f1e96fce0e476392f922bf910d4ade3cf8c573"
+    },
+    {
+      "path": "slot006-joint-gap-2-0.log",
+      "sha256": "138ab23023bae6447b95535bd23fb79e34f33d939532f6dde2fd478977c3541b"
+    },
+    {
+      "path": "slot006-joint-gap-2-8.log",
+      "sha256": "31677fb3562199c9a180bf012f0a0ddd7d5657adb0ca2d84b85127983ee3c1d3"
+    },
+    {
+      "path": "slot006-joint-gap-6-7.log",
+      "sha256": "73986f602a2e959b4ca8c902c6a7e019903943aa182943369a1462cd3c353336"
+    },
+    {
+      "path": "slot006-joint-gap-6-8.log",
+      "sha256": "681777b33f5028291425be37a8acea3fdeae7fe94a6fe521b7301422dd82c6ee"
+    },
+    {
+      "path": "slot006-joint-gap-7-0.log",
+      "sha256": "264bd9c22153eb81dd402bc62b81e6838a09dfbba39b2dcd4a227ac14139b9c7"
+    },
+    {
+      "path": "slot006-joint-gap-8-1.log",
+      "sha256": "cae23abb31b4a01ad104657e638ccd4aa7f824e2842e18c37ea595a97a1e6722"
+    },
+    {
+      "path": "slot006-joint-gap-8-3.log",
+      "sha256": "857ff72ba8da8d6d7101eb652ebd46b2757409434a8023ffdff1ca105a463df2"
+    },
+    {
+      "path": "slot006-joint-gap-8-4.log",
+      "sha256": "eff1524315f576cf4e1ab73c7cf466fc9717d4f27ce53ed34ff2e8556f399c23"
+    },
+    {
+      "path": "slot006-joint-gap-pass.log",
+      "sha256": "2e94fc19fe45fa53ed1bd10869fb1dc229b445da23b4edfcbcb60d1f4dfb7903"
+    }
+  ],
+  "distribution": "source-only"
+}
