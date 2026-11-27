@@ -2,6 +2,7 @@ package com.masterofchessstrategy.ui
 
 import android.graphics.Bitmap
 import android.os.ParcelFileDescriptor
+import android.os.Process
 import android.os.SystemClock
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -118,11 +119,18 @@ class CompetitionMahjongNavigationIntegrationTest {
         assertEquals(3, start.engineRecord[16].toInt())
         val discard = hasText("出 ", substring = true) and hasClickAction() and isEnabled()
         compose.waitUntil(10_000) { compose.onAllNodes(discard).fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithTag("competition_mahjong_local_tiles").assertIsDisplayed()
+        val screen = compose.activity.resources.configuration
+        if (screen.screenWidthDp >= 600 && screen.screenHeightDp < 360) {
+            val summary = compose.onNodeWithTag("competition_mahjong_match_summary").getUnclippedBoundsInRoot()
+            val table = compose.onNodeWithTag("competition_mahjong_table").getUnclippedBoundsInRoot()
+            assertTrue(summary.right <= table.left)
+        }
+        capture("formal-table-entry")
+        compose.onNodeWithTag("competition_mahjong_local_tiles").performScrollTo().assertIsDisplayed()
         capture("formal-table")
         compose.onNodeWithTag("competition_mahjong_action_bar").performScrollTo()
         capture("formal-actions")
-        compose.onAllNodes(discard).onFirst().performScrollTo().performClick()
+        compose.onAllNodes(discard).onFirst().performScrollTo().assertIsDisplayed().performTouchInput { click() }
         compose.waitUntil(10_000) { activeMatch()?.engineRecord?.contentEquals(start.engineRecord) == false }
         compose.onNodeWithText("返回").performScrollTo().performClick()
         waitForTag("competition_formal_summary")
@@ -145,7 +153,10 @@ class CompetitionMahjongNavigationIntegrationTest {
         }
         fun audio() = ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand("dumpsys audio"))
             .bufferedReader().use { it.readText() }
-        val playerPattern = Regex("new player piid:(\\d+)[^\\r\\n]*package:com\\.masterofchessstrategy[^\\r\\n]*")
+        // Android audio dumps identify the same player by package or by process UID/PID.
+        val ownerPattern = "(?:package:com\\.masterofchessstrategy|uid/pid:${Process.myUid()}/${Process.myPid()})"
+        val playerPattern = Regex("new player piid:(\\d+)[^\\r\\n]*$ownerPattern\\b")
+        fun started(playerId: String) = Regex("player piid:$playerId (?:event|state):started\\b").containsMatchIn(audio())
         val baseline = playerPattern.findAll(audio()).map { it.groupValues[1] }.toSet()
         enterModes()
         clickReady("competition_formal_entry")
@@ -162,7 +173,7 @@ class CompetitionMahjongNavigationIntegrationTest {
         compose.onNodeWithTag("competition_mahjong_action_bar").performScrollTo()
         compose.onAllNodes(discard).onFirst().performScrollTo().assertIsDisplayed().performTouchInput { click() }
         compose.waitUntil(10_000) { activeMatch()?.engineRecord?.contentEquals(first.engineRecord) == false }
-        compose.waitUntil(5_000) { "player piid:$id event:started" in audio() }
+        compose.waitUntil(5_000) { started(id) }
         capture("formal-audio-table")
         val owner = LocalDataWriterRegistry.forDatabase(database).snapshot()
             .filterIsInstance<CompetitionMahjongMatchPlayViewModel>().single()
@@ -191,7 +202,7 @@ class CompetitionMahjongNavigationIntegrationTest {
             reopened != null
         }
         assertEquals(first.config.matchId, activeMatch()?.config?.matchId)
-        assertFalse("player piid:${checkNotNull(reopened)} event:started" in audio())
+        assertFalse(started(checkNotNull(reopened)))
         // A saved discard may reopen at a claim prompt. Start at the dealer's
         // first turn to exercise the same action under the new sound setting.
         compose.onNodeWithText("设置").performScrollTo().performClick()
@@ -205,7 +216,7 @@ class CompetitionMahjongNavigationIntegrationTest {
         compose.onAllNodes(discard).onFirst().performScrollTo().assertIsDisplayed().performTouchInput { click() }
         compose.waitUntil(10_000) { activeMatch()?.engineRecord?.contentEquals(beforeMutedMove.engineRecord) == false }
         SystemClock.sleep(350)
-        assertFalse("player piid:${checkNotNull(reopened)} event:started" in audio())
+        assertFalse(started(checkNotNull(reopened)))
         capture("formal-audio-reopened")
     }
 

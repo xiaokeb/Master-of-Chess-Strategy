@@ -1,0 +1,98 @@
+{
+  "tag": "v0.1.0-competition-mahjong-compact-table.1",
+  "baseline": "c474b6081b25b9c5ea0d7a969749b721f2dd72a6",
+  "release_parent": "2f93112772f2a47092b6ca913557544f6783501f",
+  "overlays": [
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/play/CompetitionMahjongMatchPlayRoute.kt",
+      "sha256": "2f17ebdc2ac4bb06546546914ebc54d965825b960b59cbf0ab44232f48a787d3"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongNavigationIntegrationTest.kt",
+      "sha256": "5474730e6d3854353734f8e29daa969cc56ec9524ec9e54e13f8b6ca51f73f1d"
+    }
+  ],
+  "debug_only_overlay": {
+    "path": "app/src/debug/AndroidManifest.xml",
+    "sha256": "5285fcf33c3545f2910aafecdc9410492398e5f2919787dda1ae55b000983d21"
+  },
+  "verification": {
+    "emulator": "Pixel_7_Pro",
+    "emulator_tests": 3,
+    "font_scales": [
+      "1.0",
+      "1.5"
+    ],
+    "physical_device": "Xiaomi M2007J3SC",
+    "physical_tests_before_layout": 3,
+    "new_layout_physical": "pending",
+    "lint": "0 errors, 25 warnings, 2 hints"
+  },
+  "artifacts": [
+    {
+      "path": "compact-build.log",
+      "sha256": "927304a2a26afc80dc31e70b2f686ad0d24d94f58e0665ba3b418b2c18cc4e14"
+    },
+    {
+      "path": "compact-1.0/instrumentation.log",
+      "sha256": "91ee41c762c22b80ee3cec3611a9e0059cec4edce5ddc6c7def3a5da67a57987"
+    },
+    {
+      "path": "compact-1.5/instrumentation.log",
+      "sha256": "5f4f630ace9a6d3a7008700a38ab93bfbbe1d69659c252a3e2c16ff2cf006b6c"
+    },
+    {
+      "path": "pre-compact/xiaomi-formal.log",
+      "sha256": "f036a05ed6a22241c07c3f0922b59d439c87793293ee12ceaf5301e93b6cbe91"
+    },
+    {
+      "path": "pre-compact/xiaomi-formal-resume.log",
+      "sha256": "c3ea4d7497105bf3a6cb1da75f5635746ff503605b301890aa43b6d7829f61c9"
+    },
+    {
+      "path": "pre-compact/xiaomi-formal-audio.log",
+      "sha256": "b031ebe67d7710e7566d2866b69817f6ac1e9a4547a80316ffaf062273cde0f7"
+    },
+    {
+      "path": "source/app/build/outputs/apk/debug/app-debug.apk",
+      "sha256": "b59cee3646edb3cca4e2d76d3055ea8c908a6d15a85899e2bff251259a9d9f11"
+    },
+    {
+      "path": "source/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+      "sha256": "ea3ce4ba66d70c6686696bf1361bb3963e356ba6da0d37b3378437d13ebfb7c8"
+    },
+    {
+      "path": "compact-1.0/formal-table-entry.png",
+      "sha256": "f6468a016ca66d53d011becbc365a98000f9e27c7654272e31cc8e64bf1aa0ad"
+    },
+    {
+      "path": "compact-1.0/formal-table.png",
+      "sha256": "f6468a016ca66d53d011becbc365a98000f9e27c7654272e31cc8e64bf1aa0ad"
+    },
+    {
+      "path": "compact-1.0/formal-actions.png",
+      "sha256": "4eaf12e0ce4704d18a237a2ec4de10192b506d4b79c0324527345a80bfff2e7e"
+    },
+    {
+      "path": "compact-1.0/formal-resumed.png",
+      "sha256": "d8fd9ae67c886fae7aa5727acce66833b0641f8a16c0e8624d99501a1a363880"
+    },
+    {
+      "path": "compact-1.5/formal-table-entry.png",
+      "sha256": "8ad54fea03d4decfeb0c0b774c626b971c34490abd36a25933e5f7fa4dc3e05d"
+    },
+    {
+      "path": "compact-1.5/formal-table.png",
+      "sha256": "a908b024240dee51490441288d0787c5da9eeb95c104e38c63c4b925b20148a3"
+    },
+    {
+      "path": "compact-1.5/formal-actions.png",
+      "sha256": "19b014b21bd56cf131ef8c1145ebe1a1949326ac754285264791ecba6faada1c"
+    },
+    {
+      "path": "compact-1.5/formal-resumed.png",
+      "sha256": "226b1811c97a6d378016b72d46f757be5e5aae5e2f972fc8268caa702f2fc974"
+    }
+  ],
+  "distribution": "source-only"
+}

@@ -192,9 +192,11 @@ internal fun CompetitionMahjongMatchPlayContent(
                         onToggleAutoPlay = game::toggleBots, onAutoPlaySpeedChanged = game::setSpeed,
                         onUndo = { game.undo(handIndex) }, modifier = panelModifier)
                 }
-                if (maxWidth >= 850.dp) {
+                val shortLandscape = maxWidth >= 600.dp && maxHeight < 360.dp
+                if (maxWidth >= 850.dp || shortLandscape) {
+                    val summaryWidth = if (shortLandscape) (maxWidth / 3).coerceAtMost(240.dp) else 280.dp
                     Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Summary(Modifier.width(280.dp).padding(8.dp))
+                        Summary(Modifier.width(summaryWidth).padding(8.dp))
                         Table(Modifier.weight(1f))
                     }
                 } else {
