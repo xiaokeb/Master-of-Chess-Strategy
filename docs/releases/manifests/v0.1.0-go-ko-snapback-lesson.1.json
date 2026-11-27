@@ -1,0 +1,98 @@
+{
+  "tag": "v0.1.0-go-ko-snapback-lesson.1",
+  "expected_changed_paths": 7,
+  "build": {
+    "candidate": "go-ko-snapback-lesson1",
+    "baseline": "2437a8dfd74aeaa5fc2d821785118114bc47eb99",
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoLessonPracticeLink.kt",
+        "sha256": "380ed748c0cda93b1c14e184821d047dca1d8206b9e67e33a7160579e10bea39"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoLearningLibrary.kt",
+        "sha256": "bf1b43857d4d1e72338c3ecdd6fc84408b21752cd49209f0ad9fa83646f33ed9"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoLessonPracticeLinkTest.kt",
+        "sha256": "90f29d8e587fc6dabe414da9674a3f87b4e7d79efcde67bee5b769af7cee5945"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoLessonPracticeNavigationTest.kt",
+        "sha256": "91a267adb613220f0e7226cf07039eaf7072baff7841339b79a49e3f0adce94b"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "53764cc06d47a31225a240e8c4c2decf2d3057a188acf456ad5f5ec9ceb69864",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "08f529b4dd4700cfa313de01697ecd89b064bf4364541bfbb484a84728d8008e"
+    },
+    "unit_tests": [
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.go.GoLessonPracticeLinkTest"
+      }
+    ],
+    "lint_errors": 0,
+    "lint_warnings": 25
+  },
+  "device": {
+    "restored_font": "1.0",
+    "original_font": "1.0",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "53764cc06d47a31225a240e8c4c2decf2d3057a188acf456ad5f5ec9ceb69864",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "08f529b4dd4700cfa313de01697ecd89b064bf4364541bfbb484a84728d8008e"
+    },
+    "candidate": "go-ko-snapback-lesson1",
+    "runs": [
+      {
+        "log_sha256": "efbb0c6b92e3a65d299d71d17d8de891d991028451f1b5bb491bc016ae118096",
+        "tests": 4,
+        "images": [
+          {
+            "sha256": "28ca9daf686e015c52cae940f332347cad53ec623ee790aae98c74da75658834",
+            "path": "font-1.0\\1fb91404-ab64-420a-991f-401185980914\\ko-capture-completed.png"
+          },
+          {
+            "sha256": "3bad11facb6925b4ac2aad3d7cd7a2891979529cc200ca9f27d8a07d492df575",
+            "path": "font-1.0\\1fb91404-ab64-420a-991f-401185980914\\ko-capture-ready.png"
+          },
+          {
+            "sha256": "35705fcf8824e34de271d43549dd02c2d473ef26cb34714fda1fa5e6ec3a81af",
+            "path": "font-1.0\\91549a74-138c-426a-988a-8cb9c1b88a0f\\snapback-completed.png"
+          },
+          {
+            "sha256": "de3a6aa0f5df3c575b3c79d29fa56cc38416cef4d8e0ea2999896be5c9c0fd2c",
+            "path": "font-1.0\\91549a74-138c-426a-988a-8cb9c1b88a0f\\snapback-defended.png"
+          },
+          {
+            "sha256": "8db33e3d57b8e62792c181d520d8cb1b47772fdc7b5fa04304f2abbc8485ceab",
+            "path": "font-1.0\\91549a74-138c-426a-988a-8cb9c1b88a0f\\snapback-ready.png"
+          }
+        ],
+        "font": "1.0",
+        "selector": "com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#snapbackShowsTheOpponentCaptureBeforeTheFirstClear,com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#allLinkedExercisesUseTheActualProductionRulesAndReachTheirGoals,com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#koLessonOpensTheCapturePracticeAndReturnsAfterTheFirstClear,com.masterofchessstrategy.games.go.GoEndgameNativeInstrumentedTest#koCaptureRejectsImmediateRecaptureButAllowsItAfterExchange"
+      },
+      {
+        "log_sha256": "7374768c4c8f642ae0284cae84174c7eb5aaa0a77e8df69b9fa184aa0201aee5",
+        "tests": 1,
+        "images": [
+          {
+            "sha256": "237f8652c5c7e24e4689241c903832f16fb2aab0c65e2287ed06954353e073ac",
+            "path": "font-1.5\\3fb9a89b-1b8d-4728-a222-0d77799292eb\\snapback-completed.png"
+          },
+          {
+            "sha256": "3b7fdcac1e776c2354c79d45dde882f572f59424c175ac64e093f9d4d1037260",
+            "path": "font-1.5\\3fb9a89b-1b8d-4728-a222-0d77799292eb\\snapback-defended.png"
+          },
+          {
+            "sha256": "612b9e5d4e5f8c1e7cf15d11bc802e2104dbf4ad87424cca148151335d1be1d7",
+            "path": "font-1.5\\3fb9a89b-1b8d-4728-a222-0d77799292eb\\snapback-ready.png"
+          }
+        ],
+        "font": "1.5",
+        "selector": "com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#snapbackShowsTheOpponentCaptureBeforeTheFirstClear"
+      }
+    ]
+  },
+  "distribution": "source-only"
+}

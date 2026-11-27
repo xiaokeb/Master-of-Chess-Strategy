@@ -10,7 +10,7 @@ data class GoLessonPracticeLink(val lessonId: String, val puzzleId: String) {
             "connection" to listOf("bridge-groups", "join-three-groups", "link-one-eye-groups"),
             "capture" to listOf("corner-capture", "shared-liberty-double-capture"),
             "suicide" to listOf("corner-counter-capture"),
-            "ko" to listOf("corner-ko-capture"),
+            "ko" to listOf("corner-ko-capture", "corner-snapback"),
         )
 
         fun forLesson(lessonId: String): List<GoLessonPracticeLink> =

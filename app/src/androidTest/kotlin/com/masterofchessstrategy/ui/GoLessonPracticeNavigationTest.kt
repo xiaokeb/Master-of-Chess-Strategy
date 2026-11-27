@@ -216,14 +216,18 @@ class GoLessonPracticeNavigationTest {
 
     @Test fun allLinkedExercisesUseTheActualProductionRulesAndReachTheirGoals() {
         val links = GoLearningLibrary.lessons.flatMap { GoLessonPracticeLink.forLesson(it.id) }
-        assertEquals(8, links.size)
+        assertEquals(9, links.size)
         links.forEach { link ->
             val puzzle = checkNotNull(GoEndgameLibrary.puzzle(link.puzzleId))
             val plan = GoEndgameLibrary.open(puzzle)
             val session = GoEndgameSession(plan)
             val before = session.state()
             assertFalse(before.completed)
-            val after = session.answer(puzzle.answer)
+            val first = session.answer(puzzle.answer)
+            val after = if (puzzle.id == "corner-snapback") {
+                assertFalse(first.completed)
+                session.answer(puzzle.answer)
+            } else first
             assertTrue(after.completed)
             if (link.lessonId == "suicide") {
                 assertEquals(2, before.stones[0])
@@ -428,11 +432,14 @@ class GoLessonPracticeNavigationTest {
         val preceding = GoEndgameLibrary.puzzles.takeWhile { it.id != puzzle.id }.map { it.id }.toSet()
         val repository = RoomGoEndgameProgressRepository(database)
         runBlocking { preceding.forEach { repository.complete(it) } }
-        compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
-        compose.onNodeWithTag(GO_ENDGAMES_ENTRY_TAG).performScrollTo().performClick()
-        awaitTag("go_endgame_catalog")
-        compose.onNodeWithTag("go_endgame_catalog").performScrollTo().performClick()
-        compose.onNodeWithTag("go_endgame_puzzle_${puzzle.id}").performScrollTo().performClick()
+        val lessons = RoomGoLearningProgressRepository(database)
+        val lesson = "不能立即回提"
+        openLessons()
+        compose.onNodeWithText("知识点目录").performScrollTo().performClick()
+        compose.onNodeWithText(lesson).performScrollTo().performClick()
+        awaitLesson(lesson)
+        val prior = runBlocking { lessons.load() }
+        compose.onNodeWithTag("go_lesson_practice_${puzzle.id}").performScrollTo().performClick()
         awaitTitle(puzzle.title)
         compose.onNodeWithTag("go_endgame_feedback").assertIsDisplayed()
         capture("snapback-ready")
@@ -456,6 +463,9 @@ class GoLessonPracticeNavigationTest {
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
         compose.onNodeWithTag("go_endgame_feedback").performScrollTo().assertIsDisplayed()
         capture("snapback-completed")
+        compose.onNodeWithTag("go_endgame_back").performScrollTo().performClick()
+        awaitLesson(lesson)
+        assertEquals(prior, runBlocking { lessons.load() })
     }
 
     @Test fun counterCaptureUnlocksDoubleConnectionAndAlternateAnswerPersists() {

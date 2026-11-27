@@ -8,7 +8,7 @@ import com.masterofchessstrategy.engine.GoPlayer
 class GoLessonPracticeLinkTest {
     @Test fun reviewedBasicAndAdvancedLinksPreserveLessonOrder() {
         val links = GoLearningLibrary.lessons.flatMap { GoLessonPracticeLink.forLesson(it.id) }
-        assertEquals(8, links.size)
+        assertEquals(9, links.size)
         links.forEach { link ->
             assertNotNull(GoLearningLibrary.lesson(link.lessonId))
             assertNotNull(GoEndgameLibrary.puzzle(link.puzzleId))
@@ -21,7 +21,7 @@ class GoLessonPracticeLinkTest {
         )
         assertEquals(listOf("corner-capture", "shared-liberty-double-capture"), GoLessonPracticeLink.forLesson("capture").map { it.puzzleId })
         assertEquals(listOf("corner-counter-capture"), GoLessonPracticeLink.forLesson("suicide").map { it.puzzleId })
-        assertEquals(listOf("corner-ko-capture"), GoLessonPracticeLink.forLesson("ko").map { it.puzzleId })
+        assertEquals(listOf("corner-ko-capture", "corner-snapback"), GoLessonPracticeLink.forLesson("ko").map { it.puzzleId })
         assertNull(GoLessonPracticeLink.resolve("suicide", "corner-capture"))
     }
 
