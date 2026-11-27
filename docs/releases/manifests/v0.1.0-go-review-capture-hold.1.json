@@ -1,0 +1,73 @@
+{
+  "tag": "v0.1.0-go-review-capture-hold.1",
+  "baseline": "29c5843c75e5b6ccfba4bf13ba885ff414259731",
+  "source": "tools/android/go/go-strength-score-review.cpp",
+  "source_sha256": "13f4bae7b6bc0338ac6631d86116861c9b2830e0d59c6f351fbb46759ab838cb",
+  "slot": 117,
+  "raw_sha256": "322df24b83b766ee2e809f37be5c521593d3765652fc39bd82cff869331c5316",
+  "verification": {
+    "device": "Pixel_7_Pro",
+    "black_first_defenses": 49,
+    "black_final_defenses": 2255,
+    "white_first_defenses": 43,
+    "reviewed_slots": 17,
+    "pending_slots": 123,
+    "pending_groups": 990,
+    "physical": "pending"
+  },
+  "evidence": [
+    {
+      "path": "probe-x86_64",
+      "sha256": "473afcb467abf78d6ca5091a8ea03448f9de40443e94ae5d63e8cb0e9c27c0be"
+    },
+    {
+      "path": "probe-arm64-v8a",
+      "sha256": "82831e6c86133b781b701bac577540698293d5e2ec1f3ee0be60c9404dcc690e"
+    },
+    {
+      "path": "atari-3-7.log",
+      "sha256": "8295c67071c78c640e58a66ca7a10b93d17f12beb6fd56dbb37fa5a038e56072"
+    },
+    {
+      "path": "hold-white-target.log",
+      "sha256": "e864ea1fe2efcb263ea5c6b732023814446a500155b3d30c789deee7ad32f475"
+    },
+    {
+      "path": "no-capture.log",
+      "sha256": "df6939b720182f76a6250b2427790bdb46c328cba8eb4e7e52f996f77f5f9b18"
+    },
+    {
+      "path": "wrong-mode.log",
+      "sha256": "df6939b720182f76a6250b2427790bdb46c328cba8eb4e7e52f996f77f5f9b18"
+    },
+    {
+      "path": "two-capture-regression.log",
+      "sha256": "948e1deef02e3307db754709d9498283a335f50d1746d85851e4cdcc180c3540"
+    },
+    {
+      "path": "B-first.log",
+      "sha256": "ae7dd280063d7c17523bf2a85756332180331db5d6e1d48de63a6b2604159302"
+    },
+    {
+      "path": "W-first.log",
+      "sha256": "7ebd65179a78556dd464dbbd515233c8d5e2774e7789cf2a7c17f528cc6ad562"
+    },
+    {
+      "path": "formal/adjudication.tsv",
+      "sha256": "3095598d1042ce951b3c52bcce919fda447e3449e331027adcee6baaf13f2984"
+    },
+    {
+      "path": "formal/match-117.mocg",
+      "sha256": "bb1dd205a26894ec5500b89267a690887c4c677ad2f272c5137bba60465dde62"
+    },
+    {
+      "path": "formal/match-117.log",
+      "sha256": "f38aaa8966a52d0a6912a71dc986b2d3950ce741a423d9710e9a186c16adc809"
+    },
+    {
+      "path": "adjudication-seventeen.tsv",
+      "sha256": "b1ae912c9cf230ee6db2be713426abb46f850c978b53236be31a5866bc5eb408"
+    }
+  ],
+  "distribution": "source-only"
+}
