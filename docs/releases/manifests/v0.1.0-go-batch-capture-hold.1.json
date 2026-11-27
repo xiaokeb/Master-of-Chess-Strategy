@@ -1,0 +1,36 @@
+{
+  "tag": "v0.1.0-go-batch-capture-hold.1",
+  "baseline": "56c950f2ee49b7ecac93347c7c1b3cc9c3a1c3a6",
+  "source": "tools/android/go/probe-strength-capture-holds.py",
+  "source_sha256": "4450534d9af0182d465f445dec28d68c993b6c9ac02f938f3c99c2c01be6171b",
+  "input_worksheet_sha256": "7b113f794c137fe88700fe72a49eb46083885fd056d014e85564c3a60c9bcd49",
+  "reviewer_sha256": "473afcb467abf78d6ca5091a8ea03448f9de40443e94ae5d63e8cb0e9c27c0be",
+  "previous_atari_sha256": "8b3021eb281d9b79297f6d6fc23980e2a430decd46edac78dda1fc208be1751c",
+  "verification": {
+    "device": "Pixel_7_Pro",
+    "reused": 59,
+    "new_proofs": 3,
+    "first_replies": 300,
+    "final_replies": 38047,
+    "physical": "unavailable"
+  },
+  "evidence": [
+    {
+      "path": "summary.json",
+      "sha256": "082e0830e07beed9845fa4b60a05df9931adca5a7a4ce52eeca1a6bbe7a9c6b9"
+    },
+    {
+      "path": "009-4-0.log",
+      "sha256": "6fe537a8404e315b528c96a44c05febc052f9f0fe6ea37aa4fb9b8197386d2dd"
+    },
+    {
+      "path": "091-17-18.log",
+      "sha256": "5721d0aa869ac123201261ed503c3ab7bf4578034be95e2b1870f5fcb58b35f2"
+    },
+    {
+      "path": "094-18-4.log",
+      "sha256": "ff15becc9425807df54d265b8a4f41cbdb7642591b32816c05b45c9256c333c3"
+    }
+  ],
+  "distribution": "source-only"
+}
