@@ -35,24 +35,6 @@ def group_liberties(board, anchor, group):
     return [f"{x},{y}" for x, y in sorted(liberties)]
 
 
-def read_proof(output, capture, stone_count, liberties, log):
-    lines = output.splitlines()
-    if not lines or not lines[0].startswith("raw,") or not lines[-1].startswith("result,"):
-        raise ValueError(f"Malformed reviewer output: {log}")
-    result = lines[-1].split(",")[1:]
-    if result[0] == "unknown":
-        return result
-    marker, move, captured, defenses = lines[1].split(",")
-    cases = [case.split(",") for case in lines[3:-1]]
-    expected = ("first-capture", stone_count) if liberties == 1 else ("first-liberty", 0)
-    if ((marker, int(captured)) != expected or move.replace(":", ",") != capture
-            or len(cases) != int(defenses) or len({case[0] for case in cases}) != len(cases)
-            or any(len(case) != 3 or int(case[2]) < 1 for case in cases)
-            or not cases or result != ["dead", "held-territory"]):
-        raise ValueError(f"Incomplete proof: {log}")
-    return result
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("matrix", "raw", "worksheet", "reviewer", "output"):
@@ -136,7 +118,7 @@ def main():
                 log = f'{slot:03}-{anchor.replace(",", "-")}{suffix}.log'
                 data = output.encode("utf-8")
                 (args.output / log).write_bytes(data)
-                result = read_proof(output, start, int(row["stones"]), args.liberties, log)
+                result = WORKSHEET["read_capture_proof"](output, start, int(row["stones"]), args.liberties, log)
                 results.append({
                     "slot": slot, "anchor": anchor, "capture": start, "record_sha256": record_hash,
                     "result": result, "log": log, "log_sha256": hashlib.sha256(data).hexdigest(),

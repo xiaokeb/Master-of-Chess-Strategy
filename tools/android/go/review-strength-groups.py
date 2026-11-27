@@ -4,6 +4,7 @@ import argparse
 import csv
 import hashlib
 import json
+import re
 from pathlib import Path
 
 
@@ -17,6 +18,24 @@ def read_verified(path, digest):
     if hashlib.sha256(data).hexdigest() != digest:
         raise ValueError(f"Evidence hash mismatch: {path}")
     return data
+
+
+def read_capture_proof(output, capture, stone_count, liberties, log):
+    lines = output.splitlines()
+    if not lines or not lines[0].startswith("raw,") or not lines[-1].startswith("result,"):
+        raise ValueError(f"Malformed reviewer output: {log}")
+    result = lines[-1].split(",")[1:]
+    if result[0] == "unknown":
+        return result
+    marker, move, captured, defenses = lines[1].split(",")
+    cases = [case.split(",") for case in lines[3:-1]]
+    expected = ("first-capture", stone_count) if liberties == 1 else ("first-liberty", 0)
+    if ((marker, int(captured)) != expected or move.replace(":", ",") != capture
+            or len(cases) != int(defenses) or len({case[0] for case in cases}) != len(cases)
+            or any(len(case) != 3 or int(case[2]) < 1 for case in cases)
+            or not cases or result != ["dead", "held-territory"]):
+        raise ValueError(f"Incomplete proof: {log}")
+    return result
 
 
 def evidence_rows(directory, raw_directory):
@@ -207,8 +226,12 @@ def decisions(rows, worksheet):
 
 
 def review_queue(rows, worksheet):
+    return queue_from_rows(checked_rows(rows, worksheet))
+
+
+def queue_from_rows(rows):
     slots = {}
-    for row in checked_rows(rows, worksheet):
+    for row in rows:
         slot = row["slot"]
         work = slots.setdefault(slot, {
             "slot": slot, "unreviewed": 0, "disputed": 0, "priority_points": [],
@@ -226,6 +249,47 @@ def review_queue(rows, worksheet):
             work["disputed"] > 0, work["unreviewed"], int(work["slot"]),
         ))
     ]
+
+
+def proof_queue(rows, worksheet, receipts):
+    checked = checked_rows(rows, worksheet)
+    groups = {(int(row["slot"]), f"{row['x']},{row['y']}"): row for row in checked}
+    proved_by_slot = {}
+    for path, digest in receipts:
+        path = Path(path)
+        receipt = json.loads(read_verified(path, digest))
+        liberties = receipt.get("liberties", 1)
+        if liberties not in (1, 2):
+            raise ValueError(f"Invalid liberty count in {path}")
+        for entry in receipt["results"]:
+            key = entry["slot"], entry["anchor"]
+            row = groups.get(key)
+            if (row is None or entry["record_sha256"] != row["raw_sha256"]
+                    or row["status"] != "inside_opponent_pass_alive"
+                    or int(row["liberties"]) != liberties
+                    or not re.fullmatch(r"\d{1,2},\d{1,2}", entry["capture"])):
+                raise ValueError(f"Proof does not match worksheet group {key}")
+            name = f'{entry["slot"]:03}-{entry["anchor"].replace(",", "-")}'
+            if liberties == 2:
+                name += "-" + entry["capture"].replace(",", "-")
+            log = entry["log"]
+            if log != name + ".log":
+                raise ValueError(f"Unexpected proof filename: {log}")
+            data = read_verified(path.parent / log, entry["log_sha256"])
+            result = read_capture_proof(data.decode("utf-8"), entry["capture"], int(row["stones"]), liberties, log)
+            if result != entry["result"]:
+                raise ValueError(f"Receipt disagrees with proof output: {log}")
+            if result[0] == "dead" and row["decision"] in ("", "disputed"):
+                proved_by_slot.setdefault(row["slot"], set()).add(entry["anchor"])
+    pending = queue_from_rows(checked)
+    for entry in pending:
+        proved = proved_by_slot.get(entry["slot"], set())
+        entry["capture_proofs"] = len(proved)
+        entry["missing_proofs"] = entry["unreviewed"] + entry["disputed"] - len(proved)
+        entry["proved_anchors"] = ";".join(sorted(proved))
+    return sorted(pending, key=lambda entry: (
+        entry["disputed"] > 0, entry["missing_proofs"], -entry["capture_proofs"], int(entry["slot"]),
+    ))
 
 
 def describe_groups(directory, rows, worksheet, slots):
@@ -299,6 +363,10 @@ def main():
     queue = actions.add_parser("queue", help="list pending slots and priority anchor points from a verified worksheet")
     queue.add_argument("worksheet", type=Path)
     queue.add_argument("output", type=Path)
+    proofs = actions.add_parser("proof-queue", help="prioritize slots using verified capture receipts")
+    proofs.add_argument("worksheet", type=Path)
+    proofs.add_argument("output", type=Path)
+    proofs.add_argument("--receipt", action="append", nargs=2, metavar=("PATH", "SHA256"), required=True)
     select = actions.add_parser("select", help="extract full groups of selected slots from a verified worksheet")
     select.add_argument("worksheet", type=Path)
     select.add_argument("output", type=Path)
@@ -329,6 +397,11 @@ def main():
         pending = review_queue(rows, args.worksheet)
         write_table(args.output, ("slot", "unreviewed", "disputed", "priority_points"), pending)
         print(f"Listed {len(pending)} pending slots")
+    elif args.action == "proof-queue":
+        pending = proof_queue(rows, args.worksheet, args.receipt)
+        write_table(args.output, ("slot", "unreviewed", "disputed", "priority_points",
+                                  "capture_proofs", "missing_proofs", "proved_anchors"), pending)
+        print(f"Listed {len(pending)} pending slots with {sum(row['capture_proofs'] for row in pending)} capture proofs")
     elif args.action == "select":
         selected = select_slots(rows, args.worksheet, args.slots)
         write_table(args.output, FIELDS, selected)

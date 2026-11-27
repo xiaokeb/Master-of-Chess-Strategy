@@ -1,0 +1,45 @@
+{
+  "tag": "v0.1.0-go-proof-queue.1",
+  "baseline": "c6afb6aa44022ea183c2fe1f90eb096310f28ab6",
+  "overlays": [
+    {
+      "path": "tools/android/go/review-strength-groups.py",
+      "sha256": "9d76f35c32d15e09f84292f86481606cc9cd5e50f4d3e5c128087c46c57f12d0"
+    },
+    {
+      "path": "tools/android/go/probe-strength-capture-holds.py",
+      "sha256": "35b0161423ddbda3ceee65ccef5d8c857f3b61d79338f33f2cd1d13f7cb541f7"
+    }
+  ],
+  "input_worksheet_sha256": "b4d2dd9bbb9b031639bf3caaaeec17d05cc5d665b0be78094b2632ac0a110c82",
+  "receipt_sha256": [
+    "082e0830e07beed9845fa4b60a05df9931adca5a7a4ce52eeca1a6bbe7a9c6b9",
+    "16473e4f36a596aadaf7cb6dc7eb3274ed401784d10063b5187add43bbb586ad"
+  ],
+  "verification": {
+    "runtime": "Conda MasterofChessStrategy",
+    "queued_slots": 121,
+    "capture_proofs": 12,
+    "unchanged_formal_slots": 19,
+    "negative_checks": 3
+  },
+  "evidence": [
+    {
+      "path": "queue.tsv",
+      "sha256": "c76b350ac3e0006f8353fa0659f0e3bc37032257713ab82ef02ba96d13764bb8"
+    },
+    {
+      "path": "classic-queue.tsv",
+      "sha256": "b8f9ef335b2b47fb49f5118eafbb6267f9eb42b53066609e2c4f51b5160fe6cd"
+    },
+    {
+      "path": "formal.tsv",
+      "sha256": "8dfb4fad3df780929da3a456ac3420c30ad80ca6783a1f7d838e3708c4bd8803"
+    },
+    {
+      "path": "check.log",
+      "sha256": "a8c6d620d11880a5dd8b4e76c4190e0fa84cb83f95bdaeeee41395b04d608902"
+    }
+  ],
+  "distribution": "source-only"
+}
