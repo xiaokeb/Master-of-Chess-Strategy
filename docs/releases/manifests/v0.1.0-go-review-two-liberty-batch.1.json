@@ -1,0 +1,67 @@
+{
+  "tag": "v0.1.0-go-review-two-liberty-batch.1",
+  "baseline": "269128002f5fee4cde7bd1e6966cd1b6748192fe",
+  "reviewer_sha256": "5f1377606d2274e21306b81ee43a1c0bc09162ea14ccfd7e2b1b2558c5d21182",
+  "slots": [
+    29,
+    67,
+    75,
+    105
+  ],
+  "adjudicated_slot": 67,
+  "verification": {
+    "device": "Pixel_7_Pro",
+    "new_group_proofs": 4,
+    "reviewed_slots": 19,
+    "pending_slots": 121,
+    "pending_groups": 986,
+    "physical": "unavailable"
+  },
+  "evidence": [
+    {
+      "path": "small-batch.json",
+      "sha256": "95f206596d022592d5446d93c0d52ba4a6f12b3e928912e9728076860c873dba"
+    },
+    {
+      "path": "slot067-alive-first.log",
+      "sha256": "dec4941227b6c553b71717c659ddc1874582b136e3e7c2312e55d67a3c88ea29"
+    },
+    {
+      "path": "slot067-alive-gap.log",
+      "sha256": "6de4b57d2b78a8da43d1f29da41695bfce5e6c03267aec302eb564446a6c135b"
+    },
+    {
+      "path": "formal-067/adjudication.tsv",
+      "sha256": "718078c9fe2514d91c75705f9b8a7eee835249f575e30c499c273b62a3a5ecf3"
+    },
+    {
+      "path": "formal-067/match-067.log",
+      "sha256": "de97aab5ad1fb693dcc8b47c0f55cb6cf160910ced7d75a3529bdae463f2cc1a"
+    },
+    {
+      "path": "formal-067/match-067.mocg",
+      "sha256": "61514aba9e44983a3b3b1dd11b9f13e82e12b388e5dba5c09e192a4e7fe29253"
+    },
+    {
+      "path": "adjudication-nineteen.tsv",
+      "sha256": "8dfb4fad3df780929da3a456ac3420c30ad80ca6783a1f7d838e3708c4bd8803"
+    },
+    {
+      "path": "batch-029-10-9.log",
+      "sha256": "1e2169cf7900574afea26a8436bf1066a2072ee273d5b3250ab6c5f56cd9e99e"
+    },
+    {
+      "path": "batch-067-1-7.log",
+      "sha256": "cb1ccb233ca1f1452ad098f6dddef5e58c855c6aa84e1720fedf78c3be9da9bb"
+    },
+    {
+      "path": "batch-075-0-5.log",
+      "sha256": "cecea4f389b92856686104a6c01e0b3bfeb3cd3d660a0b3c3004e9a0a202281d"
+    },
+    {
+      "path": "batch-105-2-1.log",
+      "sha256": "6696cfee845c3bd1349f1425e00be140a3e23f43df13012209b8b702dbe0c819"
+    }
+  ],
+  "distribution": "source-only"
+}
