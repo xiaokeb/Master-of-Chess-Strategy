@@ -355,13 +355,22 @@ void probe_atari(GoEngine& engine, const std::vector<GoPoint>& anchors) {
     std::cout << "result,dead,held-territory\n";
 }
 
+enum class CaptureFollowup { split_capture, hold_after_capture, close_liberty };
+
 void probe_capture_followup(GoEngine& engine, GoPoint opening, const std::vector<GoPoint>& anchors,
-                           bool finish_capture) {
+                           CaptureFollowup mode) {
     const auto defender = engine.stone_at(anchors.front().x, anchors.front().y);
     if (!defender || *defender == GoStone::empty) throw std::invalid_argument("expected a group anchor");
     const auto attacker = *defender == GoStone::black ? GoStone::white : GoStone::black;
     const auto color = attacker == GoStone::black ? C_BLACK : C_WHITE;
     const auto size = engine.board_size();
+    if (opening.x < 0 || opening.y < 0 || opening.x >= size || opening.y >= size) {
+        throw std::invalid_argument("first move is outside the board");
+    }
+    const bool close_liberty = mode == CaptureFollowup::close_liberty;
+    const bool split_capture = mode == CaptureFollowup::split_capture;
+    const auto opening_loc = Location::getLoc(opening.x, opening.y, size);
+    bool closes_target_liberty = false;
     std::vector<Move> setup;
     const auto original = analysis_board(engine, setup);
     Color original_area[Board::MAX_ARR_SIZE];
@@ -389,6 +398,12 @@ void probe_capture_followup(GoEngine& engine, GoPoint opening, const std::vector
                 return;
             }
             targets.push_back({Location::getX(stone, size), Location::getY(stone, size)});
+            if (close_liberty && original.getNumLiberties(loc) == 2 &&
+                original.colors[opening_loc] == C_EMPTY) {
+                for (int offset = 0; offset < 4; ++offset) {
+                    closes_target_liberty |= stone + original.adj_offsets[offset] == opening_loc;
+                }
+            }
             stone = original.next_in_chain[stone];
         } while (stone != loc);
     }
@@ -398,7 +413,7 @@ void probe_capture_followup(GoEngine& engine, GoPoint opening, const std::vector
         const auto board = analysis_board(candidate, stones);
         Color area[Board::MAX_ARR_SIZE];
         board.calculateArea(area, false, false, false, false);
-        return area[Location::getLoc(opening.x, opening.y, size)] == color &&
+        return area[opening_loc] == color &&
             std::all_of(targets.begin(), targets.end(), [&](GoPoint target) {
                 return area[Location::getLoc(target.x, target.y, size)] == color;
             });
@@ -412,16 +427,20 @@ void probe_capture_followup(GoEngine& engine, GoPoint opening, const std::vector
         return engine.stone_at(target.x, target.y) == GoStone::empty;
     });
     const bool captured_all = static_cast<std::size_t>(captured) == targets.size();
-    const bool expected_all_captured = !finish_capture;
-    if (captured == 0 || captured_all != expected_all_captured) {
+    if (close_liberty && (!closes_target_liberty || captured != 0)) {
+        std::cout << "result,unknown,first-liberty\n";
+        return;
+    }
+    if (!close_liberty && (captured == 0 || captured_all == split_capture)) {
         std::cout << "result,unknown,first-capture\n";
         return;
     }
 
     const auto defenses = engine.legal_actions();
     if (defenses.empty()) throw std::logic_error("first capture has no legal reply");
-    std::cout << "first-capture," << move_label(attack) << ',' << captured << ',' << defenses.size() << '\n';
-    std::cout << "defense," << (finish_capture ? "capture" : "hold") << ",verified-replies\n";
+    std::cout << (close_liberty ? "first-liberty," : "first-capture,")
+              << move_label(attack) << ',' << captured << ',' << defenses.size() << '\n';
+    std::cout << "defense," << (mode == CaptureFollowup::hold_after_capture ? "hold" : "capture") << ",verified-replies\n";
     for (const auto& defense : defenses) {
         auto after_defense = engine;
         if (!after_defense.apply(defense).accepted) throw std::logic_error("listed defense was rejected");
@@ -430,14 +449,15 @@ void probe_capture_followup(GoEngine& engine, GoPoint opening, const std::vector
             if (finishing_move.kind != go_place_action_kind) continue;
             auto finished = after_defense;
             if (!finished.apply(finishing_move).accepted) throw std::logic_error("listed capture was rejected");
-            if ((finish_capture && !anchors_present(finished, targets, GoStone::empty)) || !controlled(finished)) continue;
+            if ((mode != CaptureFollowup::hold_after_capture && !anchors_present(finished, targets, GoStone::empty)) ||
+                !controlled(finished)) continue;
             const auto replies = finished.legal_actions();
             if (replies.empty()) continue;
             proven = std::all_of(replies.begin(), replies.end(), [&](const auto& reply) {
                 auto leaf = finished;
                 if (!leaf.apply(reply).accepted) throw std::logic_error("listed final defense was rejected");
-                // In the hold case a new defending stone is admissible inside territory still controlled.
-                if ((finish_capture && !anchors_present(leaf, targets, GoStone::empty)) || !controlled(leaf)) return false;
+                // Only the split-capture protocol additionally requires the points to stay unoccupied.
+                if ((split_capture && !anchors_present(leaf, targets, GoStone::empty)) || !controlled(leaf)) return false;
                 const auto record = leaf.serialize();
                 GoEngine replay(size);
                 if (!replay.restore(record).restored || replay.serialize() != record || !controlled(replay)) {
@@ -495,6 +515,7 @@ int main(int argc, char** argv) {
                 "[--groups | --resume-probe B|W x,y|pass [...] | --first-replies x,y [...] "
                 "| --joint-gap attack x,y [...] | --atari-proof x,y [x,y ...] "
                 "| --two-capture-proof attack x,y [x,y ...] | --capture-and-hold attack x,y [x,y ...] "
+                "| --enclose-in-two attack x,y [x,y ...] "
                 "| output.mocg [x,y ...]]");
         }
         const auto size = number(argv[1]);
@@ -526,6 +547,7 @@ int main(int argc, char** argv) {
         const std::string_view mode = argv[3];
         if (mode != "--resume-probe" && mode != "--first-replies" && mode != "--single-gap" && mode != "--joint-gap" &&
             mode != "--atari-proof" && mode != "--two-capture-proof" && mode != "--capture-and-hold" &&
+            mode != "--enclose-in-two" &&
             std::filesystem::exists(argv[3])) {
             throw std::invalid_argument("review output already exists");
         }
@@ -562,11 +584,13 @@ int main(int argc, char** argv) {
             probe_atari(engine, anchors);
             return 0;
         }
-        if (mode == "--two-capture-proof" || mode == "--capture-and-hold") {
+        if (mode == "--two-capture-proof" || mode == "--capture-and-hold" || mode == "--enclose-in-two") {
             if (argc < 6) throw std::invalid_argument("capture follow-up requires the first move and group anchors");
             std::vector<GoPoint> anchors;
             for (int index = 5; index < argc; ++index) anchors.push_back(point(argv[index]));
-            probe_capture_followup(engine, point(argv[4]), anchors, mode == "--two-capture-proof");
+            const auto followup = mode == "--enclose-in-two" ? CaptureFollowup::close_liberty :
+                mode == "--two-capture-proof" ? CaptureFollowup::split_capture : CaptureFollowup::hold_after_capture;
+            probe_capture_followup(engine, point(argv[4]), anchors, followup);
             return 0;
         }
         for (int i = 4; i < argc; ++i) {

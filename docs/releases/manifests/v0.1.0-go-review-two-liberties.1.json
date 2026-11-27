@@ -1,0 +1,83 @@
+{
+  "tag": "v0.1.0-go-review-two-liberties.1",
+  "baseline": "234c5eb48f3058a197b770c45b9c40d8198a15c2",
+  "source": "tools/android/go/go-strength-score-review.cpp",
+  "source_sha256": "efd40fd4b49480bc30dd3a4607903266d67b4b029527313194d3ede0b81a09f6",
+  "slot": 11,
+  "raw_sha256": "3803310d5f1aa975fa062d8a723b833f56b0da7ce5430c20f7b58d898543c4bd",
+  "verification": {
+    "device": "Pixel_7_Pro",
+    "first_replies": [
+      14,
+      14
+    ],
+    "final_replies": [
+      221,
+      221
+    ],
+    "direct_capture_replies": 16,
+    "reviewed_slots": 18,
+    "pending_slots": 122,
+    "pending_groups": 988,
+    "physical": "unavailable"
+  },
+  "evidence": [
+    {
+      "path": "probe-x86_64",
+      "sha256": "5f1377606d2274e21306b81ee43a1c0bc09162ea14ccfd7e2b1b2558c5d21182"
+    },
+    {
+      "path": "probe-arm64-v8a",
+      "sha256": "75d1e66c18273f1c6e6bec9bf13be5e5057d54066a477fc14eaa7969925447f1"
+    },
+    {
+      "path": "slot011-close-left.log",
+      "sha256": "ee1e05d4f596cae6e1ea876ce50a71be22a4e9093913d4c3050054d51926424b"
+    },
+    {
+      "path": "slot011-close-right.log",
+      "sha256": "2078dfcda432544f55d3d7ef6da7d3b47e643fd5b7d9273f70a6ce8caeaff047"
+    },
+    {
+      "path": "slot011-unrelated.log",
+      "sha256": "b2cb574e3c80fed418998666f7bc4742ea2997192770a6bbddc6883796f8d218"
+    },
+    {
+      "path": "slot011-direct.log",
+      "sha256": "53c8ccf8d18b620d42d068bac29d544b26f6aa39514caf548c1dfbd94fddcb6d"
+    },
+    {
+      "path": "slot055-regression.log",
+      "sha256": "948e1deef02e3307db754709d9498283a335f50d1746d85851e4cdcc180c3540"
+    },
+    {
+      "path": "slot117-regression.log",
+      "sha256": "e864ea1fe2efcb263ea5c6b732023814446a500155b3d30c789deee7ad32f475"
+    },
+    {
+      "path": "direct-first.log",
+      "sha256": "a2f359f49caa46e466b72af106bb72c2b8de35987091ba9c3d0f28ae9838f9f7"
+    },
+    {
+      "path": "enclose-first.log",
+      "sha256": "361f2db637c6f1fdf4c0f0a401fd3fbe4da191260909b946b4630370b0ac4e66"
+    },
+    {
+      "path": "formal/adjudication.tsv",
+      "sha256": "a1dd7c08e51d3d83f2c87ed07ee7986efa0bc4c0fddfd836afd770fdc0bf29bd"
+    },
+    {
+      "path": "formal/match-011.mocg",
+      "sha256": "9ccde270ef4dc5ea3c8460d074d4a3f86f5c0a95b9ea3d058551dc2740296d5b"
+    },
+    {
+      "path": "formal/match-011.log",
+      "sha256": "d30fbdfdbba4118095f21a2f96db31df9a98d17c762c1cf465eaf7a80fac7f4a"
+    },
+    {
+      "path": "adjudication-eighteen.tsv",
+      "sha256": "d8f663cf2f5de4cab2a11f7457a40f892346014c302cc56c1ab37d58eee02b30"
+    }
+  ],
+  "distribution": "source-only"
+}
