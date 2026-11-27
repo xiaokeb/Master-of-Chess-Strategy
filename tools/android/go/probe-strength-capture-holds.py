@@ -1,4 +1,4 @@
-"""Collect native capture-and-hold evidence for unresolved enclosed groups in atari."""
+"""Collect native capture evidence for unresolved enclosed groups with one or two liberties."""
 
 import argparse
 import hashlib
@@ -14,7 +14,7 @@ from uuid import uuid4
 WORKSHEET = runpy.run_path(str(Path(__file__).with_name("review-strength-groups.py")))
 
 
-def sole_liberty(board, anchor, group):
+def group_liberties(board, anchor, group):
     size = len(board)
     color = group["color"]
     pending = [anchor]
@@ -30,10 +30,27 @@ def sole_liberty(board, anchor, group):
             elif board[ny][nx] == color and (nx, ny) not in seen:
                 seen.add((nx, ny))
                 pending.append((nx, ny))
-    if len(seen) != int(group["stones"]) or len(liberties) != 1:
+    if len(seen) != int(group["stones"]) or len(liberties) != int(group["liberties"]):
         raise ValueError(f"Unexpected chain or liberty at {anchor}")
-    x, y = liberties.pop()
-    return f"{x},{y}"
+    return [f"{x},{y}" for x, y in sorted(liberties)]
+
+
+def read_proof(output, capture, stone_count, liberties, log):
+    lines = output.splitlines()
+    if not lines or not lines[0].startswith("raw,") or not lines[-1].startswith("result,"):
+        raise ValueError(f"Malformed reviewer output: {log}")
+    result = lines[-1].split(",")[1:]
+    if result[0] == "unknown":
+        return result
+    marker, move, captured, defenses = lines[1].split(",")
+    cases = [case.split(",") for case in lines[3:-1]]
+    expected = ("first-capture", stone_count) if liberties == 1 else ("first-liberty", 0)
+    if ((marker, int(captured)) != expected or move.replace(":", ",") != capture
+            or len(cases) != int(defenses) or len({case[0] for case in cases}) != len(cases)
+            or any(len(case) != 3 or int(case[2]) < 1 for case in cases)
+            or not cases or result != ["dead", "held-territory"]):
+        raise ValueError(f"Incomplete proof: {log}")
+    return result
 
 
 def main():
@@ -44,7 +61,11 @@ def main():
     parser.add_argument("--serial", default="emulator-5554")
     parser.add_argument("--avd", default="Pixel_7_Pro")
     parser.add_argument("--previous-atari", nargs=2, metavar=("RECEIPT", "SHA256"))
+    parser.add_argument("--liberties", type=int, choices=(1, 2), default=1)
+    parser.add_argument("--board-size", type=int, choices=(9, 13, 19))
     args = parser.parse_args()
+    if args.liberties == 2 and args.previous_atari:
+        parser.error("--previous-atari applies to one-liberty groups")
     prior_proofs = {}
     prior_hash = None
     if args.previous_atari:
@@ -86,51 +107,45 @@ def main():
     reused = []
     for slot, slot_rows in groupby(rows, key=lambda row: int(row["slot"])):
         groups = list(slot_rows)
-        targets = [row for row in groups if not row["decision"] and row["liberties"] == "1"
+        targets = [row for row in groups if not row["decision"] and int(row["liberties"]) == args.liberties
                    and row["status"] == "inside_opponent_pass_alive"]
         if not targets:
             continue
         board, _ = WORKSHEET["verified_board"](args.matrix, slot, groups)
+        if args.board_size and len(board) != args.board_size:
+            continue
         name = f"match-{slot:03}.mocg"
         record_hash = groups[0]["raw_sha256"]
         record = None
         for row in targets:
             anchor = f'{row["x"]},{row["y"]}'
-            capture = sole_liberty(board, (int(row["x"]), int(row["y"])), row)
+            starts = group_liberties(board, (int(row["x"]), int(row["y"])), row)
             prior = prior_proofs.get((slot, anchor))
             if prior is not None:
                 if (prior["record_sha256"] != record_hash or prior["stones"] != int(row["stones"])
-                        or prior["capture_move"] != capture):
+                        or prior["capture_move"] != starts[0]):
                     raise ValueError(f"Prior proof does not match slot {slot} at {anchor}")
                 reused.append({"slot": slot, "anchor": anchor, "record_sha256": record_hash})
                 continue
             if record is None:
                 record = upload(args.raw / name, name, record_hash)
-            output = adb("shell", probe, len(board), record, "--capture-and-hold", capture, anchor)
-            log = f'{slot:03}-{anchor.replace(",", "-")}.log'
-            data = output.encode("utf-8")
-            (args.output / log).write_bytes(data)
-            lines = output.splitlines()
-            if not lines or not lines[0].startswith("raw,") or not lines[-1].startswith("result,"):
-                raise ValueError(f"Malformed reviewer output: {log}")
-            result = lines[-1].split(",")[1:]
-            if result[0] == "dead":
-                marker, move, captured, defenses = lines[1].split(",")
-                cases = [case.split(",") for case in lines[3:-1]]
-                if (marker != "first-capture" or move.replace(":", ",") != capture
-                        or int(captured) != int(row["stones"]) or len(cases) != int(defenses)
-                        or len({case[0] for case in cases}) != len(cases)
-                        or any(len(case) != 3 or int(case[2]) < 1 for case in cases)
-                        or not cases or result != ["dead", "held-territory"]):
-                    raise ValueError(f"Incomplete proof: {log}")
-            elif result[0] != "unknown":
-                raise ValueError(f"Unexpected reviewer result: {log}")
-            results.append({
-                "slot": slot, "anchor": anchor, "capture": capture, "record_sha256": record_hash,
-                "result": result, "log": log, "log_sha256": hashlib.sha256(data).hexdigest(),
-            })
+            mode = "--capture-and-hold" if args.liberties == 1 else "--enclose-in-two"
+            for start in starts:
+                output = adb("shell", probe, len(board), record, mode, start, anchor)
+                suffix = "" if args.liberties == 1 else "-" + start.replace(",", "-")
+                log = f'{slot:03}-{anchor.replace(",", "-")}{suffix}.log'
+                data = output.encode("utf-8")
+                (args.output / log).write_bytes(data)
+                result = read_proof(output, start, int(row["stones"]), args.liberties, log)
+                results.append({
+                    "slot": slot, "anchor": anchor, "capture": start, "record_sha256": record_hash,
+                    "result": result, "log": log, "log_sha256": hashlib.sha256(data).hexdigest(),
+                })
+                if result[0] == "dead":
+                    break
 
     receipt = {"reviewer_sha256": reviewer_hash, "avd": args.avd,
+               "liberties": args.liberties, "board_size": args.board_size,
                "previous_atari_sha256": prior_hash, "reused": reused, "results": results}
     (args.output / "summary.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
     print(Counter(row["result"][0] for row in results))
