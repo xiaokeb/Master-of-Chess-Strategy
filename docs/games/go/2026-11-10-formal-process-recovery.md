@@ -47,3 +47,17 @@
 1. 安装同源 Debug 应用和测试 APK。以 `GoFormalProcessCheckpointInstrumentedTest#seed` 运行 AndroidJUnitRunner，传入唯一 UUID 参数 `go_process_token`，以及 `go_process_case` 的 `standard`、`opening` 或 `continuation`。
 2. 用 ADB 启动 `.ui.GoFormalProcessCheckActivity`，传入 `owned_database=go-formal-process-qa-<UUID>.db` 和 `match_id`。`match_id` 是 `UUID.nameUUIDFromBytes` 对 UTF-8 文本 `<UUID>:<go_process_case>` 的结果。
 3. 等待 `files/go-formal-process-qa/go-formal-process-qa-<UUID>.json` 更新，并核对其 PID 等于 `:go_formal_qa` 的进程 PID。只终止已核对的专用进程，使用同一参数重启，比较除 PID 以外的字段。可再执行上述牌桌操作并检查收据和归档表。
+
+## 2026-11-28 小米真机复验
+
+在小米 25042PN24C（API 37，arm64-v8a）及 Pixel 7 Pro 上使用同一对标准 Debug APK，并以设备实际安装包的 SHA-256 核对来源。两个环境均通过三种进程重启。测试只终止已核对 PID 的围棋专用进程，使用独立 UUID 数据库。
+
+| 真机场景 | 进程 PID | 恢复结果 |
+| --- | --- | --- |
+| 标准人机 | 14572 → 14770 | 同局 ID、两手棋、盘面、检查点及辅助额度一致。 |
+| 指定开局 | 15020 → 15190 | 同局四手棋、原开局两手及检查点散列一致。 |
+| 自动续局 | 15458 → 15698 | 第 2／3 局和双方协商状态一致，保留黑方确认、白方待确认。 |
+
+已复核三张真机横屏截图。小米系统拒绝 ADB 注入触控，恢复后的实际操作在 Pixel 7 Pro 补验。标准人机落子后 KataGo 应手，原局由两手增至四手且只保留一份正式创建记录。指定开局重开后取得新局 ID，回到原始两手。自动续局在白方确认后进入第 3／3 局，再次重启时原局归档、棋谱和投影各一份，成长结果为零。上述恢复后操作仍待真机验证。
+
+[源码与证据清单](../../releases/manifests/v0.1.0-go-formal-process-xiaomi.1.json)

@@ -1,0 +1,227 @@
+{
+  "distribution": "source-only",
+  "baseline": "a2dae2b1246bbcc574c524de75355fba30bf3d66",
+  "installed_apks": {
+    "app/build/outputs/apk/debug/app-debug.apk": "6e7a36c15e735b4e2d497e01bb2dde6442977df79487f2e64e976a8dd631dc8a",
+    "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "d53fcf9397c8bf9ecc76ffbea8df007d0cfdff5ad3686f9aa8e9f5316fdd0ddf"
+  },
+  "tag": "v0.1.0-go-formal-process-xiaomi.1",
+  "evidence": [
+    {
+      "sha256": "0f8efdb9d37c2aef1bf9a473a2bf40ea91c4310b976548e9e88b837096474124",
+      "path": "continuation-review.png"
+    },
+    {
+      "sha256": "a70a6fc81d3c4c27a485c23bc1695e6cc3173a3912c360c0dbe5844fa6be1e7b",
+      "path": "device-7fa60cc3078c4766a98b361492c46616/continuation-after.json"
+    },
+    {
+      "sha256": "02cd9031da56a4226e4385fb97a3ce226cf44e0d09ebd1eed13ea9c991ee429a",
+      "path": "device-7fa60cc3078c4766a98b361492c46616/continuation-before.json"
+    },
+    {
+      "sha256": "962ca07631853b764456f5828836c12ab52ecb3f511cb03aa2ed3a75971637d3",
+      "path": "device-7fa60cc3078c4766a98b361492c46616/continuation-restored.png"
+    },
+    {
+      "sha256": "7dd543c8a44afa956f2e2fe9a2593b20a27a15514929f7c6958edb675114f805",
+      "path": "device-7fa60cc3078c4766a98b361492c46616/continuation-seed.log"
+    },
+    {
+      "sha256": "2470938d1aef2fe506b14c76ee344957429687f44f8f53d8101b69f1b3405e72",
+      "path": "device-7fa60cc3078c4766a98b361492c46616/opening-after.json"
+    },
+    {
+      "sha256": "b67c4afc388b68990534308b0d92c992bdda97ba57152d97256cc1865b13adfc",
+      "path": "device-7fa60cc3078c4766a98b361492c46616/opening-before.json"
+    },
+    {
+      "sha256": "edbef3103013fe1ccf34fac352599c2afa5e586444761ace080eb5fa6725ad60",
+      "path": "device-7fa60cc3078c4766a98b361492c46616/opening-restored.png"
+    },
+    {
+      "sha256": "e8ae0c3dee20d5be9dad6fca0e348cded05600140b1d715a457bc9f9c9947ee9",
+      "path": "device-7fa60cc3078c4766a98b361492c46616/opening-seed.log"
+    },
+    {
+      "sha256": "52c5dc31be9e9d81461223f5d3591f5b925a7b29458750d1bd89da51fe509253",
+      "path": "device-7fa60cc3078c4766a98b361492c46616/standard-after.json"
+    },
+    {
+      "sha256": "9a0353d0aa193e3cb55a6a8a7bea9321417bb724fb39f9dc6104d6aeae69a281",
+      "path": "device-7fa60cc3078c4766a98b361492c46616/standard-before.json"
+    },
+    {
+      "sha256": "de7fbeb896ea1052de939adb4dcf26b70883ce7ce91d593e2abf12820eaf0d01",
+      "path": "device-7fa60cc3078c4766a98b361492c46616/standard-restored.png"
+    },
+    {
+      "sha256": "fbd4c36efe09bb0ecab5e0b93035238558de9534bfe86ff3a303617512be65a8",
+      "path": "device-7fa60cc3078c4766a98b361492c46616/standard-seed.log"
+    },
+    {
+      "sha256": "42bb618ff0e711275d189e7f603b167935695aa0be9a0d9db4c679b5cb8187c8",
+      "path": "pixel/device-d71a1eded5c048469b2967112e9f0705/continuation-after.json"
+    },
+    {
+      "sha256": "0223e7f4a6774cd64c4f3e0a03af71667ecbd85e4123bdbae1f77cf3b0d8b0f4",
+      "path": "pixel/device-d71a1eded5c048469b2967112e9f0705/continuation-before.json"
+    },
+    {
+      "sha256": "a7f278b9544c6c168b4f328a2a2fa3e9fcd8abeecce7920b3b5f3b0ba3a5a698",
+      "path": "pixel/device-d71a1eded5c048469b2967112e9f0705/continuation-restored.png"
+    },
+    {
+      "sha256": "5ee56d125dc0a282e8a0d38c1069efb4a578de3a967132a80812dbfcba558b46",
+      "path": "pixel/device-d71a1eded5c048469b2967112e9f0705/continuation-seed.log"
+    },
+    {
+      "sha256": "961c48028acf345601fdeb4ed980a66bb984e4b6424668e168a1920cbc3156b0",
+      "path": "pixel/device-d71a1eded5c048469b2967112e9f0705/opening-after.json"
+    },
+    {
+      "sha256": "3716afed090928968a7c6da37c8cfebdd8ba61ed7f46fdb5d1c4850dfc01e4a9",
+      "path": "pixel/device-d71a1eded5c048469b2967112e9f0705/opening-before.json"
+    },
+    {
+      "sha256": "dcfdf36644ebe858a4d6b5bf058097a6ac4572025e8e5c5c81ae2cc4117b1f2c",
+      "path": "pixel/device-d71a1eded5c048469b2967112e9f0705/opening-restored.png"
+    },
+    {
+      "sha256": "5ee56d125dc0a282e8a0d38c1069efb4a578de3a967132a80812dbfcba558b46",
+      "path": "pixel/device-d71a1eded5c048469b2967112e9f0705/opening-seed.log"
+    },
+    {
+      "sha256": "b69f109833986cdccd30c8d1cd7b52280610a1fda2ee63fd17d163877c208575",
+      "path": "pixel/device-d71a1eded5c048469b2967112e9f0705/standard-after.json"
+    },
+    {
+      "sha256": "16ce0386c6a57ba3e144900ff0a362de148ec28eb1f898f1e362a6a4d5046398",
+      "path": "pixel/device-d71a1eded5c048469b2967112e9f0705/standard-before.json"
+    },
+    {
+      "sha256": "1a56e5ea33792292369b73f1459e83a0b61c2fab323b91d3f2ee6b7cdbd27916",
+      "path": "pixel/device-d71a1eded5c048469b2967112e9f0705/standard-restored.png"
+    },
+    {
+      "sha256": "d6b94b5ef407791c95eb62831e304371349b33c7178f0e91465db0497da49b3e",
+      "path": "pixel/device-d71a1eded5c048469b2967112e9f0705/standard-seed.log"
+    },
+    {
+      "sha256": "459b9a25d19ad985265cd3e5a544a7feb062f9f614b29c8aca5861e438413a75",
+      "path": "pixel/finish-8ca65bcca15e41e7bab54e67f261000d/archive-after/receipt.json"
+    },
+    {
+      "sha256": "459b9a25d19ad985265cd3e5a544a7feb062f9f614b29c8aca5861e438413a75",
+      "path": "pixel/finish-8ca65bcca15e41e7bab54e67f261000d/archive-prior/receipt.json"
+    },
+    {
+      "sha256": "dfd7322c9e9d58a5804031246ab4909985d63c2386de7f9c72806d4acb9860d4",
+      "path": "pixel/finish-8ca65bcca15e41e7bab54e67f261000d/continuation-advanced.json"
+    },
+    {
+      "sha256": "e45780baf9a6208d5850e3b907ab5a1f6e66493da9cc665604d9514d0ffe2779",
+      "path": "pixel/finish-8ca65bcca15e41e7bab54e67f261000d/continuation-advanced.png"
+    },
+    {
+      "sha256": "1981d95dba2032b5c19df19489508440a8f92f3e589d8022b146678881415800",
+      "path": "pixel/finish-8ca65bcca15e41e7bab54e67f261000d/continuation-reopen.json"
+    },
+    {
+      "sha256": "38ff97f1bce8257ed52395bcd5282053a9728d5f6b15cbfbd48312cf1567ef1f",
+      "path": "pixel/finish-8ca65bcca15e41e7bab54e67f261000d/standard-after.json"
+    },
+    {
+      "sha256": "4b8facfa20629da8c0b5bce7c4e972ce77d7561decb1eb65245c5d0fbba80940",
+      "path": "pixel/finish-8ca65bcca15e41e7bab54e67f261000d/standard-after.png"
+    },
+    {
+      "sha256": "cf8a73c60ea3fcf3139ab6d15e3f48dbe7df652be968ab11d145e0b443e59420",
+      "path": "pixel/finish-8ca65bcca15e41e7bab54e67f261000d/standard-before.json"
+    },
+    {
+      "sha256": "88fad872de3047aa58f6d67714510f2cb6148f641e17561fc495e40a3f6e395a",
+      "path": "pixel/finish-8ca65bcca15e41e7bab54e67f261000d/standard-storage/receipt.json"
+    },
+    {
+      "sha256": "110899b46ad9f9b5d02230312b17b5a96b31697217cae2f802558a735b98ed2e",
+      "path": "pixel/finish-b95c30a8c42846d495b82ecb8646974a/opening-after.json"
+    },
+    {
+      "sha256": "c2a07b6168412bf377b294d12766d0559b892112fbc36be5e93be952f8ae138d",
+      "path": "pixel/finish-b95c30a8c42846d495b82ecb8646974a/opening-after.png"
+    },
+    {
+      "sha256": "fd5b451d06590a7950f1f4ae772892cf26c97828d292d257ec8b2b942bcd752a",
+      "path": "pixel/finish-b95c30a8c42846d495b82ecb8646974a/opening-before.json"
+    },
+    {
+      "sha256": "199046d5e8a5425d9111504caa072dba90685bd8db4362053fa41b8bbcea51f6",
+      "path": "restored-review.jpg"
+    }
+  ],
+  "evidence_root": ".build/go-formal-xiaomi1",
+  "xiaomi": {
+    "model": "25042PN24C",
+    "touch_follow_up": "unverified; the device rejected shell input",
+    "api": 37,
+    "abi": "arm64-v8a",
+    "screenshots": 3
+  },
+  "devices": {
+    "xiaomi": {
+      "standard": {
+        "opening_events": 0,
+        "events": 2,
+        "phase": "PLAYING",
+        "opening_sha256": null,
+        "checkpoint_sha256": "8db67d8ed946bbc6464659b07d1f644c2b926fccc448ee3c824ffa8ce0307bb8"
+      },
+      "opening": {
+        "opening_events": 2,
+        "events": 4,
+        "phase": "PLAYING",
+        "opening_sha256": "36e3c3ba2e7e71822b3d3784fbcfd3a290454d10fa0578cf78f7aee61bd63de1",
+        "checkpoint_sha256": "69b68f7f23b2b78df8b3ff4023f20da35b165574ab341cf8fb507c5faffa52bd"
+      },
+      "continuation": {
+        "opening_events": 2,
+        "events": 5,
+        "phase": "SCORING",
+        "opening_sha256": "36e3c3ba2e7e71822b3d3784fbcfd3a290454d10fa0578cf78f7aee61bd63de1",
+        "checkpoint_sha256": "9b28c56f734cb3c15cc41e780a6d8e52be6761ac376ca5c2aabf0b07a80a8598"
+      }
+    },
+    "pixel": {
+      "standard": {
+        "opening_events": 0,
+        "events": 2,
+        "phase": "PLAYING",
+        "opening_sha256": null,
+        "checkpoint_sha256": "1ec8b4d84917c9572e23a78c2044ad20dbc18fed34244665780e5a3ee65debc1"
+      },
+      "opening": {
+        "opening_events": 2,
+        "events": 4,
+        "phase": "PLAYING",
+        "opening_sha256": "36e3c3ba2e7e71822b3d3784fbcfd3a290454d10fa0578cf78f7aee61bd63de1",
+        "checkpoint_sha256": "be3835548122eb061fe541a19e7808327098e5f2a180de6f9210bddf27b5069b"
+      },
+      "continuation": {
+        "opening_events": 2,
+        "events": 5,
+        "phase": "SCORING",
+        "opening_sha256": "36e3c3ba2e7e71822b3d3784fbcfd3a290454d10fa0578cf78f7aee61bd63de1",
+        "checkpoint_sha256": "132dc7fdde0415eba2b78949fbd38fbb6ab2bcd3f185b0bcc9c7dcd68d99b4ff"
+      }
+    }
+  },
+  "pixel": {
+    "follow_up": [
+      "standard-actual-move-and-KataGo-reply",
+      "explicit-restart-to-original-opening",
+      "both-confirm-and-advance-with-single-archive"
+    ],
+    "model": "Pixel_7_Pro"
+  }
+}
