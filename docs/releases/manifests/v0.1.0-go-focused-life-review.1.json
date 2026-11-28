@@ -1,0 +1,96 @@
+{
+  "tag": "v0.1.0-go-focused-life-review.1",
+  "baseline": "51349f6bab619f4071f9b1776bde17ef6b632c03",
+  "distribution": "source-only",
+  "evidence_root": ".build/go-focus-life1",
+  "prior_evidence": ".build/go-deep-life1/native-fingerprints.tsv",
+  "prior_evidence_sha256": "1520846d5cdd5d70d3d3f0ca1eeb62a81a88dd0d7bf8b408c6418d7b84060a3a",
+  "source": {
+    "path": "tools/android/go/go-strength-score-review.cpp",
+    "sha256": "e9c9edc7fc5679d50a9bb3ebd9113867d8495d29080be871f46513a702a6eae8"
+  },
+  "build": {
+    "ndk": "30.0.16138531",
+    "products": [
+      {
+        "abi": "x86_64",
+        "path": "score-review-x86_64",
+        "core_sha256": "898a4152c5872d2e67724e86318deaf42a05676303cedc412cbd5df36d2951d7",
+        "sha256": "b8b23fb441843c8a75948efed6be735e52c10f1f431e1097995bbce4e1b43e3c",
+        "katago_sha256": "2b489feb98bbdecc74da18684c3fd9f7c8840f2ed6416b57d10937b1c962e55c"
+      },
+      {
+        "abi": "arm64-v8a",
+        "path": "score-review-arm64-v8a",
+        "core_sha256": "2095e0818d4c14d3447c5861d653a2eb4a5f1e0f3add3f020afa8b5d80741983",
+        "sha256": "87d6d91dc4b553f4f0255e484569115d7b18f7ca755c39f4b7dcd5a9b34d6651",
+        "katago_sha256": "b8e5e4629f106a259757909a147e4777e1ab25e1411dd487b1843605299a9d4d"
+      }
+    ],
+    "source_sha256": "e9c9edc7fc5679d50a9bb3ebd9113867d8495d29080be871f46513a702a6eae8",
+    "working_sha256": "e9c9edc7fc5679d50a9bb3ebd9113867d8495d29080be871f46513a702a6eae8"
+  },
+  "review": {
+    "added": [
+      126
+    ],
+    "total_reviewed": 27,
+    "pending_slots": 113,
+    "pending_groups": 976,
+    "decision_sha256": "d37946d3ebb09ec01c37217291c3ca78dabe4e18e00c0d5ce124ca2bd8b09fb9"
+  },
+  "new_results": [
+    {
+      "winner": "black",
+      "white_legal_attacks": 39,
+      "slot": 126,
+      "white_area_quarters": 316,
+      "komi_quarters": 15,
+      "black_legal_attacks": 38,
+      "black_area_quarters": 360
+    }
+  ],
+  "evidence": [
+    {
+      "path": "build-receipt.json",
+      "sha256": "8abfbdfbba2a96f052d2f00d24eef54f1a9e15290c8781608d30e882e669f937"
+    },
+    {
+      "path": "results.json",
+      "sha256": "08e1e1eb2588648b3c6702dd11ff0fb519c2e62a970c23bc36734b3f96ebb777"
+    },
+    {
+      "path": "verified-coverage.json",
+      "sha256": "714d1def02e37dcd6229ddb8883f7cf23749dcd86a5ff510e2587af3e57d101f"
+    },
+    {
+      "path": "native-fingerprints.tsv",
+      "sha256": "446323725ce96c749ded8362b81db7759c1d78a766b2562e2d382e1198242e76"
+    },
+    {
+      "path": "worksheet-receipt.json",
+      "sha256": "42adc8900e5df26eba72d49a6eb81d2db41991a77c8970a8d54fc44ff6fe0df7"
+    },
+    {
+      "path": "decisions-next.tsv",
+      "sha256": "d37946d3ebb09ec01c37217291c3ca78dabe4e18e00c0d5ce124ca2bd8b09fb9"
+    },
+    {
+      "path": "formal/adjudication.tsv",
+      "sha256": "3dee01ecd63e761b07e73b584b2991428fcc9e26aad2e5b304d0ff6d4626a75d"
+    },
+    {
+      "path": "formal/match-126.json",
+      "sha256": "53db2d34f2e7ac94b808632034f96fd88e6664838fbfcf2362d4cf265556baab"
+    },
+    {
+      "path": "formal/match-126.log",
+      "sha256": "588b1998b7d03d4796f2a3cac81d2176577b901895a373b7394a159c74eb5a88"
+    }
+  ],
+  "device": {
+    "abi": "x86_64",
+    "physical": "not-connected",
+    "model": "Pixel_7_Pro"
+  }
+}
