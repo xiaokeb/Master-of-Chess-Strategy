@@ -1,0 +1,52 @@
+{
+  "tag": "v0.1.0-go-joint-life-batch.1",
+  "baseline": "8873962fe913255e0861abad88cf01c952c6cc27",
+  "reviewer_sha256": "75d1e66c18273f1c6e6bec9bf13be5e5057d54066a477fc14eaa7969925447f1",
+  "device": {
+    "model": "Xiaomi 25042PN24C",
+    "api": 37,
+    "abi": "arm64-v8a"
+  },
+  "verification": {
+    "probed_slots": 10,
+    "adjudicated_slots": [
+      3,
+      50,
+      62,
+      108
+    ],
+    "distinct_new_records": 3,
+    "matrix_unique_records": 138,
+    "matrix_slots": 140,
+    "reviewed_slots": 24,
+    "pending_slots": 116,
+    "pending_groups": 979
+  },
+  "evidence": [
+    {
+      "path": "proofs.json",
+      "sha256": "71398c97306d5fd874b30633dcd0741a45ba47b1074e3d5328ca60a146eb0bbb"
+    },
+    {
+      "path": "proofs-two-groups.json",
+      "sha256": "6fd1f56f99da8d3026cf311d636c50ab40d3d7cecd7d9b66fac923ddea660a1c"
+    },
+    {
+      "path": "native-fingerprints.tsv",
+      "sha256": "553a5375cb267d8bb4643f4e7dc9ba3d1b5c19896d6141b01006f92dfc8ab58a"
+    },
+    {
+      "path": "formal/adjudication.tsv",
+      "sha256": "908752bc07779ad0d8e006ca944ffd856751de5cef1b06c590f1e98ee2ce39fa"
+    },
+    {
+      "path": "formal-two-groups/adjudication.tsv",
+      "sha256": "e44249d300ae1765bc984aef1906d3b32daf48aaf7cc0ca8195f35d131711a30"
+    },
+    {
+      "path": "adjudication-twentyfour.tsv",
+      "sha256": "f99d5e8e9047a11b20c73c018b7e69fb096b832281adfa4ec6a0c532a8c54522"
+    }
+  ],
+  "distribution": "source-only"
+}
