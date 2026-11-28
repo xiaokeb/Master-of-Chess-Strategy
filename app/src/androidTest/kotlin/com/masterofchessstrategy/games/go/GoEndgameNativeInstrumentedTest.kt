@@ -56,6 +56,7 @@ class GoEndgameNativeInstrumentedTest {
             "shared-liberty-double-capture" to setOf(BoardPosition(4, 4)),
             "join-three-groups" to setOf(BoardPosition(6, 6)),
             "corner-ko-capture" to setOf(BoardPosition(1, 2)),
+            "shared-liberty-triple-capture" to setOf(BoardPosition(9, 9)),
         )
         for ((id, solutions) in expected) {
             val puzzle = checkNotNull(GoEndgameLibrary.puzzle(id))

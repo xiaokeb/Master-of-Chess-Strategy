@@ -165,6 +165,12 @@ object GoEndgameLibrary {
                 "黑棋先送一子，再回提整个白棋棋组。回提后的棋盘没有重现先前局面。", puzzle.boardSize,
                 puzzle.setup, puzzle.firstMove, captured = puzzle.targets, maxBlackMoves = puzzle.maxBlackMoves)
         },
+        GoEndgamePuzzle("shared-liberty-triple-capture", "一气三提", GoEndgameTheme.CAPTURE, GoEndgameLevel.HARD,
+            "黑先。中央三颗白子各自成组，找到它们共有的最后一口气。",
+            "三组白棋共用同一个最后气点。黑棋填上这一点，三颗白子同时被提走。", 19,
+            listOf(p(7, 9), p(8, 9), p(11, 9), p(10, 9), p(9, 7), p(9, 8), p(8, 8), p(0, 0),
+                p(8, 10), p(1, 0), p(10, 8), p(2, 0), p(10, 10), p(3, 0)),
+            p(9, 9), captured = setOf(p(8, 9), p(9, 8), p(10, 9))),
     )
 
     init { require(puzzles.map { it.id }.toSet().size == puzzles.size) }

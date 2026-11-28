@@ -1,0 +1,128 @@
+{
+  "emulator": {
+    "runs": [
+      {
+        "images": [
+          {
+            "sha256": "a3c1cc547f8d4c67c98f6f751a91ac281c96da04b03e386a6551958f023564e5",
+            "path": "font-1.0\\d87b2c3b-ad7e-446a-b266-672d5141411c\\triple-capture-completed.png"
+          },
+          {
+            "sha256": "a8503a2e510dc0e79b745d3f323f4a09c9ab5b65db09fdfde317fcb07fb915c7",
+            "path": "font-1.0\\d87b2c3b-ad7e-446a-b266-672d5141411c\\triple-capture-ready.png"
+          }
+        ],
+        "tests": 3,
+        "font": "1.0",
+        "selector": "com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#nineteenLineTripleCaptureAwardsOnlyTheFirstClear,com.masterofchessstrategy.games.go.GoEndgameNativeInstrumentedTest#allAuthoredSetupsAndAnswersRunThroughRealNativeRules,com.masterofchessstrategy.games.go.GoEndgameNativeInstrumentedTest#authoredTacticsAcceptExactlyTheVerifiedPlacements",
+        "log_sha256": "dbc442046022d63cc570af74f95c883aff6235c7bd3d36853bcb487851479fdb"
+      },
+      {
+        "images": [
+          {
+            "sha256": "7befcd9824224b46b9df14197c56a56e39c07849721c8df58cd892627d6519e9",
+            "path": "font-1.5\\f9c8e317-37d0-437d-9ad0-590645783717\\triple-capture-completed.png"
+          },
+          {
+            "sha256": "bc971c8fe2dcca6f3ddb8a7ef9a407aaa72e6bb5c58437b342f64f1e5326b48f",
+            "path": "font-1.5\\f9c8e317-37d0-437d-9ad0-590645783717\\triple-capture-ready.png"
+          }
+        ],
+        "tests": 1,
+        "font": "1.5",
+        "selector": "com.masterofchessstrategy.ui.GoLessonPracticeNavigationTest#nineteenLineTripleCaptureAwardsOnlyTheFirstClear",
+        "log_sha256": "dec44bd261c213cd759bd6a3e6166e723e1ba1237c9b38aef6f04822df4d2e43"
+      }
+    ],
+    "restored_font": "1.0",
+    "model": "Pixel_7_Pro"
+  },
+  "tag": "v0.1.0-go-triple-capture.1",
+  "build": {
+    "lint_errors": 0,
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibrary.kt",
+        "sha256": "eda8ee1df004a43027c204817ae0e3e06034da83ba1719fe1edf30dd9290cba7"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameLibraryTest.kt",
+        "sha256": "3213c7fac3fd676773d25d9400084eac85e3269a89820270ed45f7ee5cbc616f"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoEndgameChallengesTest.kt",
+        "sha256": "d952d5f7db22998def8cbcf0ac42bde08759e26d82ddc6645317ee31da22e995"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoEndgameNativeInstrumentedTest.kt",
+        "sha256": "3bc573f8b3d81ef5e574bb806877c8a87175715a85e38605c50ba38a33e39cd5"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoLessonPracticeNavigationTest.kt",
+        "sha256": "cef2dffdcda8e4b8b25c02f0b3553a59efdb1ff2d95858b177f5c5878d512bdc"
+      }
+    ],
+    "unit_tests": 21,
+    "lint_warnings": 25,
+    "apks": {
+      "app-debug.apk": "ad2312bc1b895c498e2bd6e8b3794218bf83d7fd5837bbd3a25087440d81ebe9",
+      "app-debug-androidTest.apk": "135ed0964823dd744143b228287747b09f20320541f6bb6bb566f53aef7cf024"
+    },
+    "baseline": "98cbcc6644c8827a5691edd87b53b291dfb5be70"
+  },
+  "evidence_root": ".build/go-triple-capture1",
+  "evidence": [
+    {
+      "path": "build.log",
+      "sha256": "05c605aa36434748444250698d5cb09d852c617ddb0cc6b894040aa337ff00f4"
+    },
+    {
+      "path": "device-fda9c3a86b034a23be45ac674f80bff3/device-receipt.json",
+      "sha256": "0379836dd75990468d87883bc4cb22a03f1faaa4a0f3e90791871e3bd617a8e0"
+    },
+    {
+      "path": "device-fda9c3a86b034a23be45ac674f80bff3/font-1.0/d87b2c3b-ad7e-446a-b266-672d5141411c/triple-capture-completed.png",
+      "sha256": "a3c1cc547f8d4c67c98f6f751a91ac281c96da04b03e386a6551958f023564e5"
+    },
+    {
+      "path": "device-fda9c3a86b034a23be45ac674f80bff3/font-1.0/d87b2c3b-ad7e-446a-b266-672d5141411c/triple-capture-ready.png",
+      "sha256": "a8503a2e510dc0e79b745d3f323f4a09c9ab5b65db09fdfde317fcb07fb915c7"
+    },
+    {
+      "path": "device-fda9c3a86b034a23be45ac674f80bff3/font-1.5/f9c8e317-37d0-437d-9ad0-590645783717/triple-capture-completed.png",
+      "sha256": "7befcd9824224b46b9df14197c56a56e39c07849721c8df58cd892627d6519e9"
+    },
+    {
+      "path": "device-fda9c3a86b034a23be45ac674f80bff3/font-1.5/f9c8e317-37d0-437d-9ad0-590645783717/triple-capture-ready.png",
+      "sha256": "bc971c8fe2dcca6f3ddb8a7ef9a407aaa72e6bb5c58437b342f64f1e5326b48f"
+    },
+    {
+      "path": "device-fda9c3a86b034a23be45ac674f80bff3/triple-capture-1.0.log",
+      "sha256": "dbc442046022d63cc570af74f95c883aff6235c7bd3d36853bcb487851479fdb"
+    },
+    {
+      "path": "device-fda9c3a86b034a23be45ac674f80bff3/triple-capture-1.5.log",
+      "sha256": "dec44bd261c213cd759bd6a3e6166e723e1ba1237c9b38aef6f04822df4d2e43"
+    },
+    {
+      "path": "lint.txt",
+      "sha256": "4fdf5b8181fbac1bde91ef1ae91cca086aa980e1c2ae89c3cbc85c6066aeca4f"
+    },
+    {
+      "path": "pixel-visual.jpg",
+      "sha256": "b88323634f2739d6ce5adf77fc2201df36299a76971e13e6d3daa126811d122d"
+    },
+    {
+      "path": "TEST-com.masterofchessstrategy.games.go.GoEndgameChallengesTest.xml",
+      "sha256": "b491779737e47ca2da78bf1c8f284ebb22f14e244153236f83b4f9404f40568c"
+    },
+    {
+      "path": "TEST-com.masterofchessstrategy.games.go.GoEndgameLibraryTest.xml",
+      "sha256": "8e778f2cdd28f92af6fb67a95deaf6dfd34835aab736556edab32d5e34d0ff42"
+    }
+  ],
+  "physical": {
+    "status": "not-connected"
+  },
+  "distribution": "source-only"
+}

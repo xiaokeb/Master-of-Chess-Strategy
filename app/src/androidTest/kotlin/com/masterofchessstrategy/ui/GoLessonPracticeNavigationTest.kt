@@ -468,6 +468,38 @@ class GoLessonPracticeNavigationTest {
         assertEquals(prior, runBlocking { lessons.load() })
     }
 
+    @Test fun nineteenLineTripleCaptureAwardsOnlyTheFirstClear() {
+        val puzzle = checkNotNull(GoEndgameLibrary.puzzle("shared-liberty-triple-capture"))
+        val preceding = GoEndgameLibrary.puzzles.takeWhile { it.id != puzzle.id }.map { it.id }.toSet()
+        val repository = RoomGoEndgameProgressRepository(database)
+        runBlocking {
+            preceding.forEach { repository.complete(it) }
+            repository.select(puzzle.id)
+        }
+        compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag(GO_ENDGAMES_ENTRY_TAG).performScrollTo().performClick()
+        awaitTitle(puzzle.title)
+        compose.onNodeWithTag("go_intersection_8_9").assertContentDescriptionContains("白子", substring = true)
+        compose.onNodeWithTag("go_endgame_rewards").performScrollTo().assertTextEquals("残局奖励 18 星 · 620 分")
+        capture("triple-capture-ready")
+
+        repeat(2) { attempt ->
+            compose.onNodeWithTag("go_intersection_9_9").performClick()
+            awaitTag("go_endgame_completed")
+            for (point in puzzle.captured) {
+                compose.onNodeWithTag("go_intersection_${point.x}_${point.y}")
+                    .assertContentDescriptionContains("空点", substring = true)
+            }
+            compose.onNodeWithTag("go_endgame_rewards").performScrollTo().assertTextEquals("残局奖励 19 星 · 660 分")
+            assertEquals(preceding + puzzle.id, runBlocking { repository.load().completedIds })
+            if (attempt == 0) {
+                capture("triple-capture-completed")
+                compose.onNodeWithText("重置本关").performScrollTo().performClick()
+                compose.waitUntil(15_000) { compose.onAllNodesWithTag("go_endgame_completed").fetchSemanticsNodes().isEmpty() }
+            }
+        }
+    }
+
     @Test fun counterCaptureUnlocksDoubleConnectionAndAlternateAnswerPersists() {
         val puzzles = GoEndgameLibrary.puzzles
         val escape = checkNotNull(GoEndgameLibrary.puzzle("corner-counter-capture"))
