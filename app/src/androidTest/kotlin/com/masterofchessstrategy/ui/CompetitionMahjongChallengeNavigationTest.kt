@@ -408,6 +408,53 @@ class CompetitionMahjongChallengeNavigationTest {
         verifyKongReplacement(CompetitionMahjongPracticePosition.EXPOSED_KONG_DRAW_ID, exposed = true)
     }
 
+    @Test fun addedKongWaitsForAllThreeResponsesBeforeDrawingTheReplacement() {
+        val id = CompetitionMahjongPracticePosition.ADDED_KONG_DRAW_ID
+        val prior = CompetitionMahjongChallengeLibrary.challenges.takeWhile { it.id != id }.map { it.id }.toSet()
+        val store = RoomCompetitionMahjongChallengeProgress(database)
+        runBlocking {
+            prior.forEach { store.complete(it) }
+            store.select(id)
+        }
+        compose.onNodeWithTag(HOME_COMPETITION_MAHJONG_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag("competition_challenge_entry").performScrollTo().performClick()
+        waitFor("competition_mahjong_challenge_hand")
+        val declare = compose.onNodeWithTag("competition_mahjong_challenge_declare_kong")
+        val win = compose.onNodeWithTag("competition_mahjong_challenge_confirm_win")
+        val meld = compose.onNodeWithTag("competition_mahjong_challenge_kong_meld")
+        declare.performScrollTo().assertTextEquals("加杠 2万").performClick()
+        waitFor("competition_mahjong_challenge_kong_pending")
+        compose.onNodeWithText("原碰 2万 · 来自东家").performScrollTo().assertIsDisplayed()
+        win.assertDoesNotExist()
+        meld.assertDoesNotExist()
+        compose.onNodeWithText("本次摸牌 东").assertDoesNotExist()
+        assertEquals(prior, runBlocking { store.load().completedIds })
+        capture("added-kong-pending")
+
+        declare.performScrollTo().assertTextEquals("查看三家回应").performClick()
+        waitFor("competition_mahjong_challenge_kong_meld")
+        meld.performScrollTo().assertTextEquals("已加杠 2万 · 原碰来自东家")
+        compose.onNodeWithText("本次摸牌 东").performScrollTo().assertIsDisplayed()
+        assertEquals(prior, runBlocking { store.load().completedIds })
+        capture("added-kong-replacement")
+
+        win.performScrollTo().assertTextEquals("自摸").performClick()
+        waitFor("competition_mahjong_challenge_completed")
+        val result = CompetitionMahjongPracticePosition.kongDraw(id, declare = true, settle = true)
+        val fan = checkNotNull(result.totalFan)
+        val payment = 8 + fan
+        assertEquals(listOf(-payment, 3 * payment, -payment, -payment), result.netScores)
+        InstrumentationRegistry.getInstrumentation().sendStatus(2, android.os.Bundle().apply {
+            putInt("added_kong_replacement_total_fan", fan)
+        })
+        compose.onNodeWithTag("competition_mahjong_challenge_settlement").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("本盘总番 $fan").assertIsDisplayed()
+        compose.onNodeWithTag("competition_mahjong_challenge_rewards").performScrollTo()
+            .assertTextEquals("训练奖励 31 星 · 1970 分")
+        assertEquals(prior + id, runBlocking { store.load().completedIds })
+        capture("added-kong-settlement")
+    }
+
     private fun verifyKongReplacement(id: String, exposed: Boolean) {
         val before = CompetitionMahjongChallengeLibrary.challenges.takeWhile { it.id != id }.map { it.id }.toSet()
         val caption = if (exposed) "直明杠" else "暗杠"

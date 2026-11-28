@@ -59,11 +59,18 @@ data class CompetitionMahjongChallengeState(
     val roundDeltas: List<Int> = emptyList(),
     val flowers: List<Int> = emptyList(),
     val qualifyingFan: Int? = null,
+    val awaitingKongResponses: Boolean = false,
 ) {
     val robbingKong: Boolean get() = challenge.id == CompetitionMahjongPracticePosition.ROB_KONG_ID
     val responseTraining: Boolean get() = CompetitionMahjongPracticePosition.isResponseTraining(challenge.id)
     val kongTraining: Boolean get() = CompetitionMahjongPracticePosition.isKongDrawTraining(challenge.id)
     val exposedKong: Boolean get() = challenge.id == CompetitionMahjongPracticePosition.EXPOSED_KONG_DRAW_ID
+    val addedKong: Boolean get() = challenge.id == CompetitionMahjongPracticePosition.ADDED_KONG_DRAW_ID
+    val kongLabel: String get() = when {
+        addedKong -> "加杠"
+        exposedKong -> "直明杠"
+        else -> "暗杠"
+    }
 }
 
 class CompetitionMahjongChallengeSession(
@@ -93,6 +100,7 @@ class CompetitionMahjongChallengeSession(
             robbingKong -> "请决定是否抢杠和。"
             lastWall -> "牌墙已空，请回应北家的弃牌。"
             lastWallSelfDraw -> "牌墙已空，请选择自摸或打出刚摸到的东风。"
+            challenge.id == CompetitionMahjongPracticePosition.ADDED_KONG_DRAW_ID -> "南家摸到第四张二万，可以把原碰加成杠。"
             challenge.id == CompetitionMahjongPracticePosition.EXPOSED_KONG_DRAW_ID -> "东家弃二万，请用手中的三张二万直明杠。"
             challenge.id == CompetitionMahjongPracticePosition.CONCEALED_KONG_DRAW_ID -> "请暗杠四张二万。"
             discardTraining -> "请选择要打出的手牌。"
@@ -136,11 +144,14 @@ class CompetitionMahjongChallengeSession(
 
     internal fun declareKong(): CompetitionMahjongChallengeState {
         require(current.kongTraining && !current.completed && current.winningTile == null)
-        val turn = CompetitionMahjongPracticePosition.kongDraw(challenge.id, declare = true)
-        val kind = if (current.exposedKong) "直明杠" else "暗杠"
-        current = current.copy(attempts = current.attempts + 1,
+        val pending = current.addedKong && !current.awaitingKongResponses
+        val turn = CompetitionMahjongPracticePosition.kongDraw(challenge.id, declare = true, holdForResponses = pending)
+        current = if (pending) current.copy(attempts = current.attempts + 1, awaitingKongResponses = true,
+            feedback = "加杠声明已送出。等待其他三家回应，原碰保留，牌墙尚未补牌。")
+        else current.copy(attempts = current.attempts + 1, awaitingKongResponses = false,
             visibleHand = Collections.unmodifiableList(turn.hand), winningTile = turn.tile,
-            feedback = "${kind}后从牌墙尾补到东风。请选择自摸。")
+            feedback = if (current.addedKong) "三家均过，加杠成立。补到东风，请选择自摸。"
+                else "${current.kongLabel}后从牌墙尾补到东风。请选择自摸。")
         return current
     }
 
@@ -341,6 +352,10 @@ object CompetitionMahjongChallengeLibrary {
             CompetitionMahjongChallengeTheme.CONTEXT, CompetitionMahjongChallengeLevel.MASTER,
             "你坐南家，手中有三张二万。认领东家打出的二万组成直明杠，再看牌墙尾的补牌。", "",
             "直明杠后补到东风成将。杠上开花计 8 番，三家各付底分和本盘总番。东家打出的是杠牌，和牌是南家自摸。", setOf(46, 74, 80)),
+        challenge(CompetitionMahjongPracticePosition.ADDED_KONG_DRAW_ID, "无人抢杠后补牌自摸",
+            CompetitionMahjongChallengeTheme.CONTEXT, CompetitionMahjongChallengeLevel.MASTER,
+            "你坐南家，已有一副二万碰牌。摸到第四张二万后声明加杠，待三家回应再补牌。", "",
+            "三家过牌后加杠才成立。补到东风成将，杠上开花计 8 番，自摸 1 番不重复计。", setOf(46, 47, 74, 80)),
     ))
 
     init {

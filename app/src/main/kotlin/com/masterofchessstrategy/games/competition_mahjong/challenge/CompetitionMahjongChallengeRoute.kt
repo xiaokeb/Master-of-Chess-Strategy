@@ -125,10 +125,19 @@ internal fun CompetitionMahjongChallengeScreen(
                             })
                         }
                         if (exercise.kongTraining && exercise.winningTile != null) {
-                            val meld = if (exercise.exposedKong) "已直明杠 2万 · 来自东家" else "已暗杠 2万"
+                            val meld = when {
+                                exercise.addedKong -> "已加杠 2万 · 原碰来自东家"
+                                exercise.exposedKong -> "已直明杠 2万 · 来自东家"
+                                else -> "已暗杠 2万"
+                            }
                             Text(meld, modifier = Modifier.testTag("competition_mahjong_challenge_kong_meld"))
                         } else if (exercise.exposedKong) {
                             Text("东家弃牌 2万")
+                        } else if (exercise.addedKong) {
+                            Text("原碰 2万 · 来自东家")
+                            if (exercise.awaitingKongResponses) {
+                                Text("抢杠回应中 · 暂未补牌", modifier = Modifier.testTag("competition_mahjong_challenge_kong_pending"))
+                            } else Text("本次摸牌 2万")
                         }
                         val source = exercise.challenge.sourceRuleSection?.let { "竞赛规则第 $it 节" }
                             ?: "官方番种 ID " + exercise.challenge.sourceFanIds.sorted().joinToString("、")
@@ -142,7 +151,7 @@ internal fun CompetitionMahjongChallengeScreen(
                         if (exercise.kongTraining && !exercise.completed) {
                             if (exercise.winningTile == null) Button(onClick = onDeclareKong, enabled = state.canOperate,
                                 modifier = Modifier.testTag("competition_mahjong_challenge_declare_kong")) {
-                                Text(if (exercise.exposedKong) "直明杠 2万" else "暗杠 2万")
+                                Text(if (exercise.awaitingKongResponses) "查看三家回应" else "${exercise.kongLabel} 2万")
                             } else Button(onClick = onConfirmWin, enabled = state.canOperate,
                                 modifier = Modifier.testTag("competition_mahjong_challenge_confirm_win")) { Text("自摸") }
                         }
