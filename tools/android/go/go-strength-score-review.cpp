@@ -271,22 +271,25 @@ public:
     bool defend(const GoEngine& position, int remaining, std::vector<EngineAction>& path) {
         if (position.phase() != GoPhase::playing || !anchors_present(position, anchors_, defender_))
             return false;
-        for (const auto& reply : ordered_actions(position, path.back())) {
+        const auto replies = ordered_actions(position, path.back());
+        if (focus_last_move_ && remaining > 1) {
+            // Prove immediate life before spending the budget on a deeper variation.
+            for (const auto& reply : replies) {
+                if (visited == limit) return false;
+                ++visited;
+                auto branch = position;
+                if (!branch.apply(reply).accepted) throw std::logic_error("listed deep reply was rejected");
+                if (record_leaf(branch, path, reply)) return true;
+            }
+        }
+        for (const auto& reply : replies) {
+            const bool leaves_already_checked = focus_last_move_ && remaining > 1;
             if (visited == limit) return false;
-            ++visited;
+            if (!leaves_already_checked) ++visited;
             auto branch = position;
             if (!branch.apply(reply).accepted) throw std::logic_error("listed deep reply was rejected");
+            if (!leaves_already_checked && record_leaf(branch, path, reply)) return true;
             path.push_back(reply);
-            if (pass_alive(branch, anchors_, defender_)) {
-                const auto bytes = branch.serialize();
-                GoEngine replay(branch.board_size());
-                if (!replay.restore(bytes).restored || replay.serialize() != bytes ||
-                    !pass_alive(replay, anchors_, defender_))
-                    throw std::logic_error("deep life leaf cannot be replayed");
-                witnesses.push_back(path);
-                path.pop_back();
-                return true;
-            }
             if (remaining > 1 && branch.phase() == GoPhase::playing) {
                 const auto start = witnesses.size();
                 const auto attacks = ordered_actions(branch, reply);
@@ -314,6 +317,17 @@ public:
     std::vector<std::vector<EngineAction>> witnesses;
 
 private:
+    bool record_leaf(const GoEngine& branch, const std::vector<EngineAction>& path, const EngineAction& reply) {
+        if (!pass_alive(branch, anchors_, defender_)) return false;
+        const auto bytes = branch.serialize();
+        GoEngine replay(branch.board_size());
+        if (!replay.restore(bytes).restored || replay.serialize() != bytes || !pass_alive(replay, anchors_, defender_))
+            throw std::logic_error("deep life leaf cannot be replayed");
+        witnesses.push_back(path);
+        witnesses.back().push_back(reply);
+        return true;
+    }
+
     auto ordered_actions(const GoEngine& position, const EngineAction& last_move) const -> std::vector<EngineAction> {
         auto actions = position.legal_actions();
         // Only reorder. A proof still has to cover every legal opponent reply, including pass.
