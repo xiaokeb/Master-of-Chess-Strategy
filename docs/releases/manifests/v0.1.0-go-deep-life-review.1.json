@@ -1,0 +1,118 @@
+{
+  "new_results": [
+    {
+      "black": 172,
+      "winner": "white",
+      "slot": 7,
+      "white": 152
+    },
+    {
+      "black": 168,
+      "winner": "white",
+      "slot": 104,
+      "white": 156
+    }
+  ],
+  "evidence": [
+    {
+      "sha256": "865f7bb79ca38ca6ca57159f9c8ce0348c40fe94d9c0215eeaa598231d7e1f71",
+      "path": "build-receipt.json"
+    },
+    {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "build-x86_64.log"
+    },
+    {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "build-arm64-v8a.log"
+    },
+    {
+      "sha256": "662ee7a214370bd0d217ae888c9f5691ca91752220d901578ef0d5127ba3a664",
+      "path": "results.json"
+    },
+    {
+      "sha256": "9c733a6179c4cfca4a25d2fe9281091ed3e600e5ab376c0c2dc450581d4da0fd",
+      "path": "full-coverage.json"
+    },
+    {
+      "sha256": "1520846d5cdd5d70d3d3f0ca1eeb62a81a88dd0d7bf8b408c6418d7b84060a3a",
+      "path": "native-fingerprints.tsv"
+    },
+    {
+      "sha256": "2f5221395dc16a3a8eab7021ec3110a82f3d9eb29d5e851d87528b8f1f1bd757",
+      "path": "worksheet-receipt.json"
+    },
+    {
+      "sha256": "3594f57407e2978a6df1a16b9130f520eea4202361d178b0fee250eb35ac1da6",
+      "path": "decisions-next.tsv"
+    },
+    {
+      "sha256": "753383a8d29b5c06ff5f99cdfca88f7f034c8e2328b88fc5f7dc9faca6fd0d84",
+      "path": "formal/adjudication.tsv"
+    },
+    {
+      "sha256": "bdabdc36729fe9ba73efa1006c582b19bca28fe8012c921097e6492e73e33b19",
+      "path": "formal/match-007.json"
+    },
+    {
+      "sha256": "9abae2e32fef2e1e3b3407068e429d3b9f29ce6904b322ccaa1c2174064e8945",
+      "path": "formal/match-104.json"
+    },
+    {
+      "sha256": "7f1154e5dc2399f430744b0b889e842886636fb9eb24d56230148981740ec300",
+      "path": "positive-control-repeat.log"
+    },
+    {
+      "sha256": "9b0cd88df410fa71a7de1cd937554cc5c6b92d307365542a81e6684abee07727",
+      "path": "negative-occupied-attack.log"
+    },
+    {
+      "sha256": "e3ae7a5cdea5c7f11ddfb79f46377def776b49bb287f6e5768fa3a24e6ac3166",
+      "path": "negative-mixed-anchors.log"
+    }
+  ],
+  "evidence_root": ".build/go-deep-life1",
+  "distribution": "source-only",
+  "review": {
+    "added": [
+      7,
+      104
+    ],
+    "total_reviewed": 26,
+    "pending_slots": 114,
+    "pending_groups": 977,
+    "decision_sha256": "3594f57407e2978a6df1a16b9130f520eea4202361d178b0fee250eb35ac1da6"
+  },
+  "source": {
+    "sha256": "2aafb45000ff3b48f2a21f531e9ae0abc337d7b26482a0228169d6c8c8af2f3f",
+    "path": "tools/android/go/go-strength-score-review.cpp"
+  },
+  "baseline": "962fbf825e822e72bdea1e0bf3027f768d1dff8f",
+  "build": {
+    "products": [
+      {
+        "abi": "x86_64",
+        "sha256": "e01a50ef99f7c1d27cee3bfaa8d0bb34c590ec8e44635ca4c8b679852f62d7d1",
+        "path": "score-review-x86_64",
+        "katago_sha256": "2b489feb98bbdecc74da18684c3fd9f7c8840f2ed6416b57d10937b1c962e55c",
+        "core_sha256": "898a4152c5872d2e67724e86318deaf42a05676303cedc412cbd5df36d2951d7"
+      },
+      {
+        "abi": "arm64-v8a",
+        "sha256": "a667c9f791e1da7172518b4fd598579169854f9c9f755e0c7daf7ea0666d7561",
+        "path": "score-review-arm64-v8a",
+        "katago_sha256": "b8e5e4629f106a259757909a147e4777e1ab25e1411dd487b1843605299a9d4d",
+        "core_sha256": "2095e0818d4c14d3447c5861d653a2eb4a5f1e0f3add3f020afa8b5d80741983"
+      }
+    ],
+    "working_sha256": "2aafb45000ff3b48f2a21f531e9ae0abc337d7b26482a0228169d6c8c8af2f3f",
+    "source_sha256": "2aafb45000ff3b48f2a21f531e9ae0abc337d7b26482a0228169d6c8c8af2f3f",
+    "ndk": "30.0.16138531"
+  },
+  "tag": "v0.1.0-go-deep-life-review.1",
+  "device": {
+    "model": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "physical": "not-connected"
+  }
+}

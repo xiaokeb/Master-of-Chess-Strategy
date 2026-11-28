@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <charconv>
 #include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -262,6 +263,102 @@ void probe_gap(GoEngine& engine, const std::vector<GoPoint>& anchors, std::strin
     std::cout << "unknown," << move_label(attack) << ",-," << leaves << '\n';
 }
 
+class JointLifeSearch {
+public:
+    JointLifeSearch(const std::vector<GoPoint>& anchors, GoStone defender)
+        : anchors_(anchors), defender_(defender) {}
+
+    bool defend(const GoEngine& position, int remaining, std::vector<EngineAction>& path) {
+        if (position.phase() != GoPhase::playing || !anchors_present(position, anchors_, defender_))
+            return false;
+        for (const auto& reply : ordered_actions(position)) {
+            if (visited == limit) return false;
+            ++visited;
+            auto branch = position;
+            if (!branch.apply(reply).accepted) throw std::logic_error("listed deep reply was rejected");
+            path.push_back(reply);
+            if (pass_alive(branch, anchors_, defender_)) {
+                const auto bytes = branch.serialize();
+                GoEngine replay(branch.board_size());
+                if (!replay.restore(bytes).restored || replay.serialize() != bytes ||
+                    !pass_alive(replay, anchors_, defender_))
+                    throw std::logic_error("deep life leaf cannot be replayed");
+                witnesses.push_back(path);
+                path.pop_back();
+                return true;
+            }
+            if (remaining > 1 && branch.phase() == GoPhase::playing) {
+                const auto start = witnesses.size();
+                const auto attacks = ordered_actions(branch);
+                const bool covered = !attacks.empty() && std::all_of(attacks.begin(), attacks.end(), [&](const auto& attack) {
+                    auto counter = branch;
+                    if (!counter.apply(attack).accepted) throw std::logic_error("listed deep attack was rejected");
+                    path.push_back(attack);
+                    const bool won = defend(counter, remaining - 1, path);
+                    path.pop_back();
+                    return won;
+                });
+                if (covered) {
+                    path.pop_back();
+                    return true;
+                }
+                witnesses.resize(start);
+            }
+            path.pop_back();
+        }
+        return false;
+    }
+
+    static constexpr std::size_t limit = 60'000;
+    std::size_t visited = 0;
+    std::vector<std::vector<EngineAction>> witnesses;
+
+private:
+    auto ordered_actions(const GoEngine& position) const -> std::vector<EngineAction> {
+        auto actions = position.legal_actions();
+        // Only reorder. A proof still has to cover every legal opponent reply, including pass.
+        const auto distance = [&](const EngineAction& action) {
+            if (action.kind == go_pass_action_kind) return 100;
+            auto closest = 100;
+            for (const auto anchor : anchors_)
+                closest = std::min(closest, std::abs(action.arguments[0] - anchor.x) +
+                    std::abs(action.arguments[1] - anchor.y));
+            return closest;
+        };
+        std::stable_sort(actions.begin(), actions.end(), [&](const auto& left, const auto& right) {
+            return distance(left) < distance(right);
+        });
+        return actions;
+    }
+
+    const std::vector<GoPoint>& anchors_;
+    GoStone defender_;
+};
+
+void probe_deep_gap(GoEngine& engine, const std::vector<GoPoint>& anchors, std::string_view opening_attack) {
+    const auto defender = engine.stone_at(anchors.front().x, anchors.front().y);
+    if (!defender || *defender == GoStone::empty || !anchors_present(engine, anchors, *defender))
+        throw std::invalid_argument("expected same-color group anchors");
+    if (!engine.apply(make_go_resume_play(*defender == GoStone::black ? 1 : 0)).accepted)
+        throw std::runtime_error("cannot resume play from the original agreement");
+    auto attack = make_go_pass();
+    if (opening_attack != "pass") {
+        const auto move = point(opening_attack);
+        attack = make_go_place(move.x, move.y);
+    }
+    if (!engine.apply(attack).accepted) throw std::invalid_argument("specified attack is illegal");
+    JointLifeSearch search(anchors, *defender);
+    std::vector<EngineAction> path{attack};
+    const bool covered = search.defend(engine, 3, path);
+    std::cout << "deep," << (covered ? "proven" : search.visited == search.limit ? "budget" : "unknown") << ','
+              << move_label(attack) << ',' << search.visited << ',' << search.witnesses.size() << '\n';
+    for (const auto& witness : search.witnesses) {
+        std::cout << "leaf";
+        for (const auto& action : witness) std::cout << ',' << move_label(action);
+        std::cout << '\n';
+    }
+}
+
 void probe_atari(GoEngine& engine, const std::vector<GoPoint>& anchors) {
     const auto defender = engine.stone_at(anchors.front().x, anchors.front().y);
     if (!defender || *defender == GoStone::empty) throw std::invalid_argument("expected a group anchor");
@@ -513,7 +610,7 @@ int main(int argc, char** argv) {
             throw std::invalid_argument(
                 "use: go-strength-score-review size input.mocg "
                 "[--groups | --resume-probe B|W x,y|pass [...] | --first-replies x,y [...] "
-                "| --joint-gap attack x,y [...] | --atari-proof x,y [x,y ...] "
+                "| --joint-gap attack x,y [...] | --joint-gap-deep attack x,y [...] | --atari-proof x,y [x,y ...] "
                 "| --two-capture-proof attack x,y [x,y ...] | --capture-and-hold attack x,y [x,y ...] "
                 "| --enclose-in-two attack x,y [x,y ...] "
                 "| output.mocg [x,y ...]]");
@@ -547,7 +644,7 @@ int main(int argc, char** argv) {
         const std::string_view mode = argv[3];
         if (mode != "--resume-probe" && mode != "--first-replies" && mode != "--single-gap" && mode != "--joint-gap" &&
             mode != "--atari-proof" && mode != "--two-capture-proof" && mode != "--capture-and-hold" &&
-            mode != "--enclose-in-two" &&
+            mode != "--enclose-in-two" && mode != "--joint-gap-deep" &&
             std::filesystem::exists(argv[3])) {
             throw std::invalid_argument("review output already exists");
         }
@@ -570,11 +667,12 @@ int main(int argc, char** argv) {
             probe_gap(engine, {point(argv[4])}, argv[5]);
             return 0;
         }
-        if (mode == "--joint-gap") {
+        if (mode == "--joint-gap" || mode == "--joint-gap-deep") {
             if (argc < 6) throw std::invalid_argument("--joint-gap requires one attack and one or more group anchors");
             std::vector<GoPoint> anchors;
             for (int i = 5; i < argc; ++i) anchors.push_back(point(argv[i]));
-            probe_gap(engine, anchors, argv[4]);
+            if (mode == "--joint-gap-deep") probe_deep_gap(engine, anchors, argv[4]);
+            else probe_gap(engine, anchors, argv[4]);
             return 0;
         }
         if (mode == "--atari-proof") {
