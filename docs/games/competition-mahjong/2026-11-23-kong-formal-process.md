@@ -29,3 +29,11 @@ NDK 30 双 ABI、Debug 主 APK、测试 APK、Release 主清单与 9 项 JVM 测
 以 `CompetitionMahjongSeriesRecoveryActionInstrumentedTest#openSeriesAtSettlementBoundary` 运行，传入种子测试使用的 `mahjong_process_token` 及 `mahjong_settled_hands`（15 或 16）。首次获得收据后只终止匹配的专用进程，再传入相同参数和 `mahjong_process_reopen=true`，检查恢复后收据。第 15 盘用例会继续操作「下一盘」。
 
 [验收证据清单](../../releases/manifests/v0.1.0-competition-mahjong-kong-process-xiaomi.1.json)
+
+## 从进行中的第 16 盘直接结算
+
+新增 `settleResumedWmoKongsFinalHand` 专项，使用「下一盘」已保存的隔离检查点。从第 16 盘直接继续合法动作，核对原赛事配置与前 15 盘结果，确认末盘结算后才新增一份归档。复现时结束已核对的专用牌桌进程，再以同一 `mahjong_process_token` 运行专项；随后用上节仪器用例打开、终止并重开归档状态。
+
+Pixel 7 Pro 冷启动保留原测试库。结算、打开归档和跨进程恢复共 3 项通过，PID 3934 → 4045。累计分 −126、42、−54、138，存盘摘要与归档数一致，已复核横屏结算画面。本轮 ADB 未发现两款指定真机，末盘直接结算的真机验收仍待补齐。
+
+[专项证据清单](../../releases/manifests/v0.1.0-competition-mahjong-resumed-final-hand.1.json)

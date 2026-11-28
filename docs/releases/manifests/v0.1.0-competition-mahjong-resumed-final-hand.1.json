@@ -1,0 +1,76 @@
+{
+  "evidence": [
+    {
+      "path": "build.log",
+      "sha256": "7c9d88d443a0da99cc4e05220e5a9ca663bc8a3b207d84c32688b154161969bb"
+    },
+    {
+      "path": "pixel-077899718f0a435a83ffd34eb725d0f3/before.log",
+      "sha256": "44b27c3fdeb218211ab7002c5e4fb561acc63fa589e9b5fece09466ba5891115"
+    },
+    {
+      "path": "pixel-077899718f0a435a83ffd34eb725d0f3/initial.json",
+      "sha256": "e274a8c5769950a183b516d6ab3cbbc8b7cd862704e469ca1e6d55f75943f5fd"
+    },
+    {
+      "path": "pixel-077899718f0a435a83ffd34eb725d0f3/receipt.json",
+      "sha256": "81ebfc890baa49fc722fa98e27dd697ff9f612bc348d46be0990399171a8e57b"
+    },
+    {
+      "path": "pixel-077899718f0a435a83ffd34eb725d0f3/restored.log",
+      "sha256": "495216e0694027dff2480e0320372559bb639335ad1578c782a92cb551f4111d"
+    },
+    {
+      "path": "pixel-077899718f0a435a83ffd34eb725d0f3/settle.log",
+      "sha256": "9406323f6097e082b5955d6f7915b62c9e3deb0c20f31befc4466829fc5d9a00"
+    },
+    {
+      "path": "pixel-077899718f0a435a83ffd34eb725d0f3/settlement-marker.txt",
+      "sha256": "dae96b2cb4692fb6a9db844de83bba214a3394947108f3753180d3f5b2aafa4b"
+    },
+    {
+      "path": "pixel-077899718f0a435a83ffd34eb725d0f3/device/before.json",
+      "sha256": "682e1eaf0f132495913fd17115759333dc5977b9b4f919110ea066f993ab62a0"
+    },
+    {
+      "path": "pixel-077899718f0a435a83ffd34eb725d0f3/device/before.png",
+      "sha256": "d9a18f5466d90ba9a4c661306e183511c3861ba11771ded9166c0c59a88bf7af"
+    },
+    {
+      "path": "pixel-077899718f0a435a83ffd34eb725d0f3/device/restored-review.jpg",
+      "sha256": "b7c0bc5e172c0b06658a32d1586bb4d776ed878b811927a326bd71d26b80fa9d"
+    },
+    {
+      "path": "pixel-077899718f0a435a83ffd34eb725d0f3/device/restored.json",
+      "sha256": "5dffc750d94d2d0d845d326874a82952e6356b2b5170c075311dcf42ffd40ff3"
+    },
+    {
+      "path": "pixel-077899718f0a435a83ffd34eb725d0f3/device/restored.png",
+      "sha256": "f83a2f877b8a030b1c824f9dbe71f115fef5873a8be2400da309d87e2ad39365"
+    }
+  ],
+  "test_overlay": {
+    "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/data/CompetitionMahjongFormalProcessInstrumentedTest.kt",
+    "sha256": "4d73ebd68ad8cd3b522adb55804f73cfaa030224195ac96da9aec2b7c38a0693"
+  },
+  "physical": {
+    "status": "not-connected"
+  },
+  "evidence_root": ".build/cm-final-hand1",
+  "distribution": "source-only",
+  "pixel": {
+    "model": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "api": 37,
+    "app_sha256": "caf85f12abe7e38a40c72ef0ba8f7c1c0cb4f67fb020c4862abff188e056066c",
+    "test_sha256": "54ba560687a649b96b6923c938a2c556ce3ffc1739acb37672fc69a862e3ea5a",
+    "first_pid": 3934,
+    "restored_pid": 4045,
+    "match_id": "00000000-0000-0002-0000-000000061a80",
+    "scores": "-126,42,-54,138",
+    "settled_hands": 16,
+    "archives": 1
+  },
+  "baseline": "29acc62f2761ec49ac30d512f3fe00e643b8c674",
+  "tag": "v0.1.0-competition-mahjong-resumed-final-hand.1"
+}

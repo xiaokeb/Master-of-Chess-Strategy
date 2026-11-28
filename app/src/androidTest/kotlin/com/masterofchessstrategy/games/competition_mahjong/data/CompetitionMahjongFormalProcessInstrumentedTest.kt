@@ -22,6 +22,7 @@ import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeNotNull
 import org.junit.Test
 
 class CompetitionMahjongFormalProcessInstrumentedTest {
@@ -49,6 +50,36 @@ class CompetitionMahjongFormalProcessInstrumentedTest {
         seedTable(CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO_KONGS, wins = 0, level = 0, settled = 16)
     }
 
+    @Test fun settleResumedWmoKongsFinalHand() = runBlocking {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val token = InstrumentationRegistry.getArguments().getString("mahjong_process_token")
+        assumeNotNull(token)
+        require(UUID.fromString(token).toString() == token)
+        val context = instrumentation.targetContext
+        val name = "competition-mahjong-process-qa-$token.db"
+        check(context.getDatabasePath(name).isFile)
+        val db = Room.databaseBuilder(context, MocsDatabase::class.java, name).build()
+        try {
+            val before = readStoredSnapshot(db)
+            val active = checkNotNull(before.active)
+            assertEquals(CompetitionMahjongBotStrategy.POSITION_SEEDED_WMO_KONGS, active.config.botStrategy)
+            assertEquals(15, active.activeHandIndex)
+            assertEquals(15, active.ledger.completedHandCount)
+            assertTrue(before.archivedSeries.isEmpty())
+            finishHands(db, first = 15, count = 16)
+
+            val after = readStoredSnapshot(db)
+            val settled = checkNotNull(after.active)
+            assertEquals(active.config, settled.config)
+            assertEquals(active.ledger.results, settled.ledger.results.take(15))
+            assertEquals(16, settled.ledger.completedHandCount)
+            assertEquals(active.config, after.archivedSeries.single().config)
+            println("MAHJONG_FINAL_HAND ${settled.config.matchId} ${(0..3).map { settled.ledger.cumulativeScores[it] }}")
+        } finally {
+            db.close()
+        }
+    }
+
     private suspend fun seedTable(strategy: CompetitionMahjongBotStrategy, wins: Int, level: Int, settled: Int = 0) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val external = InstrumentationRegistry.getArguments().getString("mahjong_process_token")
@@ -71,13 +102,8 @@ class CompetitionMahjongFormalProcessInstrumentedTest {
             val repository = createProductionGameBackupRepository(db, ChineseChessEndgamePackParser.loadBundled(context.assets),
                 GoLocalStorage(db, isolated), FangqiLocalStorage.forDatabase(db)) { false }
             repository.restore(CompetitionMahjongNativeWinFixture.backup(wins, level, strategy))
-            if (settled > 0) finishHands(db, settled)
-            val stored = db.withTransaction {
-                checkNotNull(CompetitionMahjongFormalRoomStorage.readMctxInTransaction(
-                    db, db.competitionMahjongFormalRoomDao(), 0,
-                ))
-            }
-            val snapshot = checkNotNull(CompetitionMahjongFormalSnapshotCodec.decode(stored, 0))
+            if (settled > 0) finishHands(db, first = 0, count = settled)
+            val snapshot = readStoredSnapshot(db)
             val active = checkNotNull(snapshot.active)
             assertEquals(wins + if (settled == 16) 1 else 0, snapshot.archivedSeries.size)
             assertEquals(strategy, active.config.botStrategy)
@@ -93,7 +119,14 @@ class CompetitionMahjongFormalProcessInstrumentedTest {
         }
     }
 
-    private suspend fun finishHands(db: MocsDatabase, count: Int) {
+    private suspend fun readStoredSnapshot(db: MocsDatabase) = db.withTransaction {
+        val stored = checkNotNull(CompetitionMahjongFormalRoomStorage.readMctxInTransaction(
+            db, db.competitionMahjongFormalRoomDao(), 0,
+        ))
+        checkNotNull(CompetitionMahjongFormalSnapshotCodec.decode(stored, 0))
+    }
+
+    private suspend fun finishHands(db: MocsDatabase, first: Int, count: Int) {
         val host = CompetitionMahjongFormalHost(db, 0)
         try {
             val session = (host.open() as CompetitionMahjongFormalHost.Entry.Ready).session
@@ -107,7 +140,7 @@ class CompetitionMahjongFormalProcessInstrumentedTest {
             val controller = CompetitionMahjongMatchController(initial.config, store)
             try {
                 assertTrue(controller.open())
-                repeat(count) { hand ->
+                for (hand in first until count) {
                     finishCompetitionMahjongTestHand(controller, hand)
                     if (hand < count - 1) assertTrue(controller.nextHand(hand))
                 }
