@@ -129,7 +129,14 @@ class CompetitionMahjongChallengeNavigationTest {
         CompetitionMahjongPracticePosition.NOT_READY_ID, answer = "b", wrong = "a", points = 20, rewards = "23 星 · 1330 分",
     )
 
-    private fun verifyFalseWinReview(id: String, answer: String, wrong: String, points: Int, rewards: String) {
+    @Test fun completeHandBelowEightFanPaysTenPerOpponent() = verifyFalseWinReview(
+        CompetitionMahjongPracticePosition.BELOW_MINIMUM_ID, answer = "a", wrong = "c", points = 10, rewards = "32 星 · 2050 分",
+        expectedExplanation = "门前清 2 番加单钓将 1 番，共 3 番",
+    )
+
+    private fun verifyFalseWinReview(
+        id: String, answer: String, wrong: String, points: Int, rewards: String, expectedExplanation: String? = null,
+    ) {
         val store = RoomCompetitionMahjongChallengeProgress(database)
         val preceding = CompetitionMahjongChallengeLibrary.challenges.takeWhile { it.id != id }.map { it.id }.toSet()
         runBlocking {
@@ -152,6 +159,9 @@ class CompetitionMahjongChallengeNavigationTest {
             .assertTextEquals("训练奖励 $rewards")
         compose.onNodeWithTag("competition_mahjong_challenge_feedback").performScrollTo()
             .assertTextContains("三家各得 $points 分", substring = true)
+        expectedExplanation?.let {
+            compose.onNodeWithTag("competition_mahjong_challenge_feedback").assertTextContains(it, substring = true)
+        }
         assertEquals(preceding + id, runBlocking { store.load().completedIds })
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
         capture("false-win-explained")

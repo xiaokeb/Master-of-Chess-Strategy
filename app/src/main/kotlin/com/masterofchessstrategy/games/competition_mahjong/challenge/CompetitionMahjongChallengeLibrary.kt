@@ -356,6 +356,9 @@ object CompetitionMahjongChallengeLibrary {
             CompetitionMahjongChallengeTheme.CONTEXT, CompetitionMahjongChallengeLevel.MASTER,
             "你坐南家，已有一副二万碰牌。摸到第四张二万后声明加杠，待三家回应再补牌。", "",
             "三家过牌后加杠才成立。补到东风成将，杠上开花计 8 番，自摸 1 番不重复计。", setOf(46, 47, 74, 80)),
+        falseWinReview(CompetitionMahjongPracticePosition.BELOW_MINIMUM_ID, "成牌却不足八番",
+            "你坐东家，手中有四副暗顺和一张南风。南家打出南风，你报和。裁判如何处理？", "a",
+            "南风成将，门前清 2 番加单钓将 1 番，共 3 番。本盘停和，三家各得 10 分，东家共付 30 分。"),
     ))
 
     init {

@@ -25,6 +25,7 @@ internal object CompetitionMahjongPracticePosition {
     const val FOUR_CONCEALED_CLAIM_ID = "claim-four-concealed-pungs"
     const val WRONG_TILE_ID = "false-win-wrong-tile"
     const val NOT_READY_ID = "false-win-not-ready"
+    const val BELOW_MINIMUM_ID = "false-win-below-eight"
     const val ROB_KONG_ID = "respond-to-an-added-kong"
     const val ROB_KONG_TILE = 31
     const val ROB_KONG_PAYER = 1
@@ -192,6 +193,10 @@ internal object CompetitionMahjongPracticePosition {
     private val falseWins = mapOf(
         WRONG_TILE_ID to FalseWinExercise(dealerHand.dropLast(1) + 31, 31, 10),
         NOT_READY_ID to FalseWinExercise(listOf(0, 2, 4, 6, 8, 9, 11, 13, 15, 17, 18, 20, 22, 31), 31, 20),
+        // Four closed sequences plus a single South wait. The opponent's South completes a three-fan hand.
+        BELOW_MINIMUM_ID to FalseWinExercise(
+            listOf(0, 1, 2, 1, 2, 3, 13, 14, 15, 24, 25, 26, 28, 31), 31, 10,
+        ),
     )
 
     fun isFalseWinReview(id: String): Boolean = id in falseWins
