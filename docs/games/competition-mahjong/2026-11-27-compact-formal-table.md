@@ -6,10 +6,16 @@ Xiaomi M2007J3SC 的横屏首屏中，赛事摘要占去较多高度，查看手
 
 Xiaomi M2007J3SC 先通过三项正式牌桌用例，覆盖从设置逐档开启中等、困难、大师并实际出牌，离开后续玩同一赛事，以及开启声音、静音和离开时释放播放器。测试自动化适配了小米较矮的视口与 MIUI 音频日志中的进程编号和播放状态格式。真机运行使用独立 Room 数据库，测试宿主的 ADB 启动权限只在临时 Debug 候选中启用。
 
-真机回执与原始截图存于 `.build/cm-xiaomi-formal-visual1/pre-compact/`。新布局待同一真机重新连接后复验。
+原布局真机回执和截图存于 `.build/cm-xiaomi-formal-visual1/pre-compact/`。
 
 ## 新布局模拟器验收
 
 Pixel 7 Pro 以 2304×1080 横屏和 480 dpi 复现紧凑窗口。100% 和 150% 字号各完成正式入局、实际出牌及同一赛事续玩。100% 字号另验证播放、静音和退出释放。核对了两档字号的首屏、手牌、出牌操作和续局画面。100% 字号首屏可见手牌，150% 字号仍需短距离滚动以显示完整手牌与出牌行。测试后恢复模拟器参数。
 
 截图和仪器回执位于 `.build/cm-xiaomi-formal-visual1/compact-1.0/` 与 `.build/cm-xiaomi-formal-visual1/compact-1.5/`。
+
+## 2026-11-28 真机复验
+
+Xiaomi 25042PN24C（Android API 37，arm64-v8a）以 3200×1440 原生横屏、600 dpi、100% 字号通过正式入局、出牌和原赛事续玩。七张界面截图显示赛事摘要与牌桌并排，首屏可见手牌。播放、静音出牌和退出释放播放器另通过一项，保存两张截图。设备参数沿用原设置，测试完成后恢复原候选 APK。回执位于 `.build/cm-xiaomi-formal-visual1/device-25042PN24C/`。
+
+出牌和续局回执 `host-resume.log` 的 SHA-256 为 `289d967c68bb48bc8698857d62eb116776115086e267ba9a52a9c1d8c8ab52c7`，声音回执 `host-audio.log` 的 SHA-256 为 `a5b8619d2255fae77e22168a03ed7e535d6a8eb0d54f5678bf10dc5553f4ee22`。

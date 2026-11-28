@@ -7,3 +7,5 @@
 第 5 槽的单块证据仍缺，第 7 槽虽有个别活棋证明，同色联合落子仍待复核。两局留在待审工作表。此次 Pixel 7 Pro 原生复算通过，项目 Conda 环境验证累计表只增加第 6 槽。累计 20 局正式复算，剩余 120 局、985 个棋块待审。
 
 回执位于 `.build/go-proof-queue1/`。累计裁定表 SHA-256 为 `65398b50d724515c079c6e6041c61012861357d1405cdbadc0b0331c47edcd0b`。小米真机本轮未连接。
+
+2026-11-28 在 Xiaomi 25042PN24C（Android API 37，arm64-v8a）复验，19 份原生输出与 Pixel 7 Pro 一致，复算棋谱散列也一致。真机文件索引位于 `.build/go-proof-queue1/device-25042PN24C/fingerprints.tsv`，SHA-256 为 `4d816af1adacff5794f3fbdfd6be0e0bffd3011eb209af04b5a19e9c20516e9c`。
