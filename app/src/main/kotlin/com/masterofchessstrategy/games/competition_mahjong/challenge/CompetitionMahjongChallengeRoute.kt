@@ -147,15 +147,23 @@ internal fun CompetitionMahjongChallengeScreen(
                                 Text(if (exercise.discardFromSeat == null) "自摸" else "点和")
                             }
                         }
-                        if (exercise.claimTraining && !exercise.completed) {
+                        if (exercise.responseTraining && !exercise.completed) {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                val selfDraw = exercise.discardFromSeat == null
                                 OutlinedButton(onPassClaim, enabled = state.canOperate, modifier = Modifier.testTag(
-                                    if (exercise.robbingKong) "competition_mahjong_challenge_pass_kong"
-                                    else "competition_mahjong_challenge_pass_discard",
-                                )) { Text("过") }
+                                    when {
+                                        exercise.robbingKong -> "competition_mahjong_challenge_pass_kong"
+                                        selfDraw -> "competition_mahjong_challenge_discard_final_draw"
+                                        else -> "competition_mahjong_challenge_pass_discard"
+                                    },
+                                )) { Text(if (selfDraw) "打出东风" else "过") }
                                 Button(onConfirmWin, enabled = state.canOperate,
                                     modifier = Modifier.testTag("competition_mahjong_challenge_confirm_win")) {
-                                    Text(if (exercise.robbingKong) "抢杠和" else "点和")
+                                    Text(when {
+                                        exercise.robbingKong -> "抢杠和"
+                                        selfDraw -> "自摸"
+                                        else -> "点和"
+                                    })
                                 }
                             }
                         }

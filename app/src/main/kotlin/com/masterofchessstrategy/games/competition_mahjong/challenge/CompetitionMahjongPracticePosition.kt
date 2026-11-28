@@ -30,6 +30,7 @@ internal object CompetitionMahjongPracticePosition {
     const val ROB_KONG_PAYER = 1
     private const val ROB_KONG_VIEWER = 2
     const val LAST_WALL_CLAIM_ID = "claim-final-wall-discard"
+    const val LAST_WALL_SELF_DRAW_ID = "live-final-wall-self-draw"
     const val LAST_WALL_TILE = 27
     const val LAST_WALL_PAYER = 3
     const val NINE_GATES_PUZZLE_ID = "live-nine-gates-exclusion"
@@ -79,7 +80,8 @@ internal object CompetitionMahjongPracticePosition {
     )
 
     fun isDiscardTraining(id: String): Boolean = id in discards
-    fun isClaimTraining(id: String): Boolean = id == ROB_KONG_ID || id == LAST_WALL_CLAIM_ID
+    fun isResponseTraining(id: String): Boolean =
+        id == ROB_KONG_ID || id == LAST_WALL_CLAIM_ID || id == LAST_WALL_SELF_DRAW_ID
 
     private data class FalseWinExercise(val opening: List<Int>, val discard: Int, val payment: Int)
 
@@ -150,11 +152,18 @@ internal object CompetitionMahjongPracticePosition {
         }
     }
 
-    /** Restores the last discard of a full physical wall with the local response still pending. */
-    fun lastWallClaim(decision: CompetitionMahjongRoundActionKind? = null): WinningTurn {
+    fun lastWallClaim(decision: CompetitionMahjongRoundActionKind? = null) = lastWall(false, decision)
+
+    fun lastWallSelfDraw(decision: CompetitionMahjongRoundActionKind? = null) = lastWall(true, decision)
+
+    /** Replays the full wall and stops at the final draw or discard, before the local decision. */
+    private fun lastWall(selfDraw: Boolean, decision: CompetitionMahjongRoundActionKind?): WinningTurn {
         val hand = (0..8).toList() + listOf(18, 19, 20, LAST_WALL_TILE)
-        val dealerSlots = listOf(0, 1, 2, 3, 16, 17, 18, 19, 32, 33, 34, 35, 48)
-        val wall = fixedWall(dealerSlots.zip(hand) + (53..60).zip(34..41) + (135 to LAST_WALL_TILE))
+        val viewer = if (selfDraw) LAST_WALL_PAYER else 0
+        val payer = LAST_WALL_PAYER.takeUnless { selfDraw }
+        val dealSlots = (0 until 12).map { index -> index / 4 * 16 + 4 * viewer + index % 4 } +
+            if (viewer == 0) 48 else 49 + viewer
+        val wall = fixedWall(dealSlots.zip(hand) + (53..60).zip(34..41) + (135 to LAST_WALL_TILE))
         val draws = (143 downTo 136).map { wall[it] } + (61..135).map { wall[it] }
         val journal = TrainingJournal().apply {
             event(CompetitionMahjongRoundActionKind.DISCARD, 0, wall[49])
@@ -162,6 +171,7 @@ internal object CompetitionMahjongPracticePosition {
             draws.forEachIndexed { index, tile ->
                 val seat = (index + 1) % 4
                 event(CompetitionMahjongRoundActionKind.DRAW, seat)
+                if (index == draws.lastIndex && selfDraw) return@forEachIndexed
                 event(CompetitionMahjongRoundActionKind.DISCARD, seat, tile)
                 if (index == draws.lastIndex) {
                     check(seat == LAST_WALL_PAYER && tile == LAST_WALL_TILE)
@@ -170,21 +180,34 @@ internal object CompetitionMahjongPracticePosition {
             }
         }
         val scoring = CompetitionMahjongScoring.WMO_2021_KONGS
-        return NativeCompetitionMahjongSession(0, scoring = scoring).use { session ->
-            check(session.restore(withJournal(roundOpening(wall, scoring), journal.bytes())) == RestoreResult.Restored)
+        val opening = roundOpening(wall, scoring)
+        return NativeCompetitionMahjongSession(0, viewerSeat = viewer, scoring = scoring).use { session ->
+            check(session.restore(withJournal(opening, journal.bytes(), viewer)) == RestoreResult.Restored)
             val frame = session.snapshot()
             val local = frame.seats.single { it.seat == frame.viewerSeat }
-            check(frame.phase == CompetitionMahjongRoundPhase.CLAIM && frame.wallRemaining == 0 &&
-                frame.pendingSeat == LAST_WALL_PAYER && frame.pendingTile == LAST_WALL_TILE &&
-                local.concealedTiles.sorted() == hand && local.flowers.size == 2 &&
+            if (selfDraw) {
+                check(frame.phase == CompetitionMahjongRoundPhase.DISCARD && frame.currentSeat == viewer &&
+                    frame.drawnTile == LAST_WALL_TILE && local.concealedTiles.sorted() == hand + LAST_WALL_TILE)
+            } else {
+                check(frame.phase == CompetitionMahjongRoundPhase.CLAIM && frame.pendingSeat == payer &&
+                    frame.pendingTile == LAST_WALL_TILE && local.concealedTiles.sorted() == hand)
+            }
+            check(frame.wallRemaining == 0 && local.flowers.size == 2 &&
                 frame.seats.filter { it.seat != frame.viewerSeat }.all { it.concealedTiles.isEmpty() })
-            val option = WinningTurn(hand, LAST_WALL_TILE, LAST_WALL_PAYER, flowers = local.flowers)
+            val option = WinningTurn(hand, LAST_WALL_TILE, payer, flowers = local.flowers)
             if (decision == null) return@use option
             require(decision == CompetitionMahjongRoundActionKind.WIN || decision == CompetitionMahjongRoundActionKind.PASS)
-            val action = CompetitionMahjongAction(decision, LAST_WALL_TILE)
-            check(action in session.legalActions())
-            val applied = session.apply(action)
-            check(applied.accepted && !applied.falseWin)
+            if (selfDraw && decision == CompetitionMahjongRoundActionKind.PASS) {
+                // Choosing to discard the final draw lets the other three seats pass in this fixture.
+                journal.event(CompetitionMahjongRoundActionKind.DISCARD, viewer, LAST_WALL_TILE)
+                journal.passAfter(viewer, LAST_WALL_TILE)
+                check(session.restore(withJournal(opening, journal.bytes(), viewer)) == RestoreResult.Restored)
+            } else {
+                val action = CompetitionMahjongAction(decision, LAST_WALL_TILE)
+                check(action in session.legalActions())
+                val applied = session.apply(action)
+                check(applied.accepted && !applied.falseWin)
+            }
             val result = session.snapshot()
             if (decision == CompetitionMahjongRoundActionKind.PASS) {
                 check(result.phase == CompetitionMahjongRoundPhase.EXHAUSTIVE_DRAW &&
@@ -193,12 +216,16 @@ internal object CompetitionMahjongPracticePosition {
             } else {
                 val fan = result.winningFan
                 val payment = 8 + fan.totalFan
+                val expected = if (selfDraw) listOf(-payment, -payment, -payment, 3 * payment)
+                    else listOf(payment + 16, -8, -8, -payment)
+                val fanId = if (selfDraw) 44 else 45
+                val otherLastTileFanId = if (selfDraw) 45 else 44
                 check(result.phase == CompetitionMahjongRoundPhase.WON && result.winnerSeat == frame.viewerSeat &&
-                    result.payerSeat == LAST_WALL_PAYER && result.winningTile == LAST_WALL_TILE && fan.qualifies &&
-                    fan.entries.any { it.id == 45 && it.points == 8 && it.count == 1 } &&
-                    fan.entries.none { it.id == 44 || it.id == 80 } &&
+                    result.payerSeat == payer && result.winningTile == LAST_WALL_TILE && fan.qualifies &&
+                    fan.entries.any { it.id == fanId && it.points == 8 && it.count == 1 } &&
+                    fan.entries.none { it.id == otherLastTileFanId || it.id == 80 } &&
                     fan.totalFan == fan.fanWithoutFlowers + local.flowers.size &&
-                    result.netScores == listOf(payment + 16, -8, -8, -payment))
+                    result.netScores == expected)
                 option.copy(totalFan = fan.totalFan, netScores = result.netScores, qualifyingFan = fan.fanWithoutFlowers)
             }
         }

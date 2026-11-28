@@ -135,8 +135,12 @@ class CompetitionMahjongChallengeViewModel(
 
     private fun createSession(id: String): CompetitionMahjongChallengeSession {
         val challenge = checkNotNull(CompetitionMahjongChallengeLibrary.challenge(id)) { "牌型题不存在" }
-        if (id == CompetitionMahjongPracticePosition.LAST_WALL_CLAIM_ID) {
-            val opening = CompetitionMahjongPracticePosition.lastWallClaim()
+        val opening = when (id) {
+            CompetitionMahjongPracticePosition.LAST_WALL_CLAIM_ID -> CompetitionMahjongPracticePosition.lastWallClaim()
+            CompetitionMahjongPracticePosition.LAST_WALL_SELF_DRAW_ID -> CompetitionMahjongPracticePosition.lastWallSelfDraw()
+            else -> null
+        }
+        if (opening != null) {
             return CompetitionMahjongChallengeSession(challenge, opening.hand, opening.flowers)
         }
         val hand = when {

@@ -1,0 +1,210 @@
+{
+  "tag": "v0.1.0-competition-mahjong-last-draw.1",
+  "build": {
+    "candidate": "cm-last-draw1",
+    "baseline": "d9a97faa37986e3d471af60b119561cf3a59c7ec",
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongPracticePosition.kt",
+        "sha256": "422e668bff0a45737e8ba3a1df9bc166dd34ed38ee77d3b41829be98be710c91"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeLibrary.kt",
+        "sha256": "27654b07a994eec548989c399433e1a36cf787e240f3d9a6bd7ddaee47866cba"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeRoute.kt",
+        "sha256": "fe3869cf70735cef923acfdd5c5de34172e68236d4a14de0071fb049157500b0"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeViewModel.kt",
+        "sha256": "661045fda4b71647564def35494df48e5129421195ad17de2ccec417442c24e3"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeLibraryTest.kt",
+        "sha256": "101e59034912bb9230fedbc4ce70423ca10214203d6d53bc9b27660e3a68949c"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongChallengeNavigationTest.kt",
+        "sha256": "871fd856394acf1c89c16fef4b21e8ad8cf4798612aa2f93343845413b511717"
+      }
+    ],
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "78e97b9185bcf09edc795abed2e9a325d188bef8ac9f64951ba09b36757b9d2c",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "caaa94ee766a24d1edaeddf7cf4cda28851c577fcdd825e3827dd7701b4773d5"
+    },
+    "unit_tests": [
+      {
+        "tests": 5,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeViewModelTest"
+      },
+      {
+        "tests": 6,
+        "name": "com.masterofchessstrategy.games.competition_mahjong.challenge.CompetitionMahjongChallengeLibraryTest"
+      }
+    ],
+    "lint_errors": 0,
+    "lint_warnings": 25
+  },
+  "device": {
+    "restored_font": "1.0",
+    "products": {
+      "app/build/outputs/apk/debug/app-debug.apk": "78e97b9185bcf09edc795abed2e9a325d188bef8ac9f64951ba09b36757b9d2c",
+      "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "caaa94ee766a24d1edaeddf7cf4cda28851c577fcdd825e3827dd7701b4773d5"
+    },
+    "candidate": "cm-last-draw1",
+    "original_font": "1.0",
+    "runs": [
+      {
+        "log_sha256": "d6aad2d71b1c73a5addb90d5b3e1f36cd8a2e1993dcb57d7410e0e432506d147",
+        "images": [
+          {
+            "path": "font-1.0\\b8f3282b-8e45-4cc1-a5c1-69223115a20f\\last-wall-pass.png",
+            "sha256": "f6db82bd1dc6e8d0c26b0d601a982117faa1edc2b8372647cf2a0d26918e4ee0"
+          },
+          {
+            "path": "font-1.0\\b8f3282b-8e45-4cc1-a5c1-69223115a20f\\last-wall-pending.png",
+            "sha256": "d3a1c31e5699c4218c9c982fdd16edc372a2ed425d288bb5658a29895980b568"
+          },
+          {
+            "path": "font-1.0\\b8f3282b-8e45-4cc1-a5c1-69223115a20f\\last-wall-settlement.png",
+            "sha256": "fb8a48ec6c7b5598680d31d68c19037078fd58e9d47d5311cd506a0061664454"
+          },
+          {
+            "path": "font-1.0\\f02f0b11-379a-41a4-a924-d8921442b98d\\last-wall-self-draw-discard.png",
+            "sha256": "905c88e77837738b98556b42c1ca4d0a189f1571b8247430e76dedba87cac13c"
+          },
+          {
+            "path": "font-1.0\\f02f0b11-379a-41a4-a924-d8921442b98d\\last-wall-self-draw-ready.png",
+            "sha256": "c8447df7ae2ad10e9adca74edddf1ac541212c39a89ba12d0dc89d44998dfd32"
+          },
+          {
+            "path": "font-1.0\\f02f0b11-379a-41a4-a924-d8921442b98d\\last-wall-self-draw-settlement.png",
+            "sha256": "214b0321c0947313b40b341e1820fad123891d65b19a2ccd9239ae075d3afcea"
+          }
+        ],
+        "tests": 2,
+        "font": "1.0"
+      },
+      {
+        "log_sha256": "7d368b5cb9b18248d9f4ec9d3d620f4724109de9e83df147064090577ee41b9b",
+        "images": [
+          {
+            "path": "font-1.5\\605da708-6258-4ad4-8370-17e64f3474bc\\last-wall-self-draw-discard.png",
+            "sha256": "5cbad1c5bd329f4725c582a470bbb635271be6f038b390d5f0200b6dab45325a"
+          },
+          {
+            "path": "font-1.5\\605da708-6258-4ad4-8370-17e64f3474bc\\last-wall-self-draw-ready.png",
+            "sha256": "3bd8417e6c71ddd95616d157b629d9e6cfea55db97ccdd1c567dfe609e74a3dd"
+          },
+          {
+            "path": "font-1.5\\605da708-6258-4ad4-8370-17e64f3474bc\\last-wall-self-draw-settlement.png",
+            "sha256": "a1898afc9295077b3d6e9a88997f864c268187a962bcfb8a2442fac95ae49198"
+          }
+        ],
+        "tests": 1,
+        "font": "1.5"
+      }
+    ]
+  },
+  "physical": {
+    "model": "Xiaomi 25042PN24C",
+    "api": 37,
+    "abi": "arm64-v8a",
+    "font": "1.0",
+    "tests": 2,
+    "self_draw_receipt": "JUnit device log",
+    "claim_receipt": "instrumentation",
+    "screenshots": 6
+  },
+  "native_result": {
+    "qualifying_fan": 31,
+    "flowers": 2,
+    "total_fan": 33,
+    "seat_deltas": [
+      -41,
+      -41,
+      -41,
+      123
+    ]
+  },
+  "evidence": [
+    {
+      "path": "build.log",
+      "sha256": "8b555a39d2e330fa0f807b4889ba154b1b31743e54f7cac304232b38e5a0ac5e"
+    },
+    {
+      "path": "challenge-unit.log",
+      "sha256": "9941c1d1bb0e94437f40c71b7de4c3a4740587899704074b2e64e43ef550a679"
+    },
+    {
+      "path": "physical-build.log",
+      "sha256": "216047c393faf6f07aefde20719189997468271813fd070626446a89b4d5cd2d"
+    },
+    {
+      "path": "physical-apks/host/AndroidManifest.xml",
+      "sha256": "44c7385e1bd95e52061c029fb3c1a3975aef42c34464506c0c70df1fd2de3194"
+    },
+    {
+      "path": "physical-apks/host/app-debug.apk",
+      "sha256": "49199613040f65c6b6245648ef0439af6dbaed5b1a36b057781c60e78329a329"
+    },
+    {
+      "path": "physical-apks/host/app-debug-androidTest.apk",
+      "sha256": "caaa94ee766a24d1edaeddf7cf4cda28851c577fcdd825e3827dd7701b4773d5"
+    },
+    {
+      "path": "device-39a452b370404a9b9f873b639688393d/device-receipt.json",
+      "sha256": "639ea4b7f59156f5bf8cc1f8762202d588113049ac32d69592889df939e2a1b1"
+    },
+    {
+      "path": "device-39a452b370404a9b9f873b639688393d/last-draw-training-1.0.log",
+      "sha256": "d6aad2d71b1c73a5addb90d5b3e1f36cd8a2e1993dcb57d7410e0e432506d147"
+    },
+    {
+      "path": "device-39a452b370404a9b9f873b639688393d/last-draw-training-1.5.log",
+      "sha256": "7d368b5cb9b18248d9f4ec9d3d620f4724109de9e83df147064090577ee41b9b"
+    },
+    {
+      "path": "device-25042PN24C/host-claim.log",
+      "sha256": "f104c83c0e664a1542e3896cdc9951b3ba42b84488331cd72ba03c4ee19befb6"
+    },
+    {
+      "path": "device-25042PN24C/host-claim-runner.log",
+      "sha256": "22c057d8d5d34fec89567727ebca559a955a00c0e2cfe4a0aad9c28bfc449fd2"
+    },
+    {
+      "path": "device-25042PN24C/host-self-draw.log",
+      "sha256": "00706778ce0d9a73d06c3d35425ed3dea06e3dcf096714d03491775ead3270c2"
+    },
+    {
+      "path": "device-25042PN24C/host-self-draw-runner.log",
+      "sha256": "ab9c58cdbd20bbe48c308359aaa7c7d227bf33392cf7a2a6a05f5c3bad6b9533"
+    },
+    {
+      "path": "device-25042PN24C/self-draw/last-wall-self-draw-discard.png",
+      "sha256": "a11ce5e9ad83a22fdb1f15d7cf33d675eb62c90c1ff4345240cb6efe38d0a1b9"
+    },
+    {
+      "path": "device-25042PN24C/self-draw/last-wall-self-draw-ready.png",
+      "sha256": "c94605807dbd24f1250e6ddd1750288268393c6533b6f456ca76f8bd1eb5c3df"
+    },
+    {
+      "path": "device-25042PN24C/self-draw/last-wall-self-draw-settlement.png",
+      "sha256": "4b0e94b8e37ead6c4cba7695fc2603d251a019797c7acfe1dae59a2cee12496e"
+    },
+    {
+      "path": "device-25042PN24C/claim/last-wall-pass.png",
+      "sha256": "645ee7258511bdb80ac761d8bd2e7b9805d0d79cd5250a58fa7a58a22dd6b53e"
+    },
+    {
+      "path": "device-25042PN24C/claim/last-wall-pending.png",
+      "sha256": "da5cc04d074c35e67de311d1bb0d6fab2b21552b282dc7d93538d2867ccf60a0"
+    },
+    {
+      "path": "device-25042PN24C/claim/last-wall-settlement.png",
+      "sha256": "01c74f3edf5fc4fbb876adefbef8913463b9436ee6a30222747e0bcd77a86dba"
+    }
+  ],
+  "distribution": "source-only"
+}
