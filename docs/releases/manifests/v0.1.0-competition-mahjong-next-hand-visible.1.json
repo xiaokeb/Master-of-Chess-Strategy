@@ -1,0 +1,114 @@
+{
+  "emulator": {
+    "model": "Pixel_7_Pro",
+    "abi": "x86_64",
+    "api": 37,
+    "font_scale": "1.5",
+    "installed_apks": {
+      "app": "a2b37a07b46b891e3ad3e7cb87fa634e68471f8765bdd6aab9056b5f3133e9d1",
+      "test": "2b5d21f07e70dd860e0a70d257f86c7ec35fded800d846349806208edcdb1d50"
+    },
+    "boundaries": [
+      {
+        "settled_hands": 15,
+        "archives": 0,
+        "before_pid": 8929,
+        "restored_pid": 9036,
+        "next_hand": 16
+      }
+    ]
+  },
+  "summary_tests": 6,
+  "physical": {
+    "status": "not-connected"
+  },
+  "evidence": [
+    {
+      "path": "build.log",
+      "sha256": "ab39ddecea5cbb402a849f0164eca84c0c7aa6d758c6e038f4c9c70b426d0588"
+    },
+    {
+      "path": "lint.txt",
+      "sha256": "40af26868504cbcafa2c001b4f603dd1dccaa396918714a1df07046a54ab1394"
+    },
+    {
+      "path": "pixel-fe3c36555ceb43ea8bcb112d4c1ff064/15/before.json",
+      "sha256": "fcb9b1aa98dc7d44e23f635a91b6edf3b8b93b5e72f7310b932613fc39cc580c"
+    },
+    {
+      "path": "pixel-fe3c36555ceb43ea8bcb112d4c1ff064/15/before.log",
+      "sha256": "42fbb2cbcf5c0883fb543d6a50b6c112b904421f81144d21e5e62fdfdedb6e05"
+    },
+    {
+      "path": "pixel-fe3c36555ceb43ea8bcb112d4c1ff064/15/before.png",
+      "sha256": "eba4505a0362f3cfcce3e27228764c746fb06f3c600af2eb4da321bd629bb56a"
+    },
+    {
+      "path": "pixel-fe3c36555ceb43ea8bcb112d4c1ff064/15/next.json",
+      "sha256": "ca52b4c05b94213efce59535c14bcc0a94be82c6cc4b5b8db179956c13ffb81e"
+    },
+    {
+      "path": "pixel-fe3c36555ceb43ea8bcb112d4c1ff064/15/next.png",
+      "sha256": "ee1a6ed8dd54d8ac9369d9660dc9ca1f21984ec43bae086eefd10d6cc088a4ef"
+    },
+    {
+      "path": "pixel-fe3c36555ceb43ea8bcb112d4c1ff064/15/restored.json",
+      "sha256": "6ab208be4f353a6959e3c9a0b80516a50dd50eea70a34f2d9432ad5f37196fa7"
+    },
+    {
+      "path": "pixel-fe3c36555ceb43ea8bcb112d4c1ff064/15/restored.log",
+      "sha256": "16740c061bb434cfa86902e0f8ab5c875b03cf958fe046481f4f8f151d3aa3ef"
+    },
+    {
+      "path": "pixel-fe3c36555ceb43ea8bcb112d4c1ff064/15/restored.png",
+      "sha256": "eba4505a0362f3cfcce3e27228764c746fb06f3c600af2eb4da321bd629bb56a"
+    },
+    {
+      "path": "pixel-fe3c36555ceb43ea8bcb112d4c1ff064/15/seed.log",
+      "sha256": "6e3f219b02c1c0f30ad96faf8861b0487db97ffe4af80d8f7b14909c84d5daaa"
+    },
+    {
+      "path": "pixel-fe3c36555ceb43ea8bcb112d4c1ff064/receipt.json",
+      "sha256": "a4e0c70a29389fa57222a857f3c66fb86a4d5df7a2e5160e65fab5a0a01136b1"
+    },
+    {
+      "path": "pixel-fe3c36555ceb43ea8bcb112d4c1ff064/summary-1.0.log",
+      "sha256": "1408661ca84d117330e47f697abff2d64800e79403a8d0add458132e7be34105"
+    },
+    {
+      "path": "pixel-fe3c36555ceb43ea8bcb112d4c1ff064/summary-1.5.log",
+      "sha256": "376ecd07349a6f13bb5257d19b08a4c07066da37ad36d5b1ea95694640a52863"
+    },
+    {
+      "path": "pixel-visual.jpg",
+      "sha256": "08cb1ac6cc5041cc6050cea2eafb095b59bed3f275ce9a8671220465f1798fc6"
+    },
+    {
+      "path": "TEST-com.masterofchessst-25HNB3JS3TNQ0.games.competition_mahjong.match.play.CompetitionMahjongMatchPlayViewModelTest.xml",
+      "sha256": "fa4afee141f0a52a492de309f0afdfd09aca4015b2e4689d22ea15ff129ebac6"
+    }
+  ],
+  "evidence_root": ".build/cm-next-hand-visible1",
+  "build": {
+    "baseline": "9e10cc6874872e91bb0bdd557931a53494fd1af5",
+    "lint_errors": 0,
+    "unit_tests": 53,
+    "lint_warnings": 25,
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/CompetitionMahjongMatchSummary.kt",
+        "sha256": "aaa8c739c01d52c5e2fc7a8218b4260f4c491ca20129ae04e3ef3837b1f39f45"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/match/CompetitionMahjongMatchSummaryTest.kt",
+        "sha256": "0e7ad0948bf07d852c589b1742b91047c37b1b1d07ac86bb667289c14ae7872b"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/data/CompetitionMahjongSeriesRecoveryActionInstrumentedTest.kt",
+        "sha256": "69c8b9e641e5d0c6ea463679017fd8d21dd5f74a7a98c2002e3e9bcc4da5fc1c"
+      }
+    ]
+  },
+  "tag": "v0.1.0-competition-mahjong-next-hand-visible.1",
+  "distribution": "source-only"
+}

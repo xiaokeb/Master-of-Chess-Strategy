@@ -2,7 +2,6 @@ package com.masterofchessstrategy.games.competition_mahjong.match
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -36,6 +35,19 @@ fun CompetitionMahjongMatchSummary(
         ) {
             Text("国标麻将 · 十六盘", style = MaterialTheme.typography.titleMedium)
             Text("已完成 ${state.completedHandCount} / 16 盘", modifier = Modifier.testTag("competition_mahjong_match_progress"))
+            if (state.error != null) Text(state.error, color = MaterialTheme.colorScheme.error)
+            if (state.needsSave) {
+                Button(onClick = onRetrySave, enabled = !busy, modifier = Modifier.testTag("competition_mahjong_match_retry")) {
+                    Text("重试保存")
+                }
+                Text("本盘尚未保存，保存成功后可继续。")
+            } else if (state.completedHandCount in 1..15 && state.completedHandCount == state.activeHandIndex + 1) {
+                Button(
+                    onClick = { onNextHand(state.activeHandIndex) },
+                    enabled = !busy && state.canStartNextHand,
+                    modifier = Modifier.testTag("competition_mahjong_match_next"),
+                ) { Text("下一盘") }
+            }
             if (state.completedHandCount < 16) {
                 Text("${winds[state.activeHandIndex / 4]}风圈 · 第${state.activeHandIndex % 4 + 1}盘")
                 val seating = CompetitionMahjongMatchSeating.forHand(state.activeHandIndex)
@@ -56,21 +68,6 @@ fun CompetitionMahjongMatchSummary(
                 }
                 Text("同分并列，共享所占名次的标准分。")
             }
-            if (state.error != null) Text(state.error, color = MaterialTheme.colorScheme.error)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (state.needsSave) {
-                    Button(onClick = onRetrySave, enabled = !busy, modifier = Modifier.testTag("competition_mahjong_match_retry")) {
-                        Text("重试保存")
-                    }
-                } else if (state.completedHandCount in 1..15 && state.completedHandCount == state.activeHandIndex + 1) {
-                    Button(
-                        onClick = { onNextHand(state.activeHandIndex) },
-                        enabled = !busy && state.canStartNextHand,
-                        modifier = Modifier.testTag("competition_mahjong_match_next"),
-                    ) { Text("下一盘") }
-                }
-            }
-            if (state.needsSave) Text("本盘尚未保存，保存成功后可继续。")
             if (state.completedHandCount == 16 && !state.needsSave) Text("十六盘结束。")
         }
     }

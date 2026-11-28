@@ -58,7 +58,7 @@ class CompetitionMahjongSeriesRecoveryActionInstrumentedTest {
         }
         save(automation, evidence, if (reopening) "restored" else "before", boundary)
         if (reopening && hands == 15) {
-            click(automation, "下一盘")
+            click(automation, "下一盘", scroll = false)
             val next = waitForReceipt(receipt) { it.getInt("hand_index") == 15 }
             for (key in listOf("pid", "match_id", "settled_hands", "scores", "archives", "strategy", "session_version", "round_version")) {
                 assertEquals(key, boundary.get(key), next.get(key))
@@ -80,7 +80,7 @@ class CompetitionMahjongSeriesRecoveryActionInstrumentedTest {
         error("No committed Mahjong settlement receipt")
     }
 
-    private fun click(automation: UiAutomation, label: String) {
+    private fun click(automation: UiAutomation, label: String, scroll: Boolean = true) {
         val deadline = SystemClock.elapsedRealtime() + 15_000
         var labels = emptyList<String>()
         while (SystemClock.elapsedRealtime() < deadline) {
@@ -91,7 +91,7 @@ class CompetitionMahjongSeriesRecoveryActionInstrumentedTest {
                 val node = visible.firstOrNull { it.isEnabled && it.text?.toString() == label }
                 val control = generateSequence(node) { it.parent }.firstOrNull { it.isClickable }
                 if (control?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true) return
-                if (node == null) {
+                if (node == null && scroll) {
                     visible.firstOrNull { it.isScrollable }?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
                 }
             }
