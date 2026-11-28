@@ -82,6 +82,29 @@ class GoAiMatchSessionTest {
         session.closeAndJoin()
     }
 
+    @Test fun rejectedPlacementKeepsTheCheckpointAndShowsARuleMessage() = runTest {
+        val config = GoAiMatchConfig(9)
+        val repository = Repository().apply { saved = GoAiSavedMatch("rule-feedback", config, byteArrayOf(9, 0, 0, 1)) }
+        val session = session(repository, Search(), config)
+        try {
+            runCurrent()
+            val before = checkNotNull(repository.saved).copyBytes()
+            assertTrue(session.humanAction(place(0)))
+            runCurrent()
+            val rejected = session.state.value
+            assertEquals("这个交叉点已有棋子，请选空点。", rejected.game.error)
+            assertEquals(2, rejected.eventCount)
+            assertTrue(rejected.humanCanPlay)
+            assertArrayEquals(before, repository.saved!!.copyBytes())
+            assertTrue(repository.history.isEmpty())
+            assertTrue(session.humanAction(place(2)))
+            runCurrent()
+            assertNull(session.state.value.game.error)
+            assertEquals(3, session.state.value.eventCount)
+            assertEquals(1, repository.history.size)
+        } finally { session.closeAndJoin() }
+    }
+
     @Test fun humanAndAiMovesAreSavedInOrderWithImmutableSearchPosition() = runTest {
         val repository = Repository()
         val search = Search().apply { answers.trySend(move(place(1))) }

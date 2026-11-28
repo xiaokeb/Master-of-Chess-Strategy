@@ -285,13 +285,14 @@ class GoGameViewModel(
                 if (!mutableState.value.canAct) return@withLock
                 val now = nowMillis()
                 if (expireClock(current, now)) return@withLock
-                when (current.apply(action)) {
+                when (val result = current.apply(action)) {
                     ActionResult.Accepted -> {
                         clock = clock?.advance(now, clockPlayer(current))
                         persist(current, lastMove = lastMove, liveAction = action)
                     }
                     is ActionResult.Rejected -> {
-                        mutableState.value = mutableState.value.copy(error = "该操作不符合当前围棋规则")
+                        val previous = mutableState.value
+                        mutableState.value = previous.copy(error = previous.rejectedActionMessage(action, result.error))
                     }
                 }
             }

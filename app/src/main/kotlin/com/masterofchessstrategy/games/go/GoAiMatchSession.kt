@@ -809,7 +809,17 @@ class GoAiMatchSession(
                                     check(candidate.undo())
                                 }
                             }
-                        } else check(candidate.apply(checkNotNull(applied)) == ActionResult.Accepted) { "Illegal Go action" }
+                        } else {
+                            val requested = checkNotNull(applied)
+                            val result = candidate.apply(requested)
+                            if (result is ActionResult.Rejected) {
+                                if (!disposed.get() && lifetime.isActive) {
+                                    val message = previous.game.rejectedActionMessage(requested, result.error)
+                                    mutableState.value = mutableState.value.copy(game = previous.game.copy(error = message))
+                                }
+                                return@withLock
+                            }
+                        }
                         val nextClock = running?.advance(now, player(candidate).takeIf { candidate.phase == GoPhase.PLAYING })
                         val next = snapshot(candidate).withClock(nextClock)
                         val nextEventCount = candidate.eventHistory().size

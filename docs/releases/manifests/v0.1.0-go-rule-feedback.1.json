@@ -1,0 +1,106 @@
+{
+  "evidence": [
+    {
+      "sha256": "8821a380869a4bc270db1c8fdc6655fdf46bc9921da4be4ad48c381ac6640cfb",
+      "path": "device-80be09513dac47ad8cc026826b214940/feedback-1.0.log"
+    },
+    {
+      "sha256": "f0ac0d1a94d5f08b29fab2057c6f95fdaae65e617f17e9e502412c0904b43617",
+      "path": "device-80be09513dac47ad8cc026826b214940/feedback-1.0.png"
+    },
+    {
+      "sha256": "bf5e43b516d5f23e4bdb6b691d60dc5b4eabf8f85be4d1d06d18685d67018c1c",
+      "path": "device-80be09513dac47ad8cc026826b214940/feedback-1.5.log"
+    },
+    {
+      "sha256": "9c1b96acb0a2afef51f167ea2008f1fc6e77c97797a59ed2e6197ed327e1bd29",
+      "path": "device-80be09513dac47ad8cc026826b214940/feedback-1.5.png"
+    },
+    {
+      "sha256": "0f29e099302e0d51603b594d524502446a8cae19e7d2f8209024a6f1d3b47462",
+      "path": "device-80be09513dac47ad8cc026826b214940/receipt.json"
+    },
+    {
+      "sha256": "40af26868504cbcafa2c001b4f603dd1dccaa396918714a1df07046a54ab1394",
+      "path": "lint.txt"
+    },
+    {
+      "sha256": "8aae6a49e6c53ee2068429daf4a4eb90f6cda78a167b888b26b9dbdaf24b23f5",
+      "path": "main-build.log"
+    },
+    {
+      "sha256": "1a4e9080adaa6b68da421dd69656265089ec97cd3e985ca2ade265aaf4f4488a",
+      "path": "pixel-visual.jpg"
+    },
+    {
+      "sha256": "ec8af9977d34a8387ad7f45125e6c15a80306cb997f7341876953cb3584984cb",
+      "path": "test-build.log"
+    },
+    {
+      "sha256": "1e9dfc2897dc430b8c5d8cf608a45b9a286ff90f912360efd5edf2e4c6b77cf8",
+      "path": "TEST-com.masterofchessstrategy.games.go.GoAiMatchSessionTest.xml"
+    },
+    {
+      "sha256": "5ec5b2c5d24631cc41a6e276b783a6f2a70a498427895d66168374c1754f0e11",
+      "path": "TEST-com.masterofchessstrategy.games.go.GoGameViewModelTest.xml"
+    }
+  ],
+  "tag": "v0.1.0-go-rule-feedback.1",
+  "emulator": {
+    "restored_font": "1.0",
+    "runs": [
+      {
+        "log_sha256": "8821a380869a4bc270db1c8fdc6655fdf46bc9921da4be4ad48c381ac6640cfb",
+        "font": "1.0",
+        "screenshot_sha256": "f0ac0d1a94d5f08b29fab2057c6f95fdaae65e617f17e9e502412c0904b43617"
+      },
+      {
+        "log_sha256": "bf5e43b516d5f23e4bdb6b691d60dc5b4eabf8f85be4d1d06d18685d67018c1c",
+        "font": "1.5",
+        "screenshot_sha256": "9c1b96acb0a2afef51f167ea2008f1fc6e77c97797a59ed2e6197ed327e1bd29"
+      }
+    ],
+    "model": "Pixel_7_Pro"
+  },
+  "physical": {
+    "status": "not-connected"
+  },
+  "build": {
+    "apks": {
+      "app-debug.apk": "29013900052faefae416f45b95baeff9ace1e42073f68d6ce2df7471ea5a83f5",
+      "app-debug-androidTest.apk": "a91d81ac00007f33b4eaf69350f35860838be8d3ae31a3e844346b13f9bf6772"
+    },
+    "lint_errors": 0,
+    "baseline": "075a5db10e7584125f26decb8892fe3ffa1a69d4",
+    "overlays": [
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoGameUiState.kt",
+        "sha256": "cd7b8ee2a1540870b552c29745a4eea3e66ec2632001ff0ef98cb1ea52c77606"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoGameViewModel.kt",
+        "sha256": "2940de75d390163fca31766bf9c2fbaffdd6a1b24829bd87d55bf7e4f112a9a1"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoAiMatchSession.kt",
+        "sha256": "cb89634bbe45e9de4b7e4dbe2e33b365efb1cb8ce2b0ea8db4dd2f54e1e3156e"
+      },
+      {
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoAiMatchSessionTest.kt",
+        "sha256": "0996b88e4c537c89120976d49723edca550321f4898361aabd2e057c9546d6c1"
+      },
+      {
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoProductionStorageVisualTest.kt",
+        "sha256": "dd21f98119206ff43ef3228be8a64db69bf738882dc2d513ba71c15fea65f611"
+      },
+      {
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoGameScreen.kt",
+        "sha256": "368707a409300dc7ef9c2d206621aeb902eb947cf874d4dcd3593bcc62895467"
+      }
+    ],
+    "lint_warnings": 25,
+    "unit_tests": 34
+  },
+  "evidence_root": ".build/go-rule-feedback-release",
+  "distribution": "source-only"
+}

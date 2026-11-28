@@ -89,6 +89,39 @@ class GoProductionStorageVisualTest {
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
     }
 
+    @Test fun occupiedPointAndKoShowRuleFeedbackWithoutWritingTheCheckpoint() {
+        val setup = listOf(0 to 1, 1 to 1, 1 to 0, 0 to 2, 2 to 1, 2 to 2, 8 to 8, 1 to 3, 1 to 2)
+        val before = NativeGoEngine(9).use { engine ->
+            setup.forEach { (x, y) -> assertEquals(ActionResult.Accepted, engine.apply(GoAction.Place(BoardPosition(x, y)))) }
+            GoSavedSession(9, engine.serialize(), GoScoreDisplayMode.STONES)
+        }
+        runBlocking { RoomGoSessionRepository(database).save(before) }
+        compose.onNodeWithTag(HOME_GO_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag(GO_LOCAL_ENTRY_TAG).performScrollTo().performClick()
+        compose.waitUntil(15_000) {
+            compose.onAllNodes(hasTestTag("go_intersection_1_2") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+        }
+        val checkpoint = runBlocking { database.goLocalSessionDao().find(GameType.GO.code)!!.checkpoint }
+        compose.onNodeWithTag("go_intersection_1_2").assertIsEnabled().performClick()
+        val occupied = "这个交叉点已有棋子，请选空点。"
+        compose.waitUntil(15_000) { compose.onAllNodesWithText(occupied).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText(occupied).assertIsDisplayed()
+        assertArrayEquals(checkpoint, runBlocking { database.goLocalSessionDao().find(GameType.GO.code)!!.checkpoint })
+
+        compose.onNodeWithTag("go_intersection_1_1").performClick()
+        val ko = "这个空点现在不能落子。请检查无气禁着或全局同形，或选择其他落点。"
+        compose.waitUntil(15_000) { compose.onAllNodesWithText(ko).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText(ko).assertIsDisplayed()
+        assertArrayEquals(checkpoint, runBlocking { database.goLocalSessionDao().find(GameType.GO.code)!!.checkpoint })
+        capture("go-illegal-recapture")
+
+        compose.onNodeWithTag("go_intersection_7_8").performClick()
+        compose.waitUntil(15_000) { runBlocking {
+            !database.goLocalSessionDao().find(GameType.GO.code)!!.checkpoint.contentEquals(checkpoint)
+        } }
+        compose.onNodeWithText(ko).assertDoesNotExist()
+    }
+
     private fun awaitTag(tag: String) {
         compose.waitUntil(15_000) { compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }
     }

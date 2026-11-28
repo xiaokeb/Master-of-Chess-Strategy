@@ -89,6 +89,7 @@ fun GoGameScreen(
                         Text("围棋 · ${state.boardSize} 路", style = MaterialTheme.typography.titleLarge)
                         TextButton(onClick = onBack) { Text("返回") }
                     }
+                    if (state.error != null) Text(state.error, color = MaterialTheme.colorScheme.error)
                     TextButton(onClick = onNewGame,
                         enabled = !state.loading && !state.saving && !state.needsSave && !state.importing,
                     ) { Text("新对局") }
@@ -178,7 +179,6 @@ fun GoGameScreen(
                     }
                     if (state.saving) Text("正在保存对局…")
                     if (state.importing) Text("正在校验并保存导入棋谱…")
-                    if (state.error != null) Text(state.error, color = MaterialTheme.colorScheme.error)
                     if (state.needsSave) {
                         Button(onClick = onRetrySave) { Text("重试保存") }
                     }
