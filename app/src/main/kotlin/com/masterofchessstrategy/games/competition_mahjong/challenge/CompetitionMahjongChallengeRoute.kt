@@ -49,6 +49,7 @@ fun CompetitionMahjongChallengeRoute(
         onDiscard = { game.discard(it) },
         onConfirmWin = { game.confirmWin() },
         onPassClaim = { game.passClaim() },
+        onDeclareKong = { game.declareKong() },
     )
 }
 
@@ -67,6 +68,7 @@ internal fun CompetitionMahjongChallengeScreen(
     onDiscard: (Int) -> Unit = {},
     onConfirmWin: () -> Unit = {},
     onPassClaim: () -> Unit = {},
+    onDeclareKong: () -> Unit = {},
 ) {
     var catalogOpen by remember { mutableStateOf(false) }
     var theme by remember { mutableStateOf<CompetitionMahjongChallengeTheme?>(null) }
@@ -122,6 +124,9 @@ internal fun CompetitionMahjongChallengeScreen(
                                 else -> "${competitionMahjongTileName(27 + source)}家弃牌 $name"
                             })
                         }
+                        if (exercise.kongTraining && exercise.winningTile != null) {
+                            Text("已暗杠 2万", modifier = Modifier.testTag("competition_mahjong_challenge_kong_meld"))
+                        }
                         val source = exercise.challenge.sourceRuleSection?.let { "竞赛规则第 $it 节" }
                             ?: "官方番种 ID " + exercise.challenge.sourceFanIds.sorted().joinToString("、")
                         Text("规则索引：$source", style = MaterialTheme.typography.bodySmall)
@@ -131,6 +136,13 @@ internal fun CompetitionMahjongChallengeScreen(
             val answers: @Composable (Modifier) -> Unit = { panel ->
                 Column(panel.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     if (exercise != null) {
+                        if (exercise.kongTraining && !exercise.completed) {
+                            if (exercise.winningTile == null) Button(onClick = onDeclareKong, enabled = state.canOperate,
+                                modifier = Modifier.testTag("competition_mahjong_challenge_declare_kong")) {
+                                Text("暗杠 2万")
+                            } else Button(onClick = onConfirmWin, enabled = state.canOperate,
+                                modifier = Modifier.testTag("competition_mahjong_challenge_confirm_win")) { Text("自摸") }
+                        }
                         if (exercise.discardTraining && !exercise.completed) {
                             if (exercise.chosenDiscard == null) {
                                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp),

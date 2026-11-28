@@ -33,6 +33,8 @@ internal object CompetitionMahjongPracticePosition {
     const val LAST_WALL_SELF_DRAW_ID = "live-final-wall-self-draw"
     const val LAST_WALL_TILE = 27
     const val LAST_WALL_PAYER = 3
+    const val CONCEALED_KONG_DRAW_ID = "self-draw-after-concealed-kong"
+    const val CONCEALED_KONG_TILE = 1
     const val NINE_GATES_PUZZLE_ID = "live-nine-gates-exclusion"
     const val ALL_GREEN_PUZZLE_ID = "live-all-green-half-flush"
     const val TERMINALS_PUZZLE_ID = "live-terminals-double-pungs"
@@ -82,6 +84,44 @@ internal object CompetitionMahjongPracticePosition {
     fun isDiscardTraining(id: String): Boolean = id in discards
     fun isResponseTraining(id: String): Boolean =
         id == ROB_KONG_ID || id == LAST_WALL_CLAIM_ID || id == LAST_WALL_SELF_DRAW_ID
+
+    /** Uses the same wall for the opening, the actual concealed kong and the final settlement. */
+    fun concealedKongDraw(declare: Boolean = false, settle: Boolean = false): WinningTurn {
+        val hand = List(4) { CONCEALED_KONG_TILE } + listOf(9, 10, 11, 21, 22, 23, 25, 25, 25, 27)
+        val scoring = CompetitionMahjongScoring.WMO_2021_KONGS
+        return NativeCompetitionMahjongSession(0, scoring = scoring).use { session ->
+            check(session.restore(dealerOpening(hand, scoring = scoring, replacements = listOf(27))) == RestoreResult.Restored)
+            val initial = session.snapshot()
+            val kong = CompetitionMahjongAction(CompetitionMahjongRoundActionKind.CONCEALED_KONG, CONCEALED_KONG_TILE)
+            check(initial.phase == CompetitionMahjongRoundPhase.DISCARD && initial.currentSeat == 0 &&
+                initial.seats[0].concealedTiles.sorted() == hand && kong in session.legalActions())
+            if (!declare) return@use WinningTurn(hand, 27, null)
+
+            check(session.apply(kong).accepted)
+            val frame = session.snapshot()
+            val local = frame.seats[0]
+            val meld = local.melds.single()
+            val win = CompetitionMahjongAction(CompetitionMahjongRoundActionKind.WIN, 27)
+            check(frame.phase == CompetitionMahjongRoundPhase.DISCARD && frame.currentSeat == 0 &&
+                frame.drawnTile == 27 && frame.wallRemaining == initial.wallRemaining - 1 &&
+                meld.kind == CompetitionMahjongMeldKind.KONG && meld.tile == CONCEALED_KONG_TILE &&
+                meld.fromSeat == 0 && !meld.addedKong && local.flowers.isEmpty() &&
+                frame.seats.drop(1).all { it.concealedTiles.isEmpty() } && win in session.legalActions())
+            val turn = WinningTurn(local.concealedTiles.sorted(), 27, null)
+            if (!settle) return@use turn
+
+            val applied = session.apply(win)
+            val result = session.snapshot()
+            val fan = result.winningFan
+            val payment = 8 + fan.totalFan
+            check(applied.accepted && !applied.falseWin && result.phase == CompetitionMahjongRoundPhase.WON &&
+                result.winnerSeat == 0 && result.payerSeat == null && result.winningTile == 27 && fan.qualifies &&
+                fan.entries.any { it.id == 46 && it.points == 8 && it.count == 1 } &&
+                fan.entries.none { it.id == 44 || it.id == 80 || it.id == 81 } &&
+                result.netScores == listOf(3 * payment, -payment, -payment, -payment))
+            turn.copy(totalFan = fan.totalFan, netScores = result.netScores, qualifyingFan = fan.fanWithoutFlowers)
+        }
+    }
 
     private data class FalseWinExercise(val opening: List<Int>, val discard: Int, val payment: Int)
 

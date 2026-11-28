@@ -400,6 +400,51 @@ class CompetitionMahjongChallengeNavigationTest {
         capture("last-wall-self-draw-settlement")
     }
 
+    @Test fun concealedKongDrawProducesReplacementWinAndAwardsOnlyOnSettlement() {
+        val id = CompetitionMahjongPracticePosition.CONCEALED_KONG_DRAW_ID
+        val before = CompetitionMahjongChallengeLibrary.challenges.takeWhile { it.id != id }.map { it.id }.toSet()
+        val store = RoomCompetitionMahjongChallengeProgress(database)
+        runBlocking {
+            before.forEach { store.complete(it) }
+            store.select(id)
+        }
+        compose.onNodeWithTag(HOME_COMPETITION_MAHJONG_TAG).performScrollTo().performClick()
+        compose.onNodeWithTag("competition_challenge_entry").performScrollTo().performClick()
+        waitFor("competition_mahjong_challenge_hand")
+        val confirm = compose.onNodeWithTag("competition_mahjong_challenge_confirm_win")
+        confirm.assertDoesNotExist()
+        val kong = compose.onNodeWithTag("competition_mahjong_challenge_declare_kong")
+        kong.performScrollTo().assertTextEquals("暗杠 2万")
+        capture("concealed-kong-start")
+
+        kong.performClick()
+        waitFor("competition_mahjong_challenge_kong_meld")
+        compose.onNodeWithTag("competition_mahjong_challenge_kong_meld").performScrollTo()
+            .assertTextEquals("已暗杠 2万")
+        compose.onNodeWithText("本次摸牌 东").performScrollTo().assertIsDisplayed()
+        assertEquals(before, runBlocking { store.load().completedIds })
+        capture("concealed-kong-replacement")
+
+        confirm.performScrollTo().assertTextEquals("自摸").performClick()
+        waitFor("competition_mahjong_challenge_completed")
+        val result = CompetitionMahjongPracticePosition.concealedKongDraw(declare = true, settle = true)
+        val fan = checkNotNull(result.totalFan)
+        val payment = 8 + fan
+        assertEquals(listOf(3 * payment, -payment, -payment, -payment), result.netScores)
+        InstrumentationRegistry.getInstrumentation().sendStatus(2, android.os.Bundle().apply {
+            putInt("kong_replacement_total_fan", fan)
+        })
+        compose.onNodeWithTag("competition_mahjong_challenge_settlement").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("本盘总番 $fan").assertIsDisplayed()
+        compose.onNodeWithTag("competition_mahjong_challenge_feedback").performScrollTo()
+            .assertTextContains("杠上开花计 8 番", substring = true)
+        assertEquals(before + id, runBlocking { store.load().completedIds })
+        assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
+        compose.onNodeWithTag("competition_mahjong_challenge_rewards").performScrollTo()
+            .assertTextEquals("训练奖励 29 星 · 1810 分")
+        capture("concealed-kong-settlement")
+    }
+
     @Test fun nativeNineGatesTeachesWmoExclusionAndSavesOneReward() {
         val hand = CompetitionMahjongPracticePosition.verifyNineGates()
         assertEquals(listOf(0, 0, 0, 1, 2, 3, 4, 4, 5, 6, 7, 8, 8, 8), hand)
