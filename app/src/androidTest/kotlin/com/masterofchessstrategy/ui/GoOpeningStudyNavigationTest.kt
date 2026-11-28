@@ -130,47 +130,67 @@ class GoOpeningStudyNavigationTest {
         assertNull(runBlocking { store.aiEntryRepository().load().active })
     }
 
-    @Test fun thirteenLineBranchHandsTheWhiteTurnAndExactPrefixToRealKataGo() {
-        val branch = checkNotNull(GoOpeningStudyLibrary.line("13-left-side-choice"))
+    @Test fun thirteenLineBranchHandsTheWhiteTurnAndExactPrefixToRealKataGo() = verifyBranchContinuation(
+        "13-balanced-corners", "13-left-side-choice", GoPlayer.WHITE, "3_6",
+        "第7行第4列，黑子，最后落点", "轮到白",
+    )
+
+    @Test fun nineLineBranchHandsTheBlackTurnAndExactPrefixToRealKataGo() = verifyBranchContinuation(
+        "9-corners-center", "9-left-side-link", GoPlayer.BLACK, "3_4",
+        "第5行第4列，白子，最后落点", "白从中央靠向左边",
+    )
+
+    private fun verifyBranchContinuation(
+        primaryId: String,
+        branchId: String,
+        nextPlayer: GoPlayer,
+        lastIntersection: String,
+        lastDescription: String,
+        lastExplanation: String,
+    ) {
+        val branch = checkNotNull(GoOpeningStudyLibrary.line(branchId))
+        val primary = checkNotNull(GoOpeningStudyLibrary.line(primaryId))
         val endpoint = GoOpeningStudyLibrary.open(branch).opening
-        assertEquals(GoPlayer.WHITE, endpoint.currentPlayer)
+        assertEquals(nextPlayer, endpoint.currentPlayer)
         val store = storage()
         runBlocking {
             RoomGoLearningProgressRepository(database).save(GoLearningProgress(GoLearningLibrary.lessons.map { it.id }.toSet()))
         }
         openStudy()
-        compose.onNodeWithTag("go_opening_line_13-balanced-corners").performScrollTo().performClick()
-        awaitEvent("事件 0 / 6")
+        compose.onNodeWithTag("go_opening_line_$primaryId").performScrollTo().performClick()
+        awaitEvent("事件 0 / ${primary.steps.size}")
         compose.onNodeWithText("末步").performScrollTo().performClick()
-        awaitEvent("事件 6 / 6")
+        awaitEvent("事件 ${primary.steps.size} / ${primary.steps.size}")
         compose.onNodeWithTag("go_opening_branch_${branch.id}").performScrollTo().performClick()
-        awaitEvent("事件 4 / 5")
+        awaitEvent("事件 4 / ${branch.steps.size}")
         compose.onNodeWithTag("go_opening_start_auto").performScrollTo().assertIsNotEnabled()
-        capture("13-shared-position")
-        compose.onNodeWithText("下一步").performScrollTo().performClick()
-        awaitEvent("事件 5 / 5")
-        compose.onNodeWithTag("go_intersection_3_6").assertContentDescriptionEquals("第7行第4列，黑子，最后落点")
-        compose.onNodeWithTag("go_opening_explanation").performScrollTo().assertTextContains("轮到白", substring = true)
-        capture("13-branch-endpoint")
+        capture("${branch.boardSize}-shared-position")
+        for (event in 5..branch.steps.size) {
+            compose.onNodeWithText("下一步").performScrollTo().performClick()
+            awaitEvent("事件 $event / ${branch.steps.size}")
+        }
+        compose.onNodeWithTag("go_intersection_$lastIntersection").assertContentDescriptionEquals(lastDescription)
+        compose.onNodeWithTag("go_opening_explanation").performScrollTo().assertTextContains(lastExplanation, substring = true)
+        capture("${branch.boardSize}-branch-endpoint")
         compose.onNodeWithTag("go_opening_start_auto").performScrollTo().assertIsEnabled().performClick()
         compose.waitUntil(60_000) { compose.onAllNodesWithTag("go_ai_pause").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("go_ai_pause").performScrollTo().assertIsEnabled().performClick()
         compose.waitUntil(90_000) {
             val saved = runBlocking { store.formalAiRepository().load() } ?: return@waitUntil false
-            NativeGoEngine(13, 15, 0).use {
+            NativeGoEngine(branch.boardSize, 15, 0).use {
                 it.restore(saved.copyBytes()) == RestoreResult.Restored && it.eventHistory().size > branch.steps.size
             }
         }
         val saved = checkNotNull(runBlocking { store.formalAiRepository().load() })
         assertTrue(saved.config.automatic)
         assertArrayEquals(endpoint.copyBytes(), saved.copyOpeningBytes())
-        NativeGoEngine(13, 15, 0).use {
+        NativeGoEngine(branch.boardSize, 15, 0).use {
             assertEquals(RestoreResult.Restored, it.restore(saved.copyBytes()))
-            assertEquals(branch.steps.map { step -> GoAction.Place(step.point) }, it.eventHistory().take(5))
+            assertEquals(branch.steps.map { step -> GoAction.Place(step.point) }, it.eventHistory().take(branch.steps.size))
         }
         assertTrue(runBlocking { database.goRankedDao().starts().isEmpty() })
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
-        capture("13-branch-katago")
+        capture("${branch.boardSize}-branch-katago")
     }
 
     private fun awaitEvent(label: String) = compose.waitUntil(15_000) {

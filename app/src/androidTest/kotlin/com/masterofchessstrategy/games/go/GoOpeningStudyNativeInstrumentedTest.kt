@@ -7,7 +7,7 @@ import org.junit.Test
 class GoOpeningStudyNativeInstrumentedTest {
     @Test fun allAuthoredLinesReachTheirExactPlayableNativeEndpointAndSgfRoundTrip() {
         val plans = GoOpeningStudyLibrary.openAll()
-        assertEquals(8, plans.size)
+        assertEquals(9, plans.size)
         for (plan in plans) {
             assertEquals(plan.line.steps.size, plan.opening.eventCount)
             plan.opening.createEngine().use { endpoint ->

@@ -1,0 +1,168 @@
+{
+  "tag": "v0.1.0-go-opening-9-branch.1",
+  "distribution": "source-only",
+  "evidence_root": ".build/go-opening-9-branch1",
+  "build": {
+    "candidate": "f178290caf18f1e1fc2e80dae1a3c7d4efdd8cfe",
+    "products": {
+      "app-debug.apk": "0fce7e7c3fcd83e82bcb333f85e3730a59bca216324af6a608c87f59c7ba6971",
+      "app-debug-androidTest.apk": "fd551b03020ad183ef99708d124c56ffe74c39ca6f5618ae24e1060bc626b3a6"
+    },
+    "unit_tests": 9,
+    "lint_errors": 0,
+    "lint_warnings": 25,
+    "release_manifest": "processed"
+  },
+  "overlays": [
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyNativeInstrumentedTest.kt",
+      "sha256": "d12162a6d6bb34c79bd6d7f0c9ad0f055dd95e9874ad1fc085ffce77e986bec9"
+    },
+    {
+      "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/GoOpeningStudyNavigationTest.kt",
+      "sha256": "b08a3334847003451dffcb8cb9c3aac05054d0a015e7f1d46f86010177f8f975"
+    },
+    {
+      "path": "app/src/main/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyLibrary.kt",
+      "sha256": "8f1893d7d05951a2a01b4d0f121f16d22129af402e06c05c3e65bae890d12aba"
+    },
+    {
+      "path": "app/src/test/kotlin/com/masterofchessstrategy/games/go/GoOpeningStudyLibraryTest.kt",
+      "sha256": "db0e5191f43999b944b560fc89a73844a5deb99c3ed4910372d12fb3c942b1bb"
+    }
+  ],
+  "device": {
+    "model": "Pixel_7_Pro",
+    "physical": "not-connected",
+    "restored_font": "1.0",
+    "runs": [
+      {
+        "log_sha256": "4c2359da7ddd1736bf61e63c6d2cc135866bd5673a3f24a033553e492da6baaf",
+        "font": "1.0",
+        "images": [
+          {
+            "path": "font-1.0\\8e2b202c-221d-4f4b-8fe3-c451ffb7b33e\\13-branch-endpoint.png",
+            "sha256": "f72e50eda323a0cfcbd57254dfe693c4142c42f8d0d2a3b7ddcf1f4d0443bc79"
+          },
+          {
+            "path": "font-1.0\\8e2b202c-221d-4f4b-8fe3-c451ffb7b33e\\13-branch-katago.png",
+            "sha256": "b8f08ed4b88c0644c2b4011a74a6dcf91dc76d79587350904e3f0b278ce36a8f"
+          },
+          {
+            "path": "font-1.0\\8e2b202c-221d-4f4b-8fe3-c451ffb7b33e\\13-shared-position.png",
+            "sha256": "44bbc352e8720e06f59c92bcd7e9be2896652993889c01d6aeefb9505d2c6e88"
+          },
+          {
+            "path": "font-1.0\\d7a7adff-b432-4ecd-905d-5efb802ee01a\\9-branch-endpoint.png",
+            "sha256": "1add44e2e056dcc515fc17907a3d1ae098f8d9752396bbccb2dbbf8891053a87"
+          },
+          {
+            "path": "font-1.0\\d7a7adff-b432-4ecd-905d-5efb802ee01a\\9-branch-katago.png",
+            "sha256": "625e87a3b27d1a6df19657c23ced40c6201c51ef074a1024d631fda981972a5d"
+          },
+          {
+            "path": "font-1.0\\d7a7adff-b432-4ecd-905d-5efb802ee01a\\9-shared-position.png",
+            "sha256": "43b2d593cf5c16d2a31ea4482dba5f5d46881bc4fb505b22d157eca51aa76ada"
+          }
+        ],
+        "tests": 3
+      },
+      {
+        "log_sha256": "ba48cee99590f349074d93548394381c12640adaa66b54134c77ab1c5699a390",
+        "font": "1.5",
+        "images": [
+          {
+            "path": "font-1.5\\9c3985eb-4400-4a73-bba3-ab02f185b8f7\\9-branch-endpoint.png",
+            "sha256": "8e59090794c846c8cd74bb2d011e7a65ff1e3f738d263d669e5e724099bec2bc"
+          },
+          {
+            "path": "font-1.5\\9c3985eb-4400-4a73-bba3-ab02f185b8f7\\9-branch-katago.png",
+            "sha256": "67aaf9a85a0e220fd4d55c80a9f11508f7050550f3d0895480025c2854e676f1"
+          },
+          {
+            "path": "font-1.5\\9c3985eb-4400-4a73-bba3-ab02f185b8f7\\9-shared-position.png",
+            "sha256": "77267ff052ec9be017d62b15301014f3af0af65c90773f6779bd0185f9139b5b"
+          }
+        ],
+        "tests": 1
+      }
+    ]
+  },
+  "opening": {
+    "id": "9-left-side-link",
+    "endpoint_events": 6,
+    "side_to_move": "black",
+    "authored_lines_native_round_trip": 9,
+    "shared_moves": 4
+  },
+  "evidence": [
+    {
+      "path": "build-receipt.json",
+      "sha256": "0fb15509d9ba246d9b30d6a331cc0a2d868c338fa04637dcfd60066aa7a2071b"
+    },
+    {
+      "path": "build.log",
+      "sha256": "853e5209fd63a49edae4184db7dbb7d047d20b95f362cc52e774cf66d5a7bba8"
+    },
+    {
+      "path": "device-dfbc3f943ae24a37866bf3ddfdfddbfa/device-receipt.json",
+      "sha256": "5146e6deac41b31f04190584185ea4ba2d4ab1f6cbd763cb89f9a6ca5904591e"
+    },
+    {
+      "path": "device-dfbc3f943ae24a37866bf3ddfdfddbfa/font-1.0/8e2b202c-221d-4f4b-8fe3-c451ffb7b33e/13-branch-endpoint.png",
+      "sha256": "f72e50eda323a0cfcbd57254dfe693c4142c42f8d0d2a3b7ddcf1f4d0443bc79"
+    },
+    {
+      "path": "device-dfbc3f943ae24a37866bf3ddfdfddbfa/font-1.0/8e2b202c-221d-4f4b-8fe3-c451ffb7b33e/13-branch-katago.png",
+      "sha256": "b8f08ed4b88c0644c2b4011a74a6dcf91dc76d79587350904e3f0b278ce36a8f"
+    },
+    {
+      "path": "device-dfbc3f943ae24a37866bf3ddfdfddbfa/font-1.0/8e2b202c-221d-4f4b-8fe3-c451ffb7b33e/13-shared-position.png",
+      "sha256": "44bbc352e8720e06f59c92bcd7e9be2896652993889c01d6aeefb9505d2c6e88"
+    },
+    {
+      "path": "device-dfbc3f943ae24a37866bf3ddfdfddbfa/font-1.0/d7a7adff-b432-4ecd-905d-5efb802ee01a/9-branch-endpoint.png",
+      "sha256": "1add44e2e056dcc515fc17907a3d1ae098f8d9752396bbccb2dbbf8891053a87"
+    },
+    {
+      "path": "device-dfbc3f943ae24a37866bf3ddfdfddbfa/font-1.0/d7a7adff-b432-4ecd-905d-5efb802ee01a/9-branch-katago.png",
+      "sha256": "625e87a3b27d1a6df19657c23ced40c6201c51ef074a1024d631fda981972a5d"
+    },
+    {
+      "path": "device-dfbc3f943ae24a37866bf3ddfdfddbfa/font-1.0/d7a7adff-b432-4ecd-905d-5efb802ee01a/9-shared-position.png",
+      "sha256": "43b2d593cf5c16d2a31ea4482dba5f5d46881bc4fb505b22d157eca51aa76ada"
+    },
+    {
+      "path": "device-dfbc3f943ae24a37866bf3ddfdfddbfa/font-1.5/9c3985eb-4400-4a73-bba3-ab02f185b8f7/9-branch-endpoint.png",
+      "sha256": "8e59090794c846c8cd74bb2d011e7a65ff1e3f738d263d669e5e724099bec2bc"
+    },
+    {
+      "path": "device-dfbc3f943ae24a37866bf3ddfdfddbfa/font-1.5/9c3985eb-4400-4a73-bba3-ab02f185b8f7/9-branch-katago.png",
+      "sha256": "67aaf9a85a0e220fd4d55c80a9f11508f7050550f3d0895480025c2854e676f1"
+    },
+    {
+      "path": "device-dfbc3f943ae24a37866bf3ddfdfddbfa/font-1.5/9c3985eb-4400-4a73-bba3-ab02f185b8f7/9-shared-position.png",
+      "sha256": "77267ff052ec9be017d62b15301014f3af0af65c90773f6779bd0185f9139b5b"
+    },
+    {
+      "path": "device-dfbc3f943ae24a37866bf3ddfdfddbfa/opening-9-branch-1.0.log",
+      "sha256": "4c2359da7ddd1736bf61e63c6d2cc135866bd5673a3f24a033553e492da6baaf"
+    },
+    {
+      "path": "device-dfbc3f943ae24a37866bf3ddfdfddbfa/opening-9-branch-1.5.log",
+      "sha256": "ba48cee99590f349074d93548394381c12640adaa66b54134c77ab1c5699a390"
+    },
+    {
+      "path": "lint.txt",
+      "sha256": "826b2358ac9d0bedf6a26f0488e6e22926f19f7834361aeb9fa3182a5944ace2"
+    },
+    {
+      "path": "pixel-visual.jpg",
+      "sha256": "bed31dbda941e394d208d12dbe0db6ddb042a8383f516c5b8e1e902c0772eed2"
+    },
+    {
+      "path": "TEST-com.masterofchessstrategy.games.go.GoOpeningStudyLibraryTest.xml",
+      "sha256": "922d8686081f438165c1b8abbb5ec92e2256ed89d87f6dd90b345779e35816a3"
+    }
+  ]
+}
