@@ -292,6 +292,74 @@ def proof_queue(rows, worksheet, receipts):
     ))
 
 
+def individual_life_evidence(directory, rows, worksheet, receipt_path, digest):
+    """Validate individual replies without turning them into whole-board adjudications."""
+    groups = {}
+    for row in checked_rows(rows, worksheet):
+        groups.setdefault(int(row["slot"]), []).append(row)
+    receipt = json.loads(read_verified(receipt_path, digest))
+    if not re.fullmatch(r"[0-9a-f]{64}", receipt["reviewer_sha256"]):
+        raise ValueError("Invalid reviewer identity")
+    verified = {}
+    for entry in receipt["results"]:
+        slot = entry["slot"]
+        if type(slot) is not int or slot not in groups:
+            raise ValueError(f"Unexpected life evidence slot: {slot}")
+        board, anchors = verified_board(directory, slot, groups[slot])
+        anchor = entry["anchor"]
+        position = tuple(map(int, anchor.split(",")))
+        row = anchors.get(position)
+        key = slot, anchor
+        if (row is None or anchor != f"{position[0]},{position[1]}" or key in verified
+                or row["raw_sha256"] != entry["record_sha256"] or row["color"] != entry["color"]
+                or row["decision"] not in ("", "disputed")):
+            raise ValueError(f"Life evidence does not match pending group {key}")
+        size = len(board)
+
+        def valid_move(move):
+            if move == "pass":
+                return True
+            return re.fullmatch(r"(0|[1-9][0-9]?):(0|[1-9][0-9]?)", move) and all(
+                int(value) < size for value in move.split(":")
+            )
+
+        def reply_pairs(lines):
+            pairs = {}
+            for line in lines:
+                attack, reply = line.split(",")
+                if not valid_move(attack) or (reply != "-" and not valid_move(reply)) or attack in pairs:
+                    raise ValueError(f"Invalid reply for group {key}: {line}")
+                pairs[attack] = reply
+            return pairs
+
+        name = f"{slot:03}-individual-{anchor.replace(',', '-')}"
+        first_log = receipt_path.parent / f"{name}-first.log"
+        first = read_verified(first_log, entry["first_sha256"]).decode("utf-8").splitlines()
+        if len(first) < 4 or not first[0].startswith("raw,") or first[1] != "attack,reply":
+            raise ValueError(f"Malformed first replies in {first_log}")
+        pairs = reply_pairs(first[2:-1])
+        gaps = {attack for attack, reply in pairs.items() if reply == "-"}
+        covered = len(pairs) - len(gaps)
+        status = "unknown" if gaps else "alive"
+        if first[-1] != f"coverage,{covered},{len(pairs)},{status}" or set(entry["gaps"]) != gaps:
+            raise ValueError(f"Incomplete first reply coverage for group {key}")
+        for attack, sha256 in entry["gaps"].items():
+            path = receipt_path.parent / f"{name}-gap-{attack.replace(':', '-')}.log"
+            log = read_verified(path, sha256).decode("utf-8").splitlines()
+            if len(log) < 2 or log[0] != first[0]:
+                raise ValueError(f"Wrong position in {path}")
+            mark, branch, defense, leaves = log[1].split(",")
+            if mark != "proven" or branch != attack or not valid_move(defense) or int(leaves) < 1:
+                raise ValueError(f"Unproven branch in {path}")
+            if len(log) > 2 and (log[2] != "counterattack,response" or len(log) < 4
+                                 or "-" in reply_pairs(log[3:]).values()):
+                raise ValueError(f"Invalid counterattack evidence in {path}")
+        verified[key] = {"slot": slot, "anchor": anchor, "color": row["color"],
+                         "initial_replies": len(pairs), "follow_up_branches": len(gaps),
+                         "raw_sha256": row["raw_sha256"]}
+    return [verified[key] for key in sorted(verified)]
+
+
 def describe_groups(directory, rows, worksheet, slots):
     descriptions = []
     selected = select_slots(rows, worksheet, slots)
@@ -367,6 +435,11 @@ def main():
     proofs.add_argument("worksheet", type=Path)
     proofs.add_argument("output", type=Path)
     proofs.add_argument("--receipt", action="append", nargs=2, metavar=("PATH", "SHA256"), required=True)
+    life = actions.add_parser("life-evidence", help="validate individual life evidence without changing the worksheet")
+    life.add_argument("worksheet", type=Path)
+    life.add_argument("receipt", type=Path)
+    life.add_argument("sha256")
+    life.add_argument("output", type=Path)
     select = actions.add_parser("select", help="extract full groups of selected slots from a verified worksheet")
     select.add_argument("worksheet", type=Path)
     select.add_argument("output", type=Path)
@@ -402,6 +475,11 @@ def main():
         write_table(args.output, ("slot", "unreviewed", "disputed", "priority_points",
                                   "capture_proofs", "missing_proofs", "proved_anchors"), pending)
         print(f"Listed {len(pending)} pending slots with {sum(row['capture_proofs'] for row in pending)} capture proofs")
+    elif args.action == "life-evidence":
+        verified = individual_life_evidence(args.inspection, rows, args.worksheet, args.receipt, args.sha256)
+        write_table(args.output, ("slot", "anchor", "color", "initial_replies", "follow_up_branches", "raw_sha256"),
+                    verified)
+        print(f"Validated {len(verified)} individual life proofs")
     elif args.action == "select":
         selected = select_slots(rows, args.worksheet, args.slots)
         write_table(args.output, FIELDS, selected)
