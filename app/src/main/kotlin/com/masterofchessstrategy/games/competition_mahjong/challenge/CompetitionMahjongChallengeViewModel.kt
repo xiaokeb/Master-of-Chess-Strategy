@@ -145,8 +145,8 @@ class CompetitionMahjongChallengeViewModel(
             return CompetitionMahjongChallengeSession(challenge, opening.hand, opening.flowers)
         }
         val hand = when {
-            id == CompetitionMahjongPracticePosition.CONCEALED_KONG_DRAW_ID ->
-                CompetitionMahjongPracticePosition.concealedKongDraw().hand
+            CompetitionMahjongPracticePosition.isKongDrawTraining(id) ->
+                CompetitionMahjongPracticePosition.kongDraw(id).hand
             CompetitionMahjongPracticePosition.isDiscardTraining(id) -> CompetitionMahjongPracticePosition.discardOpeningHand(id)
             CompetitionMahjongPracticePosition.isFalseWinReview(id) -> CompetitionMahjongPracticePosition.verifyFalseWin(id)
             id == CompetitionMahjongPracticePosition.ROB_KONG_ID -> CompetitionMahjongPracticePosition.robKong().hand

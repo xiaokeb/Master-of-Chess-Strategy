@@ -1,0 +1,181 @@
+{
+  "evidence_root": ".build/cm-exposed-kong1",
+  "build": {
+    "lint_warnings": 25,
+    "overlays": [
+      {
+        "sha256": "d89b72cff5506c5604b4b248359f5deb35c328910c11b64c3a043102541f4e31",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongPracticePosition.kt"
+      },
+      {
+        "sha256": "a892ecc50eecb25dbbe886734b9878e9549895d29196ee204a89b1da406905c6",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeLibrary.kt"
+      },
+      {
+        "sha256": "dfaddc50226c93331e77ba9731397080b5cd606667608dd1ab0c378c7cb668cc",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeRoute.kt"
+      },
+      {
+        "sha256": "b4217a92e7e15897427bc95079cea1dd0a57da9b5790f4284e5581d79f30df10",
+        "path": "app/src/main/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeViewModel.kt"
+      },
+      {
+        "sha256": "bdb12f7be66f9c270a36e82a0f2f7185d278f974a00330b522d30836be6ee307",
+        "path": "app/src/test/kotlin/com/masterofchessstrategy/games/competition_mahjong/challenge/CompetitionMahjongChallengeLibraryTest.kt"
+      },
+      {
+        "sha256": "85e8d1c04aa1b1ba3b6070e0be544c4e3a67f9131d39a6f55f25e07f5077b58e",
+        "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/ui/CompetitionMahjongChallengeNavigationTest.kt"
+      }
+    ],
+    "apks": {
+      "app-debug.apk": "ff6763ea0e31fda1e2b65b8ae984a62dab61e8b72e0a053e0724b13aec4c231b",
+      "app-debug-androidTest.apk": "60218488ff3862229f5d22859f051e8cfa03000a7d8e6e642ad3d24882c240bc"
+    },
+    "lint_errors": 0,
+    "baseline": "f9ce94a7ec9d2c9c4f91fd6b0ad703dc3e19eed4",
+    "unit_tests": 11
+  },
+  "native_result": {
+    "exposed_kong_fan": 1,
+    "seat_deltas": [
+      -18,
+      54,
+      -18,
+      -18
+    ],
+    "fan_total": 10,
+    "kong_replacement_fan": 8
+  },
+  "tag": "v0.1.0-competition-mahjong-exposed-kong.1",
+  "physical": {
+    "status": "not-connected"
+  },
+  "emulator": {
+    "model": "Pixel_7_Pro",
+    "restored_font": "1.0",
+    "runs": [
+      {
+        "log_sha256": "5f99ecd4577716ce47053bf50f9b3fef6c58986440388f14fb16e5f4ffd60a16",
+        "font": "1.0",
+        "images": [
+          {
+            "sha256": "dfaa64e7d531e713c20a41e8a6dc7efe2e83cfafe987973c59cc5852bf1cfcb9",
+            "path": "font-1.0\\631d077e-e908-4e43-8816-d1fbef5ec842\\concealed-kong-replacement.png"
+          },
+          {
+            "sha256": "1db4b407403540b47defa43096d9cef6e01d8dc916c98e2429084e77604df3ad",
+            "path": "font-1.0\\631d077e-e908-4e43-8816-d1fbef5ec842\\concealed-kong-settlement.png"
+          },
+          {
+            "sha256": "88605432b3b7b81e9035c9f74dcd772f691af8b24ce4b753efc95e3e39628ac1",
+            "path": "font-1.0\\631d077e-e908-4e43-8816-d1fbef5ec842\\concealed-kong-start.png"
+          },
+          {
+            "sha256": "adb2d429f55116bca994673e66cd0576aa5edc01b9a7248e6213d5206100c735",
+            "path": "font-1.0\\7a891091-f986-453d-a078-c3a1e011da69\\exposed-kong-replacement.png"
+          },
+          {
+            "sha256": "bbfaeb20a51a012cb166d0d8e11be832feb86bb75f95ca2eaf4ba711a199041f",
+            "path": "font-1.0\\7a891091-f986-453d-a078-c3a1e011da69\\exposed-kong-settlement.png"
+          },
+          {
+            "sha256": "5af24f11f6c75a4f64c1a28c8e50a311af39f8848f645e9da24e92c86b036fc1",
+            "path": "font-1.0\\7a891091-f986-453d-a078-c3a1e011da69\\exposed-kong-start.png"
+          }
+        ],
+        "tests": 2
+      },
+      {
+        "log_sha256": "f552ac5110eaeb0ebb589d8e414aa077b84cb823d6b8c9baf699b4b39ac8e668",
+        "font": "1.5",
+        "images": [
+          {
+            "sha256": "a8ec84f9df621edb6e9c8d7456d7555b24dd9e0cf33a48a83a8abc26298d4f4c",
+            "path": "font-1.5\\e3d5b0e7-6ca5-443c-ac97-a61c8f844154\\exposed-kong-replacement.png"
+          },
+          {
+            "sha256": "d7f0b549787c6cc5b00108d053595f63b4fced131b7015508791ad593f583627",
+            "path": "font-1.5\\e3d5b0e7-6ca5-443c-ac97-a61c8f844154\\exposed-kong-settlement.png"
+          },
+          {
+            "sha256": "52c5b5f9de234c0f0474851c9957da7f84f7b3016c450f6faf069729c6d90fc7",
+            "path": "font-1.5\\e3d5b0e7-6ca5-443c-ac97-a61c8f844154\\exposed-kong-start.png"
+          }
+        ],
+        "tests": 1
+      }
+    ]
+  },
+  "distribution": "source-only",
+  "evidence": [
+    {
+      "path": "build.log",
+      "sha256": "9a531b7ba4020a5a116343b4f723f64e1aba6c2f17eeaf424605e3c03138b4a0"
+    },
+    {
+      "path": "device-7b871c5eeff2492a9bb8a913d1779ddd/device-receipt.json",
+      "sha256": "916361366b8b5bd3ff15a01604554431c1a95d79a987b086108e861962bb89d3"
+    },
+    {
+      "path": "device-7b871c5eeff2492a9bb8a913d1779ddd/exposed-kong-training-1.0.log",
+      "sha256": "5f99ecd4577716ce47053bf50f9b3fef6c58986440388f14fb16e5f4ffd60a16"
+    },
+    {
+      "path": "device-7b871c5eeff2492a9bb8a913d1779ddd/exposed-kong-training-1.5.log",
+      "sha256": "f552ac5110eaeb0ebb589d8e414aa077b84cb823d6b8c9baf699b4b39ac8e668"
+    },
+    {
+      "path": "device-7b871c5eeff2492a9bb8a913d1779ddd/font-1.0/631d077e-e908-4e43-8816-d1fbef5ec842/concealed-kong-replacement.png",
+      "sha256": "dfaa64e7d531e713c20a41e8a6dc7efe2e83cfafe987973c59cc5852bf1cfcb9"
+    },
+    {
+      "path": "device-7b871c5eeff2492a9bb8a913d1779ddd/font-1.0/631d077e-e908-4e43-8816-d1fbef5ec842/concealed-kong-settlement.png",
+      "sha256": "1db4b407403540b47defa43096d9cef6e01d8dc916c98e2429084e77604df3ad"
+    },
+    {
+      "path": "device-7b871c5eeff2492a9bb8a913d1779ddd/font-1.0/631d077e-e908-4e43-8816-d1fbef5ec842/concealed-kong-start.png",
+      "sha256": "88605432b3b7b81e9035c9f74dcd772f691af8b24ce4b753efc95e3e39628ac1"
+    },
+    {
+      "path": "device-7b871c5eeff2492a9bb8a913d1779ddd/font-1.0/7a891091-f986-453d-a078-c3a1e011da69/exposed-kong-replacement.png",
+      "sha256": "adb2d429f55116bca994673e66cd0576aa5edc01b9a7248e6213d5206100c735"
+    },
+    {
+      "path": "device-7b871c5eeff2492a9bb8a913d1779ddd/font-1.0/7a891091-f986-453d-a078-c3a1e011da69/exposed-kong-settlement.png",
+      "sha256": "bbfaeb20a51a012cb166d0d8e11be832feb86bb75f95ca2eaf4ba711a199041f"
+    },
+    {
+      "path": "device-7b871c5eeff2492a9bb8a913d1779ddd/font-1.0/7a891091-f986-453d-a078-c3a1e011da69/exposed-kong-start.png",
+      "sha256": "5af24f11f6c75a4f64c1a28c8e50a311af39f8848f645e9da24e92c86b036fc1"
+    },
+    {
+      "path": "device-7b871c5eeff2492a9bb8a913d1779ddd/font-1.5/e3d5b0e7-6ca5-443c-ac97-a61c8f844154/exposed-kong-replacement.png",
+      "sha256": "a8ec84f9df621edb6e9c8d7456d7555b24dd9e0cf33a48a83a8abc26298d4f4c"
+    },
+    {
+      "path": "device-7b871c5eeff2492a9bb8a913d1779ddd/font-1.5/e3d5b0e7-6ca5-443c-ac97-a61c8f844154/exposed-kong-settlement.png",
+      "sha256": "d7f0b549787c6cc5b00108d053595f63b4fced131b7015508791ad593f583627"
+    },
+    {
+      "path": "device-7b871c5eeff2492a9bb8a913d1779ddd/font-1.5/e3d5b0e7-6ca5-443c-ac97-a61c8f844154/exposed-kong-start.png",
+      "sha256": "52c5b5f9de234c0f0474851c9957da7f84f7b3016c450f6faf069729c6d90fc7"
+    },
+    {
+      "path": "lint.txt",
+      "sha256": "4fdf5b8181fbac1bde91ef1ae91cca086aa980e1c2ae89c3cbc85c6066aeca4f"
+    },
+    {
+      "path": "pixel-visual.jpg",
+      "sha256": "c0bc60ced4594d2b6a17e71dd234f220e29c1ec559ab40e6e5fbe69591e7dd74"
+    },
+    {
+      "path": "TEST-com.masterofchessstr-E07R487T4U5P4.games.competition_mahjong.challenge.CompetitionMahjongChallengeViewModelTest.xml",
+      "sha256": "e284fb580cdbead8403bcb188a4dd3c2e3e995cb06b76091659726474b08844e"
+    },
+    {
+      "path": "TEST-com.masterofchessstrat-FU91LTSR2O05M.games.competition_mahjong.challenge.CompetitionMahjongChallengeLibraryTest.xml",
+      "sha256": "438cfd8ab53a952fcc9af50909e39be2378aed2c8d92016c10b0674f55a0d76f"
+    }
+  ]
+}

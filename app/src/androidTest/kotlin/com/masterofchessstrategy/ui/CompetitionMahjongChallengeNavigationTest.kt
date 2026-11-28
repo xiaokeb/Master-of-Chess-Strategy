@@ -401,8 +401,17 @@ class CompetitionMahjongChallengeNavigationTest {
     }
 
     @Test fun concealedKongDrawProducesReplacementWinAndAwardsOnlyOnSettlement() {
-        val id = CompetitionMahjongPracticePosition.CONCEALED_KONG_DRAW_ID
+        verifyKongReplacement(CompetitionMahjongPracticePosition.CONCEALED_KONG_DRAW_ID, exposed = false)
+    }
+
+    @Test fun exposedKongUsesTheDiscardAndAwardsOnlyOnSelfDraw() {
+        verifyKongReplacement(CompetitionMahjongPracticePosition.EXPOSED_KONG_DRAW_ID, exposed = true)
+    }
+
+    private fun verifyKongReplacement(id: String, exposed: Boolean) {
         val before = CompetitionMahjongChallengeLibrary.challenges.takeWhile { it.id != id }.map { it.id }.toSet()
+        val caption = if (exposed) "直明杠" else "暗杠"
+        val evidence = if (exposed) "exposed-kong" else "concealed-kong"
         val store = RoomCompetitionMahjongChallengeProgress(database)
         runBlocking {
             before.forEach { store.complete(it) }
@@ -414,25 +423,27 @@ class CompetitionMahjongChallengeNavigationTest {
         val confirm = compose.onNodeWithTag("competition_mahjong_challenge_confirm_win")
         confirm.assertDoesNotExist()
         val kong = compose.onNodeWithTag("competition_mahjong_challenge_declare_kong")
-        kong.performScrollTo().assertTextEquals("暗杠 2万")
-        capture("concealed-kong-start")
+        kong.performScrollTo().assertTextEquals("$caption 2万")
+        if (exposed) compose.onNodeWithText("东家弃牌 2万").performScrollTo().assertIsDisplayed()
+        capture("$evidence-start")
 
         kong.performClick()
         waitFor("competition_mahjong_challenge_kong_meld")
         compose.onNodeWithTag("competition_mahjong_challenge_kong_meld").performScrollTo()
-            .assertTextEquals("已暗杠 2万")
+            .assertTextEquals(if (exposed) "已直明杠 2万 · 来自东家" else "已暗杠 2万")
         compose.onNodeWithText("本次摸牌 东").performScrollTo().assertIsDisplayed()
         assertEquals(before, runBlocking { store.load().completedIds })
-        capture("concealed-kong-replacement")
+        capture("$evidence-replacement")
 
         confirm.performScrollTo().assertTextEquals("自摸").performClick()
         waitFor("competition_mahjong_challenge_completed")
-        val result = CompetitionMahjongPracticePosition.concealedKongDraw(declare = true, settle = true)
+        val result = CompetitionMahjongPracticePosition.kongDraw(id, declare = true, settle = true)
         val fan = checkNotNull(result.totalFan)
         val payment = 8 + fan
-        assertEquals(listOf(3 * payment, -payment, -payment, -payment), result.netScores)
+        val winner = if (exposed) 1 else 0
+        assertEquals(List(4) { if (it == winner) 3 * payment else -payment }, result.netScores)
         InstrumentationRegistry.getInstrumentation().sendStatus(2, android.os.Bundle().apply {
-            putInt("kong_replacement_total_fan", fan)
+            putInt(if (exposed) "exposed_kong_replacement_total_fan" else "kong_replacement_total_fan", fan)
         })
         compose.onNodeWithTag("competition_mahjong_challenge_settlement").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("本盘总番 $fan").assertIsDisplayed()
@@ -441,8 +452,8 @@ class CompetitionMahjongChallengeNavigationTest {
         assertEquals(before + id, runBlocking { store.load().completedIds })
         assertTrue(runBlocking { database.matchOutcomeDao().listAll().isEmpty() })
         compose.onNodeWithTag("competition_mahjong_challenge_rewards").performScrollTo()
-            .assertTextEquals("训练奖励 29 星 · 1810 分")
-        capture("concealed-kong-settlement")
+            .assertTextEquals(if (exposed) "训练奖励 30 星 · 1890 分" else "训练奖励 29 星 · 1810 分")
+        capture("$evidence-settlement")
     }
 
     @Test fun nativeNineGatesTeachesWmoExclusionAndSavesOneReward() {

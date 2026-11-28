@@ -125,7 +125,10 @@ internal fun CompetitionMahjongChallengeScreen(
                             })
                         }
                         if (exercise.kongTraining && exercise.winningTile != null) {
-                            Text("已暗杠 2万", modifier = Modifier.testTag("competition_mahjong_challenge_kong_meld"))
+                            val meld = if (exercise.exposedKong) "已直明杠 2万 · 来自东家" else "已暗杠 2万"
+                            Text(meld, modifier = Modifier.testTag("competition_mahjong_challenge_kong_meld"))
+                        } else if (exercise.exposedKong) {
+                            Text("东家弃牌 2万")
                         }
                         val source = exercise.challenge.sourceRuleSection?.let { "竞赛规则第 $it 节" }
                             ?: "官方番种 ID " + exercise.challenge.sourceFanIds.sorted().joinToString("、")
@@ -139,7 +142,7 @@ internal fun CompetitionMahjongChallengeScreen(
                         if (exercise.kongTraining && !exercise.completed) {
                             if (exercise.winningTile == null) Button(onClick = onDeclareKong, enabled = state.canOperate,
                                 modifier = Modifier.testTag("competition_mahjong_challenge_declare_kong")) {
-                                Text("暗杠 2万")
+                                Text(if (exercise.exposedKong) "直明杠 2万" else "暗杠 2万")
                             } else Button(onClick = onConfirmWin, enabled = state.canOperate,
                                 modifier = Modifier.testTag("competition_mahjong_challenge_confirm_win")) { Text("自摸") }
                         }

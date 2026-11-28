@@ -34,7 +34,8 @@ internal object CompetitionMahjongPracticePosition {
     const val LAST_WALL_TILE = 27
     const val LAST_WALL_PAYER = 3
     const val CONCEALED_KONG_DRAW_ID = "self-draw-after-concealed-kong"
-    const val CONCEALED_KONG_TILE = 1
+    const val EXPOSED_KONG_DRAW_ID = "self-draw-after-exposed-kong"
+    private const val KONG_TILE = 1
     const val NINE_GATES_PUZZLE_ID = "live-nine-gates-exclusion"
     const val ALL_GREEN_PUZZLE_ID = "live-all-green-half-flush"
     const val TERMINALS_PUZZLE_ID = "live-terminals-double-pungs"
@@ -85,28 +86,48 @@ internal object CompetitionMahjongPracticePosition {
     fun isResponseTraining(id: String): Boolean =
         id == ROB_KONG_ID || id == LAST_WALL_CLAIM_ID || id == LAST_WALL_SELF_DRAW_ID
 
-    /** Uses the same wall for the opening, the actual concealed kong and the final settlement. */
-    fun concealedKongDraw(declare: Boolean = false, settle: Boolean = false): WinningTurn {
-        val hand = List(4) { CONCEALED_KONG_TILE } + listOf(9, 10, 11, 21, 22, 23, 25, 25, 25, 27)
+    fun isKongDrawTraining(id: String) = id == CONCEALED_KONG_DRAW_ID || id == EXPOSED_KONG_DRAW_ID
+
+    /** Replays the same wall for the opening, the declared kong and the final settlement. */
+    fun kongDraw(id: String, declare: Boolean = false, settle: Boolean = false): WinningTurn {
+        require(isKongDrawTraining(id))
+        val exposed = id == EXPOSED_KONG_DRAW_ID
+        val viewer = if (exposed) 1 else 0
+        val hand = List(if (exposed) 3 else 4) { KONG_TILE } + listOf(9, 10, 11, 21, 22, 23, 25, 25, 25, 27)
         val scoring = CompetitionMahjongScoring.WMO_2021_KONGS
-        return NativeCompetitionMahjongSession(0, scoring = scoring).use { session ->
-            check(session.restore(dealerOpening(hand, scoring = scoring, replacements = listOf(27))) == RestoreResult.Restored)
+        val opening = if (exposed) {
+            val southSlots = (4..7).toList() + (20..23) + (36..39) + 50
+            val wall = roundOpening(southSlots.zip(hand) + listOf(49 to KONG_TILE, 143 to 27), scoring)
+            val journal = TrainingJournal().apply {
+                event(CompetitionMahjongRoundActionKind.DISCARD, 0, KONG_TILE)
+                event(CompetitionMahjongRoundActionKind.PASS, 2, KONG_TILE)
+                event(CompetitionMahjongRoundActionKind.PASS, 3, KONG_TILE)
+            }
+            withJournal(wall, journal.bytes(), viewer)
+        } else dealerOpening(hand, scoring = scoring, replacements = listOf(27))
+        return NativeCompetitionMahjongSession(0, viewerSeat = viewer, scoring = scoring).use { session ->
+            check(session.restore(opening) == RestoreResult.Restored)
             val initial = session.snapshot()
-            val kong = CompetitionMahjongAction(CompetitionMahjongRoundActionKind.CONCEALED_KONG, CONCEALED_KONG_TILE)
-            check(initial.phase == CompetitionMahjongRoundPhase.DISCARD && initial.currentSeat == 0 &&
-                initial.seats[0].concealedTiles.sorted() == hand && kong in session.legalActions())
+            val kind = if (exposed) CompetitionMahjongRoundActionKind.EXPOSED_KONG
+                else CompetitionMahjongRoundActionKind.CONCEALED_KONG
+            val kong = CompetitionMahjongAction(kind, KONG_TILE)
+            if (exposed) {
+                check(initial.phase == CompetitionMahjongRoundPhase.CLAIM && initial.pendingSeat == 0 &&
+                    initial.pendingTile == KONG_TILE)
+            } else check(initial.phase == CompetitionMahjongRoundPhase.DISCARD && initial.currentSeat == viewer)
+            check(initial.seats[viewer].concealedTiles.sorted() == hand && kong in session.legalActions())
             if (!declare) return@use WinningTurn(hand, 27, null)
 
             check(session.apply(kong).accepted)
             val frame = session.snapshot()
-            val local = frame.seats[0]
+            val local = frame.seats[viewer]
             val meld = local.melds.single()
             val win = CompetitionMahjongAction(CompetitionMahjongRoundActionKind.WIN, 27)
-            check(frame.phase == CompetitionMahjongRoundPhase.DISCARD && frame.currentSeat == 0 &&
+            check(frame.phase == CompetitionMahjongRoundPhase.DISCARD && frame.currentSeat == viewer &&
                 frame.drawnTile == 27 && frame.wallRemaining == initial.wallRemaining - 1 &&
-                meld.kind == CompetitionMahjongMeldKind.KONG && meld.tile == CONCEALED_KONG_TILE &&
+                meld.kind == CompetitionMahjongMeldKind.KONG && meld.tile == KONG_TILE &&
                 meld.fromSeat == 0 && !meld.addedKong && local.flowers.isEmpty() &&
-                frame.seats.drop(1).all { it.concealedTiles.isEmpty() } && win in session.legalActions())
+                frame.seats.filter { it.seat != viewer }.all { it.concealedTiles.isEmpty() } && win in session.legalActions())
             val turn = WinningTurn(local.concealedTiles.sorted(), 27, null)
             if (!settle) return@use turn
 
@@ -115,10 +136,11 @@ internal object CompetitionMahjongPracticePosition {
             val fan = result.winningFan
             val payment = 8 + fan.totalFan
             check(applied.accepted && !applied.falseWin && result.phase == CompetitionMahjongRoundPhase.WON &&
-                result.winnerSeat == 0 && result.payerSeat == null && result.winningTile == 27 && fan.qualifies &&
+                result.winnerSeat == viewer && result.payerSeat == null && result.winningTile == 27 && fan.qualifies &&
                 fan.entries.any { it.id == 46 && it.points == 8 && it.count == 1 } &&
+                (!exposed || fan.entries.any { it.id == 74 && it.points == 1 && it.count == 1 }) &&
                 fan.entries.none { it.id == 44 || it.id == 80 || it.id == 81 } &&
-                result.netScores == listOf(3 * payment, -payment, -payment, -payment))
+                result.netScores == List(4) { if (it == viewer) 3 * payment else -payment })
             turn.copy(totalFan = fan.totalFan, netScores = result.netScores, qualifyingFan = fan.fanWithoutFlowers)
         }
     }
