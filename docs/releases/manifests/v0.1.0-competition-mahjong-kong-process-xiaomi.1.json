@@ -1,0 +1,210 @@
+{
+  "devices": {
+    "xiaomi": {
+      "model": "25042PN24C",
+      "abi": "arm64-v8a",
+      "api": 37,
+      "font_scale": "1.0",
+      "installed_apks": {
+        "app": "caf85f12abe7e38a40c72ef0ba8f7c1c0cb4f67fb020c4862abff188e056066c",
+        "test": "e1786cd95c5b59fe339e94586c2cdf1b238f45c5a23a8f6184e99c7b5dd9a63b"
+      },
+      "boundaries": [
+        {
+          "settled_hands": 15,
+          "archives": 0,
+          "before_pid": 21491,
+          "restored_pid": 21788,
+          "next_hand": 16
+        },
+        {
+          "settled_hands": 16,
+          "archives": 1,
+          "before_pid": 22548,
+          "restored_pid": 22789,
+          "fixture": "Pixel 7 Pro isolated native fixture",
+          "fixture_sha256": "d1baeccbb32fbf2a6a4c7133b97033702a66df912cf63675a0bb67b68eff5151"
+        }
+      ]
+    },
+    "pixel": {
+      "model": "Pixel_7_Pro",
+      "abi": "x86_64",
+      "api": 37,
+      "font_scale": "1.0",
+      "installed_apks": {
+        "app": "caf85f12abe7e38a40c72ef0ba8f7c1c0cb4f67fb020c4862abff188e056066c",
+        "test": "e1786cd95c5b59fe339e94586c2cdf1b238f45c5a23a8f6184e99c7b5dd9a63b"
+      },
+      "boundaries": [
+        {
+          "settled_hands": 15,
+          "archives": 0,
+          "before_pid": 8186,
+          "restored_pid": 8303,
+          "next_hand": 16
+        },
+        {
+          "settled_hands": 16,
+          "archives": 1,
+          "before_pid": 8467,
+          "restored_pid": 8574
+        }
+      ]
+    }
+  },
+  "evidence_root": ".build/cm-wmo-xiaomi1",
+  "distribution": "source-only",
+  "test_overlay": {
+    "path": "app/src/androidTest/kotlin/com/masterofchessstrategy/games/competition_mahjong/data/CompetitionMahjongSeriesRecoveryActionInstrumentedTest.kt",
+    "sha256": "6b5182d40c02bdf820f35e7c30fb52c29fbc074365f9a4c189c4fceecd7debe8"
+  },
+  "evidence": [
+    {
+      "path": "build.log",
+      "sha256": "cce18d696b6c9744853939bddb8e40e1608a3272b5ecb8d193eefbf234fd5dca"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/15/before.json",
+      "sha256": "a2be8ef2e7d4767c17a97a3817f34ab3ffa31edf4f3ad5ec29427a3494e25b7d"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/15/before.log",
+      "sha256": "b6a6a9992fb78e4dde06d6699069e3317f9b3ef40aedceae50de1b8c24b62f79"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/15/before.png",
+      "sha256": "c42c97226398759fd0e73a0a30e5082a3ed21ceeea102213e19f8a661fea45d8"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/15/next.json",
+      "sha256": "e274a8c5769950a183b516d6ab3cbbc8b7cd862704e469ca1e6d55f75943f5fd"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/15/next.png",
+      "sha256": "abd22c5ee33855f19dc34cb3c7bbcdbab60579fe51164c93fe0f7171dff635e6"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/15/restored.json",
+      "sha256": "831151ac9052c57bb46bfd08c1429d80567ec60adb43e1175105939a8d83d50c"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/15/restored.log",
+      "sha256": "11c2766f4dc5c22bcaff315b0b14f5d6622ecee4e5fc2adc79d50fd864a7c968"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/15/restored.png",
+      "sha256": "669abb70334fba9823b03c42be9deac2f1ecead3352e1b3183845e4fbcc42f50"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/15/seed.log",
+      "sha256": "19f2c126253e55add23e7e99aff7eea0a4dc174f19a94cc9ca4d722f76080759"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/16/before.json",
+      "sha256": "b9f3ee36b13da85491ee48e06b51ed96327152295c13fc1d7e9ce7740680be0f"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/16/before.log",
+      "sha256": "d8cbff0f4a13962ab46eb567e8300e7d9be32f0a436278efafbd2b88f221fedf"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/16/before.png",
+      "sha256": "1ad89b44c75f6142d58f9d7688e11cd7de2936b305bd871536834815aef7d0e3"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/16/restored.json",
+      "sha256": "7f5e40065597b116e5cfe9af67f6a7b1896c72575be49ef2ffb8961242efe796"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/16/restored.log",
+      "sha256": "495216e0694027dff2480e0320372559bb639335ad1578c782a92cb551f4111d"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/16/restored.png",
+      "sha256": "d40492a6c7ceaca89a4c15055e3ecfa34dcdad04a734e8776e3dbddc589c5c53"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/16/seed.log",
+      "sha256": "0938ceda3fa732f245e6bfd72a456bf02edf492f8ec57e323b781e59cbaa2e06"
+    },
+    {
+      "path": "pixel-588fd7b1b54440059839780135e21715/receipt.json",
+      "sha256": "b15cfcf5d07af29ec4d2e570ffc8fc179cc215444b83764fd0bad25272dd4fd0"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/15/before.json",
+      "sha256": "04e65cc39f6afc8b6a9885083b28f3a65e0a6582ed1c8d4fe08a44780edcc4d5"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/15/before.log",
+      "sha256": "fc9ad92b314dc4447c3f8ce713209d9c91cf1c61146945a1e873b2a55aaf8741"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/15/before.png",
+      "sha256": "09374e351b617ef540262774599bfeeb2b5218b417618977613678896afe512c"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/15/next.json",
+      "sha256": "4809dc2e9a81bc4b47cea484023b2569b9a79ce4a5ba19d34603c74f12da3c87"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/15/next.png",
+      "sha256": "4dd74d102f5ca23207cfdadefb653a3d95fda6188d98ab7f25400a73a5bff353"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/15/restored.json",
+      "sha256": "bb78402327027051fc47dcb4a4d97e2f5e70d7400b8aa3c04a68cb1f2183ad2c"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/15/restored.log",
+      "sha256": "53b612e6a7acab58b7ca9d4b668497d47ec416592d63e7b736f9c87ec2dd8248"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/15/restored.png",
+      "sha256": "95ce1b8aac3cff78a8cef8712cda786f6faf0df67ac0a901048e5577b792c99c"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/15/seed.log",
+      "sha256": "1db647fb5fe1447deedb272ac3d2fdf8c35ba4a12c5c23eae840cba85f1e0fa3"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/16/before.json",
+      "sha256": "ff3a5e40789c19c0a7ce36a5ab753b6a9ea6236fe566749521decfc82df722c4"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/16/before.log",
+      "sha256": "9b01b89266e6cb31fb5d153c05be04ad0f818f4a615206c5573c43d793e10e37"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/16/before.png",
+      "sha256": "8404931b1afd4a59bd35ca0d0a2383805465dfa4c07e54921fbd9b043b7eecae"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/16/restored.json",
+      "sha256": "b3a16ff82c8d419f141a8d32f566cbac6c30793fd51b318bfd7021641aa0852c"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/16/restored.log",
+      "sha256": "81d7f725cae27461e72f62c39b1f6dcad0c53c551697845e629943f62916cef6"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/16/restored.png",
+      "sha256": "b320f4e77838d1153c4a8bc28acd5f962d55c5e7c7b0571ad8437090ba4c25e5"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/16/seed.log",
+      "sha256": "15d945d314ca1d07531a917178dc7fe1fa16105d89beedf391dce7b0f80548c5"
+    },
+    {
+      "path": "xiaomi-e87c4f20d90848079df4cc8eb87be607/receipt.json",
+      "sha256": "ae577bb7b62cf69b348af3b5430342802fdde0a44df9745afc397fe59e24ec3e"
+    },
+    {
+      "path": "xiaomi-review.jpg",
+      "sha256": "05e995d8e50e018c2a6c30f5eb2d3cfc1d8047cd084198b48205e72a30a66fa9"
+    }
+  ],
+  "baseline": "4a1837ac8aa67afa50aa298fc2456a6c00c8c3e4",
+  "tag": "v0.1.0-competition-mahjong-kong-process-xiaomi.1"
+}
