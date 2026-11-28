@@ -168,7 +168,6 @@ fun GoAiMatchScreen(
                             }
                         }
                         if (game.phase == GoPhase.SCORING) {
-                            Text("双方确认同一死子提议后才结束；有争议时继续行棋。")
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 for (actor in GoPlayer.entries) FilterChip(scoringActor == actor, { onActor(actor) },
                                     enabled = match.canReviewScore, label = { Text("${goReplayPlayer(actor)}方标记") })
@@ -179,6 +178,7 @@ fun GoAiMatchScreen(
                                 Button({ onAction(GoAction.ConfirmScore(GoPlayer.WHITE, game.proposalRevision)) },
                                     enabled = match.canReviewScore && !game.whiteConfirmed) { Text(if (game.whiteConfirmed) "白方已确认" else "白方确认") }
                             }
+                            Text("双方确认同一死子提议后才结束；有争议时继续行棋。")
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 for (actor in GoPlayer.entries) OutlinedButton({ onAction(GoAction.ResumePlay(actor)) },
                                     enabled = match.canReviewScore) { Text("${goReplayPlayer(actor)}方主张死子，续弈") }
